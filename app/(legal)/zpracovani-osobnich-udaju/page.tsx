@@ -38,7 +38,7 @@ export default function Page() {
                 <Cl n="5.1">Zpracovatel přijímá s ohledem na stav techniky, náklady a povahu zpracování technická a organizační opatření ke zabezpečení Údajů podle čl. 32 GDPR. Jde zejména o:</Cl>
                 <Sub>
                     <li>šifrování přenosu (TLS) mezi prohlížečem a Službou;</li>
-                    <li>end-to-end šifrování souborů a zpráv sdílených mezi členy Kanceláře: obsah se šifruje klíčem odesílatele a příjemce, soukromé klíče členů jsou uložené jen zašifrované jejich hlavním klíčem;</li>
+                    <li>end-to-end šifrování chatu a sdílení (zprávy, soubory, věci, klienti) mezi členy Kanceláře: obsah se šifruje klíčem odesílatele a příjemce, soukromé klíče členů jsou uložené jen zašifrované jejich hlavním klíčem;</li>
                     <li>end-to-end šifrování zpráv a souborů ve sdíleném kanálu s klientem: klíč je jen u Správce (chráněn heslem kanceláře a záložním kódem) a v klientském odkazu, <strong>Zpracovatel k němu nemá přístup</strong>;</li>
                     <li>oddělení dat jednotlivých zákazníků pravidly přístupu na úrovni databáze (každý uživatel vidí jen své záznamy);</li>
                     <li>omezení přístupu Zpracovatele k Údajům na osoby, které je nezbytně potřebují, a ochranu přístupových klíčů a tajných údajů;</li>

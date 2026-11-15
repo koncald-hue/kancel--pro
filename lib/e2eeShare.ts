@@ -54,3 +54,29 @@ export async function decryptShareFile(privateKey: CryptoKey, wrappedKey: string
     const key = await unwrapFromAdmin(privateKey, wrappedKey);
     return decryptToBlob(key, cipher, name);
 }
+
+// ---------- Zprávy (chat mezi členy kanceláře) ----------
+// Zpráva = obsah (JSON) zašifrovaný náhodným klíčem + volitelné přílohy zašifrované týmž klíčem.
+// Klíč zprávy je zabalený veřejným klíčem příjemce i odesílatele.
+export type EncryptedMessage = { encPayload: string; wrappedForRecipient: string; wrappedForSender: string; blobs: Blob[] };
+
+export async function encryptMessage(payload: unknown, attachments: Uint8Array[], recipientPublicKey: string, senderPublicKey: string): Promise<EncryptedMessage> {
+    const key = await generateKey();
+    const blobs: Blob[] = [];
+    for (const data of attachments) blobs.push(new Blob([toBuf(await encryptBytes(key, data))], { type: 'application/octet-stream' }));
+    return {
+        encPayload: await encryptText(key, JSON.stringify(payload)),
+        wrappedForRecipient: await wrapForAdmin(recipientPublicKey, key),
+        wrappedForSender: await wrapForAdmin(senderPublicKey, key),
+        blobs,
+    };
+}
+
+export async function openMessage<T>(privateKey: CryptoKey, wrappedKey: string, encPayload: string): Promise<{ payload: T; key: CryptoKey }> {
+    const key = await unwrapFromAdmin(privateKey, wrappedKey);
+    return { payload: JSON.parse(await decryptText(key, encPayload)) as T, key };
+}
+
+export async function decryptAttachment(key: CryptoKey, cipher: Uint8Array): Promise<Uint8Array> {
+    return decryptBytes(key, cipher);
+}

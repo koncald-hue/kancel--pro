@@ -1,9 +1,6 @@
-import type { Metadata } from 'next';
-import LawyerShell from '@/app/components/lawyer/LawyerShell';
-import LawyerSharing from '@/app/components/lawyer/LawyerSharing';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = { title: 'Sdílení | Kancelář', robots: { index: false } };
-
+// Sdílení souborů se sloučilo do šifrovaného chatu kanceláře
 export default function Page() {
-    return <LawyerShell active="sdileni"><LawyerSharing /></LawyerShell>;
+    redirect('/kancelar/chat');
 }
