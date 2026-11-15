@@ -1,7 +1,7 @@
 -- =====================================================================
 -- STATISTIKY PRO SPRÁVCE
 -- Spusť JEDNOU v Supabase: SQL Editor -> New query -> vložit -> Run. Jde spustit i opakovaně.
--- Nejdřív musí být spuštěné všechny ostatní soubory (lawyer.sql, verification-billing.sql ...).
+-- Nejdřív musí být spuštěné všechny ostatní soubory (lawyer.sql, verification-billing.sql, firms.sql ...).
 --
 -- Funkce admin_stats() vrací souhrn jedním dotazem a smí ji zavolat jen člen týmu (ostatním vrátí chybu).
 -- Vrací JEN počty a součty. Žádná jména, e-maily ani obsah spisů a zpráv nevrací.
@@ -84,6 +84,13 @@ begin
         select coalesce(paid_at, created_at)::date as day, sum(price_czk) as rev
         from public.lawyer_orders where status = 'paid' group by 1
       ) o on o.day = d.day
+    ),
+
+    'firms', jsonb_build_object(
+      'total', (select count(*) from public.firms),
+      'active', (select count(*) from public.firms where seats > 0 and until >= current_date),
+      'seats_sold', (select coalesce(sum(seats), 0) from public.firms where seats > 0 and until >= current_date),
+      'members', (select count(*) from public.firm_members where role = 'member')
     ),
 
     -- jen celkové počty, žádný obsah

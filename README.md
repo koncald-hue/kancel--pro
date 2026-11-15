@@ -6,7 +6,7 @@ Samostatná aplikace pro advokáty a právníky (spisy, lhůty, klienti, výkazy
 1. Založ nový projekt Supabase (oddělený od veřejného webu).
 2. Zkopíruj `.env.example` do `.env.local` a vyplň hodnoty.
 3. V Supabase (SQL Editor) spusť postupně soubory ze složky `supabase/`:
-   `00-zaklad.sql`, `cases.sql`, `case-files.sql`, `case-meta.sql`, `lawyer.sql`, `defense.sql`, `client-portal.sql`, `client-identity.sql`, `verification-e2ee.sql`, `verification-billing.sql`, `tiers.sql`.
+   `00-zaklad.sql`, `cases.sql`, `case-files.sql`, `case-meta.sql`, `lawyer.sql`, `defense.sql`, `client-portal.sql`, `client-identity.sql`, `verification-e2ee.sql`, `verification-billing.sql`, `tiers.sql`, `pul-rocni-plan.sql`, `firms.sql` (kanceláře), `admin-stats.sql` (statistiky).
 4. Zaregistruj se v aplikaci a pak sebe přidej do týmu: `insert into public.staff (user_id) select id from auth.users where email = 'tvuj@email.cz';`
 5. `npm install`, `npm run dev`.
 

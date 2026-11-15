@@ -13,6 +13,7 @@ type Stats = {
     access: { trial: number; active: number; expired: number; requested: number; verified: number; pending_verification: number; rejected: number; trial_ending_7d: number };
     orders: { total: number; paid: number; pending: number; refund_due: number; revenue_total: number; revenue_7d: number; revenue_30d: number; paid_month: number; paid_half: number; paid_year: number; buyers: number; repeat_buyers: number };
     daily: { day: string; signups: number; revenue: number }[];
+    firms: { total: number; active: number; seats_sold: number; members: number };
     usage: { cases: number; files: number; files_mb: number; client_links: number; lawyers_with_case: number };
 };
 
@@ -129,6 +130,14 @@ export default function AdminStats() {
                         <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
                             <p className="text-sm font-semibold text-slate-800">Nové registrace za posledních 30 dní</p>
                             <div className="mt-3"><Bars data={days.map((d) => ({ day: d.day, value: d.signups }))} color="bg-indigo-600" label={(d) => `${new Date(d.day).toLocaleDateString('cs-CZ')}: ${d.value}`} /></div>
+                        </div>
+                    </Section>
+
+                    <Section title="Kanceláře">
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            <Tile label="Kanceláře" value={nf.format(stats.firms.total)} note={`${stats.firms.active} s aktivním balíčkem`} />
+                            <Tile label="Prodaná místa" value={nf.format(stats.firms.seats_sold)} note="v aktivních balíčcích" />
+                            <Tile label="Přijatí členové" value={nf.format(stats.firms.members)} note="bez vedoucích" />
                         </div>
                     </Section>
 

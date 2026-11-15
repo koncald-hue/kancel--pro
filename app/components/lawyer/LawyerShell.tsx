@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Settings, Users, Scale } from 'lucide-react';
+import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Settings, Users, UsersRound, Scale } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import { useAuth } from '../site/AuthContext';
 
@@ -12,6 +12,7 @@ const SECTIONS = [
     ['klienti', '/kancelar/klienti', 'Klienti', Users],
     ['vykazy', '/kancelar/vykazy', 'Výkazy práce', Clock3],
     ['knihovna', '/kancelar/knihovna', 'Knihovna', Library],
+    ['tym', '/kancelar/tym', 'Tým', UsersRound],
     ['nastaveni', '/kancelar/nastaveni', 'Nastavení', Settings],
 ] as const;
 
