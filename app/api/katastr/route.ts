@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
 
 // Klíč k API katastru je JEN na serveru (podmínky ČÚZK zakazují jeho předání koncovému zařízení).
-// Počet volání ČÚZK je omezený pro celý klíč, proto limity na uživatele (počítadlo je jen v paměti serveru).
+// Počet volání ČÚZK je omezený pro celý klíč (bezplatný klíč: 500 volání za den), proto limity na uživatele (počítadlo je jen v paměti serveru).
 const hits = new Map<string, { count: number; resetAt: number }>();
 function limited(key: string, limit: number, windowMs: number): boolean {
     const now = Date.now();
@@ -53,7 +53,7 @@ export async function GET(req: Request) {
             const ok = !!access && access.verification_status === 'verified' && (access.status === 'active' || access.status === 'trial') && (!access.until || String(access.until) >= today);
             if (!ok) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
         }
-        if (limited(`m:${uid}`, 20, 60_000) || limited(`d:${uid}`, 300, 86_400_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+        if (limited(`m:${uid}`, 10, 60_000) || limited(`d:${uid}`, 60, 86_400_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
 
         const url = new URL(req.url);
         const op = url.searchParams.get('op');

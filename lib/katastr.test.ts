@@ -33,6 +33,15 @@ describe('katastr', () => {
         expect(normalizeParcel({ id: 'x' })).toBeNull();
     });
 
+    it('normalizes a real response from the ČÚZK API', () => {
+        const real = {"id": 582818405, "typParcely": "PKN", "druhCislovaniParcely": 2, "kmenoveCisloParcely": 100, "poddeleniCislaParcely": null, "katastralniUzemi": {"kod": 721981, "nazev": "Plzeň"}, "zdrojParcelyZE": null, "katastralniUzemiPuvodni": null, "dilParcely": null, "vymera": 347, "lv": {"id": 765129405, "cislo": 27197, "katastralniUzemi": {"kod": 721981, "nazev": "Plzeň"}}, "mapovyList": {"kod": 6780, "oznaceni": "DKM"}, "zpusobUrceniVymery": {"kod": 2, "nazev": "Ze souřadnic v S-JTSK"}, "druhPozemku": {"kod": 13, "nazev": "zastavěná plocha a nádvoří"}, "stavba": {"id": 272567405, "typStavby": {"kod": 1, "nazev": "budova s číslem popisným"}, "cislaDomovni": [327], "castObce": {"kod": 406392, "nazev": "Vnitřní Město"}}, "pravoStavby": null, "definicniBod": {"id": 28807405, "x": -822152.37, "y": -1069616.74}, "zpusobVyuziti": null, "zpusobyOchrany": [{"kod": 16, "nazev": "pam. rezervace - budova, pozemek v památkové rezervaci"}], "bpej": [], "rizeniPlomby": []};
+        expect(normalizeParcel(real)).toEqual({
+            id: 582818405, oznaceni: '100', katastralniUzemi: { kod: 721981, nazev: 'Plzeň' }, typ: 'PKN', stavebni: false, vymera: 347,
+            druhPozemku: 'zastavěná plocha a nádvoří', zpusobVyuziti: '', lv: { cislo: 27197, katastralniUzemi: 'Plzeň' }, stavba: 'č. p. 327',
+            zpusobyOchrany: ['pam. rezervace - budova, pozemek v památkové rezervaci'], plomby: [], bpej: [],
+        });
+    });
+
     it('searches territories by name or code, ignoring diacritics', () => {
         const list = [{ kod: 1, nazev: 'Plzeň' }, { kod: 2, nazev: 'Plzeňské Předměstí' }, { kod: 3, nazev: 'Kralovice' }, { kod: 700001, nazev: 'Lipno' }];
         expect(searchKu(list, 'plzen').map((k) => k.kod)).toEqual([1, 2]);
