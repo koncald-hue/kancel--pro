@@ -14,7 +14,7 @@ const Box = ({ children }: { children: React.ReactNode }) => <div className="mx-
 
 // Ochrana pracovního prostoru: přihlášení, zahájení zkušebního přístupu nebo žádost o placený přístup
 export default function LawyerGate({ children, allowExpired = false }: { children: React.ReactNode; allowExpired?: boolean }) {
-    const { account, authReady, openLogin, isStaff } = useAuth();
+    const { account, authReady, openLogin, isStaff, logout } = useAuth();
     const [version, setVersion] = useState(0);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -68,6 +68,7 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
                 </>
             )}
             <p className="mt-5 text-xs"><Link href="/" className="font-semibold text-indigo-900 underline">Co kancelář obsahuje</Link></p>
+            <p className="mt-3 text-xs text-slate-500">Přihlášen jako {account.email}. <button type="button" onClick={logout} className="font-semibold underline">Odhlásit se</button></p>
         </Box>
     );
 }

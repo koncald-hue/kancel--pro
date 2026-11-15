@@ -47,7 +47,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 supabase.rpc('is_staff').then(({ data, error }) => { setIsStaff(error ? false : data === true); setAuthReady(true); });
             }, 0);
         };
-        supabase.auth.getSession().then(({ data: { session } }) => apply(session?.user ?? null));
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            apply(session?.user ?? null);
+            // Uložené přihlášení může patřit účtu, který už neexistuje (např. smazaný v Supabase): pak se odhlásí
+            if (session) supabase.auth.getUser().then(({ error }) => { if (error) void supabase.auth.signOut(); });
+        });
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => apply(session?.user ?? null));
         return () => subscription.unsubscribe();
     }, []);
