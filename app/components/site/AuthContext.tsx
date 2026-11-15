@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, useSyncExt
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { TERMS_VERSION } from '@/lib/company';
 
 // Přihlášení do aplikace pro právníky: jeden účet, přihlašování e-mailem a heslem
 export type AuthInfo = {
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [notice, setNotice] = useState('');
+    const [agree, setAgree] = useState(false);
 
     useEffect(() => {
         const apply = (user: AuthUser | null) => {
@@ -64,7 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setNotice('');
         if (mode === 'register') {
             if (password.length < 10) { setNotice('Heslo musí mít alespoň 10 znaků.'); return; }
-            const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/kancelar` } });
+            if (!agree) { setNotice('Pro vytvoření účtu je nutné souhlasit s obchodními podmínkami.'); return; }
+            const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/kancelar`, data: { terms_version: TERMS_VERSION, terms_accepted_at: new Date().toISOString(), professional_use: true } } });
             if (error) { setNotice('Registrace se nepodařila: ' + error.message); return; }
             setPassword('');
             if (data.session) { setOpen(false); setEmail(''); } else { setMode('login'); setNotice('Účet je vytvořený. Poslali jsme vám e-mail s potvrzovacím odkazem, po potvrzení se přihlaste.'); }
@@ -96,6 +99,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                                 <label htmlFor="login-password" className="mb-1 block text-xs font-semibold text-slate-800">Heslo{isRegister ? ' (alespoň 10 znaků)' : ''}</label>
                                 <input id="login-password" type="password" required minLength={isRegister ? 10 : undefined} autoComplete={isRegister ? 'new-password' : 'current-password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
                             </div>
+                            {isRegister && (
+                                <label className="flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-slate-700">
+                                    <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-indigo-700" />
+                                    <span>Jednám v rámci své podnikatelské činnosti nebo výkonu povolání a souhlasím s <a href="/obchodni-podminky" target="_blank" rel="noreferrer" className="font-semibold text-indigo-700 underline">obchodními podmínkami</a> a <a href="/zpracovani-osobnich-udaju" target="_blank" rel="noreferrer" className="font-semibold text-indigo-700 underline">smlouvou o zpracování osobních údajů</a>. Zásady ochrany soukromí najdete <a href="/ochrana-osobnich-udaju" target="_blank" rel="noreferrer" className="font-semibold text-indigo-700 underline">zde</a>.</span>
+                                </label>
+                            )}
                             <button type="submit" className="w-full rounded-xl bg-indigo-700 py-2.5 text-xs font-medium text-white hover:bg-indigo-800">{isRegister ? 'Vytvořit účet' : 'Přihlásit se'}</button>
                         </form>
                         <p className="mt-4 text-center text-xs text-slate-600">

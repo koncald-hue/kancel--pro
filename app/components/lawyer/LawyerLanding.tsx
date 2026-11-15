@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowRight, Bot, CalendarClock, Check, ClipboardList, FileArchive, Lock, Receipt, Scale, ShieldCheck, Users } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import LawyerPricing from './LawyerPricing';
+import { RETENTION_MONTHS } from '@/lib/company';
 import { CaseMock, ClientMock, DashboardMock, TimesheetMock } from './LandingMockups';
 
 const AUTOMATED: [typeof Scale, string, string][] = [
@@ -108,7 +109,7 @@ export default function LawyerLanding() {
             <section className="px-4 pb-16 sm:px-6 sm:pb-24">
                 <div className="mx-auto max-w-4xl rounded-3xl bg-gradient-to-br from-indigo-600 to-indigo-800 p-10 text-center text-white sm:p-14">
                     <h2 className="text-3xl font-bold tracking-tight">Vyzkoušejte Kancelář bez rizika</h2>
-                    <p className="mx-auto mt-3 max-w-xl text-indigo-100">14 dní zdarma, bez karty a bez závazku. Vaše data zůstanou uložená, i kdybyste se nerozhodli pokračovat.</p>
+                    <p className="mx-auto mt-3 max-w-xl text-indigo-100">14 dní zdarma, bez karty a bez závazku. Vaše data se po skončení zkušební doby ještě {RETENTION_MONTHS} měsíců uchovají, nic se nesmaže hned.</p>
                     <div className="mt-7 flex justify-center">
                         {account ? <Link href="/kancelar" className="rounded-xl bg-white px-7 py-3.5 text-sm font-bold text-indigo-700 hover:bg-indigo-50">Otevřít kancelář</Link> : <button type="button" onClick={() => openLogin('register')} className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-bold text-indigo-700 hover:bg-indigo-50"><Check size={16} aria-hidden="true" /> Začít zdarma</button>}
                     </div>
@@ -117,7 +118,8 @@ export default function LawyerLanding() {
 
             <footer className="border-t border-slate-100 px-4 py-8 text-center text-xs leading-relaxed text-slate-500 sm:px-6">
                 <p>Kancelář slouží k organizaci práce a nenahrazuje právní poradenství ani úsudek advokáta. Informace o zákonech jsou pomůckou ke kontrole.</p>
-                <p className="mt-1">Veřejný web pro občany a studenty je samostatný projekt.</p>
+                <p className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 font-semibold"><Link href="/obchodni-podminky" className="hover:text-slate-800">Obchodní podmínky</Link><Link href="/zpracovani-osobnich-udaju" className="hover:text-slate-800">Zpracování osobních údajů</Link><Link href="/ochrana-osobnich-udaju" className="hover:text-slate-800">Ochrana soukromí</Link></p>
+                <p className="mt-2">Veřejný web pro občany a studenty je samostatný projekt.</p>
             </footer>
         </div>
     );
