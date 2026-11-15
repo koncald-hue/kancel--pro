@@ -29,3 +29,27 @@ grant execute on function public.is_staff() to anon, authenticated;
 drop policy if exists "staff: vidi tym" on public.staff;
 create policy "staff: vidi tym" on public.staff
   for select using (public.is_staff());
+
+-- Nastavení aplikace (např. ceny předplatného), mění je jen tým
+create table if not exists public.app_settings (
+  key text primary key,
+  value integer not null
+);
+
+alter table public.app_settings enable row level security;
+
+drop policy if exists "app_settings: tym" on public.app_settings;
+create policy "app_settings: tym" on public.app_settings
+  for all using (public.is_staff()) with check (public.is_staff());
+
+create or replace function public.app_setting(p_key text, p_default integer)
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce((select value from public.app_settings where key = p_key), p_default);
+$$;
+
+revoke all on function public.app_setting(text, integer) from public;
