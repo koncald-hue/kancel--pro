@@ -19,7 +19,7 @@ export default function Page() {
                 <Cl n="2.1">Údaje o zákaznících zpracováváme pro tyto účely:</Cl>
                 <Sub>
                     <li><strong>Vedení účtu a poskytování Služby:</strong> e-mail, přihlašovací údaje (heslo ukládáme jen v nevratné podobě), jméno, název kanceláře, telefon, adresa kanceláře, web, evidenční číslo advokáta. Právní základ: plnění smlouvy (čl. 6 odst. 1 písm. b) GDPR).</li>
-                    <li><strong>Ověření totožnosti:</strong> údaje z veřejného seznamu advokátů a doklad totožnosti nahraný k ověření (uložený zašifrovaný, čitelný jen správci Služby). Právní základ: oprávněný zájem na ochraně Klientů a zákazníků před vydáváním se za advokáta (čl. 6 odst. 1 písm. f) GDPR) a plnění smlouvy.</li>
+                    <li><strong>Profil zákazníka:</strong> jméno a příjmení, profese, evidenční číslo ČAK (u advokáta), adresa kanceláře, telefon, e-mail pro klienty, web. Právní základ: plnění smlouvy a oprávněný zájem na tom, aby bylo zřejmé, kdo Službu používá, a na ochraně klientů a zákazníků před zneužitím (čl. 6 odst. 1 písm. b) a f) GDPR). Tyto údaje vidí provozovatel Služby a klienti Zákazníka na své stránce.</li>
                     <li><strong>Platby a účetnictví:</strong> údaje o objednávkách, platbách a fakturaci. Právní základ: plnění smlouvy a splnění právní povinnosti (účetní a daňové předpisy, čl. 6 odst. 1 písm. c) GDPR). Údaje o platbách uchováváme po dobu stanovenou těmito předpisy.</li>
                     <li><strong>Zabezpečení a provoz:</strong> technické záznamy o přístupech a chybách, ochrana před zneužitím. Právní základ: oprávněný zájem (čl. 6 odst. 1 písm. f) GDPR).</li>
                     <li><strong>Komunikace se zákazníky:</strong> odpovědi na dotazy a provozní oznámení (potvrzení registrace, změny podmínek). Právní základ: plnění smlouvy a oprávněný zájem.</li>
@@ -33,7 +33,7 @@ export default function Page() {
             </Section>
 
             <Section n={4} title="Jak dlouho údaje uchováváme">
-                <Cl n="4.1">Údaje o Účtu uchováváme po dobu trvání smlouvy a po skončení přístupu po dobu {RETENTION_MONTHS} měsíců, poté je mažeme. Doklady k ověření totožnosti smažeme na žádost po skončení smlouvy, nejpozději spolu s Účtem. Účetní doklady uchováváme po dobu, kterou předepisují účetní a daňové předpisy.</Cl>
+                <Cl n="4.1">Údaje o Účtu uchováváme po dobu trvání smlouvy a po skončení přístupu po dobu {RETENTION_MONTHS} měsíců, poté je mažeme. Účetní doklady uchováváme po dobu, kterou předepisují účetní a daňové předpisy.</Cl>
             </Section>
 
             <Section n={5} title="Vaše práva">

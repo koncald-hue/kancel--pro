@@ -105,7 +105,7 @@ export default function LawyerTeam() {
                 <>
                     <section className="rounded-2xl border border-slate-200 bg-white p-6">
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><CreditCard size={18} className="text-indigo-700" /> Balíček pro kancelář</h2>
-                        <p className="mt-1 text-sm text-slate-600">Platí za celou kancelář. Po zaplacení se přístup aktivuje všem členům. Objednat může vedoucí po ověření totožnosti.</p>
+                        <p className="mt-1 text-sm text-slate-600">Platí za celou kancelář. Po zaplacení se přístup aktivuje všem členům. Objednat může vedoucí s vyplněným profilem.</p>
                         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Počet advokátů">
                             {FIRM_SIZES.map((n) => <button key={n} type="button" aria-pressed={size === n} onClick={() => setSize(n)} className={`rounded-full border px-4 py-1.5 text-sm font-semibold ${size === n ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700'}`}>Do {n} advokátů</button>)}
                         </div>
@@ -117,7 +117,7 @@ export default function LawyerTeam() {
 
                     <section className="rounded-2xl border border-slate-200 bg-white p-6">
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><UserPlus size={18} className="text-indigo-700" /> Členové ({overview?.members?.length ?? 0} z {f?.seats || 0})</h2>
-                        <p className="mt-1 text-xs text-slate-500">Vidíte jen jméno, e-mail, ověření a stav přístupu. Věci, klienty, soubory ani zprávy členů nevidíte.</p>
+                        <p className="mt-1 text-xs text-slate-500">Vidíte jen jméno, e-mail, stav profilu a stav přístupu. Věci, klienty, soubory ani zprávy členů nevidíte.</p>
                         <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
                             {(overview?.members ?? []).map((m) => (
                                 <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">

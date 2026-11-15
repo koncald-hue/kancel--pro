@@ -87,7 +87,7 @@ export default function LawyerLanding() {
                         <span className="inline-flex w-fit rounded-2xl bg-white/10 p-4 text-indigo-300"><ShieldCheck size={30} aria-hidden="true" /></span>
                         <div>
                             <h3 className="text-xl font-bold">Postavené na ochraně důvěrných údajů</h3>
-                            <p className="mt-2 text-sm leading-relaxed text-slate-300"><Lock size={13} className="mr-1 inline" aria-hidden="true" />Zprávy a soubory s klientem jsou end-to-end šifrované: klíč je jen v odkazu a v heslu kanceláře. Totožnost advokáta ověřuje provozovatel podle seznamu ČAK, aby se za vás nemohl vydávat nikdo jiný. Stav věci a poznámky ve spisu šifrované end-to-end nejsou, citlivé podrobnosti patří do zpráv.</p>
+                            <p className="mt-2 text-sm leading-relaxed text-slate-300"><Lock size={13} className="mr-1 inline" aria-hidden="true" />Zprávy a soubory s klientem jsou end-to-end šifrované: klíč je jen v odkazu a v heslu kanceláře. Každý uživatel má vyplněný profil, takže je jasné, kdo Službu používá. Stav věci a poznámky ve spisu šifrované end-to-end nejsou, citlivé podrobnosti patří do zpráv.</p>
                         </div>
                     </div>
                 </div>
@@ -97,7 +97,7 @@ export default function LawyerLanding() {
                 <div className="mx-auto max-w-5xl px-4 sm:px-6">
                     <h2 id="steps-title" className="text-center text-3xl font-bold tracking-tight text-slate-900">Začněte za pár minut</h2>
                     <ol className="mt-10 grid gap-5 md:grid-cols-3">
-                        {[['1', 'Založte účet', 'Zaregistrujete se e-mailem a hned zkoušíte 14 dní zdarma.'], ['2', 'Pracujte ve spisech', 'Zakládáte věci, hlídáte lhůty a píšete výkazy. Data zůstávají uložená.'], ['3', 'Vyberte si plán', 'Po ověření totožnosti zvolíte měsíční, půlroční nebo roční předplatné.']].map(([n, t, d]) => (
+                        {[['1', 'Založte účet', 'Zaregistrujete se e-mailem a hned zkoušíte 14 dní zdarma.'], ['2', 'Pracujte ve spisech', 'Zakládáte věci, hlídáte lhůty a píšete výkazy. Data zůstávají uložená.'], ['3', 'Vyberte si plán', 'Po vyplnění profilu zvolíte měsíční, půlroční nebo roční předplatné.']].map(([n, t, d]) => (
                             <li key={n} className="rounded-2xl bg-white p-6 shadow-xs"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">{n}</span><h3 className="mt-4 font-bold text-slate-900">{t}</h3><p className="mt-1 text-sm text-slate-600">{d}</p></li>
                         ))}
                     </ol>

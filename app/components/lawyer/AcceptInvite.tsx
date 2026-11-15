@@ -31,7 +31,7 @@ export default function AcceptInvite() {
             {firm ? (
                 <>
                     <p className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-800"><CheckCircle2 size={18} /> Jste členem kanceláře {firm}.</p>
-                    <p className="mt-2 text-sm text-slate-600">Vaše věci, klienty a zprávy vidíte jen vy. Pro klientské odkazy ještě projděte ověřením totožnosti v Nastavení.</p>
+                    <p className="mt-2 text-sm text-slate-600">Vaše věci, klienty a zprávy vidíte jen vy. Před použitím aplikace ještě vyplňte svůj profil.</p>
                     <Link href="/kancelar" className={`${primaryBtn} mt-6 inline-flex`}>Otevřít kancelář</Link>
                 </>
             ) : !authReady ? (

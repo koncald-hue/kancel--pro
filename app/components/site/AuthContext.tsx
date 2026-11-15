@@ -9,7 +9,7 @@ import { TERMS_VERSION } from '@/lib/company';
 // Přihlášení do aplikace pro právníky: jeden účet, přihlašování e-mailem a heslem
 export type AuthInfo = {
     account: AuthUser | null;
-    // Člen týmu provozovatele: smí ověřovat advokáty a spravovat platby
+    // Člen týmu provozovatele: vidí přehled uživatelů a spravuje platby
     isStaff: boolean;
     // false, dokud se po načtení stránky nezjistí, jestli je někdo přihlášený
     authReady: boolean;

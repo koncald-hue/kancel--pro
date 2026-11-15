@@ -7,11 +7,12 @@ export type TimeEntry = { id: string; case_id: string | null; entry_date: string
 
 export const TRIAL_DAYS = 14;
 
-// Balíček pro advokáty: ověřený advokát se zaplaceným (aktivním) předplatným; zkušební přístup se nepočítá
+// Placený přístup: advokát s vyplněným profilem a zaplaceným (aktivním) předplatným; zkušební přístup se nepočítá
 export const hasLawyerPass = (row: LawyerAccess | null | undefined): boolean => !!row && row.verification_status === 'verified' && row.status === 'active' && (!row.until || row.until >= todayIso());
 
-export const isVerifiedLawyer = (row: LawyerAccess | null | undefined) => row?.verification_status === 'verified';
-export const PROFESSION_LABELS = { advokat: 'Advokát (ověřeno v seznamu ČAK)', jiny: 'Právník (ověřeno kontrolou kanceláře)' } as const;
+// Profil je vyplněný (v databázi hodnota 'verified', viz supabase/profil.sql)
+export const hasProfile = (row: LawyerAccess | null | undefined) => row?.verification_status === 'verified';
+export const PROFESSION_LABELS = { advokat: 'Advokát (ČAK)', jiny: 'Jiný právník' } as const;
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const addDays = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 

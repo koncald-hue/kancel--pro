@@ -96,7 +96,7 @@ export default function AdminStats() {
                             <Tile label="Tržby celkem" value={czk(stats.orders.revenue_total)} note={`${nf.format(stats.orders.paid)} zaplacených objednávek`} />
                             <Tile label="Za 30 dní" value={czk(stats.orders.revenue_30d)} />
                             <Tile label="Za 7 dní" value={czk(stats.orders.revenue_7d)} />
-                            <Tile label="K vrácení" value={nf.format(stats.orders.refund_due)} note="platby od neověřených" warn={stats.orders.refund_due > 0} />
+                            <Tile label="K vrácení" value={nf.format(stats.orders.refund_due)} note="platby bez vyplněného profilu" warn={stats.orders.refund_due > 0} />
                         </div>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <Tile label="Měsíční plán" value={nf.format(stats.orders.paid_month)} note="zaplacených" />
@@ -118,9 +118,8 @@ export default function AdminStats() {
                             <Tile label="Přístup vypršel" value={nf.format(stats.access.expired)} note="možnost obnovy" />
                         </div>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <Tile label="Ověření advokáti" value={nf.format(stats.access.verified)} />
-                            <Tile label="Čekají na ověření" value={nf.format(stats.access.pending_verification)} warn={stats.access.pending_verification > 0} note={stats.access.pending_verification > 0 ? 'zkontrolujte ve Správě' : undefined} />
-                            <Tile label="Zamítnuto" value={nf.format(stats.access.rejected)} />
+                            <Tile label="Profil vyplněn" value={nf.format(stats.access.verified)} />
+                            <Tile label="Profil nevyplněn" value={nf.format(Math.max(0, stats.access.trial + stats.access.active + stats.access.expired - stats.access.verified))} warn={stats.access.trial + stats.access.active + stats.access.expired > stats.access.verified} note="nemohou používat aplikaci" />
                             <Tile label="Nepotvrzený e-mail" value={nf.format(stats.users.unconfirmed)} />
                         </div>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2">

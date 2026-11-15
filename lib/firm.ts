@@ -11,4 +11,4 @@ export type FirmInvite = { id: string; email: string; token: string; expires_at:
 export type FirmOverview = { firm: { id: string; name: string; seats: number; until: string | null; role: 'owner' | 'member' }; members?: FirmMember[]; invites?: FirmInvite[] };
 
 export const inviteUrl = (token: string) => `${typeof window === 'undefined' ? '' : window.location.origin}/pozvanka/${token}`;
-export const VERIFICATION_LABEL: Record<string, string> = { none: 'Neověřeno', pending: 'Ověřuje se', verified: 'Ověřeno', rejected: 'Zamítnuto' };
+export const VERIFICATION_LABEL: Record<string, string> = { none: 'Profil nevyplněn', pending: 'Profil nevyplněn', verified: 'Profil vyplněn', rejected: 'Profil nevyplněn' };

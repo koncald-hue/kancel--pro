@@ -198,7 +198,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                         <h2 className="text-lg font-bold text-slate-900">Klientská stránka</h2>
                         <p className="mt-1 text-sm text-slate-600">Soukromý odkaz, přes který klient bez registrace vidí stav věci, nahrává podklady a píše zprávy.</p>
                         {!verified ? (
-                            <p className="mt-3 rounded-xl border border-indigo-300 bg-white p-3 text-sm text-indigo-950">Klientský odkaz se zapne po ověření vaší totožnosti. <a href="/kancelar/nastaveni" className="font-semibold underline">Požádat o ověření</a></p>
+                            <p className="mt-3 rounded-xl border border-indigo-300 bg-white p-3 text-sm text-indigo-950">Klientský odkaz se zapne po vyplnění vašeho profilu. <a href="/kancelar/nastaveni" className="font-semibold underline">Vyplnit profil</a></p>
                         ) : !link || !active ? (
                             <div className="mt-3">
                                 {link && !active && <p className="mb-2 text-sm font-semibold text-rose-800">{link.revoked ? 'Odkaz je zrušený.' : 'Platnost odkazu vypršela.'}</p>}

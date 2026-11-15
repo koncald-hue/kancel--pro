@@ -4,7 +4,7 @@ import { serviceClient } from '@/lib/serverSupabase';
 
 // Webhook platební brány: potvrdí zaplacenou objednávku předplatného advokáta a automaticky mu prodlouží přístup.
 // Požadavek musí být podepsaný (HMAC-SHA256 z "<orderId>.<reference>" tajemstvím PAYMENT_WEBHOOK_SECRET, hlavička x-signature).
-// Platba neověřeného advokáta se v databázi neaktivuje, ale označí se k vrácení peněz.
+// Platba od advokáta bez vyplněného profilu se v databázi neaktivuje, ale označí se k vrácení peněz.
 export async function POST(req: Request) {
     const secret = process.env.PAYMENT_WEBHOOK_SECRET;
     if (!secret) return NextResponse.json({ error: 'unavailable' }, { status: 503 });

@@ -36,7 +36,6 @@ function LawyerCard({ lawyer }: { lawyer: Lawyer }) {
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-indigo-800 text-lg font-bold text-white" aria-hidden="true">{initials(name)}</span>
                 <div className="min-w-0 flex-1">
                     <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-800">Váš advokát</p>
-                    {lawyer.verified && <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-900"><BadgeCheck size={13} aria-hidden="true" /> {lawyer.profession === 'jiny' ? 'Ověřený právník' : 'Ověřený advokát (ČAK)'}</p>}
                     <p className="text-xl font-bold leading-tight text-slate-900">{name}</p>
                     {lawyer.name && lawyer.firm && <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-600"><Building2 size={14} aria-hidden="true" />{lawyer.firm}</p>}
                     {lawyer.barNumber && <p className="text-xs text-slate-500">Ev. č. ČAK {lawyer.barNumber}</p>}
@@ -207,8 +206,8 @@ export default function ClientPortal() {
         return (
             <div className="mx-auto max-w-md px-4 py-20 text-center">
                 <Lock size={30} className="mx-auto text-indigo-800" aria-hidden="true" />
-                <h1 className="mt-3 text-2xl font-bold text-slate-900">Totožnost advokáta není ověřena</h1>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">Z bezpečnostních důvodů tuto stránku zatím nelze otevřít. Obraťte se prosím na advokáta jinou cestou (telefonem) a ověřte, že odkaz opravdu poslal on.</p>
+                <h1 className="mt-3 text-2xl font-bold text-slate-900">Stránka zatím není dostupná</h1>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">Advokát si ještě nedokončil nastavení, proto se tato stránka zatím nedá otevřít. Obraťte se prosím na advokáta jinou cestou, například telefonem.</p>
             </div>
         );
     }

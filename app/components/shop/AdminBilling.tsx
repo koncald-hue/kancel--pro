@@ -40,7 +40,7 @@ export default function AdminBilling({ rows }: { rows: LawyerAccess[] }) {
     async function markPaid(o: Order) {
         if (!window.confirm('Potvrdit, že platba dorazila? Advokátovi se tím aktivuje přístup na zaplacené období.')) return;
         const { data, error } = await supabase.rpc('staff_mark_order_paid', { p_order: o.id });
-        setMsg(error ? error.message : data === 'refund_due' ? 'Advokát není ověřený, platbu je potřeba vrátit.' : 'Platba potvrzena, přístup aktivován.');
+        setMsg(error ? error.message : data === 'refund_due' ? 'Advokát nemá vyplněný profil, platbu je potřeba vrátit.' : 'Platba potvrzena, přístup aktivován.');
         setReload((n) => n + 1);
     }
 
@@ -49,7 +49,7 @@ export default function AdminBilling({ rows }: { rows: LawyerAccess[] }) {
     return (
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5" aria-label="Předplatné advokátů">
             <h2 className="text-lg font-bold text-slate-900">Předplatné advokátů</h2>
-            <p className="mt-1 text-xs text-slate-600">Advokát smí objednat jen po ověření. Zaplacená objednávka mu automaticky aktivuje přístup na dobu předplatného. Pokud by platba dorazila od neověřeného, nikdy se neaktivuje a označí se k vrácení peněz.</p>
+            <p className="mt-1 text-xs text-slate-600">Advokát smí objednat jen s vyplněným profilem. Zaplacená objednávka mu automaticky aktivuje přístup na dobu předplatného. Pokud by platba dorazila od advokáta bez vyplněného profilu, neaktivuje se a označí se k vrácení peněz.</p>
             <div className="mt-3 flex flex-wrap items-end gap-3">
                 <label className="text-xs font-semibold text-slate-600">Cena za měsíc (Kč)<input value={prices.month} onChange={(e) => setPrices((p) => ({ ...p, month: e.target.value }))} inputMode="numeric" className={`${inputCls} mt-1 w-32 font-normal`} /></label>
                 <label className="text-xs font-semibold text-slate-600">Cena za půl roku (Kč)<input value={prices.half} onChange={(e) => setPrices((p) => ({ ...p, half: e.target.value }))} inputMode="numeric" className={`${inputCls} mt-1 w-32 font-normal`} /></label>

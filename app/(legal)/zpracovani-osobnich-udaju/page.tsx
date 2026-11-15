@@ -39,7 +39,6 @@ export default function Page() {
                 <Sub>
                     <li>šifrování přenosu (TLS) mezi prohlížečem a Službou;</li>
                     <li>end-to-end šifrování zpráv a souborů ve sdíleném kanálu s klientem: klíč je jen u Správce (chráněn heslem kanceláře a záložním kódem) a v klientském odkazu, <strong>Zpracovatel k němu nemá přístup</strong>;</li>
-                    <li>šifrování dokladů nahraných k ověření totožnosti klíčem správce Služby;</li>
                     <li>oddělení dat jednotlivých zákazníků pravidly přístupu na úrovni databáze (každý uživatel vidí jen své záznamy);</li>
                     <li>omezení přístupu Zpracovatele k Údajům na osoby, které je nezbytně potřebují, a ochranu přístupových klíčů a tajných údajů;</li>
                     <li>šifrované uložení dat u poskytovatele infrastruktury.</li>

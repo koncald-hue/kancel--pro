@@ -37,11 +37,6 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                 </div>
                 {access.status === 'trial' && access.until && <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-950">Zkušební přístup do {new Date(`${access.until}T12:00:00`).toLocaleDateString('cs-CZ')}</span>}
             </div>
-            {access.verification_status !== 'verified' && (
-                <p className="mt-4 rounded-xl border border-indigo-300 bg-indigo-50 p-3 text-sm text-indigo-950">
-                    {access.verification_status === 'pending' ? 'Vaše totožnost se ověřuje. Klientské odkazy a poptávky se zapnou po schválení.' : 'Klientské odkazy a poptávky se zapnou až po ověření totožnosti.'} <Link href="/kancelar/nastaveni" className="font-semibold underline">{access.verification_status === 'pending' ? 'Zobrazit stav' : 'Ověřit totožnost'}</Link>
-                </p>
-            )}
             <nav className="mt-5 flex gap-1 overflow-x-auto border-b border-slate-200" aria-label="Části kanceláře">
                 {SECTIONS.map(([id, href, label, Icon]) => (
                     <Link key={id} href={href} aria-current={active === id ? 'page' : undefined} className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-semibold ${active === id ? 'border-indigo-800 text-indigo-900' : 'border-transparent text-slate-600 hover:text-slate-900'}`}>

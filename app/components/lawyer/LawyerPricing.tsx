@@ -73,7 +73,7 @@ export default function LawyerPricing() {
                     );
                 })}
             </div>
-            <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-slate-500">Předplatné lze koupit po ověření totožnosti (pro advokáty podle seznamu ČAK), aby se za advokáty nemohl vydávat nikdo jiný.</p>
+            <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-slate-500">Před použitím aplikace vyplníte povinný profil (jméno, evidenční číslo ČAK, kancelář a kontakt). Předplatné lze koupit po jeho vyplnění.</p>
         </section>
     );
 }

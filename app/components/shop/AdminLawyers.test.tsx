@@ -20,11 +20,11 @@ describe('AdminLawyers', () => {
             row({ user_id: 'a', email: 'novak@ak.cz', register_name: 'JUDr. Jan Novák', bar_number: '12345' }),
             row({ user_id: 'b', email: 'dvorak@ak.cz', register_name: 'JUDr. Petr Dvořák', verification_status: 'pending', status: 'expired', until: null }),
         ];
-        render(<AdminLawyers rows={rows} onSet={vi.fn()} onRevoke={vi.fn()} />);
+        render(<AdminLawyers rows={rows} onSet={vi.fn()} />);
         expect(screen.getByText('JUDr. Jan Novák')).toBeTruthy();
         expect(screen.getByText(/novak@ak.cz/)).toBeTruthy();
         expect((await screen.findAllByText('1 490 Kč', { selector: 'p' })).length).toBeGreaterThan(0);
-        fireEvent.click(screen.getByRole('button', { name: 'Čekají na ověření' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Profil nevyplněn' }));
         expect(screen.queryByText('JUDr. Jan Novák')).toBeNull();
         expect(screen.getByText('JUDr. Petr Dvořák')).toBeTruthy();
         fireEvent.click(screen.getByRole('button', { name: 'K vrácení peněz' }));
