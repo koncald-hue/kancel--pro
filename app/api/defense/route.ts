@@ -4,7 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 import { OFFENSES_DATABASE } from '../../data/offenses';
 import { deadlineById } from '@/lib/cases';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Klient se vytvoří až při prvním použití, aby šlo aplikaci sestavit i bez klíče OpenAI
+let openaiClient: OpenAI | null = null;
+const getOpenAI = () => (openaiClient ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
 
@@ -70,7 +72,7 @@ export async function POST(req: Request) {
             nahrané_soubory: (files ?? []).map((f) => f.name),
         };
 
-        const completion = await openai.chat.completions.create({
+        const completion = await getOpenAI().chat.completions.create({
             model: 'gpt-4o',
             temperature: 0.3,
             response_format: { type: 'json_object' },
