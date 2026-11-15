@@ -1,0 +1,24 @@
+<!-- Šablona e-mailu po registraci (potvrzení e-mailu + uvítání).
+     Supabase: Authentication -> Emails -> Confirm sign up.
+     Subject (předmět): Vítejte na Právo srozumitelně – potvrďte svůj e-mail -->
+<div style="font-family: Georgia, 'Times New Roman', serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1e293b;">
+  <h1 style="font-size: 24px; margin: 0 0 16px; color: #78350f;">Vítejte na Právo srozumitelně!</h1>
+  <p style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6;">
+    Děkujeme za registraci. Rádi vás u nás vítáme. Abychom měli jistotu, že e-mail patří vám, potvrďte ho prosím kliknutím na tlačítko níže.
+  </p>
+  <p style="margin: 28px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #92400e; color: #ffffff; font-family: Arial, sans-serif; font-size: 15px; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 10px;">
+      Potvrdit e-mail
+    </a>
+  </p>
+  <p style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6;">
+    Po potvrzení najdete ve svém účtu v sekci <strong>Moje produkty</strong> všechny zakoupené studijní materiály a vzory smluv a můžete si je kdykoli stáhnout.
+  </p>
+  <p style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #64748b;">
+    Pokud tlačítko nefunguje, zkopírujte do prohlížeče tento odkaz:<br>
+    <span style="word-break: break-all;">{{ .ConfirmationURL }}</span>
+  </p>
+  <p style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #64748b;">
+    Pokud jste se k nám neregistrovali, tento e-mail ignorujte, nic se nestane.
+  </p>
+</div>
