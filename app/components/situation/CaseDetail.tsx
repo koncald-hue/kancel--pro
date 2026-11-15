@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, BookUser, CalendarClock, CalendarPlus, Check, Clock, FileText, FolderOpen, LayoutDashboard, Pin, PinOff, ShieldCheck, Share2, Link2, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookUser, CalendarClock, CalendarPlus, Check, Clock, FileText, FolderOpen, LayoutDashboard, Pin, PinOff, ShieldCheck, Share2, Landmark, Link2, Trash2 } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { hasLawyerAccess, useLawyerAccess } from '@/lib/lawyer';
 import { buildIcs, collectDeadlines, describeCaseError, downloadTextFile, loadBundle, removeCaseStorage, type CaseBundle } from '@/lib/caseFile';
 import { daysUntil, deleteCase, loadCase, updateCase, type LegalCase } from '@/lib/cases';
 import CaseOverviewTab from './CaseOverviewTab';
+import CaseKatastrTab from './CaseKatastrTab';
 import CaseFilesTab from './CaseFilesTab';
 import CaseDeadlinesTab, { deadlineText, deadlineTone } from './CaseDeadlinesTab';
 import CaseTimelineTab from './CaseTimelineTab';
@@ -19,7 +20,7 @@ import CaseExportPanel from './CaseExportPanel';
 import CaseClientTab from './CaseClientTab';
 import { ghostBtn, type TabProps } from './caseUi';
 
-type TabId = 'prehled' | 'obrana' | 'klient' | 'soubory' | 'lhuty' | 'chronologie' | 'kontakty';
+type TabId = 'prehled' | 'katastr' | 'obrana' | 'klient' | 'soubory' | 'lhuty' | 'chronologie' | 'kontakty';
 
 export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen' | 'office' }) {
     const isOffice = variant === 'office';
@@ -101,6 +102,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
     const tabs: { id: TabId; label: string; icon: typeof FileText; count?: number }[] = [
         { id: 'prehled', label: 'Přehled', icon: LayoutDashboard },
         ...(isLawyer ? [{ id: 'klient' as TabId, label: 'Klient', icon: Link2, count: unread }] : []),
+        ...(isLawyer ? [{ id: 'katastr' as TabId, label: 'Katastr', icon: Landmark }] : []),
         { id: 'obrana', label: 'Obrana', icon: ShieldCheck },
         { id: 'soubory', label: 'Soubory', icon: FolderOpen, count: bundle.files.length },
         { id: 'lhuty', label: 'Lhůty', icon: CalendarClock, count: open.length },
@@ -153,6 +155,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
 
             <div className="mt-5" role="tabpanel">
                 {tab === 'prehled' && <CaseOverviewTab {...tabProps} />}
+                {tab === 'katastr' && <CaseKatastrTab {...tabProps} />}
                 {tab === 'obrana' && <CaseDefenseTab {...tabProps} />}
                 {tab === 'soubory' && <CaseFilesTab {...tabProps} />}
                 {tab === 'lhuty' && <CaseDeadlinesTab {...tabProps} />}

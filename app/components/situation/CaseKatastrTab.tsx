@@ -1,0 +1,57 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import type { ParcelaView } from '@/lib/katastr';
+import KatastrSearch, { ParcelCard } from '../lawyer/KatastrSearch';
+import type { TabProps } from './caseUi';
+
+type Saved = { id: string; label: string; snapshot: ParcelaView; data_as_of: string; created_at: string };
+
+// Nemovitosti ve spisu: vyhledání parcely v katastru a uložení jejích údajů ke věci
+export default function CaseKatastrTab({ item, userId, fail }: TabProps) {
+    const [saved, setSaved] = useState<Saved[] | null>(null);
+
+    const load = useCallback(async () => {
+        const { data, error } = await supabase.from('case_properties').select('id, label, snapshot, data_as_of, created_at').eq('case_id', item.id).order('created_at', { ascending: false });
+        if (error) { fail(new Error(/case_properties|relation|does not exist/i.test(error.message) ? 'Katastr ve spisu zatím není v databázi zapnutý (chybí spuštění souboru katastr.sql).' : error.message)); setSaved([]); return; }
+        setSaved((data ?? []) as Saved[]);
+    }, [item.id, fail]);
+
+    useEffect(() => {
+        let cancelled = false;
+        void (async () => { await Promise.resolve(); if (!cancelled) await load(); })();
+        return () => { cancelled = true; };
+    }, [load]);
+
+    async function save(p: ParcelaView, dataAsOf: string) {
+        const { error } = await supabase.from('case_properties').insert({ case_id: item.id, user_id: userId, label: `Parcela ${p.oznaceni}, k. ú. ${p.katastralniUzemi.nazev}`, snapshot: p, data_as_of: dataAsOf });
+        if (error) throw new Error(error.message);
+        await load();
+    }
+
+    async function remove(id: string) {
+        if (!window.confirm('Odebrat nemovitost ze spisu?')) return;
+        const { error } = await supabase.from('case_properties').delete().eq('id', id);
+        if (error) fail(new Error(error.message)); else setSaved((s) => (s ?? []).filter((x) => x.id !== id));
+    }
+
+    return (
+        <div className="space-y-5">
+            <KatastrSearch onSave={save} />
+            <section aria-label="Nemovitosti ve spisu">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Uloženo ve spisu</h2>
+                {saved === null ? <p className="mt-3 text-sm text-slate-500" role="status">Načítám…</p> : saved.length === 0 ? <p className="mt-3 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">K této věci zatím není uložena žádná nemovitost.</p> : (
+                    <div className="mt-3 space-y-3">
+                        {saved.map((s) => (
+                            <ParcelCard key={s.id} p={s.snapshot} dataAsOf={s.data_as_of || null}>
+                                <span className="flex items-center gap-2 text-xs text-slate-500">uloženo {new Date(s.created_at).toLocaleDateString('cs-CZ')}<button type="button" onClick={() => void remove(s.id)} aria-label={`Odebrat ${s.label}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button></span>
+                            </ParcelCard>
+                        ))}
+                    </div>
+                )}
+            </section>
+        </div>
+    );
+}
