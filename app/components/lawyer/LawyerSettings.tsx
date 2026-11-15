@@ -31,6 +31,8 @@ export default function LawyerSettings() {
     const [firm, setFirm] = useState(access.firm_name);
     const [rate, setRate] = useState(String(access.default_rate || ''));
     const [msg, setMsg] = useState('');
+    const [bill, setBill] = useState({ ico: access.ico ?? '', dic: access.dic ?? '', vat: !!access.vat_payer, bank: access.bank_account ?? '', due: String(access.due_days ?? 14), note: access.invoice_note ?? '' });
+    const [billMsg, setBillMsg] = useState('');
     const complete = access.verification_status === 'verified';
     const [code, setCode] = useState(access.intake_code ?? '');
     const [codeMsg, setCodeMsg] = useState('');
@@ -49,6 +51,12 @@ export default function LawyerSettings() {
         setPayMsg(`Objednávka ${String(data).slice(0, 8)} je vytvořena. Platební brána se připravuje, po jejím spuštění tu uvidíte tlačítko Zaplatit a přístup se po zaplacení aktivuje automaticky.`);
         const o = await supabase.from('lawyer_orders').select('id, plan, price_czk, status, period_end').order('created_at', { ascending: false }).limit(5);
         if (!o.error) setOrders((o.data ?? []) as typeof orders);
+    }
+
+    async function saveBilling() {
+        const due = Number(bill.due);
+        const { error } = await supabase.rpc('save_billing_settings', { p_ico: bill.ico, p_dic: bill.dic, p_vat: bill.vat, p_bank: bill.bank, p_due_days: Number.isFinite(due) ? Math.round(due) : 14, p_note: bill.note });
+        setBillMsg(error ? (/function|schema cache/i.test(error.message) ? 'Fakturace zatím není v databázi zapnutá (chybí spuštění souboru fakturace.sql).' : error.message) : 'Uloženo. Údaje se použijí na nově vystavených vyúčtováních.');
     }
 
     async function saveCode() {
@@ -72,6 +80,20 @@ export default function LawyerSettings() {
                 </label>
                 <button type="button" onClick={() => void save()} className={`${primaryBtn} mt-4`}><Check size={16} /> Uložit</button>
                 {msg && <p role="status" className="mt-2 text-sm text-slate-600">{msg}</p>}
+            </section>
+            <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Fakturační údaje">
+                <h2 className="text-lg font-bold text-slate-900">Fakturační údaje</h2>
+                <p className="mt-1 text-sm text-slate-600">Uvádějí se na vašich vyúčtováních a fakturách (spolu s jménem a adresou z profilu).</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <label className="block text-xs font-semibold text-slate-600">IČO<input value={bill.ico} onChange={(e) => setBill((b) => ({ ...b, ico: e.target.value }))} maxLength={20} className={`${inputCls} mt-1 font-normal`} /></label>
+                    <label className="block text-xs font-semibold text-slate-600">DIČ<input value={bill.dic} onChange={(e) => setBill((b) => ({ ...b, dic: e.target.value }))} maxLength={20} className={`${inputCls} mt-1 font-normal`} placeholder="CZ…" /></label>
+                    <label className="block text-xs font-semibold text-slate-600">Číslo účtu / IBAN<input value={bill.bank} onChange={(e) => setBill((b) => ({ ...b, bank: e.target.value }))} maxLength={60} className={`${inputCls} mt-1 font-normal`} placeholder="123456789/0100" /></label>
+                    <label className="block text-xs font-semibold text-slate-600">Výchozí splatnost (dny)<input value={bill.due} onChange={(e) => setBill((b) => ({ ...b, due: e.target.value }))} inputMode="numeric" className={`${inputCls} mt-1 max-w-32 font-normal`} /></label>
+                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 sm:col-span-2"><input type="checkbox" checked={bill.vat} onChange={(e) => setBill((b) => ({ ...b, vat: e.target.checked }))} className="h-4 w-4 accent-indigo-700" /> Jsem plátce DPH</label>
+                    <label className="block text-xs font-semibold text-slate-600 sm:col-span-2">Text pod fakturou (nepovinné)<input value={bill.note} onChange={(e) => setBill((b) => ({ ...b, note: e.target.value }))} maxLength={500} className={`${inputCls} mt-1 font-normal`} placeholder="např. Zapsán v seznamu advokátů ČAK pod ev. č. 12345." /></label>
+                </div>
+                <button type="button" onClick={() => void saveBilling()} className={`${primaryBtn} mt-4`}><Check size={16} /> Uložit fakturační údaje</button>
+                {billMsg && <p role="status" className="mt-2 text-sm text-slate-600">{billMsg}</p>}
             </section>
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Profil">
                 <h2 className="text-lg font-bold text-slate-900">Váš profil</h2>

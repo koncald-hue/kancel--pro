@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Gavel, Lightbulb, Plus, X } from 'lucide-react';
 import { OFFENSES_DATABASE } from '@/app/data/offenses';
 import { getOffenseUrl } from '@/lib/slug';
 import { PUBLIC_SITE } from '@/lib/publicSite';
+import { supabase } from '@/lib/supabase';
 import { collectDeadlines, insertRow, type CaseEntry } from '@/lib/caseFile';
 import { daysUntil } from '@/lib/cases';
 import { inputCls, ghostBtn, type TabProps } from './caseUi';
@@ -26,6 +27,13 @@ export function caseHints(item: TabProps['item'], bundle: TabProps['bundle']): {
 }
 
 export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchItem, setBundle, fail }: TabProps) {
+    const [clients, setClients] = useState<{ id: string; name: string; email: string; phone: string }[]>([]);
+    useEffect(() => {
+        if (!lawyer) return;
+        let cancelled = false;
+        supabase.from('lawyer_clients').select('id, name, email, phone').order('name').then(({ data }) => { if (!cancelled) setClients((data ?? []) as { id: string; name: string; email: string; phone: string }[]); });
+        return () => { cancelled = true; };
+    }, [lawyer, item.client_id]);
     const [step, setStep] = useState('');
     const [quick, setQuick] = useState('');
     const done = item.steps.filter((s) => s.done).length;
@@ -59,14 +67,15 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
             )}
 
             {lawyer && <section aria-label="Údaje o věci" className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-                <h3 className="text-sm font-semibold text-slate-900">Údaje o věci</h3>
-                <p className="text-xs text-slate-500">Uvedou se na titulní straně předávaného spisu. Hodí se pro úřady i advokáty.</p>
+                <h3 className="text-sm font-semibold text-slate-900">Údaje o věci a klient</h3>
+                <p className="text-xs text-slate-500">Klient, kterého sem zapíšete, se sám objeví v seznamu klientů (včetně e-mailu a telefonu) a půjde ho vybrat ve výkazech a ve vyúčtování.</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                    {([['reference', 'Spisová značka / č. j.', 'např. 12 T 34/2026'], ['authority', 'Úřad nebo soud', 'např. Městský úřad Plzeň'], ['client_name', 'Klient / dotčená osoba', 'např. Jan Novák']] as const).map(([key, label, placeholder]) => (
+                    {([['reference', 'Spisová značka / č. j.', 'např. 12 T 34/2026', ''], ['authority', 'Úřad nebo soud', 'např. Městský úřad Plzeň', ''], ['client_name', 'Klient / dotčená osoba', 'např. Jan Novák', 'clients'], ['client_email', 'E-mail klienta', 'jan@example.cz', ''], ['client_phone', 'Telefon klienta', '+420 …', '']] as const).map(([key, label, placeholder, list]) => (
                         <label key={key} className="block text-xs font-semibold text-slate-600">{label}
-                            <input defaultValue={item[key] ?? ''} key={`${item.id}-${key}`} maxLength={120} placeholder={placeholder} onBlur={(e) => { const value = e.target.value.trim(); if (value !== (item[key] ?? '')) patchItem({ [key]: value }); }} className={`${inputCls} mt-1 font-normal`} />
+                            <input defaultValue={item[key] ?? ''} key={`${item.id}-${key}-${item[key] ?? ''}`} list={list || undefined} maxLength={120} placeholder={placeholder} onBlur={(e) => { const value = e.target.value.trim(); if (value === (item[key] ?? '')) return; const known = key === 'client_name' ? clients.find((c) => c.name.toLowerCase() === value.toLowerCase()) : undefined; patchItem(known ? { client_name: known.name, client_email: item.client_email || known.email, client_phone: item.client_phone || known.phone } : { [key]: value }); }} className={`${inputCls} mt-1 font-normal`} />
                         </label>
                     ))}
+                    <datalist id="clients">{clients.map((c) => <option key={c.id} value={c.name} />)}</datalist>
                 </div>
             </section>}
 

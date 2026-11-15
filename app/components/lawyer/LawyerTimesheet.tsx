@@ -7,6 +7,7 @@ import { loadCases, type LegalCase } from '@/lib/cases';
 import { downloadTextFile } from '@/lib/caseFile';
 import { czk, entryAmount, formatMinutes, parseDuration, timesheetCsv, type LawyerClient, type TimeEntry } from '@/lib/lawyer';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
+import { loadPriceItems, money, type PriceItem } from '@/lib/billing';
 import { useLawyer } from './LawyerGate';
 
 const TIMER_KEY = 'lawyerTimer';
@@ -18,6 +19,7 @@ export default function LawyerTimesheet() {
     const [cases, setCases] = useState<LegalCase[]>([]);
     const [clients, setClients] = useState<LawyerClient[]>([]);
     const [error, setError] = useState('');
+    const [services, setServices] = useState<PriceItem[]>([]);
     const [filter, setFilter] = useState<'open' | 'all'>('open');
     const [form, setForm] = useState({ caseId: '', date: today(), duration: '', description: '', rate: '' });
     // Stopky se obnoví z úložiště prohlížeče (přežijí obnovení stránky)
@@ -29,6 +31,12 @@ export default function LawyerTimesheet() {
         Promise.all([supabase.from('time_entries').select('*').order('entry_date', { ascending: false }).order('created_at', { ascending: false }), supabase.from('lawyer_clients').select('*'), loadCases()])
             .then(([e, c, all]) => { if (cancelled) return; if (e.error) throw new Error(e.error.message); setEntries((e.data ?? []) as TimeEntry[]); setClients((c.data ?? []) as LawyerClient[]); setCases(all); })
             .catch(() => { if (!cancelled) setError('Výkazy se nepodařilo načíst. Zkontrolujte, že je spuštěné SQL lawyer.sql.'); });
+        return () => { cancelled = true; };
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        loadPriceItems().then((list) => { if (!cancelled) setServices(list.filter((p) => p.active && p.unit === 'hod')); }).catch(() => undefined);
         return () => { cancelled = true; };
     }, []);
 
@@ -90,6 +98,7 @@ export default function LawyerTimesheet() {
 
             <form onSubmit={(e) => { e.preventDefault(); void add(); }} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                 <div className="grid gap-2 sm:grid-cols-[1.4fr_auto_auto_auto]">
+                    {services.length > 0 && <select value="" onChange={(e) => { const p = services.find((x) => x.id === e.target.value); if (p) setForm((f) => ({ ...f, description: f.description || p.name, rate: String(p.unit_price) })); }} className={`${inputCls} sm:col-span-full`} aria-label="Hodinová služba z ceníku"><option value="">Služba z ceníku…</option>{services.map((p) => <option key={p.id} value={p.id}>{p.name} · {money(p.unit_price)}/h</option>)}</select>}
                     <select value={form.caseId} onChange={(e) => setForm((f) => ({ ...f, caseId: e.target.value }))} className={inputCls} aria-label="Věc">
                         <option value="">Bez věci</option>
                         {cases.filter((c) => c.status === 'open').map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}

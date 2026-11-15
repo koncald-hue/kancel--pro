@@ -23,6 +23,9 @@ export type LegalCase = {
     client_name?: string;
     reference?: string;
     authority?: string;
+    client_id?: string | null;
+    client_email?: string;
+    client_phone?: string;
     created_at: string;
 };
 
@@ -51,7 +54,7 @@ export async function createCase(userId: string, input: NewCase): Promise<LegalC
     return data as LegalCase;
 }
 
-export async function updateCase(id: string, patch: Partial<Pick<LegalCase, 'steps' | 'event_date' | 'note' | 'status' | 'title' | 'summary' | 'situation' | 'pinned' | 'client_name' | 'reference' | 'authority'>>) {
+export async function updateCase(id: string, patch: Partial<Pick<LegalCase, 'steps' | 'event_date' | 'note' | 'status' | 'title' | 'summary' | 'situation' | 'pinned' | 'client_name' | 'client_email' | 'client_phone' | 'reference' | 'authority'>>) {
     const { error } = await supabase.from('cases').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id);
     if (error) throw new Error(error.message);
 }

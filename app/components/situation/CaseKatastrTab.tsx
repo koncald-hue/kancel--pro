@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import type { ParcelaView } from '@/lib/katastr';
-import KatastrSearch, { ParcelCard } from '../lawyer/KatastrSearch';
+import type { ParcelaView, PropertySnapshot } from '@/lib/katastr';
+import KatastrSearch, { PropertyCard, snapshotLabel } from '../lawyer/KatastrSearch';
 import type { TabProps } from './caseUi';
 
-type Saved = { id: string; label: string; snapshot: ParcelaView; data_as_of: string; created_at: string };
+type Saved = { id: string; label: string; snapshot: PropertySnapshot | ParcelaView; data_as_of: string; created_at: string };
 
 // Nemovitosti ve spisu: vyhledání parcely v katastru a uložení jejích údajů ke věci
 export default function CaseKatastrTab({ item, userId, fail }: TabProps) {
@@ -25,8 +25,8 @@ export default function CaseKatastrTab({ item, userId, fail }: TabProps) {
         return () => { cancelled = true; };
     }, [load]);
 
-    async function save(p: ParcelaView, dataAsOf: string) {
-        const { error } = await supabase.from('case_properties').insert({ case_id: item.id, user_id: userId, label: `Parcela ${p.oznaceni}, k. ú. ${p.katastralniUzemi.nazev}`, snapshot: p, data_as_of: dataAsOf });
+    async function save(p: PropertySnapshot, dataAsOf: string) {
+        const { error } = await supabase.from('case_properties').insert({ case_id: item.id, user_id: userId, label: snapshotLabel(p).slice(0, 200), snapshot: p, data_as_of: dataAsOf });
         if (error) throw new Error(error.message);
         await load();
     }
@@ -45,9 +45,9 @@ export default function CaseKatastrTab({ item, userId, fail }: TabProps) {
                 {saved === null ? <p className="mt-3 text-sm text-slate-500" role="status">Načítám…</p> : saved.length === 0 ? <p className="mt-3 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">K této věci zatím není uložena žádná nemovitost.</p> : (
                     <div className="mt-3 space-y-3">
                         {saved.map((s) => (
-                            <ParcelCard key={s.id} p={s.snapshot} dataAsOf={s.data_as_of || null}>
+                            <PropertyCard key={s.id} snap={s.snapshot} dataAsOf={s.data_as_of || null}>
                                 <span className="flex items-center gap-2 text-xs text-slate-500">uloženo {new Date(s.created_at).toLocaleDateString('cs-CZ')}<button type="button" onClick={() => void remove(s.id)} aria-label={`Odebrat ${s.label}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button></span>
-                            </ParcelCard>
+                            </PropertyCard>
                         ))}
                     </div>
                 )}

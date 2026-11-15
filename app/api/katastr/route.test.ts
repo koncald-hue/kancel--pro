@@ -55,4 +55,16 @@ describe('/api/katastr', () => {
         globalThis.fetch = (async () => new Response('{}', { status: 404 })) as unknown as typeof fetch;
         expect(await (await GET(req('op=parcela&ku=700001&kmen=999'))).json()).toEqual({ found: false });
     });
+
+    it('validates building, unit and proceeding searches before calling ČÚZK', async () => {
+        const spy = vi.fn(async () => new Response(JSON.stringify({ data: [{ id: 5, typStavby: { kod: 1, nazev: 'budova' }, cislaDomovni: [327] }] }), { status: 200 }));
+        globalThis.fetch = spy as unknown as typeof fetch;
+        expect((await GET(req('op=stavba&co=abc&typ=1&cp=1'))).status).toBe(400);
+        expect((await GET(req('op=jednotka&co=1&typ=1&cp=1'))).status).toBe(400);
+        expect((await GET(req('op=rizeni&typ=XX&cislo=1&rok=2026&ws=101'))).status).toBe(400);
+        expect(spy).not.toHaveBeenCalled();
+        const ok = await (await GET(req('op=stavba&co=406392&typ=1&cp=327'))).json();
+        expect(ok.items[0]).toMatchObject({ id: 5, cisla: '327' });
+        expect((spy.mock.calls[0] as unknown as [string])[0]).toContain('/api/v1/Stavby/Vyhledani?KodCastiObce=406392&TypStavby=1&CisloDomovni=327');
+    });
 });
