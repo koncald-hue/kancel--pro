@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { primaryBtn, ghostBtn, inputCls } from '../situation/caseUi';
 import { intakeUrl, isValidIntakeCode, SECURITY_TEXT_LAWYER } from '@/lib/portal';
 import { PROFESSION_LABELS, czk } from '@/lib/lawyer';
+import { PLANS, planName, type PlanId, type Prices } from '@/lib/plans';
 import { encryptForAdmin } from '@/lib/e2ee';
 import { useLawyer } from './LawyerGate';
 
@@ -13,8 +14,8 @@ const STATUS: Record<string, string> = { trial: 'Zkušební přístup', active: 
 
 export default function LawyerSettings() {
     const { access, userId } = useLawyer();
-    const [prices, setPrices] = useState<{ month: number; year: number } | null>(null);
-    const [orders, setOrders] = useState<{ id: string; plan: 'month' | 'year'; price_czk: number; status: string; period_end: string | null }[]>([]);
+    const [prices, setPrices] = useState<Prices | null>(null);
+    const [orders, setOrders] = useState<{ id: string; plan: PlanId; price_czk: number; status: string; period_end: string | null }[]>([]);
     const [payMsg, setPayMsg] = useState('');
     const paymentUrl = process.env.NEXT_PUBLIC_LAWYER_PAYMENT_URL ?? '';
     useEffect(() => {
@@ -22,7 +23,7 @@ export default function LawyerSettings() {
         (async () => {
             const [p, o] = await Promise.all([supabase.rpc('lawyer_prices'), supabase.from('lawyer_orders').select('id, plan, price_czk, status, period_end').order('created_at', { ascending: false }).limit(5)]);
             if (cancelled) return;
-            if (!p.error && p.data) setPrices(p.data as { month: number; year: number });
+            if (!p.error && p.data) setPrices(p.data as Prices);
             if (!o.error) setOrders((o.data ?? []) as typeof orders);
         })();
         return () => { cancelled = true; };
@@ -47,7 +48,7 @@ export default function LawyerSettings() {
         setMsg(error ? 'Uložení se nepovedlo.' : 'Uloženo. Změna se projeví po obnovení stránky.');
     }
 
-    async function buy(plan: 'month' | 'year') {
+    async function buy(plan: PlanId) {
         setPayMsg('');
         const { data, error } = await supabase.rpc('create_lawyer_order', { p_plan: plan });
         if (error) { setPayMsg(error.message); return; }
@@ -145,14 +146,13 @@ export default function LawyerSettings() {
                 ) : (
                     <>
                         <div className="mt-3 flex flex-wrap gap-3">
-                            {prices.month > 0 && <button type="button" onClick={() => void buy('month')} disabled={status !== 'verified'} className={primaryBtn}>Měsíc · {czk(prices.month)}</button>}
-                            {prices.year > 0 && <button type="button" onClick={() => void buy('year')} disabled={status !== 'verified'} className={ghostBtn}>Rok · {czk(prices.year)}</button>}
+                            {PLANS.filter((pl) => prices[pl.id] > 0).map((pl, i) => <button key={pl.id} type="button" onClick={() => void buy(pl.id)} disabled={status !== 'verified'} className={i === 0 ? primaryBtn : ghostBtn}>{pl.name} · {czk(prices[pl.id])}</button>)}
                         </div>
                         {status !== 'verified' && <p className="mt-3 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-950">Balíčky si můžete koupit, jakmile projdete ověřením totožnosti. Tím předcházíme tomu, aby někdo zaplatil dřív, než ho ověříme.</p>}
                     </>
                 )}
                 {payMsg && <p role="status" className="mt-3 text-sm text-slate-700">{payMsg}</p>}
-                {orders.length > 0 && <ul className="mt-3 divide-y divide-slate-100 text-xs text-slate-600">{orders.map((o) => <li key={o.id} className="flex justify-between py-1.5"><span>{o.plan === 'year' ? 'Rok' : 'Měsíc'} · {czk(o.price_czk)}</span><span>{o.status === 'paid' ? `zaplaceno${o.period_end ? `, platí do ${new Date(`${o.period_end}T12:00:00`).toLocaleDateString('cs-CZ')}` : ''}` : o.status === 'pending' ? 'čeká na platbu' : o.status === 'refund_due' ? 'bude vráceno' : 'zrušeno'}</span></li>)}</ul>}
+                {orders.length > 0 && <ul className="mt-3 divide-y divide-slate-100 text-xs text-slate-600">{orders.map((o) => <li key={o.id} className="flex justify-between py-1.5"><span>{planName(o.plan)} · {czk(o.price_czk)}</span><span>{o.status === 'paid' ? `zaplaceno${o.period_end ? `, platí do ${new Date(`${o.period_end}T12:00:00`).toLocaleDateString('cs-CZ')}` : ''}` : o.status === 'pending' ? 'čeká na platbu' : o.status === 'refund_due' ? 'bude vráceno' : 'zrušeno'}</span></li>)}</ul>}
             </section>
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="text-lg font-bold text-slate-900">Vizitka pro klienty</h2>

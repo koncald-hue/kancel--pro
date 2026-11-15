@@ -33,7 +33,7 @@ create table if not exists public.verification_docs (
 create table if not exists public.lawyer_orders (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  plan text not null check (plan in ('month', 'year')),
+  plan text not null check (plan in ('month', 'half', 'year')),
   price_czk integer not null check (price_czk > 0),
   status text not null default 'pending' check (status in ('pending', 'paid', 'cancelled', 'refund_due')),
   provider_ref text not null default '',
@@ -139,7 +139,7 @@ $$;
 revoke all on function public.decide_lawyer_verification(uuid, boolean, text) from public;
 grant execute on function public.decide_lawyer_verification(uuid, boolean, text) to authenticated;
 
--- Ceny (v Kč) se nastavují v app_settings: lawyer_price_month a lawyer_price_year
+-- Ceny (v Kč) se nastavují v app_settings: lawyer_price_month, lawyer_price_half a lawyer_price_year
 create or replace function public.lawyer_prices()
 returns json
 language sql
@@ -147,7 +147,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select json_build_object('month', public.app_setting('lawyer_price_month', 0), 'year', public.app_setting('lawyer_price_year', 0));
+  select json_build_object('month', public.app_setting('lawyer_price_month', 0), 'half', public.app_setting('lawyer_price_half', 0), 'year', public.app_setting('lawyer_price_year', 0));
 $$;
 revoke all on function public.lawyer_prices() from public;
 grant execute on function public.lawyer_prices() to authenticated;
@@ -161,11 +161,11 @@ set search_path = public
 as $$
 declare v_price integer; v_id uuid;
 begin
-  if p_plan not in ('month', 'year') then raise exception 'Neplatný tarif.'; end if;
+  if p_plan not in ('month', 'half', 'year') then raise exception 'Neplatný tarif.'; end if;
   if not exists (select 1 from public.lawyer_access where user_id = auth.uid() and verification_status = 'verified') then
     raise exception 'Předplatné lze koupit až po ověření totožnosti.';
   end if;
-  v_price := public.app_setting(case when p_plan = 'month' then 'lawyer_price_month' else 'lawyer_price_year' end, 0);
+  v_price := public.app_setting(case p_plan when 'month' then 'lawyer_price_month' when 'half' then 'lawyer_price_half' else 'lawyer_price_year' end, 0);
   if v_price <= 0 then raise exception 'Cena zatím není nastavena.'; end if;
   update public.lawyer_orders set status = 'cancelled' where user_id = auth.uid() and status = 'pending';
   insert into public.lawyer_orders (user_id, plan, price_czk) values (auth.uid(), p_plan, v_price) returning id into v_id;
@@ -193,7 +193,7 @@ begin
     return 'refund_due';
   end if;
   v_start := case when la.status = 'active' and la.until is not null and la.until > current_date then la.until else current_date end;
-  v_end := (v_start + case when o.plan = 'year' then interval '1 year' else interval '1 month' end)::date;
+  v_end := (v_start + case o.plan when 'year' then interval '1 year' when 'half' then interval '6 months' else interval '1 month' end)::date;
   update public.lawyer_orders set status = 'paid', provider_ref = left(coalesce(p_ref, ''), 120), paid_at = now(), period_start = v_start, period_end = v_end where id = o.id;
   update public.lawyer_access set status = 'active', until = v_end where user_id = o.user_id;
   return 'ok';

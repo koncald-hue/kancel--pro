@@ -1,39 +1,62 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { BadgeCheck, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { czk } from '@/lib/lawyer';
+import { EMPTY_PRICES, PLANS, saving, type Prices } from '@/lib/plans';
+import { useAuth } from '../site/AuthContext';
+import Link from 'next/link';
 
-const FEATURES = ['Lhůty, spisy, klienti a výkazy práce', 'Klientský odkaz a poptávkový formulář', 'End-to-end šifrovaná komunikace s klientem', 'Předání spisu s číslovanými přílohami'];
+const INCLUDED = [
+    'Spisy, lhůty, klienti a výkazy práce bez omezení počtu věcí',
+    'Klientský odkaz s end-to-end šifrovanými zprávami a soubory',
+    'Poptávkový formulář pro nové klienty',
+    'Export spisu s číslovanými přílohami',
+    'Příprava obrany s ověřenými zákony (AI, ke kontrole advokátem)',
+];
 
-// Balíčky předplatného: ceny vidí každý, koupit lze až po ověření totožnosti
+// Tři plány předplatného. Ceny se načítají z nastavení; dokud nejsou zadané, ukáže se jen „brzy".
 export default function LawyerPricing() {
-    const [prices, setPrices] = useState<{ month: number; year: number } | null>(null);
+    const { account, openLogin } = useAuth();
+    const [prices, setPrices] = useState<Prices>(EMPTY_PRICES);
     useEffect(() => {
         let cancelled = false;
-        fetch('/api/lawyer-prices').then((r) => r.json()).then((p) => { if (!cancelled) setPrices(p); }).catch(() => { if (!cancelled) setPrices({ month: 0, year: 0 }); });
+        fetch('/api/lawyer-prices').then((r) => r.json()).then((p) => { if (!cancelled) setPrices({ ...EMPTY_PRICES, ...p }); }).catch(() => undefined);
         return () => { cancelled = true; };
     }, []);
 
-    const plans = [['month', 'Měsíční', prices?.month ?? 0, 'za měsíc'], ['year', 'Roční', prices?.year ?? 0, 'za rok']] as const;
-    const yearSaving = prices && prices.month > 0 && prices.year > 0 ? prices.month * 12 - prices.year : 0;
-
     return (
-        <section className="mt-12" aria-labelledby="lawyer-plans">
-            <h2 id="lawyer-plans" className="text-center text-2xl font-bold text-slate-900">Předplatné</h2>
-            <p className="mx-auto mt-2 max-w-xl text-center text-sm leading-relaxed text-slate-600">Přístup platí po dobu zaplaceného předplatného. Koupit ho můžete po <strong>ověření totožnosti</strong> podle seznamu ČAK, aby se za advokáty nemohl vydávat nikdo jiný.</p>
-            <div className="mx-auto mt-6 grid max-w-3xl gap-4 sm:grid-cols-2">
-                {plans.map(([id, name, price, unit]) => (
-                    <div key={id} className={`rounded-2xl border bg-white p-6 ${id === 'year' ? 'border-2 border-indigo-700' : 'border-slate-200'}`}>
-                        {id === 'year' && yearSaving > 0 && <span className="rounded-full bg-indigo-100 px-3 py-0.5 text-xs font-bold text-indigo-950">Ušetříte {czk(yearSaving)}</span>}
-                        <p className="mt-2 text-lg font-bold text-slate-900">{name}</p>
-                        <p className="mt-1 text-3xl font-bold text-slate-900">{price > 0 ? czk(price) : '–'} <span className="font-sans text-sm font-normal text-slate-500">{price > 0 ? unit : 'cena bude brzy zveřejněna'}</span></p>
-                        <ul className="mt-4 space-y-2 text-sm text-slate-700">{FEATURES.map((f) => <li key={f} className="flex items-start gap-2"><Check size={15} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}</ul>
-                        <Link href="/kancelar/nastaveni" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"><BadgeCheck size={15} aria-hidden="true" /> Nejdřív ověřit totožnost</Link>
-                    </div>
-                ))}
+        <section id="cenik" className="scroll-mt-20" aria-labelledby="plans-title">
+            <div className="text-center">
+                <p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Ceník</p>
+                <h2 id="plans-title" className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Jeden produkt, tři délky předplatného</h2>
+                <p className="mx-auto mt-3 max-w-2xl text-slate-600">Všechny plány mají úplně stejné funkce. Liší se jen délkou a cenou. Začnete <strong className="text-slate-900">14 dny zdarma</strong>, bez zadávání karty a bez závazku.</p>
             </div>
+            <div className="mx-auto mt-10 grid max-w-5xl gap-5 md:grid-cols-3">
+                {PLANS.map((plan) => {
+                    const price = prices[plan.id];
+                    const save = saving(prices, plan.id);
+                    const featured = plan.id === 'half';
+                    return (
+                        <div key={plan.id} className={`relative flex flex-col rounded-3xl bg-white p-7 ${featured ? 'border-2 border-indigo-600 shadow-xl shadow-indigo-100' : 'border border-slate-200'}`}>
+                            {featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">Nejčastější volba</span>}
+                            <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
+                            <p className="mt-4 flex items-baseline gap-1.5">
+                                <span className="text-4xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>
+                                {price > 0 && <span className="text-sm text-slate-500">{plan.unit}</span>}
+                            </p>
+                            <p className="mt-1 h-5 text-xs font-semibold text-emerald-700">{save > 0 ? `Ušetříte ${czk(save)} oproti měsíčnímu placení` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>
+                            <ul className="mt-5 flex-1 space-y-2.5 text-sm text-slate-700">
+                                {INCLUDED.map((f) => <li key={f} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}
+                            </ul>
+                            {account
+                                ? <Link href="/kancelar/nastaveni" className={`mt-7 inline-flex justify-center rounded-xl px-4 py-3 text-sm font-bold ${featured ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border border-slate-300 text-slate-800 hover:bg-slate-50'}`}>Otevřít předplatné</Link>
+                                : <button type="button" onClick={() => openLogin('register')} className={`mt-7 rounded-xl px-4 py-3 text-sm font-bold ${featured ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border border-slate-300 text-slate-800 hover:bg-slate-50'}`}>Začít 14 dní zdarma</button>}
+                        </div>
+                    );
+                })}
+            </div>
+            <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-slate-500">Předplatné lze koupit po ověření totožnosti (pro advokáty podle seznamu ČAK), aby se za advokáty nemohl vydávat nikdo jiný.</p>
         </section>
     );
 }
