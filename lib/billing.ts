@@ -89,3 +89,45 @@ export async function loadPriceItems(): Promise<PriceItem[]> {
     if (error) throw new Error(/price_items|relation|does not exist/i.test(error.message) ? 'Ceník zatím není v databázi zapnutý (chybí spuštění souboru fakturace.sql).' : error.message);
     return (data ?? []) as PriceItem[];
 }
+
+// ---------- Platby a pohledávky ----------
+export type Payment = { id: string; invoice_id: string; amount: number; paid_on: string; note: string };
+export const DUE_SOON_DAYS = 7;
+export type ReceivableState = 'draft' | 'cancelled' | 'paid' | 'overdue' | 'due_soon' | 'partial' | 'open';
+export type Receivable = Invoice & { total: number; paid: number; outstanding: number; state: ReceivableState; daysToDue: number | null };
+
+export const RECEIVABLE_LABELS: Record<ReceivableState, string> = { draft: 'Koncept', cancelled: 'Storno', paid: 'Zaplaceno', overdue: 'Po splatnosti', due_soon: 'Blíží se splatnost', partial: 'Částečně zaplaceno', open: 'Čeká na zaplacení' };
+
+const dayNumber = (iso: string) => Math.floor(new Date(`${iso}T12:00:00Z`).getTime() / 86_400_000);
+export const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+
+// Stav pohledávky podle stavu vyúčtování, zbývající částky a splatnosti
+export function receivableState(inv: Pick<Invoice, 'status' | 'due_date'>, total: number, paid: number, today = todayIso()): { state: ReceivableState; daysToDue: number | null } {
+    const daysToDue = inv.due_date ? dayNumber(inv.due_date) - dayNumber(today) : null;
+    if (inv.status === 'draft') return { state: 'draft', daysToDue };
+    if (inv.status === 'cancelled') return { state: 'cancelled', daysToDue };
+    if (inv.status === 'paid' || round2(total - paid) <= 0) return { state: 'paid', daysToDue };
+    if (daysToDue !== null && daysToDue < 0) return { state: 'overdue', daysToDue };
+    if (daysToDue !== null && daysToDue <= DUE_SOON_DAYS) return { state: 'due_soon', daysToDue };
+    return { state: paid > 0 ? 'partial' : 'open', daysToDue };
+}
+
+// Všechna vyúčtování s částkami, zaplaceno a zbývá (pro přehledy a nástěnku)
+export async function loadReceivables(vatPayerNow: boolean): Promise<Receivable[]> {
+    const [inv, lines, pays] = await Promise.all([
+        supabase.from('invoices').select('*').order('created_at', { ascending: false }),
+        supabase.from('invoice_lines').select('invoice_id, qty, unit_price, vat_rate'),
+        supabase.from('invoice_payments').select('invoice_id, amount'),
+    ]);
+    if (inv.error) throw new Error(/invoices|relation|does not exist/i.test(inv.error.message) ? 'Fakturace zatím není v databázi zapnutá (chybí spuštění souboru fakturace.sql).' : inv.error.message);
+    const byInvoice = new Map<string, { qty: number; unit_price: number; vat_rate: number }[]>();
+    for (const l of (lines.data ?? []) as { invoice_id: string; qty: number; unit_price: number; vat_rate: number }[]) byInvoice.set(l.invoice_id, [...(byInvoice.get(l.invoice_id) ?? []), { qty: Number(l.qty), unit_price: Number(l.unit_price), vat_rate: Number(l.vat_rate) }]);
+    const paidBy = new Map<string, number>();
+    // Chybějící tabulka plateb (nespuštěné SQL) znamená nulové platby
+    if (!pays.error) for (const p of (pays.data ?? []) as { invoice_id: string; amount: number }[]) paidBy.set(p.invoice_id, round2((paidBy.get(p.invoice_id) ?? 0) + Number(p.amount)));
+    return ((inv.data ?? []) as Invoice[]).map((i) => {
+        const total = computeTotals(byInvoice.get(i.id) ?? [], i.status === 'draft' ? vatPayerNow : i.supplier_snapshot.vat_payer === true).total;
+        const paid = i.status === 'paid' && !paidBy.get(i.id) ? total : (paidBy.get(i.id) ?? 0);
+        return { ...i, total, paid, outstanding: round2(total - paid), ...receivableState(i, total, paid) };
+    });
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildInvoiceHtml, computeTotals, lineFromPriceItem, lineFromTimeEntry, money, parseAmount, type Invoice } from './billing';
+import { buildInvoiceHtml, computeTotals, receivableState, lineFromPriceItem, lineFromTimeEntry, money, parseAmount, type Invoice } from './billing';
 
 describe('billing', () => {
     it('computes totals per VAT rate and rounds to cents', () => {
@@ -42,5 +42,20 @@ describe('billing', () => {
         expect(html).not.toContain('<script>');
         expect(html).toContain('není plátcem DPH');
         expect(html).toContain('variabilní symbol: <b>2026001</b>');
+    });
+
+    it('classifies receivables by payment and due date', () => {
+        const today = '2026-11-15';
+        const inv = (status: 'draft' | 'issued' | 'paid' | 'cancelled', due: string | null) => ({ status, due_date: due });
+        expect(receivableState(inv('draft', null), 1000, 0, today).state).toBe('draft');
+        expect(receivableState(inv('cancelled', '2026-11-01'), 1000, 0, today).state).toBe('cancelled');
+        expect(receivableState(inv('issued', '2026-11-01'), 1000, 0, today)).toEqual({ state: 'overdue', daysToDue: -14 });
+        expect(receivableState(inv('issued', '2026-11-15'), 1000, 0, today)).toEqual({ state: 'due_soon', daysToDue: 0 });
+        expect(receivableState(inv('issued', '2026-11-22'), 1000, 0, today).state).toBe('due_soon');
+        expect(receivableState(inv('issued', '2026-11-23'), 1000, 0, today).state).toBe('open');
+        expect(receivableState(inv('issued', '2026-12-30'), 1000, 400, today).state).toBe('partial');
+        expect(receivableState(inv('issued', '2026-11-01'), 1000, 400, today).state).toBe('overdue');
+        expect(receivableState(inv('issued', '2026-11-01'), 1000, 1000, today).state).toBe('paid');
+        expect(receivableState(inv('paid', '2026-11-01'), 1000, 0, today).state).toBe('paid');
     });
 });

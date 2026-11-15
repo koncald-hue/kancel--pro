@@ -7,7 +7,9 @@ import { supabase } from '@/lib/supabase';
 import { collectDeadlines, loadAllDeadlines, type CaseDeadline } from '@/lib/caseFile';
 import { daysUntil, loadCases, type LegalCase } from '@/lib/cases';
 import { czk, entryAmount, formatMinutes, type TimeEntry } from '@/lib/lawyer';
+import { DUE_SOON_DAYS, loadReceivables, money, round2, type Receivable } from '@/lib/billing';
 import { deadlineText, deadlineTone } from '../situation/CaseDeadlinesTab';
+import { useLawyer } from './LawyerGate';
 import { ghostBtn } from '../situation/caseUi';
 
 function Tile({ label, value, note, tone }: { label: string; value: string; note?: string; tone?: string }) {
@@ -22,6 +24,13 @@ function Tile({ label, value, note, tone }: { label: string; value: string; note
 
 // Přehled dne: lhůty, otevřené věci a nevyfakturovaná práce
 export default function LawyerDashboard() {
+    const { access } = useLawyer();
+    const [receivables, setReceivables] = useState<Receivable[]>([]);
+    useEffect(() => {
+        let cancelled = false;
+        loadReceivables(!!access.vat_payer).then((r) => { if (!cancelled) setReceivables(r); }).catch(() => undefined);
+        return () => { cancelled = true; };
+    }, [access.vat_payer]);
     const [data, setData] = useState<{ cases: LegalCase[]; customs: CaseDeadline[]; entries: TimeEntry[]; inquiries: number; unread: number } | null>(null);
     const [error, setError] = useState('');
 
@@ -60,6 +69,15 @@ export default function LawyerDashboard() {
                 <Tile label="Nevyfakturováno" value={formatMinutes(minutes)} note="hodin práce" />
                 <Tile label="K fakturaci" value={czk(amount)} />
             </div>
+
+            {receivables.some((r) => ['open', 'partial', 'due_soon', 'overdue'].includes(r.state)) && (
+                <Link href="/kancelar/faktury" className="grid grid-cols-3 gap-3 rounded-2xl border border-slate-200 bg-white p-4 hover:border-indigo-300 sm:p-5" aria-label="Pohledávky, otevřít fakturaci">
+                    {([['Čeká na zaplacení', ['open', 'partial', 'due_soon', 'overdue'], ''], ['Po splatnosti', ['overdue'], 'text-rose-700'], [`Splatnost do ${DUE_SOON_DAYS} dní`, ['due_soon'], 'text-amber-700']] as const).map(([label, states, tone]) => {
+                        const list = receivables.filter((r) => (states as readonly string[]).includes(r.state));
+                        return <div key={label}><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p><p className={`mt-1 text-xl font-bold sm:text-2xl ${list.length && tone ? tone : 'text-slate-900'}`}>{money(round2(list.reduce((s, r) => s + r.outstanding, 0)))}</p><p className="text-xs text-slate-500">{list.length} vyúčtování</p></div>;
+                    })}
+                </Link>
+            )}
 
             {(data.inquiries > 0 || data.unread > 0) && (
                 <div className="flex flex-wrap gap-3">

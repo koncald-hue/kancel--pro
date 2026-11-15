@@ -1,84 +1,147 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { STATUS_LABELS, computeTotals, money, type Invoice, type InvoiceLine, type InvoiceStatus } from '@/lib/billing';
+import { DUE_SOON_DAYS, RECEIVABLE_LABELS, loadReceivables, money, round2, todayIso, type Receivable, type ReceivableState } from '@/lib/billing';
 import { inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
-const TONE: Record<InvoiceStatus, string> = { draft: 'bg-slate-100 text-slate-700', issued: 'bg-indigo-100 text-indigo-900', paid: 'bg-emerald-100 text-emerald-900', cancelled: 'bg-rose-100 text-rose-900' };
+const TONE: Record<ReceivableState, string> = { draft: 'bg-slate-100 text-slate-700', cancelled: 'bg-slate-100 text-slate-500', paid: 'bg-emerald-100 text-emerald-900', overdue: 'bg-rose-100 text-rose-900', due_soon: 'bg-amber-100 text-amber-900', partial: 'bg-sky-100 text-sky-900', open: 'bg-indigo-100 text-indigo-900' };
 const dateCz = (iso: string | null) => (iso ? new Date(`${iso}T12:00:00`).toLocaleDateString('cs-CZ') : '–');
-const today = () => new Date().toISOString().slice(0, 10);
+type Filter = 'all' | 'unpaid' | 'overdue' | 'due_soon' | 'paid' | 'draft';
+const FILTERS: [Filter, string][] = [['all', 'Vše'], ['unpaid', 'Nezaplacené'], ['overdue', 'Po splatnosti'], ['due_soon', `Splatnost do ${DUE_SOON_DAYS} dní`], ['paid', 'Zaplacené'], ['draft', 'Koncepty']];
+const matches = (r: Receivable, f: Filter) => f === 'all' ? r.state !== 'cancelled' : f === 'unpaid' ? ['open', 'partial', 'due_soon', 'overdue'].includes(r.state) : f === 'draft' ? r.state === 'draft' : r.state === f;
 
-// Přehled vyúčtování a faktur
+function dueText(r: Receivable): string {
+    if (r.state === 'paid' || r.state === 'draft' || r.state === 'cancelled' || r.daysToDue === null) return dateCz(r.due_date);
+    if (r.daysToDue < 0) return `${dateCz(r.due_date)} · ${-r.daysToDue} dní po`;
+    if (r.daysToDue === 0) return `${dateCz(r.due_date)} · dnes`;
+    return `${dateCz(r.due_date)} · za ${r.daysToDue} dní`;
+}
+
+// Přehled vyúčtování a pohledávek: co je zaplacené, co ne a co se blíží splatnosti
 export default function LawyerInvoices() {
     const { userId, access } = useLawyer();
     const router = useRouter();
-    const [rows, setRows] = useState<(Invoice & { total: number })[] | null>(null);
-    const [filter, setFilter] = useState<'all' | InvoiceStatus | 'overdue'>('all');
+    const [rows, setRows] = useState<Receivable[] | null>(null);
+    const [filter, setFilter] = useState<Filter>('unpaid');
+    const [view, setView] = useState<'list' | 'clients'>('list');
+    const [query, setQuery] = useState('');
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
+    const vatNow = !!access.vat_payer;
+
+    const load = useCallback(async () => {
+        try { setRows(await loadReceivables(vatNow)); setError(''); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se načíst.'); setRows([]); }
+    }, [vatNow]);
 
     useEffect(() => {
         let cancelled = false;
-        (async () => {
-            const [inv, lines] = await Promise.all([supabase.from('invoices').select('*').order('created_at', { ascending: false }), supabase.from('invoice_lines').select('invoice_id, qty, unit_price, vat_rate')]);
-            if (cancelled) return;
-            if (inv.error) { setError(/invoices|relation|does not exist/i.test(inv.error.message) ? 'Fakturace zatím není v databázi zapnutá (chybí spuštění souboru fakturace.sql).' : inv.error.message); setRows([]); return; }
-            const byInvoice = new Map<string, Pick<InvoiceLine, 'qty' | 'unit_price' | 'vat_rate'>[]>();
-            for (const l of (lines.data ?? []) as (InvoiceLine & { invoice_id: string })[]) byInvoice.set(l.invoice_id, [...(byInvoice.get(l.invoice_id) ?? []), l]);
-            setRows(((inv.data ?? []) as Invoice[]).map((i) => ({ ...i, total: computeTotals(byInvoice.get(i.id) ?? [], i.status === 'draft' ? !!access.vat_payer : i.supplier_snapshot.vat_payer === true).total })));
-        })();
+        void (async () => { await Promise.resolve(); if (!cancelled) await load(); })();
         return () => { cancelled = true; };
-    }, [access.vat_payer]);
+    }, [load]);
 
     async function create() {
         setBusy(true);
-        const { data, error: err } = await supabase.from('invoices').insert({ user_id: userId, issue_date: today() }).select('id').single();
+        const { data, error: err } = await supabase.from('invoices').insert({ user_id: userId, issue_date: todayIso() }).select('id').single();
         setBusy(false);
         if (err) { setError(err.message); return; }
         router.push(`/kancelar/faktury/${(data as { id: string }).id}`);
     }
 
-    const overdue = (i: Invoice) => i.status === 'issued' && !!i.due_date && i.due_date < today();
-    const shown = (rows ?? []).filter((i) => filter === 'all' || (filter === 'overdue' ? overdue(i) : i.status === filter));
-    const outstanding = (rows ?? []).filter((i) => i.status === 'issued').reduce((s, i) => s + i.total, 0);
-    const overdueSum = (rows ?? []).filter(overdue).reduce((s, i) => s + i.total, 0);
-    const paidSum = (rows ?? []).filter((i) => i.status === 'paid').reduce((s, i) => s + i.total, 0);
+    // Zaškrtnutí „zaplaceno“: zapíše platbu na zbývající částku; odškrtnutí platby smaže
+    async function togglePaid(r: Receivable) {
+        setError('');
+        if (r.state === 'paid') {
+            if (!window.confirm('Vrátit vyúčtování mezi nezaplacené? Zapsané platby se smažou.')) return;
+            const del = await supabase.from('invoice_payments').delete().eq('invoice_id', r.id);
+            if (del.error) { setError(del.error.message); return; }
+            const up = await supabase.from('invoices').update({ status: 'issued', paid_at: null }).eq('id', r.id);
+            if (up.error) { setError(up.error.message); return; }
+        } else {
+            if (r.outstanding > 0) {
+                const ins = await supabase.from('invoice_payments').insert({ invoice_id: r.id, user_id: userId, amount: r.outstanding, paid_on: todayIso() });
+                if (ins.error) { setError(ins.error.message); return; }
+            }
+            const up = await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', r.id);
+            if (up.error) { setError(up.error.message); return; }
+        }
+        await load();
+    }
+
+    const q = query.trim().toLowerCase();
+    const shown = useMemo(() => (rows ?? []).filter((r) => matches(r, filter) && (!q || `${r.number ?? ''} ${r.title} ${r.client_snapshot.name ?? ''}`.toLowerCase().includes(q))), [rows, filter, q]);
+    const live = (rows ?? []).filter((r) => r.state !== 'draft' && r.state !== 'cancelled');
+    const sum = (list: Receivable[], f: (r: Receivable) => number) => round2(list.reduce((s, r) => s + f(r), 0));
+    const unpaid = live.filter((r) => r.state !== 'paid');
+    const overdue = live.filter((r) => r.state === 'overdue');
+    const soon = live.filter((r) => r.state === 'due_soon');
+    const counts = (f: Filter) => (rows ?? []).filter((r) => matches(r, f)).length;
+
+    // Souhrn po klientech
+    const byClient = useMemo(() => {
+        const map = new Map<string, { name: string; items: Receivable[] }>();
+        for (const r of shown) { const key = r.client_id ?? `n:${r.client_snapshot.name ?? ''}`; const g = map.get(key) ?? { name: r.client_snapshot.name || 'Bez odběratele', items: [] }; g.items.push(r); map.set(key, g); }
+        return [...map.entries()].map(([key, g]) => ({ key, ...g, outstanding: sum(g.items.filter((r) => r.state !== 'paid' && r.state !== 'draft'), (r) => r.outstanding), paid: sum(g.items, (r) => r.paid), overdue: sum(g.items.filter((r) => r.state === 'overdue'), (r) => r.outstanding) })).sort((a, b) => b.overdue - a.overdue || b.outstanding - a.outstanding || a.name.localeCompare(b.name, 'cs'));
+    }, [shown]);
+
+    const Tile = ({ label, value, note, tone }: { label: string; value: string; note?: string; tone?: string }) => <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</p><p className={`mt-1 text-2xl font-bold ${tone || 'text-slate-900'}`}>{value}</p>{note && <p className="text-xs text-slate-500">{note}</p>}</div>;
+
+    const table = (list: Receivable[]) => (
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <table className="w-full min-w-[760px] text-left text-sm">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="w-10 px-3 py-2.5"><span className="sr-only">Zaplaceno</span></th><th className="px-3 py-2.5">Číslo</th><th className="px-3 py-2.5">Odběratel</th><th className="px-3 py-2.5">Splatnost</th><th className="px-3 py-2.5">Stav</th><th className="px-3 py-2.5 text-right">Částka</th><th className="px-3 py-2.5 text-right">Zbývá</th></tr></thead>
+                <tbody className="divide-y divide-slate-100">
+                    {list.map((r) => (
+                        <tr key={r.id} className={r.state === 'overdue' ? 'bg-rose-50/50' : r.state === 'due_soon' ? 'bg-amber-50/50' : ''}>
+                            <td className="px-3 py-2.5">{r.state !== 'draft' && r.state !== 'cancelled' && <input type="checkbox" checked={r.state === 'paid'} onChange={() => void togglePaid(r)} aria-label={`Zaplaceno: ${r.number ?? 'vyúčtování'}`} className="h-4 w-4 cursor-pointer accent-emerald-600" />}</td>
+                            <td className="px-3 py-2.5 font-semibold"><Link href={`/kancelar/faktury/${r.id}`} className="text-indigo-800 hover:underline">{r.number ?? 'Koncept'}</Link>{r.title && <span className="block text-xs font-normal text-slate-500">{r.title}</span>}</td>
+                            <td className="px-3 py-2.5 text-slate-700">{r.client_snapshot.name || '–'}</td>
+                            <td className={`px-3 py-2.5 ${r.state === 'overdue' ? 'font-bold text-rose-700' : r.state === 'due_soon' ? 'font-semibold text-amber-800' : 'text-slate-700'}`}>{dueText(r)}</td>
+                            <td className="px-3 py-2.5"><span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${TONE[r.state]}`}>{RECEIVABLE_LABELS[r.state]}</span></td>
+                            <td className="px-3 py-2.5 text-right text-slate-700">{money(r.total, r.currency)}</td>
+                            <td className={`px-3 py-2.5 text-right font-semibold ${r.state === 'paid' ? 'text-slate-400' : 'text-slate-900'}`}>{r.state === 'draft' || r.state === 'cancelled' ? '–' : money(r.outstanding, r.currency)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 
     return (
         <div className="space-y-5">
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
-            <div className="grid gap-3 sm:grid-cols-3">
-                {([['Čeká na zaplacení', money(outstanding), ''], ['Po splatnosti', money(overdueSum), overdueSum > 0 ? 'text-rose-700' : ''], ['Zaplaceno celkem', money(paidSum), '']] as const).map(([label, value, tone]) => (
-                    <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</p><p className={`mt-1 text-2xl font-bold ${tone || 'text-slate-900'}`}>{value}</p></div>
-                ))}
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <Tile label="Čeká na zaplacení" value={money(sum(unpaid, (r) => r.outstanding))} note={`${unpaid.length} vyúčtování`} />
+                <Tile label="Po splatnosti" value={money(sum(overdue, (r) => r.outstanding))} tone={overdue.length ? 'text-rose-700' : ''} note={`${overdue.length} vyúčtování`} />
+                <Tile label={`Splatnost do ${DUE_SOON_DAYS} dní`} value={money(sum(soon, (r) => r.outstanding))} tone={soon.length ? 'text-amber-700' : ''} note={`${soon.length} vyúčtování`} />
+                <Tile label="Zaplaceno celkem" value={money(sum(live, (r) => r.paid))} />
             </div>
             <div className="flex flex-wrap items-center gap-2">
                 <button type="button" onClick={() => void create()} disabled={busy} className={primaryBtn}><Plus size={16} /> Nové vyúčtování</button>
-                <select value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)} className={`${inputCls} ml-auto max-w-44`} aria-label="Filtr">
-                    <option value="all">Všechna</option><option value="draft">Koncepty</option><option value="issued">Vystavená</option><option value="overdue">Po splatnosti</option><option value="paid">Zaplacená</option><option value="cancelled">Storno</option>
-                </select>
+                <div className="ml-auto inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1" role="group" aria-label="Zobrazení">
+                    {([['list', 'Seznam'], ['clients', 'Podle klientů']] as const).map(([id, label]) => <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${view === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'}`}>{label}</button>)}
+                </div>
             </div>
-            {rows === null ? <p className="text-sm text-slate-500" role="status">Načítám…</p> : shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{rows.length ? 'Nic neodpovídá filtru.' : 'Zatím žádná vyúčtování. Vytvořte první a vyberte položky z ceníku nebo z výkazů práce.'}</p> : (
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-                    <table className="w-full min-w-[640px] text-left text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-2.5">Číslo</th><th className="px-3 py-2.5">Odběratel</th><th className="px-3 py-2.5">Splatnost</th><th className="px-3 py-2.5">Stav</th><th className="px-3 py-2.5 text-right">Částka</th></tr></thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {shown.map((i) => (
-                                <tr key={i.id} className="hover:bg-indigo-50/40">
-                                    <td className="px-4 py-2.5 font-semibold"><Link href={`/kancelar/faktury/${i.id}`} className="text-indigo-800 hover:underline">{i.number ?? 'Koncept'}</Link>{i.title && <span className="block text-xs font-normal text-slate-500">{i.title}</span>}</td>
-                                    <td className="px-3 py-2.5 text-slate-700">{i.client_snapshot.name || '–'}</td>
-                                    <td className={`px-3 py-2.5 ${overdue(i) ? 'font-bold text-rose-700' : 'text-slate-700'}`}>{dateCz(i.due_date)}</td>
-                                    <td className="px-3 py-2.5"><span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${overdue(i) ? 'bg-rose-100 text-rose-900' : TONE[i.status]}`}>{overdue(i) ? 'Po splatnosti' : STATUS_LABELS[i.status]}</span></td>
-                                    <td className="px-3 py-2.5 text-right font-semibold text-slate-900">{money(i.total, i.currency)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            <div className="flex flex-wrap items-center gap-2">
+                {FILTERS.map(([id, label]) => <button key={id} type="button" aria-pressed={filter === id} onClick={() => setFilter(id)} className={`rounded-full border px-3.5 py-1 text-xs font-semibold ${filter === id ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{label} ({counts(id)})</button>)}
+                <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Číslo, klient…" aria-label="Hledat" className={`${inputCls} ml-auto max-w-52`} />
+            </div>
+
+            {rows === null ? <p className="text-sm text-slate-500" role="status">Načítám…</p> : shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{rows.length ? 'Nic neodpovídá filtru.' : 'Zatím žádná vyúčtování. Vytvořte první a vyberte položky z ceníku nebo z výkazů práce.'}</p> : view === 'list' ? table(shown) : (
+                <div className="space-y-4">
+                    {byClient.map((g) => (
+                        <section key={g.key} className="rounded-2xl border border-slate-200 bg-white p-4" aria-label={g.name}>
+                            <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                <h2 className="text-base font-bold text-slate-900">{g.name}</h2>
+                                <p className="text-sm text-slate-600">Zbývá zaplatit <strong className="text-slate-900">{money(g.outstanding)}</strong>{g.overdue > 0 && <> · po splatnosti <strong className="text-rose-700">{money(g.overdue)}</strong></>} · zaplaceno {money(g.paid)}</p>
+                            </div>
+                            <div className="mt-3">{table(g.items)}</div>
+                        </section>
+                    ))}
                 </div>
             )}
         </div>

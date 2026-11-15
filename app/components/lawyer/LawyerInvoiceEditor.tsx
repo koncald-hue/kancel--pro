@@ -7,7 +7,7 @@ import { ArrowLeft, Check, Clock3, Copy, Plus, Printer, Save, Send, Trash2 } fro
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient, TimeEntry } from '@/lib/lawyer';
-import { STATUS_LABELS, VAT_RATES, buildInvoiceHtml, computeTotals, lineBase, lineFromPriceItem, lineFromTimeEntry, loadPriceItems, money, openPrint, parseAmount, qtyText, type DraftLine, type Invoice, type InvoiceLine, type Party, type PriceItem } from '@/lib/billing';
+import { STATUS_LABELS, VAT_RATES, round2, todayIso, type Payment, buildInvoiceHtml, computeTotals, lineBase, lineFromPriceItem, lineFromTimeEntry, loadPriceItems, money, openPrint, parseAmount, qtyText, type DraftLine, type Invoice, type InvoiceLine, type Party, type PriceItem } from '@/lib/billing';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
@@ -26,6 +26,8 @@ export default function LawyerInvoiceEditor() {
     const [clients, setClients] = useState<LawyerClient[]>([]);
     const [cases, setCases] = useState<LegalCase[]>([]);
     const [entries, setEntries] = useState<TimeEntry[]>([]);
+    const [payments, setPayments] = useState<Payment[]>([]);
+    const [payForm, setPayForm] = useState({ amount: '', date: todayIso(), note: '' });
     const [picker, setPicker] = useState(false);
     const [selected, setSelected] = useState<string[]>([]);
     const [priceId, setPriceId] = useState('');
@@ -38,13 +40,14 @@ export default function LawyerInvoiceEditor() {
         let cancelled = false;
         (async () => {
             try {
-                const [i, l, c, e, cs, p] = await Promise.all([
+                const [i, l, c, e, cs, p, pay] = await Promise.all([
                     supabase.from('invoices').select('*').eq('id', id).maybeSingle(),
                     supabase.from('invoice_lines').select('*').eq('invoice_id', id).order('position'),
                     supabase.from('lawyer_clients').select('*').order('name'),
                     supabase.from('time_entries').select('*').order('entry_date', { ascending: false }),
                     loadCases(),
                     loadPriceItems(),
+                    supabase.from('invoice_payments').select('*').eq('invoice_id', id).order('paid_on'),
                 ]);
                 if (cancelled) return;
                 if (i.error) throw new Error(i.error.message);
@@ -52,6 +55,7 @@ export default function LawyerInvoiceEditor() {
                 setInv(i.data as Invoice);
                 setLines(((l.data ?? []) as InvoiceLine[]).map((x) => mkLine({ description: x.description, qty: Number(x.qty), unit: x.unit, unit_price: Number(x.unit_price), vat_rate: Number(x.vat_rate) }, { price_item_id: x.price_item_id, time_entry_id: x.time_entry_id })));
                 setClients((c.data ?? []) as LawyerClient[]); setEntries((e.data ?? []) as TimeEntry[]); setCases(cs); setPrices(p.filter((x) => x.active));
+                if (!pay.error) setPayments(((pay.data ?? []) as Payment[]).map((x) => ({ ...x, amount: Number(x.amount) })));
             } catch (err) { if (!cancelled) setError(err instanceof Error ? err.message : 'Nepodařilo se načíst.'); }
         })();
         return () => { cancelled = true; };
@@ -122,6 +126,49 @@ export default function LawyerInvoiceEditor() {
         router.push(`/kancelar/faktury/${newId}`);
     }
 
+    const paidSum = round2(payments.reduce((s, p) => s + p.amount, 0));
+    const remaining = round2(totals.total - paidSum);
+
+    // Po každé změně plateb se stav vyúčtování srovná se zaplacenou částkou
+    async function syncStatus(list: Payment[]) {
+        if (!inv || inv.status === 'draft' || inv.status === 'cancelled') return;
+        const sum = round2(list.reduce((s, p) => s + p.amount, 0));
+        const next = sum >= totals.total && totals.total > 0 ? 'paid' : 'issued';
+        if (next === inv.status) return;
+        const paidAt = next === 'paid' ? new Date().toISOString() : null;
+        const { error: err } = await supabase.from('invoices').update({ status: next, paid_at: paidAt }).eq('id', inv.id);
+        if (err) setError(err.message); else patch({ status: next, paid_at: paidAt });
+    }
+
+    async function addPayment() {
+        if (!inv) return;
+        const amount = parseAmount(payForm.amount);
+        if (amount === null || amount === 0) { setError('Zadejte částku platby, např. 5000 nebo 1 250,50.'); return; }
+        setError('');
+        const { data, error: err } = await supabase.from('invoice_payments').insert({ invoice_id: inv.id, user_id: userId, amount, paid_on: payForm.date || todayIso(), note: payForm.note.trim().slice(0, 300) }).select('*').single();
+        if (err) { setError(/invoice_payments|relation|does not exist/i.test(err.message) ? 'Platby zatím nejsou v databázi zapnuté (chybí spuštění souboru platby.sql).' : err.message); return; }
+        const list = [...payments, { ...(data as Payment), amount: Number((data as Payment).amount) }];
+        setPayments(list); setPayForm({ amount: '', date: todayIso(), note: '' });
+        await syncStatus(list);
+    }
+
+    async function markPaidFully() {
+        if (!inv) return;
+        if (remaining > 0) {
+            const { data, error: err } = await supabase.from('invoice_payments').insert({ invoice_id: inv.id, user_id: userId, amount: remaining, paid_on: todayIso(), note: '' }).select('*').single();
+            if (!err && data) setPayments((l) => [...l, { ...(data as Payment), amount: Number((data as Payment).amount) }]);
+        }
+        await setStatus('paid');
+    }
+
+    async function removePayment(pid: string) {
+        const { error: err } = await supabase.from('invoice_payments').delete().eq('id', pid);
+        if (err) { setError(err.message); return; }
+        const list = payments.filter((p) => p.id !== pid);
+        setPayments(list);
+        await syncStatus(list);
+    }
+
     function print() {
         if (!inv) return;
         const view: Invoice = draft ? { ...inv, client_snapshot: buyer, supplier_snapshot: { name: access.display_name || access.email, firm: access.firm_name, address: access.office, ico: access.ico, dic: access.dic, vat_payer: access.vat_payer, bank_account: access.bank_account, email: access.contact_email || access.email, phone: access.phone, note: access.invoice_note } } : inv;
@@ -138,7 +185,7 @@ export default function LawyerInvoiceEditor() {
                 <div className="flex flex-wrap gap-2">
                     <button type="button" onClick={print} className={ghostBtn}><Printer size={15} /> Tisk / PDF</button>
                     {!draft && <button type="button" onClick={() => void duplicate()} className={ghostBtn}><Copy size={15} /> Kopírovat jako nový</button>}
-                    {inv.status === 'issued' && <><button type="button" onClick={() => void setStatus('paid')} className={primaryBtn}><Check size={15} /> Označit jako zaplacené</button><button type="button" onClick={() => { if (window.confirm('Stornovat vyúčtování?')) void setStatus('cancelled'); }} className={`${ghostBtn} text-rose-700`}>Storno</button></>}
+                    {inv.status === 'issued' && <><button type="button" onClick={() => void markPaidFully()} className={primaryBtn}><Check size={15} /> Označit jako zaplacené</button><button type="button" onClick={() => { if (window.confirm('Stornovat vyúčtování?')) void setStatus('cancelled'); }} className={`${ghostBtn} text-rose-700`}>Storno</button></>}
                     {inv.status === 'paid' && <button type="button" onClick={() => void setStatus('issued')} className={ghostBtn}>Vrátit na nezaplacené</button>}
                     {draft && <><button type="button" onClick={() => void remove()} className={`${ghostBtn} text-rose-700`}><Trash2 size={15} /> Smazat</button><button type="button" onClick={() => void save()} disabled={busy} className={ghostBtn}><Save size={15} /> Uložit</button><button type="button" onClick={() => void issue()} disabled={busy} className={primaryBtn}><Send size={15} /> Vystavit</button></>}
                 </div>
@@ -233,6 +280,27 @@ export default function LawyerInvoiceEditor() {
                 </div>
                 <label className="mt-4 block text-xs font-semibold text-slate-600">Poznámka na dokladu (nepovinné)<input value={inv.note} onChange={(e) => patch({ note: e.target.value })} disabled={!draft} maxLength={1000} className={`${inputCls} mt-1 font-normal`} /></label>
             </section>
+
+            {!draft && inv.status !== 'cancelled' && (
+                <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Platby">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <h2 className="text-lg font-bold text-slate-900">Platby</h2>
+                        <p className="text-sm text-slate-600">Zaplaceno <strong className="text-slate-900">{money(paidSum, inv.currency)}</strong> z {money(totals.total, inv.currency)} · zbývá <strong className={remaining > 0 ? 'text-slate-900' : 'text-emerald-700'}>{money(Math.max(0, remaining), inv.currency)}</strong></p>
+                    </div>
+                    {payments.length > 0 && (
+                        <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
+                            {payments.map((p) => <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-2"><span><strong className="text-slate-900">{money(p.amount, inv.currency)}</strong> · {dateCz(p.paid_on)}{p.note && <span className="text-slate-500"> · {p.note}</span>}</span><button type="button" onClick={() => void removePayment(p.id)} aria-label="Smazat platbu" className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button></li>)}
+                        </ul>
+                    )}
+                    <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_2fr_auto] sm:items-end">
+                        <label className="block text-xs font-semibold text-slate-600">Částka<input value={payForm.amount} onChange={(e) => setPayForm((f) => ({ ...f, amount: e.target.value }))} inputMode="decimal" className={`${inputCls} mt-1 font-normal`} placeholder={remaining > 0 ? String(remaining).replace('.', ',') : '0'} /></label>
+                        <label className="block text-xs font-semibold text-slate-600">Datum<input type="date" value={payForm.date} onChange={(e) => setPayForm((f) => ({ ...f, date: e.target.value }))} className={`${inputCls} mt-1 font-normal`} /></label>
+                        <label className="block text-xs font-semibold text-slate-600">Poznámka<input value={payForm.note} onChange={(e) => setPayForm((f) => ({ ...f, note: e.target.value }))} maxLength={300} className={`${inputCls} mt-1 font-normal`} placeholder="např. záloha, převod z účtu" /></label>
+                        <button type="button" onClick={() => void addPayment()} className={primaryBtn}><Plus size={15} /> Zapsat platbu</button>
+                    </div>
+                    {remaining > 0 && <button type="button" onClick={() => setPayForm((f) => ({ ...f, amount: String(remaining).replace('.', ',') }))} className="mt-2 text-xs font-semibold text-indigo-800 underline">Doplnit zbývající částku ({money(remaining, inv.currency)})</button>}
+                </section>
+            )}
         </div>
     );
 }
