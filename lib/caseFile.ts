@@ -13,7 +13,7 @@ export const MAX_FILE_BYTES = 15 * 1024 * 1024;
 export const MAX_CASE_BYTES = 100 * 1024 * 1024;
 export const DEFAULT_FOLDERS = ['Doručené dokumenty', 'Moje podání', 'Důkazy a fotky', 'Komunikace'];
 
-type Table = 'case_folders' | 'case_files' | 'case_entries' | 'case_deadlines' | 'case_contacts' | 'client_links' | 'client_requests' | 'client_messages';
+type Table = 'case_data_messages' | 'case_folders' | 'case_files' | 'case_entries' | 'case_deadlines' | 'case_contacts' | 'client_links' | 'client_requests' | 'client_messages';
 
 export async function loadBundle(caseId: string): Promise<CaseBundle> {
     const get = async <T>(table: Table, order: string, ascending: boolean): Promise<T[]> => {
