@@ -1,17 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, BookOpenCheck, Check, ExternalLink, KeyRound, Link2, Loader2, Lock, Quote, Scale, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, BookOpenCheck, Check, ExternalLink, FileText, KeyRound, Link2, Loader2, Lock, NotebookText, Quote, Scale, Search, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { insertRow } from '@/lib/caseFile';
 import { useMasterKey } from '@/lib/useE2ee';
 import { disconnect, legalApi, loadConnection, startConnect, validToken, type Connection } from '@/lib/legalClient';
-import { anonymize, type Evaluation, type NameRule, type Source } from '@/lib/legalResearch';
+import { anonymize, MAX_DOCS, type Evaluation, type NameRule, type Source } from '@/lib/legalResearch';
+import { MAX_TOTAL_CHARS, extOf, extractText, isExtractable } from '@/lib/docText';
 import { ghostBtn, inputCls, primaryBtn, type TabProps } from './caseUi';
 
 type Result = { question: string; queries: string[]; provisions: string[]; sources: Source[]; summaries: string[]; evaluation: Evaluation | null; ai: boolean };
 type Saved = { id: string; question: string; result: Result; created_at: string };
 
+type Picked = { name: string; hint: string; status: 'loading' | 'ok' | 'error'; text?: string; truncated?: boolean; reason?: string };
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('cs-CZ');
 const TONE: Record<string, string> = { silný: 'bg-emerald-100 text-emerald-900', střední: 'bg-amber-100 text-amber-900', slabý: 'bg-rose-100 text-rose-900', vysoká: 'bg-emerald-100 text-emerald-900', nízká: 'bg-slate-100 text-slate-700' };
 
@@ -27,6 +29,7 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
     const [error, setError] = useState('');
     const [result, setResult] = useState<Result | null>(null);
     const [saved, setSaved] = useState<Saved[] | null | undefined>(undefined);
+    const [picked, setPicked] = useState<Record<string, Picked>>({});
 
     // Jména ve věci, která se před odesláním nahradí (klient a kontakty)
     const names: NameRule[] = useMemo(() => [
@@ -35,6 +38,31 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
     ], [item.client_name, bundle.contacts]);
     const anon = useMemo(() => anonymize(facts, names), [facts, names]);
     const anonQuestion = useMemo(() => anonymize(question, names), [question, names]);
+    // Vybrané dokumenty: text se anonymizuje a pod obecným názvem („Dokument 1 (PDF)“) odchází bez skutečného jména souboru
+    const docs = useMemo(() => {
+        let budget = MAX_TOTAL_CHARS;
+        return Object.values(picked).filter((p) => p.status === 'ok' && p.text).map((p, i) => {
+            const a = anonymize(p.text ?? '', names);
+            const text = a.text.slice(0, Math.max(budget, 0));
+            budget -= text.length;
+            return { label: `Dokument ${i + 1} (${p.hint})`, name: p.name, text, replaced: a.replaced, cut: text.length < a.text.length || !!p.truncated };
+        });
+    }, [picked, names]);
+    const pickedCount = Object.keys(picked).length;
+
+    async function toggleDoc(key: string, name: string, hint: string, load: () => Promise<{ ok: true; text: string; truncated?: boolean } | { ok: false; reason: string }>) {
+        if (picked[key]) { setPicked((p) => { const n = { ...p }; delete n[key]; return n; }); return; }
+        if (pickedCount >= MAX_DOCS) { setError(`Vybrat jde nejvýše ${MAX_DOCS} dokumentů.`); return; }
+        setError('');
+        setPicked((p) => ({ ...p, [key]: { name, hint, status: 'loading' } }));
+        const r = await load();
+        setPicked((p) => (p[key] ? { ...p, [key]: r.ok ? { name, hint, status: 'ok', text: r.text, truncated: r.truncated } : { name, hint, status: 'error', reason: r.reason } } : p));
+    }
+    const loadFile = (path: string, name: string) => async () => {
+        const { data, error: err } = await supabase.storage.from('case-files').download(path);
+        if (err || !data) return { ok: false as const, reason: 'Soubor se nepodařilo stáhnout.' };
+        return extractText(data, name);
+    };
 
     const loadSaved = useCallback(async () => {
         const { data, error: err } = await supabase.from('case_research').select('*').eq('case_id', item.id).order('created_at', { ascending: false });
@@ -61,7 +89,7 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
         try {
             const { token, connection } = await validToken(master, userId, conn);
             if (connection !== conn) setConn(connection);
-            const r = await legalApi({ action: 'research', accessToken: token, question: anonQuestion.text, facts: anon.text, consent: true });
+            const r = await legalApi({ action: 'research', accessToken: token, question: anonQuestion.text, facts: anon.text, documents: docs.map((d) => ({ label: d.label, text: d.text })), consent: true });
             if (r.status === 401) throw new Error('Přihlášení k DirectCase vypršelo nebo bylo odmítnuto. Připojte se znovu.');
             if (!r.ok) throw new Error(typeof r.json.message === 'string' ? r.json.message : r.status === 429 ? 'Příliš mnoho rešerší, zkuste to později.' : 'Rešerše se nepodařila.');
             setResult(r.json as unknown as Result);
@@ -115,12 +143,29 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Scale size={18} className="text-indigo-700" /> Nová rešerše</h2>
                         <label className="block text-xs font-semibold text-slate-600">Právní otázka *<textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={3} maxLength={1500} placeholder="např. Kdy začíná běžet subjektivní promlčecí lhůta u práva na vydání bezdůvodného obohacení, když ochuzený o plnění nevěděl?" className={`${inputCls} mt-1 font-normal`} /></label>
                         <label className="block text-xs font-semibold text-slate-600">Skutkový popis (předvyplněno z věci, upravte)<textarea value={facts} onChange={(e) => setFacts(e.target.value)} rows={5} maxLength={6000} className={`${inputCls} mt-1 font-normal`} /></label>
+                        <fieldset className="rounded-xl border border-slate-200 p-3">
+                            <legend className="px-1 text-xs font-semibold text-slate-600">Podklady ze spisu (nepovinné, vybrané dokumenty se zanalyzují a anonymizují)</legend>
+                            {bundle.entries.length === 0 && bundle.files.length === 0 ? <p className="text-xs text-slate-500">Ve věci zatím nejsou žádné zápisy ani soubory.</p> : (
+                                <ul className="max-h-56 space-y-1 overflow-y-auto">
+                                    {bundle.entries.map((e) => { const key = `e:${e.id}`; const p = picked[key]; return (
+                                        <li key={key}><label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700"><input type="checkbox" checked={!!p} onChange={() => void toggleDoc(key, e.title, 'zápis', async () => ({ ok: true, text: `${e.title}\n${e.body}`.slice(0, 8000) }))} className="mt-1 h-4 w-4 accent-indigo-800" /><NotebookText size={14} className="mt-1 shrink-0 text-slate-400" aria-hidden="true" /><span className="min-w-0 flex-1 truncate">{e.title || '(zápis)'}<span className="ml-1.5 text-xs text-slate-400">zápis</span></span></label></li>
+                                    ); })}
+                                    {bundle.files.filter((f) => !f.enc).map((f) => { const key = `f:${f.id}`; const p = picked[key]; const ok = isExtractable(f.name); return (
+                                        <li key={key}><label className={`flex items-start gap-2 text-sm ${ok ? 'cursor-pointer text-slate-700' : 'cursor-not-allowed text-slate-400'}`}><input type="checkbox" checked={!!p} disabled={!ok} onChange={() => void toggleDoc(key, f.name, extOf(f.name) === 'docx' ? 'Word' : extOf(f.name).toUpperCase(), loadFile(f.path, f.name))} className="mt-1 h-4 w-4 accent-indigo-800" /><FileText size={14} className="mt-1 shrink-0 text-slate-400" aria-hidden="true" /><span className="min-w-0 flex-1 truncate">{f.name}{!ok && <span className="ml-1.5 text-xs">nelze přečíst</span>}{p?.status === 'loading' && <Loader2 size={12} className="ml-1.5 inline animate-spin" />}{p?.status === 'error' && <span className="ml-1.5 text-xs font-semibold text-rose-700">{p.reason}</span>}</span></label></li>
+                                    ); })}
+                                </ul>
+                            )}
+                            <p className="mt-2 text-[11px] text-slate-500">Čtou se jen soubory txt, Word a PDF s textem (do {MAX_DOCS} dokumentů, celkem asi {Math.round(MAX_TOTAL_CHARS / 1000)} tisíc znaků). Soubory se čtou ve vašem prohlížeči a do DirectCase i AI odejde jen anonymizovaný text pod názvem „Dokument 1“, bez jmen souborů. Šifrované soubory z klientského odkazu se nečtou.</p>
+                        </fieldset>
                         <details className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm" open>
                             <summary className="flex cursor-pointer items-center gap-2 font-semibold text-slate-800"><Lock size={14} aria-hidden="true" /> Co se odešle (po anonymizaci)</summary>
                             <p className="mt-2 whitespace-pre-line rounded-lg bg-white p-3 text-xs leading-relaxed text-slate-700">{(anonQuestion.text || '(otázka)') + '\n\n' + (anon.text || '(skutkový popis)')}</p>
+                            {docs.map((d) => (
+                                <details key={d.label} className="mt-2 rounded-lg bg-white p-3 text-xs"><summary className="cursor-pointer font-semibold text-slate-800">{d.label} <span className="font-normal text-slate-500">({d.name}, {d.text.length} znaků{d.cut ? ', zkráceno' : ''})</span></summary><p className="mt-2 max-h-48 overflow-y-auto whitespace-pre-line leading-relaxed text-slate-700">{d.text}</p>{Object.keys(d.replaced).length > 0 && <p className="mt-1 text-slate-500">Nahrazeno: {Object.entries(d.replaced).map(([k, v]) => `${k} (${v}×)`).join(', ')}</p>}</details>
+                            ))}
                             <p className="mt-2 text-xs text-slate-500">{Object.keys({ ...anon.replaced, ...anonQuestion.replaced }).length ? `Nahrazeno: ${Object.entries({ ...anon.replaced }).map(([k, v]) => `${k} (${v}×)`).join(', ')}. ` : ''}Automatická anonymizace nezachytí vše (např. adresy nebo neobvyklá jména). Text si před odesláním přečtěte a případně upravte.</p>
                         </details>
-                        <label className="flex cursor-pointer items-start gap-2.5 text-sm text-slate-700"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-800" /><span>Souhlasím s odesláním tohoto anonymizovaného textu do právní databáze DirectCase a službě umělé inteligence. Odpovídám za to, že neobsahuje údaje, které nesmím sdílet.</span></label>
+                        <label className="flex cursor-pointer items-start gap-2.5 text-sm text-slate-700"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-800" /><span>Souhlasím s odesláním tohoto anonymizovaného textu (včetně vybraných podkladů ze spisu) do právní databáze DirectCase a službě umělé inteligence. Odpovídám za to, že neobsahuje údaje, které nesmím sdílet.</span></label>
                         {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
                         <button type="button" onClick={() => void run()} disabled={busy || !consent || question.trim().length < 10} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />} {busy ? 'Hledám a vyhodnocuji (až 1 minuta)…' : 'Vyhledat a vyhodnotit'}</button>
                     </section>
@@ -150,6 +195,11 @@ function Report({ result, chip, actions }: { result: Result; chip: (id: string) 
             {ev ? (
                 <>
                     {ev.summary && <div><h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Shrnutí</h3><p className="mt-1 text-sm leading-relaxed text-slate-800">{ev.summary}</p></div>}
+                    {ev.fileFacts?.length > 0 && (
+                        <div><h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Skutková zjištění ze spisu</h3>
+                            <ul className="mt-1 space-y-1 text-sm text-slate-700">{ev.fileFacts.map((f, i) => <li key={i} className="flex flex-wrap items-center gap-1.5">{f.text} {f.sources.map(chip)}</li>)}</ul>
+                        </div>
+                    )}
                     {ev.arguments.length > 0 && (
                         <div><h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Argumenty</h3>
                             <ul className="mt-2 space-y-2">{ev.arguments.map((a, i) => (
@@ -174,7 +224,7 @@ function Report({ result, chip, actions }: { result: Result; chip: (id: string) 
             {result.summaries.length > 0 && <details className="rounded-xl bg-slate-50 p-3 text-sm"><summary className="cursor-pointer font-semibold text-slate-800">Souhrn přímo z DirectCase</summary><div className="mt-2 space-y-2 whitespace-pre-line text-xs leading-relaxed text-slate-700">{result.summaries.map((t, i) => <p key={i}>{t.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')}</p>)}</div></details>}
             <div><h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Zdroje ({result.sources.length})</h3>
                 <ul className="mt-2 space-y-2">{result.sources.map((s) => (
-                    <li key={s.id} id={`res-${s.id}`} className="scroll-mt-20 rounded-xl border border-slate-200 p-3 text-sm"><p className="flex flex-wrap items-center gap-2"><span className="rounded-md bg-indigo-50 px-1.5 py-0.5 text-[11px] font-bold text-indigo-900">{s.id}</span><strong className="text-slate-900">{s.title}</strong><span className="text-xs text-slate-500">{[s.kind === 'zakon' ? 'předpis' : s.court, s.date && new Date(s.date).toLocaleDateString('cs-CZ')].filter(Boolean).join(' · ')}</span>{s.url && <a href={s.url} target="_blank" rel="noreferrer noopener" className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-indigo-800 hover:underline"><ExternalLink size={12} /> Otevřít</a>}</p>{s.excerpts.map((e, i) => <p key={i} className="mt-1.5 text-xs leading-relaxed text-slate-600">„{e}“</p>)}</li>
+                    <li key={s.id} id={`res-${s.id}`} className="scroll-mt-20 rounded-xl border border-slate-200 p-3 text-sm"><p className="flex flex-wrap items-center gap-2"><span className="rounded-md bg-indigo-50 px-1.5 py-0.5 text-[11px] font-bold text-indigo-900">{s.id}</span><strong className="text-slate-900">{s.title}</strong><span className="text-xs text-slate-500">{[s.kind === 'zakon' ? 'předpis' : s.kind === 'spis' ? 'podklad ze spisu' : s.court, s.date && new Date(s.date).toLocaleDateString('cs-CZ')].filter(Boolean).join(' · ')}</span>{s.url && <a href={s.url} target="_blank" rel="noreferrer noopener" className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-indigo-800 hover:underline"><ExternalLink size={12} /> Otevřít</a>}</p>{s.excerpts.map((e, i) => <p key={i} className="mt-1.5 text-xs leading-relaxed text-slate-600">„{e}“</p>)}</li>
                 ))}</ul>
             </div>
             {actions && <div>{actions}</div>}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anonymize, judikaturaSources, lawSearchSources, provisionSource, validateEvaluation, type Source } from './legalResearch';
+import { anonymize, docSources, slimDocSource, judikaturaSources, lawSearchSources, provisionSource, validateEvaluation, type Source } from './legalResearch';
 
 describe('anonymize', () => {
     it('removes contact data and personal identifiers', () => {
@@ -50,5 +50,21 @@ describe('validateEvaluation', () => {
     });
     it('survives garbage input', () => {
         expect(validateEvaluation('nic', sources).arguments).toEqual([]);
+    });
+});
+
+describe('documents from the file', () => {
+    it('turns documents into verifiable sources and trims them for the response', () => {
+        const long = 'Žalobce požaduje zaplacení částky 50 000 Kč. '.repeat(60);
+        const src = docSources([{ label: 'Dokument 1 (žaloba)', text: long }, { label: 'Dokument 2', text: 'Krátký text.' }]);
+        expect(src.map((x) => x.id)).toEqual(['D1', 'D2']);
+        expect(src[0].excerpts.length).toBeGreaterThan(2);
+        expect(slimDocSource(src[0]).excerpts).toHaveLength(2);
+    });
+    it('keeps file facts only with valid sources and verifies quotes against documents', () => {
+        const sources = docSources([{ label: 'Dokument 1', text: 'Dne 5. 3. 2025 byla uhrazena částka 20 000 Kč bez právního důvodu.' }]);
+        const ev = validateEvaluation({ summary: 'x', facts: [{ text: 'Platba 20 000 Kč', sources: ['D1'] }, { text: 'Vymyšleno', sources: ['D5'] }], arguments: [{ stance: 'pro', claim: 'Plnění bez důvodu', explanation: 'e', sources: ['D1'] }], caselaw: [] }, sources);
+        expect(ev.fileFacts).toEqual([{ text: 'Platba 20 000 Kč', sources: ['D1'] }]);
+        expect(ev.arguments[0].unsupported).toBe(false);
     });
 });

@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimited } from '@/lib/serverSupabase';
 import { CALLBACK_PATH, McpError, exchangeCode, mcpConnect, refreshTokens, registerClient } from '@/lib/mcpClient';
-import { EVAL_SYSTEM, PLAN_SYSTEM, anonymize, judikaturaSources, lawSearchSources, provisionSource, sourcesForPrompt, validateEvaluation, type Source } from '@/lib/legalResearch';
+import { EVAL_SYSTEM, MAX_DOCS, PLAN_SYSTEM, anonymize, docSources, judikaturaSources, slimDocSource, lawSearchSources, provisionSource, sourcesForPrompt, validateEvaluation, type SpisDoc, type Source } from '@/lib/legalResearch';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
@@ -60,13 +60,22 @@ export async function POST(req: Request) {
             const accessToken = clean(body.accessToken, 8000);
             const question = anonymize(clean(body.question, 1500)).text;
             const facts = anonymize(clean(body.facts, 6000)).text;
+            // Podklady ze spisu: dokumenty se znovu projdou anonymizací (pojistka k té v prohlížeči) a omezí se rozsah
+            let budget = 24000;
+            const docs: SpisDoc[] = (Array.isArray(body.documents) ? body.documents : []).slice(0, MAX_DOCS).flatMap((d, i) => {
+                const o = (d && typeof d === 'object' ? d : {}) as Record<string, unknown>;
+                const text = anonymize(clean(o.text, 8000)).text.slice(0, budget);
+                if (text.length < 20) return [];
+                budget -= text.length;
+                return [{ label: anonymize(clean(o.label, 100)).text || `Dokument ${i + 1}`, text }];
+            });
             if (!accessToken || question.length < 10) return NextResponse.json({ error: 'bad_request', message: 'Zadejte právní otázku (aspoň několik slov).' }, { status: 400 });
             if (body.consent !== true) return NextResponse.json({ error: 'consent', message: 'Odeslání údajů je třeba potvrdit.' }, { status: 409 });
             if (rateLimited(`legalr:${u.user.id}`, 30, 86_400_000)) return NextResponse.json({ error: 'rate', message: 'Dnešní limit rešerší je vyčerpán.' }, { status: 429 });
 
             const ai = !!process.env.OPENAI_API_KEY;
             // 1) plán dotazů (bez AI se použije otázka sama)
-            const plan = ai ? await json<{ queries?: string[]; provisions?: string[] }>(PLAN_SYSTEM, { otázka: question, skutkový_popis: facts }) : null;
+            const plan = ai ? await json<{ queries?: string[]; provisions?: string[] }>(PLAN_SYSTEM, { otázka: question, skutkový_popis: facts, podklady_ze_spisu: docs.map((d) => ({ název: d.label, začátek: d.text.slice(0, 800) })) }) : null;
             const queries = (plan?.queries ?? []).map((q) => clean(q, 200)).filter(Boolean).slice(0, 4);
             if (queries.length === 0) queries.push(question.slice(0, 200));
             const provisions = (plan?.provisions ?? []).map((q) => clean(q, 120)).filter(Boolean).slice(0, 4);
@@ -84,10 +93,12 @@ export async function POST(req: Request) {
             const summaries = Object.values((caselaw as { collection_summaries?: Record<string, string> } | null)?.collection_summaries ?? {}).filter((x): x is string => typeof x === 'string').slice(0, 3);
 
             // 3) hodnocení podle nalezených zdrojů (výstup se ověřuje)
-            const evaluation = ai && sources.length
-                ? validateEvaluation(await json(EVAL_SYSTEM, { otázka: question, skutkový_popis: facts, zdroje: sourcesForPrompt(sources) }), sources)
+            const all: Source[] = [...sources, ...docSources(docs)];
+            const evaluation = ai && all.length
+                ? validateEvaluation(await json(EVAL_SYSTEM, { otázka: question, skutkový_popis: facts, zdroje: sourcesForPrompt(all) }), all)
                 : null;
-            return NextResponse.json({ question, queries, provisions, sources, summaries, evaluation, ai }, { headers: NO_STORE });
+            // Dokumenty ze spisu se vracejí jen jako krátké úryvky
+            return NextResponse.json({ question, queries, provisions, sources: all.map((s) => (s.kind === 'spis' ? slimDocSource(s) : s)), summaries, evaluation, ai }, { headers: NO_STORE });
         }
     } catch (e) { return fail(e); }
     return NextResponse.json({ error: 'bad_request' }, { status: 400 });
