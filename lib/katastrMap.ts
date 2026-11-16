@@ -56,3 +56,11 @@ export function addressWhere(q: string): string | null {
     if (words.join('').length < 3) return null;
     return words.map((w) => `upper(adresa) like '%${w.toUpperCase().replace(/'/g, "''")}%'`).join(' and ');
 }
+
+// Dotaz na parcelu podle označení „kód k. ú.-číslo“ (INSPIRE neodlišuje stavební parcely předponou „st.“, proto se vybírá podle výměry)
+export const wfsRefUrl = (ref: string) => `${WFS_URL}?service=WFS&version=2.0.0&request=GetFeature&typenames=CP:CadastralParcel&srsName=urn:ogc:def:crs:EPSG::4326&count=5&filter=${encodeURIComponent(`<fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0"><fes:PropertyIsEqualTo><fes:ValueReference>cp:nationalCadastralReference</fes:ValueReference><fes:Literal>${ref.replace(/[^0-9/-]/g, '')}</fes:Literal></fes:PropertyIsEqualTo></fes:Filter>`)}`;
+
+export function pickByArea(parcels: MapParcel[], area: number | null): MapParcel | undefined {
+    if (area !== null) { const exact = parcels.find((p) => p.area !== null && Math.abs(p.area - area) <= 1); if (exact) return exact; }
+    return parcels[0];
+}

@@ -133,8 +133,8 @@ export const snapshotLabel = (s: PropertySnapshot): string => {
     return `Parcela ${s.oznaceni}, k. ú. ${s.katastralniUzemi.nazev}`;
 };
 
-type Mode = 'mapa' | 'parcela' | 'stavba' | 'jednotka' | 'rizeni';
-const MODES: [Mode, string][] = [['mapa', 'Mapa a adresa'], ['parcela', 'Parcela'], ['stavba', 'Stavba'], ['jednotka', 'Jednotka'], ['rizeni', 'Řízení']];
+type Mode = 'mapa' | 'stavba' | 'jednotka' | 'rizeni';
+const MODES: [Mode, string][] = [['mapa', 'Parcela (mapa, adresa, číslo)'], ['stavba', 'Stavba'], ['jednotka', 'Jednotka'], ['rizeni', 'Řízení']];
 type Found = { items: PropertySnapshot[]; dataAsOf: string | null };
 
 // Autocomplete: pole s nabídkou položek z číselníku
@@ -162,6 +162,8 @@ export default function KatastrSearch({ onSave }: { onSave?: (snapshot: Property
     const [rTyp, setRTyp] = useState('V'); const [rCislo, setRCislo] = useState(''); const [rRok, setRRok] = useState(String(new Date().getFullYear())); const [ws, setWs] = useState(''); const [wsList, setWsList] = useState<{ kod: number; nazev: string }[]>([]);
     const [busy, setBusy] = useState(false); const [error, setError] = useState('');
     const [found, setFound] = useState<Found | null>(null);
+    const [focus, setFocus] = useState<MapParcel | null>(null);
+    const results = useRef<HTMLDivElement>(null);
     const [savedKeys, setSavedKeys] = useState<string[]>([]);
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -171,6 +173,11 @@ export default function KatastrSearch({ onSave }: { onSave?: (snapshot: Property
         call({ op: 'pracoviste' }).then((r) => { if (!cancelled && r.ok) setWsList((r.data.results as { kod: number; nazev: string }[]) ?? []); });
         return () => { cancelled = true; };
     }, [mode, wsList.length]);
+
+    // Po nalezení se stránka sama posune na výsledek
+    useEffect(() => {
+        if (found) results.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [found]);
 
     function suggest(op: 'ku' | 'castiobce', value: string) {
         setError('');
@@ -197,11 +204,20 @@ export default function KatastrSearch({ onSave }: { onSave?: (snapshot: Property
 
     async function search(e: React.FormEvent) {
         e.preventDefault();
-        if (mode === 'parcela') {
-            if (!ku) { setError('Vyberte katastrální území ze seznamu.'); return; }
+        if (mode === 'mapa') {
+            if (!ku) { setError('Vyberte obec (katastrální území) ze seznamu.'); return; }
             const parsed = parseParcelNumber(number);
             if (!parsed) { setError('Zadejte parcelní číslo, např. 123/4 nebo st. 56.'); return; }
-            await run({ op: 'parcela', ku: String(ku.kod), kmen: String(parsed.kmen), druh: String(parsed.druh), evid, ...(parsed.poddeleni !== undefined ? { podd: String(parsed.poddeleni) } : {}) }, (d) => ((d.parcels as ParcelaView[]) ?? []).map((p) => ({ kind: 'parcela' as const, ...p })), 'Parcela s tímto číslem v daném katastrálním území nebyla nalezena.');
+            setError(''); setFound(null); setSavedKeys([]); setBusy(true);
+            const r = await call({ op: 'parcela', ku: String(ku.kod), kmen: String(parsed.kmen), druh: String(parsed.druh), evid, ...(parsed.poddeleni !== undefined ? { podd: String(parsed.poddeleni) } : {}) });
+            if (!r.ok) { setBusy(false); setError(r.message); return; }
+            const parcels = (r.data.parcels as ParcelaView[]) ?? [];
+            if (!parcels.length) { setBusy(false); setError('Parcela s tímto číslem v daném katastrálním území nebyla nalezena.'); return; }
+            setFound({ items: parcels.map((x) => ({ kind: 'parcela' as const, ...x })), dataAsOf: (r.data.aktualnostDatK as string | null) ?? null });
+            // Obrys na mapě (vybere se parcela se stejnou výměrou, protože služba neodlišuje stavební parcely)
+            const shape = await call({ op: 'obrys', ku: String(ku.kod), kmen: String(parsed.kmen), ...(parsed.poddeleni !== undefined ? { podd: String(parsed.poddeleni) } : {}), ...(parcels[0].vymera !== null ? { area: String(parcels[0].vymera) } : {}) });
+            setBusy(false);
+            if (shape.ok && shape.data.parcel) setFocus(shape.data.parcel as MapParcel);
         } else if (mode === 'stavba' || mode === 'jednotka') {
             if (!co) { setError('Vyberte část obce ze seznamu.'); return; }
             const cp = Number(number.replace(/\D/g, ''));
@@ -217,9 +233,21 @@ export default function KatastrSearch({ onSave }: { onSave?: (snapshot: Property
     }
 
     async function openFromMap(p: MapParcel) {
-        await run({ op: 'parcela', ku: String(p.ku), kmen: String(p.kmen), druh: String(p.druh), evid: 'PKN', ...(p.poddeleni !== undefined ? { podd: String(p.poddeleni) } : {}) },
-            (d) => ((d.parcels as ParcelaView[]) ?? []).map((x) => ({ kind: 'parcela' as const, ...x })),
-            `Parcela ${p.label} v k. ú. ${p.ku} není v katastru nemovitostí vedena (může jít o parcelu zjednodušené evidence).`);
+        setError(''); setFound(null); setSavedKeys([]); setBusy(true);
+        // Služba s mapou neodlišuje stavební parcely, zkusí se obě číslování a vybere se parcela se stejnou výměrou
+        let fallback: ParcelaView[] = []; let asOf: string | null = null;
+        for (const druh of p.druh === 1 ? [1, 2] : [2, 1]) {
+            const r = await call({ op: 'parcela', ku: String(p.ku), kmen: String(p.kmen), druh: String(druh), evid: 'PKN', ...(p.poddeleni !== undefined ? { podd: String(p.poddeleni) } : {}) });
+            if (!r.ok) { setBusy(false); setError(r.message); return; }
+            const parcels = (r.data.parcels as ParcelaView[]) ?? [];
+            const exact = parcels.filter((x) => x.vymera === p.area);
+            asOf = (r.data.aktualnostDatK as string | null) ?? asOf;
+            if (exact.length) { fallback = exact; break; }
+            if (!fallback.length) fallback = parcels;
+        }
+        setBusy(false);
+        if (!fallback.length) { setError(`Parcela ${p.label} v k. ú. ${p.ku} není v katastru nemovitostí vedena (může jít o parcelu zjednodušené evidence).`); return; }
+        setFound({ items: fallback.map((x) => ({ kind: 'parcela' as const, ...x })), dataAsOf: asOf });
     }
 
     async function openNeighbor(id: number) {
@@ -252,10 +280,10 @@ export default function KatastrSearch({ onSave }: { onSave?: (snapshot: Property
                     {MODES.map(([id, name]) => <button key={id} type="button" role="tab" aria-selected={mode === id} onClick={() => switchMode(id)} className={`rounded-full border px-4 py-1.5 text-sm font-semibold ${mode === id ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}`}>{name}</button>)}
                 </div>
 
-                {mode === 'mapa' && <div className="mt-4"><KatastrMap call={call} onParcel={(p) => void openFromMap(p)} busy={busy} /></div>}
-                {mode !== 'mapa' && <div className="mt-4 grid gap-3 sm:grid-cols-6 sm:items-end">
-                    {mode === 'parcela' && <>
-                        <div className="sm:col-span-3"><Suggest id="ku" label="Katastrální území (název nebo kód)" value={kuText} onType={(v) => { setKuText(v); setKu(null); suggest('ku', v); }} onPick={(k: KatastralniUzemi) => { setKu(k); setKuText(`${k.nazev} (${k.kod})`); setKuList([]); }} suggestions={kuList} show={!ku} render={(k) => `${k.nazev} · ${k.kod}`} placeholder="např. Plzeň" /></div>
+                {mode === 'mapa' && <div className="mt-4"><KatastrMap call={call} onParcel={(p) => void openFromMap(p)} busy={busy} focus={focus} /><p className="mb-1 mt-5 text-xs font-bold uppercase tracking-wide text-slate-500">Nebo podle obce a čísla parcely</p></div>}
+                <div className="mt-4 grid gap-3 sm:grid-cols-6 sm:items-end">
+                    {mode === 'mapa' && <>
+                        <div className="sm:col-span-3"><Suggest id="ku" label="Obec / katastrální území (název nebo kód)" value={kuText} onType={(v) => { setKuText(v); setKu(null); suggest('ku', v); }} onPick={(k: KatastralniUzemi) => { setKu(k); setKuText(`${k.nazev} (${k.kod})`); setKuList([]); }} suggestions={kuList} show={!ku} render={(k) => `${k.nazev} · ${k.kod}`} placeholder="např. Plzeň" /></div>
                         <label className={`${label} sm:col-span-2`}>Parcelní číslo<input value={number} onChange={(e) => setNumber(e.target.value)} className={`${inputCls} mt-1 font-normal`} placeholder="123/4 nebo st. 56" /></label>
                         <label className={label}>Evidence<select value={evid} onChange={(e) => setEvid(e.target.value as 'PKN' | 'PZE')} className={`${inputCls} mt-1 font-normal`}><option value="PKN">Katastr nemovitostí</option><option value="PZE">Zjednodušená evidence</option></select></label>
                     </>}
@@ -272,16 +300,18 @@ export default function KatastrSearch({ onSave }: { onSave?: (snapshot: Property
                         <label className={`${label} sm:col-span-2`}>Katastrální pracoviště<select value={ws} onChange={(e) => setWs(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">{wsList.length ? 'Vyberte…' : 'Načítám…'}</option>{wsList.map((w) => <option key={w.kod} value={w.kod}>{w.nazev}</option>)}</select></label>
                     </>}
                     <button type="submit" disabled={busy} className={`${primaryBtn} justify-center sm:col-span-6 sm:justify-self-start`}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Hledat</button>
-                </div>}
-                {mode !== 'mapa' && <p className="mt-3 text-xs text-slate-500">{mode === 'parcela' ? 'Stavební parcelu zadejte s předponou „st.“. ' : ''}Zdroj: bezplatné API katastru nemovitostí ČÚZK. Počet dotazů je omezený.</p>}
+                </div>
+                <p className="mt-3 text-xs text-slate-500">{mode === 'mapa' ? 'Stavební parcelu zadejte s předponou „st.“. ' : ''}Zdroj: bezplatné API katastru nemovitostí ČÚZK. Počet dotazů je omezený.</p>
                 {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
             </form>
+            <div ref={results} className="scroll-mt-4 space-y-4">
             {found?.items.map((item) => {
                 const key = `${item.kind}-${item.id}`;
                 const btn = saveButton(item);
                 if (item.kind === 'parcela') return <ParcelCard key={key} p={item} dataAsOf={found.dataAsOf} onNeighbor={(id) => void openNeighbor(id)}>{btn}</ParcelCard>;
                 return <PropertyCard key={key} snap={item} dataAsOf={found.dataAsOf}>{btn}</PropertyCard>;
             })}
+            </div>
         </div>
     );
 }

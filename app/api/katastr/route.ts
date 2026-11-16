@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { RUIAN_ADDRESS_URL, addressWhere, parseWfsParcels, pointInRing, wfsPointUrl } from '@/lib/katastrMap';
+import { RUIAN_ADDRESS_URL, addressWhere, parseWfsParcels, pickByArea, pointInRing, wfsPointUrl, wfsRefUrl } from '@/lib/katastrMap';
 import { CUZK_BASE, RIZENI_TYPY, normalizeJednotka, normalizeNeighbor, normalizeParcel, normalizeRizeni, normalizeStavba, searchCastiObce, searchKu, type CastObce, type KatastralniUzemi } from '@/lib/katastr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -99,7 +99,7 @@ export async function GET(req: Request) {
 
         // Mapa: parcela podle bodu a hledání adresy používají veřejné služby ČÚZK bez klíče, proto se nezapočítávají do denního limitu API
         const mapOp = url.searchParams.get('op');
-        if (mapOp === 'bod' || mapOp === 'adresa') {
+        if (mapOp === 'bod' || mapOp === 'adresa' || mapOp === 'obrys') {
             if (limited(`mm:${uid}`, 40, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
             try {
                 if (mapOp === 'bod') {
@@ -108,6 +108,16 @@ export async function GET(req: Request) {
                     const res = await fetch(wfsPointUrl(lat, lon), { cache: 'no-store', signal: AbortSignal.timeout(15_000) });
                     if (!res.ok) return NextResponse.json({ error: 'upstream' }, { status: 502 });
                     const hit = parseWfsParcels(await res.text()).find((p) => pointInRing(lat, lon, p.ring));
+                    return NextResponse.json(hit ? { found: true, parcel: hit } : { found: false });
+                }
+                if (mapOp === 'obrys') {
+                    const ku = int(url.searchParams.get('ku'), 1, 999999); const kmen = int(url.searchParams.get('kmen'), 1, 999999);
+                    const podd = url.searchParams.get('podd') ? int(url.searchParams.get('podd'), 0, 9999) : null;
+                    const area = url.searchParams.get('area') ? Number(url.searchParams.get('area')) : null;
+                    if (ku === null || kmen === null) return NextResponse.json({ error: 'bad_request' }, { status: 400 });
+                    const res = await fetch(wfsRefUrl(`${ku}-${kmen}${podd ? `/${podd}` : ''}`), { cache: 'no-store', signal: AbortSignal.timeout(15_000) });
+                    if (!res.ok) return NextResponse.json({ error: 'upstream' }, { status: 502 });
+                    const hit = pickByArea(parseWfsParcels(await res.text()), area !== null && Number.isFinite(area) ? area : null);
                     return NextResponse.json(hit ? { found: true, parcel: hit } : { found: false });
                 }
                 const where = addressWhere(url.searchParams.get('q') ?? '');

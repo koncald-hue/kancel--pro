@@ -10,7 +10,7 @@ import { inputCls, primaryBtn } from '../situation/caseUi';
 type Call = (params: Record<string, string>) => Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; message: string }>;
 
 // Mapa katastru: podklad OpenStreetMap, nad ním hranice parcel z veřejné služby ČÚZK. Klik na parcelu ji otevře, adresa mapu přiblíží.
-export default function KatastrMap({ call, onParcel, busy }: { call: Call; onParcel: (p: MapParcel) => void; busy: boolean }) {
+export default function KatastrMap({ call, onParcel, busy, focus }: { call: Call; onParcel: (p: MapParcel) => void; busy: boolean; focus: MapParcel | null }) {
     const host = useRef<HTMLDivElement>(null);
     const map = useRef<Leaflet.Map | null>(null);
     const lib = useRef<typeof Leaflet | null>(null);
@@ -19,6 +19,21 @@ export default function KatastrMap({ call, onParcel, busy }: { call: Call; onPar
     const onParcelRef = useRef(onParcel);
     const callRef = useRef(call);
     useEffect(() => { onParcelRef.current = onParcel; callRef.current = call; });
+
+    // Parcela nalezená vyhledáním podle čísla: zvýrazní se a mapa se na ni přiblíží
+    useEffect(() => {
+        if (!focus) return;
+        let cancelled = false;
+        const apply = () => {
+            const m = map.current; const L = lib.current;
+            if (!m || !L) { if (!cancelled) window.setTimeout(apply, 150); return; }
+            outline.current?.remove();
+            outline.current = L.polygon(focus.ring, { color: '#4338ca', weight: 3, fillOpacity: 0.15 }).addTo(m);
+            m.fitBounds(outline.current.getBounds(), { maxZoom: 19, padding: [30, 30] });
+        };
+        apply();
+        return () => { cancelled = true; };
+    }, [focus]);
 
     const [q, setQ] = useState('');
     const [hits, setHits] = useState<AddressHit[]>([]);
@@ -52,8 +67,7 @@ export default function KatastrMap({ call, onParcel, busy }: { call: Call; onPar
         return () => { disposed = true; map.current?.remove(); map.current = null; };
     }, []);
 
-    async function find(e: React.FormEvent) {
-        e.preventDefault();
+    async function find() {
         if (q.trim().length < 3) return;
         setSearching(true); setMessage(''); setHits([]);
         const r = await call({ op: 'adresa', q });
@@ -75,16 +89,16 @@ export default function KatastrMap({ call, onParcel, busy }: { call: Call; onPar
 
     return (
         <div className="space-y-3">
-            <form onSubmit={find} className="relative flex gap-2">
+            <div className="relative flex gap-2">
                 <label className="sr-only" htmlFor="map-address">Adresa</label>
-                <input id="map-address" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Adresa, např. náměstí Míru 21, Hustopeče nad Bečvou" className={inputCls} />
-                <button type="submit" disabled={searching} className={primaryBtn}>{searching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Najít</button>
+                <input id="map-address" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void find(); } }} placeholder="Adresa, např. náměstí Míru 21, Hustopeče nad Bečvou" className={inputCls} />
+                <button type="button" onClick={() => void find()} disabled={searching} className={primaryBtn}>{searching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Najít</button>
                 {hits.length > 0 && (
                     <ul className="absolute left-0 top-full z-[1000] mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
                         {hits.map((h, i) => <li key={i}><button type="button" onClick={() => go(h)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-800 hover:bg-indigo-50 cursor-pointer"><MapPin size={14} className="shrink-0 text-indigo-700" /> {h.adresa}</button></li>)}
                     </ul>
                 )}
-            </form>
+            </div>
             <div className="relative overflow-hidden rounded-xl border border-slate-200">
                 <div ref={host} className="h-[26rem] w-full" role="application" aria-label="Mapa katastru" />
                 {(clicking || busy) && <div className="absolute right-3 top-3 z-[1000] inline-flex items-center gap-2 rounded-lg bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow"><Loader2 size={14} className="animate-spin" /> Načítám parcelu…</div>}
