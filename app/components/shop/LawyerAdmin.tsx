@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import AdminBilling from './AdminBilling';
+import AdminGrantPackage from './AdminGrantPackage';
 import AdminLawyers from './AdminLawyers';
 import type { LawyerAccess } from '@/lib/lawyer';
 
@@ -41,6 +42,8 @@ export default function LawyerAdmin() {
             <h1 className="mt-2 text-3xl font-bold text-slate-900">Advokáti a předplatné</h1>
             <p className="mt-1 text-sm text-slate-600">Přehled všech uživatelů s jejich profily, ceny a objednávky. Přístup se po zaplacení aktivuje sám, ruční aktivace je jen nouzová.</p>
             {message && <p role="alert" className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-slate-800">{message}</p>}
+
+            <AdminGrantPackage onDone={() => setReload((n) => n + 1)} />
 
             <AdminBilling rows={rows} />
 
