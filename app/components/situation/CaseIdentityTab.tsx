@@ -49,7 +49,7 @@ export default function CaseIdentityTab({ item, userId, fail }: TabProps) {
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><ShieldCheck size={18} className="text-indigo-700" aria-hidden="true" /> Identifikace klienta</h2>
                 <p className="mt-1 text-sm text-slate-600">Záznam o ověření totožnosti klienta, posouzení politicky exponované osoby a rizika. Zákon č. 253/2008 Sb. se na advokáta vztahuje jen při některých činnostech, zda se týká této věci, posuďte sami.</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => void add('bankid')} disabled={!hasLink || busy === 'add-bankid'} className={primaryBtn} title={hasLink ? '' : 'Nejdřív vytvořte klientskou stránku v záložce Klient'}>{busy === 'add-bankid' ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} Požádat klienta o ověření (Bank iD)</button>
+                    <button type="button" onClick={() => void add('bankid')} disabled={!hasLink || busy === 'add-bankid'} className={primaryBtn} title={hasLink ? '' : 'Nejdřív vytvořte klientskou stránku v záložce Klient'}>{busy === 'add-bankid' ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} Požádat klienta o online ověření</button>
                     <button type="button" onClick={() => void add('osobne')} disabled={busy === 'add-osobne'} className={ghostBtn}><Plus size={14} /> Zapsat osobní identifikaci</button>
                 </div>
                 {!hasLink && <p className="mt-2 text-xs text-slate-500">Pro online ověření je potřeba klientská stránka (záložka Klient).</p>}
@@ -62,7 +62,7 @@ export default function CaseIdentityTab({ item, userId, fail }: TabProps) {
                             <button type="button" onClick={() => void remove(r.id)} aria-label="Smazat" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 cursor-pointer"><Trash2 size={14} /></button></div>
                         {waiting ? <p className="mt-2 text-slate-600">Klient uvidí výzvu ve svém portálu na Přehledu. Po ověření se údaje doplní samy.</p> : (
                             <fieldset disabled={done} className="mt-3 space-y-3">
-                                {r.online_result ? <p className="flex items-center gap-1.5 rounded-lg bg-emerald-50 p-2.5 text-xs text-emerald-900"><BadgeCheck size={14} aria-hidden="true" /> Totožnost ověřena přes Bank iD, údaje o jménu, datu narození a adrese převzaty z ověření.</p> : null}
+                                {r.online_result ? <p className="flex items-center gap-1.5 rounded-lg bg-emerald-50 p-2.5 text-xs text-emerald-900"><BadgeCheck size={14} aria-hidden="true" /> Totožnost ověřena online, údaje o jménu, datu narození a adrese převzaty z ověření.</p> : null}
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <label className={lab}>Jméno a příjmení / název<input value={r.full_name} onChange={(e) => void patch(r.id, { full_name: e.target.value })} className={`${inputCls} mt-1 font-normal`} /></label>
                                     <label className={lab}>Datum narození<input type="date" value={r.birth_date ?? ''} onChange={(e) => void patch(r.id, { birth_date: e.target.value || null })} className={`${inputCls} mt-1 font-normal`} /></label>

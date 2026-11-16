@@ -4,7 +4,7 @@ import { canonicalJson, type Evidence } from './signing';
 // Doklad o podpisu jako stránka PDF. Text se kreslí přes plátno prohlížeče, protože základní písma PDF neumí české znaky;
 // strojově čitelný doklad (JSON) se navíc přiloží k PDF jako příloha.
 const IDENTITY_TEXT = (e: Evidence['identity']) => e.method === 'bankid'
-    ? `Ověřena přes Bank iD: ${[e.given, e.family].filter(Boolean).join(' ')}${e.birthdate ? `, nar. ${e.birthdate.split('-').reverse().map(Number).join('. ')}` : ''}${e.verifiedAt ? ` (${new Date(e.verifiedAt).toLocaleString('cs-CZ')})` : ''}${e.phoneMatch === false ? '. Telefon z Bank iD se liší od čísla pro SMS.' : ''}`
+    ? `Ověřena online (${e.provider ?? 'Bank iD'}): ${[e.given, e.family].filter(Boolean).join(' ')}${e.birthdate ? `, nar. ${e.birthdate.split('-').reverse().map(Number).join('. ')}` : ''}${e.verifiedAt ? ` (${new Date(e.verifiedAt).toLocaleString('cs-CZ')})` : ''}${e.phoneMatch === false ? '. Telefon z Bank iD se liší od čísla pro SMS.' : ''}`
     : e.method === 'lawyer' ? `Ověřena advokátem osobně${e.note ? `: ${e.note}` : ''}` : 'Totožnost nebyla ověřována';
 
 export function evidenceLines(e: Evidence, seal: string): string[] {
@@ -15,7 +15,7 @@ export function evidenceLines(e: Evidence, seal: string): string[] {
         `Otisk dokumentu (SHA-256): ${e.docSha256}`,
         `Podepsal: ${e.signer.name || 'neuvedeno'}`,
         `Totožnost: ${IDENTITY_TEXT(e.identity)}`,
-        e.otp.channel === 'lawyer' ? `Potvrzení: jednorázový kód sdělil klientovi advokát, zadán ${new Date(e.otp.verifiedAt).toLocaleString('cs-CZ')}` : `Potvrzení: jednorázový kód odeslaný SMS na ${e.signer.phoneMasked}, zadán ${new Date(e.otp.verifiedAt).toLocaleString('cs-CZ')}`,
+        e.otp.channel === 'email' ? `Potvrzení: jednorázový kód odeslaný e-mailem na ${e.signer.emailMasked ?? 'adresu klienta'}, zadán ${new Date(e.otp.verifiedAt).toLocaleString('cs-CZ')}` : e.otp.channel === 'lawyer' ? `Potvrzení: jednorázový kód sdělil klientovi advokát, zadán ${new Date(e.otp.verifiedAt).toLocaleString('cs-CZ')}` : `Potvrzení: jednorázový kód odeslaný SMS na ${e.signer.phoneMasked}, zadán ${new Date(e.otp.verifiedAt).toLocaleString('cs-CZ')}`,
         `Čas podpisu: ${new Date(e.signedAt).toLocaleString('cs-CZ')}`,
         `IP adresa: ${e.ip}`,
         `Prohlížeč: ${e.userAgent.slice(0, 110)}`,

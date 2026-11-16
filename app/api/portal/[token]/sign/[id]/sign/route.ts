@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { loadSignRequest, portalGuard, sealSecret } from '@/lib/signServer';
 import { sameName, type VerifiedIdentity } from '@/lib/bankid';
 import { CONSENT_TEXT, OTP_MAX_ATTEMPTS, isExpired, isSha256, maskPhone, normalizePhone, otpHash, sealEvidence, type Evidence } from '@/lib/signing';
+import { maskEmail } from '@/lib/mail';
 import { clientIp } from '@/lib/serverSupabase';
 
 // Podpis: klient potvrdí, že viděl dokument s daným otiskem, zadá SMS kód a po ověření totožnosti vznikne zapečetěný doklad o podpisu
@@ -21,11 +22,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string;
     let identity: Evidence['identity'] = { method: r.identity_method, note: r.identity_note || undefined };
     if (r.identity_method === 'bankid') {
         const { data: ses } = await db.from('identity_sessions').select('result, verified_at').eq('purpose', 'signature').eq('ref_id', r.id).not('verified_at', 'is', null).order('verified_at', { ascending: false }).limit(1);
-        const v = ses?.[0]?.result as VerifiedIdentity | undefined;
+        const v = ses?.[0]?.result as (VerifiedIdentity & { provider?: string }) | undefined;
         if (!v) return NextResponse.json({ error: 'identity', message: 'Nejdřív ověřte totožnost přes Bank iD.' }, { status: 403 });
         if (r.signer_name && !sameName(`${v.given} ${v.family}`, r.signer_name)) return NextResponse.json({ error: 'name', message: 'Ověřená totožnost neodpovídá osobě, které byl dokument určen.' }, { status: 403 });
         const idPhone = v.phone ? normalizePhone(v.phone) : null; const reqPhone = normalizePhone(r.signer_phone);
-        identity = { method: 'bankid', given: v.given, family: v.family, birthdate: v.birthdate, sub: v.sub, verifiedAt: ses?.[0]?.verified_at as string, phoneMatch: idPhone && reqPhone ? idPhone === reqPhone : undefined };
+        identity = { method: 'bankid', provider: v.provider, given: v.given, family: v.family, birthdate: v.birthdate, sub: v.sub, verifiedAt: ses?.[0]?.verified_at as string, phoneMatch: idPhone && reqPhone ? idPhone === reqPhone : undefined };
     }
 
     // SMS kód
@@ -45,8 +46,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string;
     const now = new Date().toISOString();
     const evidence: Evidence = {
         v: 1, requestId: r.id, title: r.title, level: 'advanced', docSha256: r.doc_sha256,
-        signer: { name: identity.given ? `${identity.given} ${identity.family}` : (r.signer_name || link.client_name || ''), phoneMasked: maskPhone(r.signer_phone) },
-        identity, otp: { channel: otp.channel === 'lawyer' ? 'lawyer' : 'sms', verifiedAt: now }, signedAt: now, ip: clientIp(req), userAgent: (req.headers.get('user-agent') ?? '').slice(0, 300), consent: CONSENT_TEXT,
+        signer: { name: identity.given ? `${identity.given} ${identity.family}` : (r.signer_name || link.client_name || ''), phoneMasked: maskPhone(r.signer_phone), emailMasked: r.signer_email ? maskEmail(r.signer_email) : undefined },
+        identity, otp: { channel: otp.channel === 'lawyer' ? 'lawyer' : otp.channel === 'email' ? 'email' : 'sms', verifiedAt: now }, signedAt: now, ip: clientIp(req), userAgent: (req.headers.get('user-agent') ?? '').slice(0, 300), consent: CONSENT_TEXT,
     };
     const seal = await sealEvidence(sealSecret(), evidence);
     const { data: done, error } = await db.from('signature_requests').update({ status: 'signed', signed_at: now, evidence, evidence_seal: seal }).eq('id', r.id).eq('status', 'pending').select('id');

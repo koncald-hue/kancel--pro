@@ -1,7 +1,7 @@
 // Identifikace klienta pro zákon č. 253/2008 Sb. Jen pomocné funkce; rozhodnutí, zda a jak identifikovat, zůstává na advokátovi.
 export type Ident = { method: 'bankid' | 'osobne' | 'jine'; status: 'requested' | 'verified_online' | 'draft' | 'confirmed'; full_name: string; birth_date: string | null; address: string; doc_type: string; doc_number: string; doc_expires: string | null; is_company: boolean; company_ico: string; beneficial_owner: string; pep: 'ne' | 'ano' | 'nevim'; pep_note: string; risk: 'nizke' | 'standardni' | 'vysoke'; purpose: string; online_result: unknown };
 
-export const METHOD_LABEL: Record<Ident['method'], string> = { bankid: 'Online přes Bank iD', osobne: 'Osobně, podle dokladu totožnosti', jine: 'Jiným způsobem' };
+export const METHOD_LABEL: Record<Ident['method'], string> = { bankid: 'Online (Bank iD / mojeID)', osobne: 'Osobně, podle dokladu totožnosti', jine: 'Jiným způsobem' };
 export const STATUS_LABEL: Record<Ident['status'], string> = { requested: 'Čeká na klienta', verified_online: 'Klient ověřen online, čeká na potvrzení', draft: 'Rozpracováno', confirmed: 'Potvrzeno' };
 
 // Co chybí, aby šlo identifikaci potvrdit. Prázdný seznam = lze potvrdit.

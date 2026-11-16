@@ -20,11 +20,11 @@ export async function GET(req: Request) {
     if (!cfg) return back(token, 'chyba', extra);
     try {
         const identity = await exchangeCode(cfg, await discover(cfg), code, s.code_verifier as string);
-        if (!identityComplete(identity)) return back(token, 'neuplne', extra);
+        if (!identityComplete(identity, cfg.provider)) return back(token, 'neuplne', extra);
         const now = new Date().toISOString();
-        await db.from('identity_sessions').update({ result: identity, verified_at: now }).eq('id', s.id);
+        await db.from('identity_sessions').update({ result: { ...identity, provider: cfg.label }, verified_at: now }).eq('id', s.id);
         if (s.purpose === 'aml') {
-            await db.from('client_identifications').update({ status: 'verified_online', method: 'bankid', online_result: { ...identity, verifiedAt: now }, full_name: `${identity.given} ${identity.family}`, birth_date: identity.birthdate, address: identity.address }).eq('id', s.ref_id).eq('status', 'requested');
+            await db.from('client_identifications').update({ status: 'verified_online', method: 'bankid', online_result: { ...identity, provider: cfg.label, verifiedAt: now }, full_name: `${identity.given} ${identity.family}`, birth_date: identity.birthdate, address: identity.address }).eq('id', s.ref_id).eq('status', 'requested');
         }
         return back(token, 'ok', extra);
     } catch { return back(token, 'chyba', extra); }

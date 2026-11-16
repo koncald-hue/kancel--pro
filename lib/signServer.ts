@@ -7,8 +7,8 @@ export function sealSecret(): string {
     return process.env.SIGN_SEAL_SECRET || `seal:${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''}`;
 }
 
-export type SignRow = { id: string; user_id: string; case_id: string; file_id: string | null; title: string; kind: string; level: 'advanced' | 'qualified'; identity_method: 'bankid' | 'lawyer' | 'none'; identity_note: string; doc_sha256: string; signer_name: string; signer_phone: string; status: SignStatus; expires_at: string | null; signed_at: string | null; created_at: string; decline_reason: string };
-export const SIGN_COLS = 'id, user_id, case_id, file_id, title, kind, level, identity_method, identity_note, doc_sha256, signer_name, signer_phone, status, expires_at, signed_at, created_at, decline_reason';
+export type SignRow = { id: string; user_id: string; case_id: string; file_id: string | null; title: string; kind: string; level: 'advanced' | 'qualified'; identity_method: 'bankid' | 'lawyer' | 'none'; identity_note: string; doc_sha256: string; signer_name: string; signer_phone: string; signer_email: string; status: SignStatus; expires_at: string | null; signed_at: string | null; created_at: string; decline_reason: string };
+export const SIGN_COLS = 'id, user_id, case_id, file_id, title, kind, level, identity_method, identity_note, doc_sha256, signer_name, signer_phone, signer_email, status, expires_at, signed_at, created_at, decline_reason';
 
 // Žádost o podpis patří ke věci klientského odkazu
 export async function loadSignRequest(db: SupabaseClient, link: LinkRow, id: string): Promise<SignRow | null> {

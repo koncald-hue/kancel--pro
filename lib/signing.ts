@@ -16,7 +16,7 @@ export const KINDS: Record<SignKind, { label: string; level: SignLevel; note: st
 };
 export const defaultLevel = (kind: SignKind): SignLevel => KINDS[kind].level;
 
-export const LEVEL_LABEL: Record<SignLevel, string> = { advanced: 'Podpis s ověřením totožnosti (Bank iD nebo osobně + SMS kód)', qualified: 'Kvalifikovaný podpis (mimo aplikaci)' };
+export const LEVEL_LABEL: Record<SignLevel, string> = { advanced: 'Podpis s ověřením totožnosti (online nebo osobně + jednorázový kód)', qualified: 'Kvalifikovaný podpis (mimo aplikaci)' };
 export const STATUS_LABEL: Record<SignStatus, string> = { pending: 'Čeká na podpis', signed: 'Podepsáno', awaiting_check: 'Čeká na ověření advokátem', declined: 'Odmítnuto', cancelled: 'Zrušeno', expired: 'Vypršelo' };
 
 // Prohlášení, které klient před podpisem potvrdí; ukládá se do dokladu
@@ -45,9 +45,9 @@ export function normalizePhone(raw: string): string | null {
 export type Evidence = {
     v: 1;
     requestId: string; title: string; level: 'advanced'; docSha256: string;
-    signer: { name: string; phoneMasked: string };
-    identity: { method: IdentityMethod; given?: string; family?: string; birthdate?: string; sub?: string; verifiedAt?: string; note?: string; phoneMatch?: boolean };
-    otp: { channel: 'sms' | 'lawyer'; verifiedAt: string };
+    signer: { name: string; phoneMasked: string; emailMasked?: string };
+    identity: { method: IdentityMethod; provider?: string; given?: string; family?: string; birthdate?: string; sub?: string; verifiedAt?: string; note?: string; phoneMatch?: boolean };
+    otp: { channel: 'sms' | 'lawyer' | 'email'; verifiedAt: string };
     signedAt: string; ip: string; userAgent: string; consent: string;
 };
 

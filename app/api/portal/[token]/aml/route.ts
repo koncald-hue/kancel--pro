@@ -10,7 +10,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
     const { db, link } = g;
     const { data, error } = await db.from('client_identifications').select('id, status').eq('case_id', link.case_id).eq('method', 'bankid').in('status', ['requested', 'verified_online', 'confirmed']).order('created_at', { ascending: false }).limit(1);
     if (error) return NextResponse.json({ request: null, bankid: false });
-    return NextResponse.json({ request: data?.[0] ?? null, bankid: !!bankIdConfig('https://x') });
+    return NextResponse.json({ request: data?.[0] ?? null, bankid: !!bankIdConfig('https://x'), idp: bankIdConfig('https://x')?.label ?? 'Bank iD' });
 }
 
 export async function POST(req: Request, ctx: { params: Promise<{ token: string }> }) {

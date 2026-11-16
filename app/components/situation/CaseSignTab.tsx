@@ -8,6 +8,7 @@ import { fetchDecrypted } from '@/lib/e2eeFiles';
 import { insertRow, safeFileName, updateRow, uploadCaseFile, type CaseFile } from '@/lib/caseFile';
 import { isAllowedUpload } from '@/lib/portal';
 import { KINDS, LEVEL_LABEL, STATUS_LABEL, defaultLevel, normalizePhone, sha256Hex, type Evidence, type IdentityMethod, type SignKind, type SignLevel, type SignStatus } from '@/lib/signing';
+import { isEmail } from '@/lib/mail';
 import { buildSignedPdf } from '@/lib/signedPdf';
 import { ghostBtn, inputCls, primaryBtn, type TabProps } from './caseUi';
 import { useChannelKey, useDecryptedNames } from './useChannelKey';
@@ -26,7 +27,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
     const [busy, setBusy] = useState('');
     const [msg, setMsg] = useState('');
     const [open, setOpen] = useState(false);
-    const [f, setF] = useState({ kind: 'smlouva' as SignKind, title: '', name: item.client_name ?? '', phone: item.client_phone ?? '', identity: 'lawyer' as IdentityMethod, note: '', days: 14 });
+    const [f, setF] = useState({ kind: 'smlouva' as SignKind, title: '', name: item.client_name ?? '', phone: item.client_phone ?? '', email: item.client_email ?? '', identity: 'lawyer' as IdentityMethod, note: '', days: 14 });
     const [file, setFile] = useState<File | null>(null);
     const picker = useRef<HTMLInputElement>(null);
 
@@ -58,6 +59,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
         await run('create', async () => {
             const problem = isAllowedUpload(file.name, file.size); if (problem) throw new Error(problem);
             if (f.phone.trim() && !normalizePhone(f.phone)) throw new Error('Telefon nevypadá správně.');
+            if (f.email.trim() && !isEmail(f.email)) throw new Error('E-mail nevypadá správně.');
             if (f.identity === 'lawyer' && f.note.trim().length < 3) throw new Error('U osobního ověření uveďte, jak jste totožnost ověřili (např. doklad, datum).');
             const hash = await sha256Hex(new Uint8Array(await file.arrayBuffer()));
             let row: CaseFile;
@@ -73,7 +75,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                 await updateRow('case_files', row.id, { client_visible: true, source: 'lawyer' }); row = { ...row, client_visible: true, source: 'lawyer' };
             }
             const level = defaultLevel(f.kind);
-            const { error } = await supabase.from('signature_requests').insert({ user_id: userId, case_id: item.id, file_id: row.id, title: f.title.trim() || KINDS[f.kind].label, kind: f.kind, level, identity_method: level === 'advanced' ? f.identity : 'none', identity_note: f.note.trim(), doc_sha256: hash, signer_name: f.name.trim(), signer_phone: level === 'advanced' ? (normalizePhone(f.phone) ?? '') : '', expires_at: new Date(Date.now() + f.days * 86_400_000).toISOString() });
+            const { error } = await supabase.from('signature_requests').insert({ user_id: userId, case_id: item.id, file_id: row.id, title: f.title.trim() || KINDS[f.kind].label, kind: f.kind, level, identity_method: level === 'advanced' ? f.identity : 'none', identity_note: f.note.trim(), doc_sha256: hash, signer_name: f.name.trim(), signer_email: level === 'advanced' ? f.email.trim() : '', signer_phone: level === 'advanced' ? (normalizePhone(f.phone) ?? '') : '', expires_at: new Date(Date.now() + f.days * 86_400_000).toISOString() });
             if (error) throw new Error(error.message);
             setBundle((b) => ({ ...b, files: [row, ...b.files] }));
             setFile(null); setOpen(false); setF((x) => ({ ...x, title: '' })); setMsg('Žádost je odeslána do klientské stránky. Klient ji uvidí v záložce Podpisy.');
@@ -121,7 +123,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                     <h2 className="flex flex-1 items-center gap-2 text-lg font-bold text-slate-900"><FileSignature size={18} className="text-indigo-700" aria-hidden="true" /> Podpisy dokumentů</h2>
                     {link && <button type="button" onClick={() => setOpen((v) => !v)} className={primaryBtn}><Plus size={15} /> Nová žádost o podpis</button>}
                 </div>
-                <p className="mt-1 text-sm text-slate-600">Klient dokument v portálu přečte, potvrdí jednorázovým kódem (SMS, nebo kódem od vás) a vznikne doklad o podpisu s časem, otiskem dokumentu a IP adresou.</p>
+                <p className="mt-1 text-sm text-slate-600">Klient dokument v portálu přečte, potvrdí jednorázovým kódem (e-mail, SMS, nebo kód od vás) a vznikne doklad o podpisu s časem, otiskem dokumentu a IP adresou.</p>
                 {link === null && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Nejdřív vytvořte klientskou stránku v záložce Klient. Podpis probíhá přes ni.</p>}
                 {msg && <p role="status" className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">{msg}</p>}
                 {open && link && (
@@ -132,11 +134,12 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                             <label className="block text-xs font-semibold text-slate-600">Název pro klienta<input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder={KINDS[f.kind].label} maxLength={200} className={`${inputCls} mt-1 font-normal`} /></label>
                             <label className="block text-xs font-semibold text-slate-600">Platnost žádosti (dny)<input type="number" min={1} max={90} value={f.days} onChange={(e) => setF({ ...f, days: Number(e.target.value) || 14 })} className={`${inputCls} mt-1 font-normal`} /></label>
                             <label className="block text-xs font-semibold text-slate-600">Jméno podepisujícího<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className={`${inputCls} mt-1 font-normal`} /></label>
+                            {advanced && <label className="block text-xs font-semibold text-slate-600">E-mail klienta (pro kód, je-li zapnuté odesílání)<input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} className={`${inputCls} mt-1 font-normal`} /></label>}
                             {advanced && <label className="block text-xs font-semibold text-slate-600">Telefon (jen pro SMS kód, je-li zapnutá SMS brána)<input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} inputMode="tel" placeholder="777 123 456" className={`${inputCls} mt-1 font-normal`} /></label>}
                         </div>
                         {advanced && (
                             <fieldset className="space-y-1.5 text-sm"><legend className="text-xs font-semibold text-slate-600">Ověření totožnosti</legend>
-                                {([['lawyer', 'Totožnost jsem ověřil osobně (doklad totožnosti)'], ['bankid', 'Klient se ověří přes Bank iD (vyžaduje zapnutý Bank iD)'], ['none', 'Neověřovat (jen SMS kód, nejnižší jistota)']] as const).map(([v, label]) => <label key={v} className="flex items-center gap-2"><input type="radio" name="idm" checked={f.identity === v} onChange={() => setF({ ...f, identity: v })} className="accent-indigo-800" /> {label}</label>)}
+                                {([['lawyer', 'Totožnost jsem ověřil osobně (doklad totožnosti)'], ['bankid', 'Klient se ověří online (vyžaduje zapnutý Bank iD nebo mojeID)'], ['none', 'Neověřovat (jen SMS kód, nejnižší jistota)']] as const).map(([v, label]) => <label key={v} className="flex items-center gap-2"><input type="radio" name="idm" checked={f.identity === v} onChange={() => setF({ ...f, identity: v })} className="accent-indigo-800" /> {label}</label>)}
                                 {f.identity === 'lawyer' && <input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="Jak jste ověřili (např. OP č. …, dne …)" maxLength={400} className={inputCls} />}
                             </fieldset>)}
                         <div className="flex flex-wrap items-center gap-2">
@@ -158,7 +161,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                             </div>
                             <p className="mt-1 text-xs text-slate-500">{LEVEL_LABEL[r.level]} · {r.signer_name || 'bez jména'} · vytvořeno {fmt(r.created_at)}{r.expires_at && r.status === 'pending' ? ` · platí do ${new Date(r.expires_at).toLocaleDateString('cs-CZ')}` : ''}</p>
                             {r.status === 'declined' && r.decline_reason && <p className="mt-1 text-xs text-slate-600">Důvod odmítnutí: {r.decline_reason}</p>}
-                            {r.status === 'signed' && r.evidence && <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-900"><BadgeCheck size={14} aria-hidden="true" /> Podepsáno {r.signed_at ? fmt(r.signed_at) : ''}{r.evidence.identity.method === 'bankid' ? ` · ověřeno přes Bank iD (${r.evidence.signer.name})` : r.evidence.identity.method === 'lawyer' ? ' · totožnost ověřena advokátem' : ' · totožnost neověřována'} · IP {r.evidence.ip}</p>}
+                            {r.status === 'signed' && r.evidence && <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-900"><BadgeCheck size={14} aria-hidden="true" /> Podepsáno {r.signed_at ? fmt(r.signed_at) : ''}{r.evidence.identity.method === 'bankid' ? ` · ověřeno online, ${r.evidence.identity.provider ?? 'Bank iD'} (${r.evidence.signer.name})` : r.evidence.identity.method === 'lawyer' ? ' · totožnost ověřena advokátem' : ' · totožnost neověřována'} · IP {r.evidence.ip}</p>}
                             <div className="mt-3 flex flex-wrap gap-2">
                                 {r.status === 'signed' && r.evidence && <button type="button" onClick={() => void signedPdf(r)} disabled={busy === `pdf-${r.id}`} className={ghostBtn}>{busy === `pdf-${r.id}` ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Podepsané PDF s dokladem</button>}
                                 {r.status === 'signed' && r.evidence && <button type="button" onClick={() => void verify(r)} disabled={busy === `ver-${r.id}`} className={ghostBtn}><ShieldCheck size={14} /> Ověřit pečeť</button>}

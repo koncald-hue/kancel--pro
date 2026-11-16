@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { authorizeUrl, bankIdConfig, discover, exchangeCode, identityComplete, normalizeUserinfo, pkceChallenge, sameName } from './bankid';
 
-const cfg = { clientId: 'cid', clientSecret: 'sec', base: 'https://oidc.sandbox.bankid.cz', scopes: 'openid profile.name', redirectUri: 'https://app.example/api/identity/bankid/callback' };
+const cfg = { provider: 'bankid' as const, label: 'Bank iD', clientId: 'cid', clientSecret: 'sec', base: 'https://oidc.sandbox.bankid.cz', scopes: 'openid profile.name', redirectUri: 'https://app.example/api/identity/bankid/callback' };
 const ep = { authorization_endpoint: 'https://oidc.sandbox.bankid.cz/auth', token_endpoint: 'https://oidc.sandbox.bankid.cz/token', userinfo_endpoint: 'https://oidc.sandbox.bankid.cz/userinfo' };
 
 describe('Bank iD', () => {
@@ -40,5 +40,25 @@ describe('Bank iD', () => {
     it('compares names regardless of diacritics, case and order', () => {
         expect(sameName('Jan Novák', 'novak JAN')).toBe(true);
         expect(sameName('Jan Novák', 'Jan Novotný')).toBe(false);
+    });
+});
+
+describe('mojeID', () => {
+    it('is chosen by IDENTITY_PROVIDER, defaults to the test environment and asks for the validation flag', async () => {
+        process.env.IDENTITY_PROVIDER = 'mojeid'; process.env.MOJEID_CLIENT_ID = 'm'; process.env.MOJEID_CLIENT_SECRET = 's';
+        const c = bankIdConfig('https://x.cz')!;
+        expect(c).toMatchObject({ provider: 'mojeid', label: 'mojeID', base: 'https://mojeid.regtest.nic.cz' });
+        const u = new URL(await authorizeUrl(c, { authorization_endpoint: 'https://mojeid.regtest.nic.cz/oidc/authorization/', token_endpoint: 'https://mojeid.regtest.nic.cz/oidc/token/', userinfo_endpoint: 'https://mojeid.regtest.nic.cz/oidc/userinfo/' }, { state: 'a', nonce: 'b', verifier: 'c' }));
+        expect(u.searchParams.get('claims')).toContain('mojeid_valid');
+        delete process.env.IDENTITY_PROVIDER; delete process.env.MOJEID_CLIENT_ID; delete process.env.MOJEID_CLIENT_SECRET;
+    });
+    it('accepts only validated mojeID accounts and reads the address object', () => {
+        const base = { sub: 'u', given_name: 'Jan', family_name: 'Novák', birthdate: '1985-03-02', address: { street_address: 'Dlouhá 12', locality: 'Plzeň', postal_code: '30100' } };
+        const ok = normalizeUserinfo({ ...base, mojeid_valid: 'true' });
+        expect(ok.address).toBe('Dlouhá 12, 30100 Plzeň');
+        expect(identityComplete(ok, 'mojeid')).toBe(true);
+        expect(identityComplete(normalizeUserinfo({ ...base, mojeid_valid: 'false' }), 'mojeid')).toBe(false);
+        expect(identityComplete(normalizeUserinfo(base), 'mojeid')).toBe(false);
+        expect(identityComplete(normalizeUserinfo(base), 'bankid')).toBe(true);
     });
 });

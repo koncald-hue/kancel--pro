@@ -6,8 +6,8 @@ import { decryptBytes, encryptFile } from '@/lib/e2ee';
 import { CONSENT_TEXT, LEVEL_LABEL, STATUS_LABEL, sha256Hex, type SignLevel, type SignStatus } from '@/lib/signing';
 import { isAllowedUpload } from '@/lib/portal';
 
-type Req = { id: string; title: string; kind: string; level: SignLevel; status: SignStatus; file_id: string | null; doc_sha256: string; identity_method: 'bankid' | 'lawyer' | 'none'; identity_verified: boolean; phone: string; signed_at: string | null; expires_at: string | null; created_at: string; decline_reason: string };
-type List = { requests: Req[]; enabled: boolean; bankid: boolean; sms: boolean };
+type Req = { id: string; title: string; kind: string; level: SignLevel; status: SignStatus; file_id: string | null; doc_sha256: string; identity_method: 'bankid' | 'lawyer' | 'none'; identity_verified: boolean; phone: string; email: string; signed_at: string | null; expires_at: string | null; created_at: string; decline_reason: string };
+type List = { requests: Req[]; enabled: boolean; bankid: boolean; idp?: string; sms: boolean; mail: boolean };
 const btn = 'inline-flex items-center gap-2 rounded-xl bg-indigo-800 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-900 disabled:opacity-60 cursor-pointer';
 const ghost = 'inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer';
 const field = 'w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-700/40';
@@ -19,8 +19,8 @@ export default function PortalSign({ token, e2ee, cryptoKey, focusId, notice }: 
     const load = useCallback(async () => {
         try {
             const res = await fetch(`/api/portal/${token}/sign`);
-            setList(res.ok ? await res.json() as List : { requests: [], enabled: false, bankid: false, sms: false });
-        } catch { setList({ requests: [], enabled: false, bankid: false, sms: false }); }
+            setList(res.ok ? await res.json() as List : { requests: [], enabled: false, bankid: false, sms: false, mail: false });
+        } catch { setList({ requests: [], enabled: false, bankid: false, sms: false, mail: false }); }
     }, [token]);
     useEffect(() => { const t = window.setTimeout(() => { void load(); }, 0); return () => window.clearTimeout(t); }, [load]);
 
@@ -70,7 +70,7 @@ function Card({ r, list, token, e2ee, cryptoKey, open, reload }: { r: Req; list:
         return out;
     }
     async function identity() { setBusy('id'); setError(''); try { const o = await post('identity'); if (o.url) window.location.href = o.url; } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); setBusy(''); } }
-    async function sendCode() { setBusy('otp'); setError(''); setInfo(''); try { const o = await post('otp'); setSent(true); setInfo(o.devCode ? `Zkušební režim: kód je ${o.devCode}` : `Kód jsme poslali SMS na číslo ${r.phone}.`); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
+    async function sendCode() { setBusy('otp'); setError(''); setInfo(''); try { const o = await post('otp'); setSent(true); setInfo(o.devCode ? `Zkušební režim: kód je ${o.devCode}` : list.sms && r.phone ? `Kód jsme poslali SMS na číslo ${r.phone}.` : `Kód jsme poslali e-mailem na ${r.email}.`); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
     async function sign() { setBusy('sign'); setError(''); try { await post('sign', { code, docSha256: r.doc_sha256, agree }); await reload(); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
     async function decline() { setBusy('decl'); setError(''); try { await post('decline', { reason }); await reload(); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
     async function uploadSigned(f: File | undefined) {
@@ -114,16 +114,16 @@ function Card({ r, list, token, e2ee, cryptoKey, open, reload }: { r: Req; list:
                     {r.identity_method === 'bankid' && (
                         <li><p className="font-semibold text-slate-900">2. Ověřte svou totožnost</p>
                             {r.identity_verified ? <p className="mt-2 flex items-center gap-1.5 text-emerald-800"><BadgeCheck size={16} aria-hidden="true" /> Totožnost je ověřená.</p> : list.bankid
-                                ? <><p className="mt-1 text-slate-600">Přihlásíte se svou bankovní identitou (Bank iD). Údaje se použijí jen k tomuto podpisu.</p><button type="button" onClick={identity} disabled={busy === 'id' || !seen?.ok} className={`${btn} mt-2`}>{busy === 'id' && <Loader2 size={15} className="animate-spin" />} Ověřit přes Bank iD</button></>
-                                : <p className="mt-2 text-amber-900">Ověření přes Bank iD zatím není zapnuté. Napište advokátovi.</p>}
+                                ? <><p className="mt-1 text-slate-600">Přihlásíte se svou ověřenou identitou ({list.idp ?? 'Bank iD'}). Údaje se použijí jen k tomuto podpisu.</p><button type="button" onClick={identity} disabled={busy === 'id' || !seen?.ok} className={`${btn} mt-2`}>{busy === 'id' && <Loader2 size={15} className="animate-spin" />} Ověřit totožnost online</button></>
+                                : <p className="mt-2 text-amber-900">Online ověření zatím není zapnuté. Napište advokátovi.</p>}
                         </li>)}
                     {r.identity_method === 'lawyer' && <li><p className="font-semibold text-slate-900">2. Totožnost</p><p className="mt-1 text-slate-600">Vaši totožnost ověřil advokát osobně.</p></li>}
-                    <li><p className="font-semibold text-slate-900">{r.identity_method === 'none' ? '2' : '3'}. Potvrďte SMS kódem</p>
-                        {list.sms && !r.phone ? <p className="mt-2 text-amber-900">U žádosti chybí telefonní číslo. Napište advokátovi.</p> : (
+                    <li><p className="font-semibold text-slate-900">{r.identity_method === 'none' ? '2' : '3'}. Potvrďte kódem</p>
+                        {(list.sms || list.mail) && !r.phone && !r.email ? <p className="mt-2 text-amber-900">U žádosti chybí telefon i e-mail. Napište advokátovi.</p> : (
                             <div className="mt-2 space-y-2">
                                 <label className="flex items-start gap-2 text-slate-700"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-800" /> <span>{CONSENT_TEXT}</span></label>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {list.sms ? <button type="button" onClick={sendCode} disabled={!seen?.ok || !identityOk || busy === 'otp'} className={ghost}>{busy === 'otp' && <Loader2 size={15} className="animate-spin" />} {sent ? 'Poslat kód znovu' : `Poslat SMS na ${r.phone}`}</button> : <p className="w-full text-slate-600">Kód vám sdělí váš advokát (telefonicky nebo osobně). Zadejte ho sem.</p>}
+                                    {(list.sms && r.phone) || (list.mail && r.email) ? <button type="button" onClick={sendCode} disabled={!seen?.ok || !identityOk || busy === 'otp'} className={ghost}>{busy === 'otp' && <Loader2 size={15} className="animate-spin" />} {sent ? 'Poslat kód znovu' : list.sms && r.phone ? `Poslat SMS na ${r.phone}` : `Poslat kód na ${r.email}`}</button> : <p className="w-full text-slate-600">Kód vám sdělí váš advokát (telefonicky nebo osobně). Zadejte ho sem.</p>}
                                     <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="Kód z SMS" aria-label="Kód z SMS" className={`${field} max-w-40`} />
                                     <button type="button" onClick={sign} disabled={!seen?.ok || !identityOk || !agree || code.length !== 6 || busy === 'sign'} className={btn}>{busy === 'sign' && <Loader2 size={15} className="animate-spin" />} Podepsat</button>
                                 </div>

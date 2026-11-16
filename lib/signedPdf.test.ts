@@ -11,7 +11,7 @@ describe('signed PDF', () => {
     it('lists the evidence including hash, identity, seal and IP', () => {
         const t = evidenceLines(ev, 'f'.repeat(64)).join('\n');
         expect(t).toContain('a'.repeat(64)); expect(t).toContain('f'.repeat(64));
-        expect(t).toContain('Bank iD: Jan Novák, nar. 2. 3. 1985'); expect(t).toContain('1.2.3.4'); expect(t).toContain('+420•••••456');
+        expect(t).toContain('(Bank iD): Jan Novák, nar. 2. 3. 1985'); expect(t).toContain('1.2.3.4'); expect(t).toContain('+420•••••456');
         expect(evidenceLines({ ...ev, identity: { method: 'lawyer', note: 'OP č. 123' } }, 's').join('\n')).toContain('advokátem osobně: OP č. 123');
     });
     it('appends an evidence page to an existing PDF and attaches the JSON', async () => {
