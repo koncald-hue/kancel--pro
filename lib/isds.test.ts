@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cookieSafe, cookieValue, loginUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
+import { decodeMessageText, cookieSafe, cookieValue, loginUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
 
 // Ukázkové odpovědi jsou sestavené podle dokumentace ISDS, ne z ostrého provozu.
 const LIST = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><p:GetListOfReceivedMessagesResponse xmlns:p="http://isds.czechpoint.cz/v20"><p:dmRecords><p:dmRecord><p:dmID>123</p:dmID><p:dbIDSender>abc1234</p:dbIDSender><p:dmSender>Městský soud &amp; spol.</p:dmSender><p:dmRecipient>JUDr. Novák</p:dmRecipient><p:dmAnnotation>Usnesení</p:dmAnnotation><p:dmMessageStatus>3</p:dmMessageStatus><p:dmAttachmentSize>12</p:dmAttachmentSize><p:dmDeliveryTime>2026-11-10T10:00:00</p:dmDeliveryTime></p:dmRecord><p:dmRecord><p:dmID>124</p:dmID><p:dmSender>FÚ</p:dmSender><p:dmMessageStatus>5</p:dmMessageStatus></p:dmRecord></p:dmRecords><p:dmStatus><p:dmStatusCode>0000</p:dmStatusCode><p:dmStatusMessage>OK</p:dmStatusMessage></p:dmStatus></p:GetListOfReceivedMessagesResponse></s:Body></s:Envelope>`;
@@ -56,5 +56,16 @@ describe('ISDS', () => {
     it('builds environment URLs', () => {
         expect(loginUrl('test')).toContain('https://www.czebox.cz/as/processLogin?type=mep-ws&applicationName=');
         expect(stateUrl('prod')).toBe('https://www.mojedatovaschranka.cz/as/mepWsStateUpdate');
+    });
+    it('accepts real-world cookie characters and rejects separators', () => {
+        expect(cookieSafe('abc:def|ghi!jkl$mno')).toBe(true);
+        expect(cookieSafe('a'.repeat(1500))).toBe(true);
+        expect(cookieSafe('abc def12345')).toBe(false);
+        expect(cookieSafe('abcdef12;x=1')).toBe(false);
+        expect(cookieSafe('abc"defgh')).toBe(false);
+    });
+    it('decodes the ISDS message header', () => {
+        expect(decodeMessageText('=?UTF-8?B?Q2h5YmEgcMWZaWhsw6HFoWVuw60sIHpub3Z1IHphZGVqdGUgw7pkYWplLg==?=')).toBe('Chyba přihlášení, znovu zadejte údaje.');
+        expect(decodeMessageText(null)).toBe('');
     });
 });

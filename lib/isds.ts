@@ -103,7 +103,15 @@ export function cookieValue(setCookies: string[], name: string): string | null {
     }
     return null;
 }
-export const cookieSafe = (v: string) => /^[A-Za-z0-9._~+/=%-]{8,2000}$/.test(v);
+// Hodnota cookie smí obsahovat jen znaky povolené v RFC 6265 (žádné mezery, uvozovky, čárky, středníky ani zpětná lomítka)
+export const cookieSafe = (v: string) => /^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]{8,4000}$/.test(v);
+
+// Text z hlavičky X-Response-message-text (RFC 2047, metoda B, může být rozdělený do bloků)
+export function decodeMessageText(header: string | null): string {
+    if (!header) return '';
+    const parts = [...header.matchAll(/=\?UTF-8\?B\?([^?]*)\?=/gi)].map((m) => Buffer.from(m[1], 'base64').toString('utf8'));
+    return parts.length ? parts.join('') : header.slice(0, 200);
+}
 
 // Stav potvrzení v mobilní aplikaci: 1 čeká se, 2 potvrzeno, 3 vypršelo
 export type MkState = 'waiting' | 'confirmed' | 'expired' | 'error';

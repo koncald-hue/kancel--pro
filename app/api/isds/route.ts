@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimited } from '@/lib/serverSupabase';
-import { USER_AGENT, basicHeader, cookieSafe, cookieValue, callIsds, loginUrl, logoutUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isFault, isOk, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf, type Auth, type Credentials, type IsdsEnv } from '@/lib/isds';
+import { USER_AGENT, basicHeader, decodeMessageText, cookieSafe, cookieValue, callIsds, loginUrl, logoutUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isFault, isOk, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf, type Auth, type Credentials, type IsdsEnv } from '@/lib/isds';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
@@ -36,10 +36,16 @@ export async function POST(req: Request) {
                 if (!cred.login || !cred.password) return NextResponse.json({ error: 'bad_request', message: 'Chybí přihlašovací jméno nebo komunikační kód.' }, { status: 400 });
                 if (action === 'mk_finish' && !cookieSafe(sCookie)) return NextResponse.json({ error: 'bad_request' }, { status: 400 });
                 const res = await fetch(loginUrl(env), { method: 'POST', redirect: 'manual', headers: { ...hdr, Authorization: basicHeader(cred), ...(action === 'mk_finish' ? { Cookie: `S-COOKIE=${sCookie}` } : {}) }, cache: 'no-store', signal: AbortSignal.timeout(30_000) });
-                if (res.status === 401) return NextResponse.json({ error: 'isds_auth', message: 'Přihlášení odmítnuto. Zkontrolujte jméno a komunikační kód a zda je u účtu aktivní Mobilní klíč.' }, { status: 401, headers: NO_STORE });
+                if (res.status === 401) { const t = decodeMessageText(res.headers.get('x-response-message-text')); return NextResponse.json({ error: 'isds_auth', message: `Přihlášení odmítnuto${t ? ` („${t}“)` : ''}. Zkontrolujte jméno a komunikační kód a zda je u účtu aktivní Mobilní klíč.` }, { status: 401, headers: NO_STORE }); }
                 const cookies = res.headers.getSetCookie();
                 const value = cookieValue(cookies, action === 'mk_start' ? 'S-COOKIE' : 'IPCZ-X-COOKIE');
-                if (!value || !cookieSafe(value)) return NextResponse.json({ error: 'upstream', message: 'Datové schránky nevrátily přihlašovací cookie.' }, { status: 502, headers: NO_STORE });
+                if (!value || !cookieSafe(value)) {
+                    // Co přesně datové schránky vrátily (jen stavový kód, text hlášení a názvy cookie, nikdy hodnoty)
+                    const text = decodeMessageText(res.headers.get('x-response-message-text'));
+                    const names = cookies.map((c) => c.split('=')[0]).join(', ') || 'žádné';
+                    console.warn(`[isds] ${action}: HTTP ${res.status}, cookies: ${names}, message: ${text}`);
+                    return NextResponse.json({ error: 'upstream', message: `Datové schránky nevrátily přihlašovací cookie (HTTP ${res.status}${text ? `, „${text}“` : ''}; cookie: ${names}).` }, { status: 502, headers: NO_STORE });
+                }
                 return NextResponse.json(action === 'mk_start' ? { sCookie: value } : { session: value }, { headers: NO_STORE });
             }
             if (action === 'mk_poll') {
