@@ -43,6 +43,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
     const [item, setItem] = useState<LegalCase | null>(null);
     const [bundle, setBundleState] = useState<CaseBundle | null>(null);
     const [tab, setTab] = useState<TabId>('prehled');
+    const [lastTab, setLastTab] = useState<Record<string, TabId>>({});
     const [error, setError] = useState('');
     const [missing, setMissing] = useState(false);
     const [exportOpen, setExportOpen] = useState(false);
@@ -105,21 +106,33 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
         } catch (err) { fail(err); }
     };
 
-    const tabs: { id: TabId; label: string; icon: typeof FileText; count?: number }[] = [
-        { id: 'prehled', label: 'Přehled', icon: LayoutDashboard },
-        ...(isLawyer ? [{ id: 'klient' as TabId, label: 'Klient', icon: Link2, count: unread }] : []),
-        ...(isLawyer ? [{ id: 'katastr' as TabId, label: 'Katastr', icon: Landmark }] : []),
-        ...(isLawyer ? [{ id: 'datovky' as TabId, label: 'Datové zprávy', icon: MailCheck }] : []),
-        ...(isLawyer ? [{ id: 'podpisy' as TabId, label: 'Podpisy', icon: FileSignature }] : []),
-        ...(isLawyer ? [{ id: 'identifikace' as TabId, label: 'Identifikace', icon: BadgeCheck }] : []),
-        ...(isLawyer ? [{ id: 'finance' as TabId, label: 'Peníze', icon: Wallet }] : []),
-        ...(isLawyer ? [{ id: 'resers' as TabId, label: 'Rešerše', icon: BookOpenCheck }] : []),
-        { id: 'obrana', label: 'Obrana', icon: ShieldCheck },
-        { id: 'soubory', label: 'Soubory', icon: FolderOpen, count: bundle.files.length },
-        { id: 'lhuty', label: 'Lhůty', icon: CalendarClock, count: open.length },
-        { id: 'chronologie', label: 'Chronologie', icon: Clock, count: bundle.entries.length },
-        { id: 'kontakty', label: 'Kontakty', icon: BookUser, count: bundle.contacts.length },
-    ];
+    type TabDef = { id: TabId; label: string; icon: typeof FileText; count?: number };
+    const T: Record<TabId, TabDef> = {
+        prehled: { id: 'prehled', label: 'Přehled', icon: LayoutDashboard },
+        klient: { id: 'klient', label: 'Klientská stránka', icon: Link2, count: unread },
+        podpisy: { id: 'podpisy', label: 'Podpisy', icon: FileSignature },
+        identifikace: { id: 'identifikace', label: 'Identifikace (AML)', icon: BadgeCheck },
+        soubory: { id: 'soubory', label: 'Soubory', icon: FolderOpen, count: bundle.files.length },
+        datovky: { id: 'datovky', label: 'Datové zprávy', icon: MailCheck },
+        lhuty: { id: 'lhuty', label: 'Lhůty', icon: CalendarClock, count: open.length },
+        chronologie: { id: 'chronologie', label: 'Chronologie', icon: Clock, count: bundle.entries.length },
+        kontakty: { id: 'kontakty', label: 'Kontakty', icon: BookUser, count: bundle.contacts.length },
+        resers: { id: 'resers', label: 'Rešerše', icon: BookOpenCheck },
+        obrana: { id: 'obrana', label: 'Obrana', icon: ShieldCheck },
+        katastr: { id: 'katastr', label: 'Katastr', icon: Landmark },
+        finance: { id: 'finance', label: 'Peníze', icon: Wallet },
+    };
+    // Advokát vidí šest hlavních záložek a v nich podzáložky; občan zůstává u krátkého plochého seznamu
+    type Group = { id: string; label: string; icon: typeof FileText; items: TabDef[]; count?: number };
+    const groups: Group[] = isLawyer ? [
+        { id: 'prehled', label: 'Přehled', icon: LayoutDashboard, items: [T.prehled] },
+        { id: 'klient', label: 'Klient', icon: Link2, items: [T.klient, T.podpisy, T.identifikace], count: unread },
+        { id: 'dokumenty', label: 'Dokumenty', icon: FolderOpen, items: [T.soubory, T.datovky], count: bundle.files.length },
+        { id: 'prubeh', label: 'Průběh', icon: CalendarClock, items: [T.lhuty, T.chronologie, T.kontakty], count: open.length },
+        { id: 'prace', label: 'Právní práce', icon: BookOpenCheck, items: [T.resers, T.obrana, T.katastr] },
+        { id: 'penize', label: 'Peníze', icon: Wallet, items: [T.finance] },
+    ] : [T.prehled, T.obrana, T.soubory, T.lhuty, T.chronologie, T.kontakty].map((t) => ({ id: t.id, label: t.label, icon: t.icon, items: [t], count: t.count }));
+    const activeGroup = groups.find((g) => g.items.some((i) => i.id === tab)) ?? groups[0];
     const tabProps: TabProps = { item, bundle, userId: account.id, lawyer: isLawyer, patchItem, setBundle, fail };
 
     return (
@@ -158,12 +171,21 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
 
             {isLawyer && item.client_id && <ClientInsolvencyBanner clientId={item.client_id} />}
             <nav className="mt-5 flex gap-1 overflow-x-auto border-b border-slate-200" role="tablist" aria-label="Části spisu">
-                {tabs.map(({ id, label, icon: Icon, count }) => (
-                    <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-semibold cursor-pointer ${tab === id ? 'border-indigo-800 text-indigo-900' : 'border-transparent text-slate-600 hover:text-slate-900'}`}>
-                        <Icon size={16} /> {label}{count ? <span className="rounded-full bg-slate-100 px-1.5 text-[11px] text-slate-600">{count}</span> : null}
+                {groups.map((g) => (
+                    <button key={g.id} type="button" role="tab" aria-selected={activeGroup.id === g.id} onClick={() => setTab(lastTab[g.id] && g.items.some((i) => i.id === lastTab[g.id]) ? lastTab[g.id] : g.items[0].id)} className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-semibold cursor-pointer ${activeGroup.id === g.id ? 'border-indigo-800 text-indigo-900' : 'border-transparent text-slate-600 hover:text-slate-900'}`}>
+                        <g.icon size={16} /> {g.label}{g.count ? <span className="rounded-full bg-slate-100 px-1.5 text-[11px] text-slate-600">{g.count}</span> : null}
                     </button>
                 ))}
             </nav>
+            {activeGroup.items.length > 1 && (
+                <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label={activeGroup.label}>
+                    {activeGroup.items.map(({ id, label, icon: Icon, count }) => (
+                        <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => { setTab(id); setLastTab((l) => ({ ...l, [activeGroup.id]: id })); }} className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold cursor-pointer ${tab === id ? 'border-indigo-800 bg-indigo-800 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
+                            <Icon size={14} aria-hidden="true" /> {label}{count ? <span className={`rounded-full px-1.5 text-[11px] ${tab === id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>{count}</span> : null}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             <div className="mt-5" role="tabpanel">
                 {tab === 'prehled' && <CaseOverviewTab {...tabProps} />}
