@@ -10,6 +10,7 @@ import { ROLE_LABELS } from '@/lib/firm';
 import { PLANS, planName, type PlanId, type Prices } from '@/lib/plans';
 import { useLawyer } from './LawyerGate';
 import ProfileForm from './ProfileForm';
+import GoogleCalendarCard from './GoogleCalendarCard';
 import FirmSettings from './FirmSettings';
 import { useAuth } from '../site/AuthContext';
 
@@ -122,6 +123,7 @@ export default function LawyerSettings() {
                 <p className="mt-1 text-sm text-slate-600">Povinné údaje o vás. Vidí je provozovatel služby a klient na své stránce. Jakmile je uložíte, zapnou se klientské odkazy a poptávky.</p>
                 <div className="mt-4"><ProfileForm access={access} onSaved={() => window.location.reload()} /></div>
             </section>
+            <GoogleCalendarCard />
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Předplatné">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><CreditCard size={18} className="text-indigo-800" /> Předplatné</h2>
                 <p className="mt-1 text-sm text-slate-700">{access.status === 'active' && access.until ? <>Aktivní do <strong>{new Date(`${access.until}T12:00:00`).toLocaleDateString('cs-CZ')}</strong>. Kancelář a klientské odkazy fungují po dobu předplatného.</> : access.status === 'trial' ? 'Máte zkušební přístup. Klientské odkazy fungují s vyplněným profilem a aktivním přístupem.' : 'Přístup momentálně není aktivní.'}</p>

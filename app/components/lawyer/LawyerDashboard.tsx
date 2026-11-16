@@ -11,6 +11,7 @@ import { DUE_SOON_DAYS, loadReceivables, money, round2, type Receivable } from '
 import { deadlineText, deadlineTone } from '../situation/CaseDeadlinesTab';
 import { useLawyer } from './LawyerGate';
 import DayPanel from './DayPanel';
+import { scheduleGoogleSync } from '@/lib/googleSync';
 import { ghostBtn } from '../situation/caseUi';
 
 function Tile({ label, value, note, tone }: { label: string; value: string; note?: string; tone?: string }) {
@@ -35,6 +36,8 @@ export default function LawyerDashboard() {
     const [data, setData] = useState<{ cases: LegalCase[]; customs: CaseDeadline[]; entries: TimeEntry[]; inquiries: number; unread: number } | null>(null);
     const [error, setError] = useState('');
     const [isirNew, setIsirNew] = useState(0);
+    // Při otevření přehledu se lhůty tiše srovnají s Google Kalendářem (když je připojený)
+    useEffect(() => { scheduleGoogleSync(); }, []);
     useEffect(() => {
         let alive = true;
         supabase.from('isir_hits').select('id', { count: 'exact', head: true }).eq('seen', false).then(({ count }) => { if (alive) setIsirNew(count ?? 0); });

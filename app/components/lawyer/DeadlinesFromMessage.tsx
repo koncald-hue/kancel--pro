@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { insertRow } from '@/lib/caseFile';
 import type { LegalCase } from '@/lib/cases';
 import { saveMessageToCase } from '@/lib/dataMessages';
+import { scheduleGoogleSync } from '@/lib/googleSync';
 import { extractText } from '@/lib/docText';
 import type { Downloaded, Record_ } from '@/lib/isds';
 import { UNIT_LABELS, computeAbsolute, computeEnd, czDate, deliveryOf, explain, parseDateInput, pragueDate, unitText, type Unit } from '@/lib/lhuty';
@@ -91,6 +92,7 @@ export default function DeadlinesFromMessage({ record, msg, downloadedNow, cases
             await supabase.from('data_message_checks').upsert({ user_id: userId, dm_id: record.id, deadlines: saved + dup, checked_at: new Date().toISOString(), note: '' }, { onConflict: 'user_id,dm_id' });
             setDone(`Uloženo lhůt: ${saved}${dup ? `, ${dup} už ve věci bylo` : ''}. Najdete je v záložce Lhůty věci.`);
             onSaved();
+            scheduleGoogleSync();
         } catch (e) { setError(e instanceof Error ? e.message : 'Uložení se nepovedlo.'); }
         setBusy(false);
     }

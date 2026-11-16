@@ -5,6 +5,7 @@ import { CalendarDays, CalendarPlus, Check, Trash2 } from 'lucide-react';
 import { buildIcs, collectDeadlines, deleteRow, downloadTextFile, insertRow, updateRow, type CaseDeadline } from '@/lib/caseFile';
 import { daysUntil } from '@/lib/cases';
 import DeadlineAxis from './DeadlineAxis';
+import { scheduleGoogleSync } from '@/lib/googleSync';
 import { daysWord, ghostBtn, inputCls, primaryBtn, type TabProps } from './caseUi';
 
 export function deadlineTone(left: number, done: boolean) {
@@ -29,6 +30,7 @@ export default function CaseDeadlinesTab({ item, bundle, userId, patchItem, setB
             const row = await insertRow<CaseDeadline>('case_deadlines', { case_id: item.id, user_id: userId, title: title.trim().slice(0, 120), due_date: date });
             setBundle((b) => ({ ...b, deadlines: [...b.deadlines, row] }));
             setTitle(''); setDate('');
+            scheduleGoogleSync();
         } catch (err) { fail(err); }
     }
 
@@ -36,11 +38,12 @@ export default function CaseDeadlinesTab({ item, bundle, userId, patchItem, setB
         try {
             await updateRow('case_deadlines', id, { done });
             setBundle((b) => ({ ...b, deadlines: b.deadlines.map((d) => (d.id === id ? { ...d, done } : d)) }));
+            scheduleGoogleSync();
         } catch (err) { fail(err); }
     }
 
     async function remove(id: string) {
-        try { await deleteRow('case_deadlines', id); setBundle((b) => ({ ...b, deadlines: b.deadlines.filter((d) => d.id !== id) })); } catch (err) { fail(err); }
+        try { await deleteRow('case_deadlines', id); setBundle((b) => ({ ...b, deadlines: b.deadlines.filter((d) => d.id !== id) })); scheduleGoogleSync(); } catch (err) { fail(err); }
     }
 
     function exportIcs() {
@@ -54,7 +57,7 @@ export default function CaseDeadlinesTab({ item, bundle, userId, patchItem, setB
             {hasLaw && (
                 <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 p-4">
                     <label className="block text-sm font-semibold text-slate-900">Datum události / doručení dokumentu
-                        <input type="date" value={item.event_date ?? ''} onChange={(e) => patchItem({ event_date: e.target.value || null })} className={`${inputCls} mt-1.5 max-w-52`} />
+                        <input type="date" value={item.event_date ?? ''} onChange={(e) => { patchItem({ event_date: e.target.value || null }); scheduleGoogleSync(); }} className={`${inputCls} mt-1.5 max-w-52`} />
                     </label>
                     <p className="mt-1.5 text-xs text-slate-600">Podle něj se spočítají zákonné lhůty včetně posunu na pracovní den.</p>
                 </div>
