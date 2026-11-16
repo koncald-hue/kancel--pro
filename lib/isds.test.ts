@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
+import { cookieSafe, cookieValue, loginUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
 
 // Ukázkové odpovědi jsou sestavené podle dokumentace ISDS, ne z ostrého provozu.
 const LIST = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><p:GetListOfReceivedMessagesResponse xmlns:p="http://isds.czechpoint.cz/v20"><p:dmRecords><p:dmRecord><p:dmID>123</p:dmID><p:dbIDSender>abc1234</p:dbIDSender><p:dmSender>Městský soud &amp; spol.</p:dmSender><p:dmRecipient>JUDr. Novák</p:dmRecipient><p:dmAnnotation>Usnesení</p:dmAnnotation><p:dmMessageStatus>3</p:dmMessageStatus><p:dmAttachmentSize>12</p:dmAttachmentSize><p:dmDeliveryTime>2026-11-10T10:00:00</p:dmDeliveryTime></p:dmRecord><p:dmRecord><p:dmID>124</p:dmID><p:dmSender>FÚ</p:dmSender><p:dmMessageStatus>5</p:dmMessageStatus></p:dmRecord></p:dmRecords><p:dmStatus><p:dmStatusCode>0000</p:dmStatusCode><p:dmStatusMessage>OK</p:dmStatusMessage></p:dmStatus></p:GetListOfReceivedMessagesResponse></s:Body></s:Envelope>`;
@@ -38,5 +38,23 @@ describe('ISDS', () => {
         const f = parseFind('<r><p:dbOwnerInfo><p:dbID>xyz9999</p:dbID><p:dbType>PO</p:dbType><p:ic>27082440</p:ic><p:firmName>Alza.cz a.s.</p:firmName><p:adCity>Praha</p:adCity></p:dbOwnerInfo></r>');
         expect(f).toEqual([{ id: 'xyz9999', name: 'Alza.cz a.s.', ic: '27082440', city: 'Praha', type: 'PO' }]);
         expect(parseCreated('<r><p:dmID>555</p:dmID><p:dmStatus><p:dmStatusCode>0000</p:dmStatusCode></p:dmStatus></r>')).toEqual({ id: '555', status: { code: '0000', message: '' } });
+    });
+    it('reads cookies from Set-Cookie headers', () => {
+        expect(cookieValue(['S-COOKIE=abc123XYZ==; Path=/; Secure', 'OTHER=1'], 'S-COOKIE')).toBe('abc123XYZ==');
+        expect(cookieValue(['IPCZ-X-COOKIE=zzz.yyy-1; Path=/'], 'IPCZ-X-COOKIE')).toBe('zzz.yyy-1');
+        expect(cookieValue(['X=1'], 'S-COOKIE')).toBeNull();
+        expect(cookieSafe('abc123XYZ==')).toBe(true);
+        expect(cookieSafe('a b; evil=1')).toBe(false);
+    });
+    it('maps the mobile key confirmation state', () => {
+        expect(parseMkState('"2"')).toBe('confirmed');
+        expect(parseMkState('1')).toBe('waiting');
+        expect(parseMkState('3')).toBe('expired');
+        expect(parseMkState('-1')).toBe('error');
+        expect(parseMkState('<html>')).toBe('error');
+    });
+    it('builds environment URLs', () => {
+        expect(loginUrl('test')).toContain('https://www.czebox.cz/as/processLogin?type=mep-ws&applicationName=');
+        expect(stateUrl('prod')).toBe('https://www.mojedatovaschranka.cz/as/mepWsStateUpdate');
     });
 });

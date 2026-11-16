@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, ArrowLeft, Download, Inbox, KeyRound, Loader2, Lock, Mail, Paperclip, Plug, Plus, Search, Send, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AlertTriangle, ArrowLeft, Download, Inbox, KeyRound, Loader2, Lock, Mail, Paperclip, Plug, Plus, Search, Send, Smartphone, Trash2, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { decryptText, encryptText } from '@/lib/e2ee';
 import { useMasterKey } from '@/lib/useE2ee';
@@ -12,19 +12,65 @@ import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
 type Account = { id: string; label: string; env: IsdsEnv; enc_cred: string };
-type Cred = { login: string; password: string };
+type Cred = { login: string; password: string; method?: 'password' | 'mobile_key' };
+type ApiRes = { ok: boolean; status: number; json: Record<string, unknown> };
+type Caller = (body: Record<string, unknown>) => Promise<ApiRes>;
 type Tab = 'received' | 'sent';
 
 const MAX_SEND = 10 * 1024 * 1024;
 const fmtSize = (b: number) => (b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} kB` : `${(b / 1024 / 1024).toFixed(1).replace('.', ',')} MB`);
 const fmtTime = (iso: string) => (iso ? new Date(iso).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '–');
 
-async function api(body: Record<string, unknown>): Promise<{ ok: boolean; status: number; json: Record<string, unknown> }> {
+async function api(body: Record<string, unknown>): Promise<ApiRes> {
     const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch('/api/isds', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify(body) });
     return { ok: res.ok, status: res.status, json: await res.json().catch(() => ({})) as Record<string, unknown> };
 }
 const errText = (r: { status: number; json: Record<string, unknown> }) => (typeof r.json.message === 'string' ? r.json.message : r.status === 429 ? 'Příliš mnoho dotazů, zkuste to za chvíli.' : r.status === 403 ? 'Přístup je zamčený.' : 'Operace se nepodařila.');
+
+
+const SESSION_MS = 25 * 60_000;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Přihlášení Mobilním klíčem: odeslání požadavku, čekání na potvrzení v telefonu (až 2,5 minuty), získání relace
+async function mkLogin(env: IsdsEnv, cred: Cred, onWait: (w: boolean) => void): Promise<{ ok: true; session: string } | { ok: false; res: ApiRes }> {
+    const start = await api({ action: 'mk_start', env, login: cred.login, password: cred.password });
+    if (!start.ok) return { ok: false, res: start };
+    const sCookie = String(start.json.sCookie ?? '');
+    onWait(true);
+    try {
+        for (let i = 0; i < 75; i++) {
+            await sleep(2000);
+            const st = await api({ action: 'mk_poll', env, sCookie });
+            const state = String(st.json.state ?? '');
+            if (state === 'confirmed') break;
+            if (state === 'expired' || state === 'error' || i === 74) return { ok: false, res: { ok: false, status: 408, json: { message: state === 'expired' ? 'Potvrzení v aplikaci Mobilní klíč vypršelo. Zkuste to znovu.' : 'Přihlášení nebylo potvrzeno v aplikaci Mobilní klíč.' } } };
+        }
+    } finally { onWait(false); }
+    const fin = await api({ action: 'mk_finish', env, login: cred.login, password: cred.password, sCookie });
+    return fin.ok ? { ok: true, session: String(fin.json.session ?? '') } : { ok: false, res: fin };
+}
+
+// Volání datových schránek s doplněním přihlášení; u Mobilního klíče se relace drží v paměti (platí 30 minut) a sama se obnoví
+function useCaller(env: IsdsEnv, cred: Cred): { call: Caller; waiting: boolean } {
+    const sess = useRef<{ value: string; at: number } | null>(null);
+    const pending = useRef<Promise<{ ok: true; session: string } | { ok: false; res: ApiRes }> | null>(null);
+    const [waiting, setWaiting] = useState(false);
+    useEffect(() => () => { if (sess.current) void api({ action: 'mk_end', env, session: sess.current.value }); }, [env]);
+    const call = useCallback<Caller>(async (body) => {
+        if (cred.method !== 'mobile_key') return api({ ...body, env, login: cred.login, password: cred.password });
+        if (!sess.current || Date.now() - sess.current.at > SESSION_MS) {
+            pending.current ??= mkLogin(env, cred, setWaiting).finally(() => { pending.current = null; });
+            const r = await pending.current;
+            if (!r.ok) return r.res;
+            sess.current = { value: r.session, at: Date.now() };
+        }
+        const res = await api({ ...body, env, session: sess.current.value });
+        if (res.status === 401) sess.current = null;
+        return res;
+    }, [env, cred]);
+    return { call, waiting };
+}
 
 const toBase64 = (file: File) => new Promise<string>((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(',')[1] ?? ''); r.onerror = () => reject(new Error('Soubor se nepodařilo načíst.')); r.readAsDataURL(file); });
 const fromBase64 = (b64: string, mime: string, name: string) => { const bin = atob(b64); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return new File([bytes], name, { type: mime || 'application/octet-stream' }); };
@@ -92,21 +138,29 @@ export default function LawyerDataBox() {
 }
 
 function Connect({ master, onDone, first }: { master: CryptoKey; onDone: () => Promise<void>; first?: boolean }) {
-    const [form, setForm] = useState({ label: '', env: 'prod' as IsdsEnv, login: '', password: '' });
+    const [form, setForm] = useState({ label: '', env: 'prod' as IsdsEnv, login: '', password: '', method: 'password' as 'password' | 'mobile_key' });
+    const [waiting, setWaiting] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     async function save(e: React.FormEvent) {
         e.preventDefault();
         setBusy(true); setError('');
         // Nejdřív zkouška přihlášení, ať se neuloží chybné údaje
-        const test = await api({ action: 'list', env: form.env, login: form.login.trim(), password: form.password, received: true });
-        if (!test.ok) { setBusy(false); setError(errText(test)); return; }
+        const cred: Cred = { login: form.login.trim(), password: form.password, method: form.method };
+        if (form.method === 'mobile_key') {
+            const r = await mkLogin(form.env, cred, setWaiting);
+            if (!r.ok) { setBusy(false); setError(errText(r.res)); return; }
+            void api({ action: 'mk_end', env: form.env, session: r.session });
+        } else {
+            const test = await api({ action: 'list', env: form.env, login: cred.login, password: cred.password, received: true });
+            if (!test.ok) { setBusy(false); setError(errText(test)); return; }
+        }
         const { data: { user } } = await supabase.auth.getUser();
-        const enc = await encryptText(master, JSON.stringify({ login: form.login.trim(), password: form.password }));
+        const enc = await encryptText(master, JSON.stringify({ login: form.login.trim(), password: form.password, method: form.method }));
         const { error: err } = await supabase.from('isds_accounts').insert({ user_id: user?.id, label: form.label.trim() || 'Moje datová schránka', env: form.env, enc_cred: enc });
         setBusy(false);
         if (err) { setError(err.message); return; }
-        setForm({ label: '', env: 'prod', login: '', password: '' });
+        setForm({ label: '', env: 'prod', login: '', password: '', method: 'password' });
         await onDone();
     }
     const label = 'block text-xs font-semibold text-slate-600';
@@ -116,10 +170,13 @@ function Connect({ master, onDone, first }: { master: CryptoKey; onDone: () => P
             <div className="grid gap-3 sm:grid-cols-2">
                 <label className={label}>Název (jak se bude zobrazovat)<input value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} maxLength={120} placeholder="např. Kancelář Novák" className={`${inputCls} mt-1 font-normal`} /></label>
                 <label className={label}>Prostředí<select value={form.env} onChange={(e) => setForm((f) => ({ ...f, env: e.target.value as IsdsEnv }))} className={`${inputCls} mt-1 font-normal`}><option value="prod">Ostrý provoz (mojedatovaschranka.cz)</option><option value="test">Testovací (czebox.cz)</option></select></label>
+                <label className={`${label} sm:col-span-2`}>Způsob přihlášení<select value={form.method} onChange={(e) => setForm((f) => ({ ...f, method: e.target.value as 'password' | 'mobile_key' }))} className={`${inputCls} mt-1 font-normal`}><option value="password">Jméno a heslo</option><option value="mobile_key">Mobilní klíč (komunikační kód)</option></select></label>
+                {form.method === 'mobile_key' && <p className="rounded-lg bg-indigo-50 p-3 text-xs leading-relaxed text-indigo-950 sm:col-span-2"><Smartphone size={13} className="mr-1 inline" aria-hidden="true" /> V portálu datových schránek otevřete <strong>Nastavení → Možnosti přihlášení → Přihlášení mobilním klíčem</strong>, aktivujte mobilní klíč a stiskněte <strong>Vygenerovat přístupové údaje</strong>. Získaný komunikační kód zadejte níže místo hesla. Při každém přihlášení vám v telefonu přijde oznámení, které potvrdíte.</p>}
                 <label className={label}>Přihlašovací jméno *<input value={form.login} onChange={(e) => setForm((f) => ({ ...f, login: e.target.value }))} required autoComplete="off" className={`${inputCls} mt-1 font-normal`} /></label>
-                <label className={label}>Heslo *<input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} required autoComplete="new-password" className={`${inputCls} mt-1 font-normal`} /></label>
+                 <label className={label}>{form.method === 'mobile_key' ? 'Komunikační kód *' : 'Heslo *'}<input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} required autoComplete="new-password" className={`${inputCls} mt-1 font-normal`} /></label>
             </div>
             <p className="flex items-start gap-2 text-xs leading-relaxed text-slate-500"><Lock size={13} className="mt-0.5 shrink-0 text-indigo-700" aria-hidden="true" /> Údaje se před uložením zašifrují vaším šifrovacím heslem v prohlížeči. Při každém použití je prohlížeč pošle zabezpečeně na náš server, ten je použije na jedno volání datových schránek a nikde neuloží.</p>
+            {waiting && <p role="status" className="flex items-center gap-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-950"><Smartphone size={16} aria-hidden="true" /> Potvrďte přihlášení v aplikaci Mobilní klíč v telefonu…</p>}
             {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
             <button type="submit" disabled={busy} className={primaryBtn}>{busy && <Loader2 size={15} className="animate-spin" />} Ověřit a připojit</button>
         </form>
@@ -143,15 +200,16 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
     const [error, setError] = useState('');
     const [open, setOpen] = useState<Record_ | null>(null);
     const [compose, setCompose] = useState(false);
+    const { call, waiting } = useCaller(account.env, cred);
 
     const refresh = useCallback(async (t: Tab) => {
         setBusy(true); setError('');
         const from = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 19);
-        const r = await api({ action: 'list', env: account.env, login: cred.login, password: cred.password, received: t === 'received', from });
+        const r = await call({ action: 'list', received: t === 'received', from });
         setBusy(false);
         if (!r.ok) { setError(errText(r)); setRecords([]); return; }
         setRecords((r.json.records as Record_[]) ?? []);
-    }, [account.env, cred.login, cred.password]);
+    }, [call]);
 
     const switchTab = (t: Tab) => { setTab(t); setRecords(null); setOpen(null); void refresh(t); };
     // První načtení po otevření schránky
@@ -159,6 +217,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
 
     return (
         <div className="space-y-4">
+            {waiting && <p role="status" className="fixed left-1/2 top-4 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-xl bg-amber-100 px-4 py-2.5 text-sm font-bold text-amber-950 shadow-lg"><Smartphone size={16} aria-hidden="true" /> Potvrďte přihlášení v aplikaci Mobilní klíč v telefonu…</p>}
             <div className="flex flex-wrap items-center gap-2">
                 <div className="flex gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Složka">
                     {([['received', 'Přijaté', Inbox], ['sent', 'Odeslané', Send]] as const).map(([id, name, Icon]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => switchTab(id)} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold cursor-pointer ${tab === id ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600'}`}><Icon size={14} aria-hidden="true" /> {name}</button>)}
@@ -183,13 +242,13 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
                     ))}
                 </ul>
             )}
-            {open && <Detail record={open} tab={tab} account={account} cred={cred} userId={userId} onClose={() => setOpen(null)} onChanged={() => void refresh(tab)} />}
-            {compose && <Compose account={account} cred={cred} userId={userId} onClose={() => setCompose(false)} onSent={() => { setCompose(false); void refresh('sent'); setTab('sent'); }} />}
+            {open && <Detail record={open} tab={tab} call={call} userId={userId} onClose={() => setOpen(null)} onChanged={() => void refresh(tab)} />}
+            {compose && <Compose account={account} call={call} userId={userId} onClose={() => setCompose(false)} onSent={() => { setCompose(false); void refresh('sent'); setTab('sent'); }} />}
         </div>
     );
 }
 
-function Detail({ record, tab, account, cred, userId, onClose, onChanged }: { record: Record_; tab: Tab; account: Account; cred: Cred; userId: string; onClose: () => void; onChanged: () => void }) {
+function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Record_; tab: Tab; call: Caller; userId: string; onClose: () => void; onChanged: () => void }) {
     const [msg, setMsg] = useState<Downloaded | null>(null);
     const [confirm, setConfirm] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -201,7 +260,7 @@ function Detail({ record, tab, account, cred, userId, onClose, onChanged }: { re
 
     async function download() {
         setBusy(true); setError('');
-        const r = await api({ action: 'download', env: account.env, login: cred.login, password: cred.password, id: record.id, undelivered: record.undelivered && tab === 'received', confirmDelivery: confirm });
+        const r = await call({ action: 'download', id: record.id, undelivered: record.undelivered && tab === 'received', confirmDelivery: confirm });
         setBusy(false);
         if (r.status === 409) { setConfirm(true); return; }
         if (!r.ok) { setError(errText(r)); return; }
@@ -257,7 +316,7 @@ function Detail({ record, tab, account, cred, userId, onClose, onChanged }: { re
     );
 }
 
-function Compose({ account, cred, userId, onClose, onSent }: { account: Account; cred: Cred; userId: string; onClose: () => void; onSent: () => void }) {
+function Compose({ account, call, userId, onClose, onSent }: { account: Account; call: Caller; userId: string; onClose: () => void; onSent: () => void }) {
     const [q, setQ] = useState('');
     const [hits, setHits] = useState<BoxHit[]>([]);
     const [to, setTo] = useState<BoxHit | null>(null);
@@ -275,7 +334,7 @@ function Compose({ account, cred, userId, onClose, onSent }: { account: Account;
         const text = q.trim();
         if (text.length < 3) return;
         setBusy(true); setError('');
-        const r = await api({ action: 'find', env: account.env, login: cred.login, password: cred.password, ...(/^\d[\d\s]{6,}\d$/.test(text) ? { ic: text } : { name: text }) });
+        const r = await call({ action: 'find', ...(/^\d[\d\s]{6,}\d$/.test(text) ? { ic: text } : { name: text }) });
         setBusy(false);
         if (!r.ok) { setError(errText(r)); return; }
         const list = (r.json.results as BoxHit[]) ?? [];
@@ -298,7 +357,7 @@ function Compose({ account, cred, userId, onClose, onSent }: { account: Account;
         setBusy(true); setError('');
         try {
             const payload = await Promise.all(files.map(async (f) => ({ name: f.name, mime: f.type, base64: await toBase64(f) })));
-            const r = await api({ action: 'send', env: account.env, login: cred.login, password: cred.password, recipient, annotation: annotation.trim(), files: payload, confirmSend: true });
+            const r = await call({ action: 'send', recipient, annotation: annotation.trim(), files: payload, confirmSend: true });
             if (!r.ok) { setError(errText(r)); setBusy(false); setConfirm(false); return; }
             if (caseId) {
                 try { await insertRow('case_entries', { case_id: caseId, user_id: userId, kind: 'event', title: `Odeslána datová zpráva: ${annotation.trim()}`.slice(0, 200), body: `Adresát: ${to?.name || recipient} (ID ${recipient}). ID zprávy ${String(r.json.id ?? '')}. Příloh: ${files.length}.`, happened_on: new Date().toISOString().slice(0, 10) }); } catch { /* chronologie není kritická */ }

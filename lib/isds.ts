@@ -79,12 +79,47 @@ export function parseFind(xml: string): BoxHit[] {
 
 export const parseCreated = (xml: string): { id: string; status: Status } => ({ id: tag(xml, 'dmID'), status: statusOf(xml) });
 
-// Odeslání jednoho volání; vrací surové XML odpovědi (nebo chybu spojení). Heslo se nikam nezapisuje.
-export async function callIsds(env: IsdsEnv, service: IsdsService, body: string, cred: Credentials): Promise<{ ok: true; xml: string } | { ok: false; kind: 'auth' | 'network' | 'http'; status: number }> {
+// ---------- Přihlášení Mobilním klíčem (dokument ISDS „Podpora autentizace Mobilním klíčem“ v1.2) ----------
+// 1) POST processLogin s Basic (jméno : komunikační kód) -> S-COOKIE, uživatel potvrdí push v aplikaci Mobilní klíč
+// 2) GET mepWsStateUpdate se S-COOKIE, dokud odpověď není „2“
+// 3) znovu POST processLogin s Basic + S-COOKIE -> IPCZ-X-COOKIE (platí 30 minut) pro volání webových služeb
+export const HOSTS: Record<IsdsEnv, string> = { test: 'www.czebox.cz', prod: 'www.mojedatovaschranka.cz' };
+export const APP_NAME = 'Kancelář';
+export const USER_AGENT = 'Kancelar/1.0';
+export const SESSION_MINUTES = 25; // cookie platí 30 minut, obnovujeme dřív
+
+export const loginUrl = (env: IsdsEnv) => `https://${HOSTS[env]}/as/processLogin?type=mep-ws&applicationName=${encodeURIComponent(APP_NAME)}&uri=${encodeURIComponent(`https://${HOSTS[env]}/apps/DS/dz`)}`;
+export const stateUrl = (env: IsdsEnv) => `https://${HOSTS[env]}/as/mepWsStateUpdate`;
+export const logoutUrl = (env: IsdsEnv) => `https://${HOSTS[env]}/as/processLogout?uri=${encodeURIComponent(`https://${HOSTS[env]}/apps/DS/dz`)}`;
+export const appsUrl = (env: IsdsEnv, service: IsdsService) => `https://${HOSTS[env]}/apps/DS/${service}`;
+
+export const basicHeader = (c: Credentials) => `Basic ${Buffer.from(`${c.login}:${c.password}`).toString('base64')}`;
+
+// Hodnota cookie podle jména z hlaviček Set-Cookie
+export function cookieValue(setCookies: string[], name: string): string | null {
+    for (const line of setCookies) {
+        const m = line.match(new RegExp(`(?:^|\\s)${name.replace(/[-]/g, '\\-')}=([^;]+)`));
+        if (m) return m[1];
+    }
+    return null;
+}
+export const cookieSafe = (v: string) => /^[A-Za-z0-9._~+/=%-]{8,2000}$/.test(v);
+
+// Stav potvrzení v mobilní aplikaci: 1 čeká se, 2 potvrzeno, 3 vypršelo
+export type MkState = 'waiting' | 'confirmed' | 'expired' | 'error';
+export const parseMkState = (body: string): MkState => { const t = body.replace(/["\s]/g, ''); return t === '2' ? 'confirmed' : t === '1' ? 'waiting' : t === '3' ? 'expired' : 'error'; };
+
+export type Auth = { type: 'basic'; cred: Credentials } | { type: 'cookie'; env: IsdsEnv; value: string };
+
+// Odeslání jednoho volání; vrací surové XML odpovědi (nebo chybu spojení). Heslo ani cookie se nikam nezapisují.
+export async function callIsds(env: IsdsEnv, service: IsdsService, body: string, auth: Credentials | Auth): Promise<{ ok: true; xml: string } | { ok: false; kind: 'auth' | 'network' | 'http'; status: number }> {
+    const a: Auth = 'type' in auth ? auth : { type: 'basic', cred: auth };
     try {
-        const headers: Record<string, string> = { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: '""' };
-        if (cred.login && cred.password) headers.Authorization = `Basic ${Buffer.from(`${cred.login}:${cred.password}`).toString('base64')}`;
-        const res = await fetch(`${ISDS_BASE[env]}/${service}`, { method: 'POST', headers, body, cache: 'no-store', signal: AbortSignal.timeout(60_000) });
+        const headers: Record<string, string> = { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: '""', 'User-Agent': USER_AGENT };
+        let url = `${ISDS_BASE[env]}/${service}`;
+        if (a.type === 'cookie') { url = appsUrl(env, service); headers.Cookie = `IPCZ-X-COOKIE=${a.value}`; }
+        else if (a.cred.login && a.cred.password) headers.Authorization = basicHeader(a.cred);
+        const res = await fetch(url, { method: 'POST', headers, body, cache: 'no-store', signal: AbortSignal.timeout(60_000) });
         if (res.status === 401 || res.status === 403) return { ok: false, kind: 'auth', status: res.status };
         const xml = await res.text();
         if (!res.ok && !isFault(xml)) return { ok: false, kind: 'http', status: res.status };
