@@ -47,6 +47,14 @@ export default function LawyerInsolvency() {
         setWatches((w.data ?? []) as Watch[]); setHits((h.data ?? []) as Hit[]);
     }, []);
     useEffect(() => { let alive = true; Promise.resolve().then(() => { if (alive) void load(); }); return () => { alive = false; }; }, [load]);
+    // Předvyplnění z karty klienta: ?ic=…&name=…
+    useEffect(() => {
+        const q = new URLSearchParams(window.location.search);
+        const ic = q.get('ic'); const name = q.get('name');
+        if (!ic) return;
+        const t = window.setTimeout(() => { setKind('firma'); setForm((f) => ({ ...f, ic, label: name ?? f.label })); }, 0);
+        return () => window.clearTimeout(t);
+    }, []);
 
     // Při otevření se zastaralé kontroly (starší 12 hodin) provedou samy
     useEffect(() => {

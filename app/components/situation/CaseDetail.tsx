@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpenCheck, BookUser, CalendarClock, CalendarPlus, Check, Clock, FileText, FolderOpen, LayoutDashboard, Pin, PinOff, ShieldCheck, Share2, Landmark, Link2, MailCheck, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookOpenCheck, BookUser, CalendarClock, CalendarPlus, Check, Clock, FileText, FolderOpen, LayoutDashboard, Pin, PinOff, ShieldCheck, Share2, Landmark, Link2, MailCheck, Trash2, Wallet } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { hasLawyerAccess, useLawyerAccess } from '@/lib/lawyer';
@@ -13,6 +13,7 @@ import CaseOverviewTab from './CaseOverviewTab';
 import CaseKatastrTab from './CaseKatastrTab';
 import CaseDataMessagesTab from './CaseDataMessagesTab';
 import CaseResearchTab from './CaseResearchTab';
+import CaseFinanceTab from './CaseFinanceTab';
 import CaseFilesTab from './CaseFilesTab';
 import CaseDeadlinesTab, { deadlineText, deadlineTone } from './CaseDeadlinesTab';
 import CaseTimelineTab from './CaseTimelineTab';
@@ -22,7 +23,7 @@ import CaseExportPanel from './CaseExportPanel';
 import CaseClientTab from './CaseClientTab';
 import { ghostBtn, type TabProps } from './caseUi';
 
-type TabId = 'prehled' | 'katastr' | 'obrana' | 'klient' | 'soubory' | 'lhuty' | 'chronologie' | 'kontakty' | 'datovky' | 'resers';
+type TabId = 'prehled' | 'katastr' | 'obrana' | 'klient' | 'soubory' | 'lhuty' | 'chronologie' | 'kontakty' | 'datovky' | 'resers' | 'finance';
 
 export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen' | 'office' }) {
     const isOffice = variant === 'office';
@@ -106,6 +107,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
         ...(isLawyer ? [{ id: 'klient' as TabId, label: 'Klient', icon: Link2, count: unread }] : []),
         ...(isLawyer ? [{ id: 'katastr' as TabId, label: 'Katastr', icon: Landmark }] : []),
         ...(isLawyer ? [{ id: 'datovky' as TabId, label: 'Datové zprávy', icon: MailCheck }] : []),
+        ...(isLawyer ? [{ id: 'finance' as TabId, label: 'Peníze', icon: Wallet }] : []),
         ...(isLawyer ? [{ id: 'resers' as TabId, label: 'Rešerše', icon: BookOpenCheck }] : []),
         { id: 'obrana', label: 'Obrana', icon: ShieldCheck },
         { id: 'soubory', label: 'Soubory', icon: FolderOpen, count: bundle.files.length },
@@ -162,6 +164,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
                 {tab === 'katastr' && <CaseKatastrTab {...tabProps} />}
                 {tab === 'datovky' && <CaseDataMessagesTab {...tabProps} />}
                 {tab === 'resers' && <CaseResearchTab {...tabProps} />}
+                {tab === 'finance' && <CaseFinanceTab {...tabProps} />}
                 {tab === 'obrana' && <CaseDefenseTab {...tabProps} />}
                 {tab === 'soubory' && <CaseFilesTab {...tabProps} />}
                 {tab === 'lhuty' && <CaseDeadlinesTab {...tabProps} />}

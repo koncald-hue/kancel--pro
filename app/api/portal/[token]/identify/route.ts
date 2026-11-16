@@ -24,12 +24,30 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
     const { error } = await db.from('client_links').update({ client_name: identity.name, client_email: identity.email, client_phone: identity.phone, client_address: identity.address, consent_at: now, onboarded_at: now }).eq('id', link.id);
     if (error) return NextResponse.json({ error: 'failed' }, { status: 500 });
 
-    // Propojení se spisem: jméno klienta ve věci a záznam v adresáři klientů advokáta
-    const { data: caseRow } = await db.from('cases').select('client_name').eq('id', link.case_id).maybeSingle();
-    if (!caseRow?.client_name) await db.from('cases').update({ client_name: identity.name }).eq('id', link.case_id);
-    const { data: existing } = await db.from('lawyer_clients').select('id, email, phone').eq('user_id', link.user_id).ilike('name', identity.name).maybeSingle();
-    if (existing) await db.from('lawyer_clients').update({ email: existing.email || identity.email, phone: existing.phone || identity.phone }).eq('id', existing.id);
-    else await db.from('lawyer_clients').insert({ user_id: link.user_id, name: identity.name, email: identity.email, phone: identity.phone, note: 'Z klientského odkazu' });
+    // Propojení se spisem: údaje klienta se doplní do věci i do adresáře klientů advokáta (nic existujícího se nepřepisuje)
+    const { data: caseRow } = await db.from('cases').select('client_name, client_email, client_phone, client_id').eq('id', link.case_id).maybeSingle();
+    const caseFill: Record<string, string> = {};
+    if (!caseRow?.client_name) caseFill.client_name = identity.name;
+    if (!caseRow?.client_email && identity.email) caseFill.client_email = identity.email;
+    if (!caseRow?.client_phone && identity.phone) caseFill.client_phone = identity.phone;
+    if (Object.keys(caseFill).length) await db.from('cases').update(caseFill).eq('id', link.case_id);
+
+    // Klient se hledá podle propojení věci, jinak podle jména
+    type ClientRow = { id: string; email: string; phone: string; address: string | null };
+    let existing = null as ClientRow | null;
+    if (caseRow?.client_id) { const r = await db.from('lawyer_clients').select('id, email, phone, address').eq('id', caseRow.client_id).maybeSingle(); existing = r.data as ClientRow | null; }
+    if (!existing) { const r = await db.from('lawyer_clients').select('id, email, phone, address').eq('user_id', link.user_id).ilike('name', identity.name).maybeSingle(); existing = r.data as ClientRow | null; }
+    if (existing) {
+        const fill: Record<string, string> = {};
+        if (!existing.email && identity.email) fill.email = identity.email;
+        if (!existing.phone && identity.phone) fill.phone = identity.phone;
+        if (!existing.address && identity.address) fill.address = identity.address;
+        if (Object.keys(fill).length) await db.from('lawyer_clients').update(fill).eq('id', existing.id);
+        if (!caseRow?.client_id) await db.from('cases').update({ client_id: existing.id }).eq('id', link.case_id);
+    } else {
+        const { data: created } = await db.from('lawyer_clients').insert({ user_id: link.user_id, name: identity.name, email: identity.email, phone: identity.phone, address: identity.address, note: 'Z klientského odkazu' }).select('id').single();
+        if (created && !caseRow?.client_id) await db.from('cases').update({ client_id: created.id }).eq('id', link.case_id);
+    }
 
     return NextResponse.json({ ok: true });
 }

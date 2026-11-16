@@ -7,6 +7,7 @@ import { loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient } from '@/lib/lawyer';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import AresPicker from './AresPicker';
+import ClientSummary from './ClientSummary';
 import { useLawyer } from './LawyerGate';
 
 const EMPTY = { name: '', email: '', phone: '', note: '', rate: '', address: '', ico: '', dic: '' };
@@ -108,6 +109,7 @@ export default function LawyerClients() {
                                     </tr>
                                     {editing === c.id && (
                                         <tr className="bg-slate-50/60"><td colSpan={5} className="px-4 py-3">
+                                            <ClientSummary client={c} />
                                             <div className="mb-2"><AresPicker compact onPick={(c) => setEdit((f) => ({ ...f, name: c.name, ico: c.ico, dic: c.dic, address: c.address }))} label="Najít firmu v ARES a přepsat údaje" /></div>
                                             <div className="grid gap-2 sm:grid-cols-6">
                                                 {([['name', 'Jméno', 2], ['email', 'E-mail', 2], ['phone', 'Telefon', 1], ['rate', 'Sazba Kč/h', 1], ['address', 'Adresa', 3], ['ico', 'IČO', 1], ['dic', 'DIČ', 1], ['note', 'Poznámka', 5]] as const).map(([k, label, span]) => <label key={k} className={`block text-xs font-semibold text-slate-600 sm:col-span-${span}`}>{label}<input value={edit[k]} onChange={(e) => setEdit((f) => ({ ...f, [k]: e.target.value }))} className={`${inputCls} mt-1 font-normal`} /></label>)}

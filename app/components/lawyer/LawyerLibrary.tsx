@@ -5,6 +5,7 @@ import { ArrowLeft, Copy, Download, FilePlus2, Library, Loader2, Pencil, Plus, P
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { AUTO_FIELDS, autoValues, buildDocx, customLabel, fieldsIn, fillTemplate, type LawyerTemplate } from '@/lib/templates';
+import { insertRow, uploadCaseFile } from '@/lib/caseFile';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
@@ -55,7 +56,7 @@ export default function LawyerLibrary() {
     if (view.mode === 'edit') return <Editor template={items.find((t) => t.id === view.id) ?? null} userId={userId} onDone={async () => { await reload(); setView({ mode: 'list' }); }} onCancel={() => setView({ mode: 'list' })} />;
     if (view.mode === 'fill') {
         const t = items.find((x) => x.id === view.id);
-        if (t) return <Fill template={t} access={access} onBack={() => setView({ mode: 'list' })} />;
+        if (t) return <Fill template={t} access={access} userId={userId} onBack={() => setView({ mode: 'list' })} />;
     }
 
     const mine = items.filter((t) => t.user_id === userId);
@@ -186,13 +187,15 @@ function Editor({ template, userId, onDone, onCancel }: { template: LawyerTempla
     );
 }
 
-function Fill({ template, access, onBack }: { template: LawyerTemplate; access: ReturnType<typeof useLawyer>['access']; onBack: () => void }) {
+function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; access: ReturnType<typeof useLawyer>['access']; userId: string; onBack: () => void }) {
     const [cases, setCases] = useState<LegalCase[]>([]);
     const [clients, setClients] = useState<{ id: string; address?: string; ico?: string; dic?: string }[]>([]);
     const [caseId, setCaseId] = useState('');
     const [custom, setCustom] = useState<Record<string, string>>({});
     const [override, setOverride] = useState<Record<string, string>>({});
     const [copied, setCopied] = useState(false);
+    const [saveMsg, setSaveMsg] = useState('');
+    const [saving, setSaving] = useState(false);
     const fields = useMemo(() => fieldsIn(template.body), [template.body]);
 
     useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => {}); supabase.from('lawyer_clients').select('id, address, ico, dic').then(({ data }) => { if (alive && data) setClients(data); }); return () => { alive = false; }; }, []);
@@ -211,6 +214,20 @@ function Fill({ template, access, onBack }: { template: LawyerTemplate; access: 
         a.download = `${template.title.replace(/[^\p{L}\p{N}]+/gu, '_')}.docx`;
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    }
+    // Vyplněný dokument se uloží do spisu vybrané věci (soubor Word) a zapíše se do chronologie
+    async function saveToCase() {
+        if (!chosen) return;
+        setSaving(true); setSaveMsg('');
+        try {
+            const blob = await buildDocx(text);
+            const name = `${template.title.replace(/[^\p{L}\p{N}]+/gu, '_')}.docx`;
+            const file = new File([blob], name, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            await uploadCaseFile(userId, chosen.id, null, file);
+            await insertRow('case_entries', { case_id: chosen.id, user_id: userId, kind: 'event', title: `Vytvořen dokument: ${template.title}`.slice(0, 200), body: remaining.length ? `Ve vzoru zbývá doplnit: ${remaining.join(', ')}.` : 'Dokument vygenerován ze vzoru a uložen do souborů věci.', happened_on: new Date().toISOString().slice(0, 10) });
+            setSaveMsg(`Uloženo do věci „${chosen.title}“ (soubor ${name}) a zapsáno do chronologie.`);
+        } catch (e) { setSaveMsg(e instanceof Error ? e.message : 'Uložení se nepovedlo.'); }
+        setSaving(false);
     }
     function print() {
         const w = window.open('', '_blank');
@@ -246,8 +263,10 @@ function Fill({ template, access, onBack }: { template: LawyerTemplate; access: 
                         <button type="button" onClick={() => void download()} className={primaryBtn}><Download size={15} /> Stáhnout Word (.docx)</button>
                         <button type="button" onClick={() => void copy()} className={ghostBtn}><Copy size={14} /> {copied ? 'Zkopírováno' : 'Kopírovat text'}</button>
                         <button type="button" onClick={print} className={ghostBtn}><Printer size={14} /> Tisk</button>
+                        {chosen && <button type="button" onClick={() => void saveToCase()} disabled={saving} className={ghostBtn}>{saving ? <Loader2 size={14} className="animate-spin" /> : <FilePlus2 size={14} />} Uložit do spisu věci</button>}
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">Vyplněný dokument se nikam neukládá. Stáhněte si ho a uložte do spisu ve věci. Před odesláním ho vždy zkontrolujte.</p>
+                    {saveMsg && <p role="status" className="mt-2 rounded-lg bg-emerald-50 p-2.5 text-xs text-emerald-900">{saveMsg}</p>}
+                    <p className="mt-2 text-xs text-slate-500">Dokument se ukládá, jen když zvolíte „Uložit do spisu věci“ (jde o vybranou věc výše). Před odesláním ho vždy zkontrolujte.</p>
                 </div>
             </div>
         </div>

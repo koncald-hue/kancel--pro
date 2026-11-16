@@ -24,13 +24,23 @@ type Tab = 'odmena' | 'urok';
 export default function LawyerCalculators() {
     const [tab, setTab] = useState<Tab>('odmena');
     const [cases, setCases] = useState<LegalCase[]>([]);
+    const [preset, setPreset] = useState<{ case?: string; jistina?: string; splatnost?: string } | null>(null);
+    // Předvyplnění z odkazu (věc, neuhrazená faktura po splatnosti): ?tab=urok&jistina=…&splatnost=…&case=…
+    useEffect(() => {
+        const q = new URLSearchParams(window.location.search);
+        const t = window.setTimeout(() => {
+            if (q.get('tab') === 'urok') setTab('urok');
+            setPreset({ case: q.get('case') ?? undefined, jistina: q.get('jistina') ?? undefined, splatnost: q.get('splatnost') ?? undefined });
+        }, 0);
+        return () => window.clearTimeout(t);
+    }, []);
     useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => undefined); return () => { alive = false; }; }, []);
     return (
         <div className="space-y-5">
             <div className="flex gap-1.5" role="tablist" aria-label="Kalkulačka">
                 {([['odmena', 'Odměna podle tarifu', Calculator], ['urok', 'Úrok z prodlení', Percent]] as const).map(([id, name, Icon]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold cursor-pointer ${tab === id ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}`}><Icon size={14} aria-hidden="true" /> {name}</button>)}
             </div>
-            {tab === 'odmena' ? <Reward cases={cases} /> : <Interest cases={cases} />}
+            {tab === 'odmena' ? <Reward key={`r-${preset?.case ?? ''}`} cases={cases} presetCase={preset?.case} /> : <Interest key={`i-${preset?.splatnost ?? ''}`} cases={cases} preset={preset} />}
         </div>
     );
 }
@@ -55,7 +65,7 @@ function useDraft(cases: LegalCase[]) {
     return { busy, error, make };
 }
 
-function Reward({ cases }: { cases: LegalCase[] }) {
+function Reward({ cases, presetCase }: { cases: LegalCase[]; presetCase?: string }) {
     const { access } = useLawyer();
     const [hodnota, setHodnota] = useState('100000');
     const [pocty, setPocty] = useState<Record<string, number>>({ '1a': 1, '1d': 1 });
@@ -64,7 +74,7 @@ function Reward({ cases }: { cases: LegalCase[] }) {
     const [pausal, setPausal] = useState(String(PAUSAL_DEFAULT));
     const [vydaje, setVydaje] = useState('0');
     const [dph, setDph] = useState(!!access.vat_payer);
-    const [caseId, setCaseId] = useState('');
+    const [caseId, setCaseId] = useState(presetCase ?? '');
     const draft = useDraft(cases);
 
     const r = useMemo(() => vypocet({ hodnota: num(hodnota), pocty, upravaPct: num(uprava) || 100, osoby: Math.max(1, Math.floor(num(osoby) || 1)), pausal: num(pausal), vydaje: num(vydaje), platceDph: dph, dph: DPH_DEFAULT }), [hodnota, pocty, uprava, osoby, pausal, vydaje, dph]);
@@ -141,13 +151,14 @@ function Reward({ cases }: { cases: LegalCase[] }) {
     );
 }
 
-function Interest({ cases }: { cases: LegalCase[] }) {
-    const [jistina, setJistina] = useState('100000');
-    const [splatnost, setSplatnost] = useState('');
+function Interest({ cases, preset }: { cases: LegalCase[]; preset: { case?: string; jistina?: string; splatnost?: string } | null }) {
+    const iso = preset?.splatnost && isIso(preset.splatnost) ? preset.splatnost : '';
+    const [jistina, setJistina] = useState(preset?.jistina && Number(preset.jistina) > 0 ? preset.jistina : '100000');
+    const [splatnost, setSplatnost] = useState(iso ? dateCz(iso) : '');
     const [doDne, setDoDne] = useState(todayIso());
     const [splatky, setSplatky] = useState<{ date: string; amount: string }[]>([]);
     const [smluvni, setSmluvni] = useState('');
-    const [caseId, setCaseId] = useState('');
+    const [caseId, setCaseId] = useState(preset?.case ?? '');
     const draft = useDraft(cases);
 
     // Splatnost a datum zaplacení se píšou jako RRRR-MM-DD nebo D. M. RRRR
