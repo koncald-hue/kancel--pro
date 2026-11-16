@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Receipt, Search, ShieldAlert, Tags, Scale, X } from 'lucide-react';
+import { Briefcase, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
 import DataBoxLauncher from './DataBoxLauncher';
@@ -11,14 +11,14 @@ import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
 
-export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'chat' | 'tym' | 'nastaveni';
+export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
 
 // Nástroje jsou seskupené podle toho, k čemu slouží
 const GROUPS: { title: string; items: Item[] }[] = [
     { title: '', items: [['prehled', '/kancelar', 'Přehled', LayoutDashboard]] },
     { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['knihovna', '/kancelar/knihovna', 'Knihovna', Library]] },
-    { title: 'Peníze', items: [['vykazy', '/kancelar/vykazy', 'Výkazy práce', Clock3], ['faktury', '/kancelar/faktury', 'Fakturace', Receipt], ['cenik', '/kancelar/cenik', 'Ceník', Tags]] },
+    { title: 'Peníze', items: [['penize', '/kancelar/penize', 'Peníze', Wallet]] },
     { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound]] },
 ];
 const SETTINGS: Item = ['nastaveni', '/kancelar/nastaveni', 'Nastavení', Settings];
@@ -61,15 +61,17 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
         return () => { cancelled = true; window.clearInterval(id); };
     }, []);
 
-    const current = ALL.find(([id]) => id === active);
+    // Výkazy, fakturace, ceník a kalkulačky patří pod jednu položku „Peníze“
+    const navActive: LawyerSection = ['vykazy', 'faktury', 'cenik', 'kalkulacky', 'penize'].includes(active) ? 'penize' : active;
+    const current = ALL.find(([id]) => id === navActive);
     // Vždy jméno přihlášeného uživatele; teprve když chybí, e-mail
     const name = access.display_name || account?.email || 'Můj pracovní prostor';
     const subtitle = firm ? `${firm.name} · ${ROLE_LABELS[firm.role].toLowerCase()}` : access.firm_name || 'Kancelář';
 
     const link = ([id, href, label, Icon]: Item) => (
-        <Link key={id} href={href} onClick={() => setOpen(false)} aria-current={active === id ? 'page' : undefined}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${active === id ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
-            <Icon size={17} aria-hidden="true" className={active === id ? 'text-indigo-700' : 'text-slate-400'} />
+        <Link key={id} href={href} onClick={() => setOpen(false)} aria-current={navActive === id ? 'page' : undefined}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${navActive === id ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
+            <Icon size={17} aria-hidden="true" className={navActive === id ? 'text-indigo-700' : 'text-slate-400'} />
             <span className="flex-1">{label}</span>
             {id === 'chat' && unread > 0 && <span className="rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white" aria-label={`${unread} nepřečtených`}>{unread}</span>}
         </Link>
