@@ -15,7 +15,7 @@ export function evidenceLines(e: Evidence, seal: string): string[] {
         `Otisk dokumentu (SHA-256): ${e.docSha256}`,
         `Podepsal: ${e.signer.name || 'neuvedeno'}`,
         `Totožnost: ${IDENTITY_TEXT(e.identity)}`,
-        `Potvrzení: jednorázový kód odeslaný SMS na ${e.signer.phoneMasked}, zadán ${new Date(e.otp.verifiedAt).toLocaleString('cs-CZ')}`,
+        e.otp.channel === 'lawyer' ? `Potvrzení: jednorázový kód sdělil klientovi advokát, zadán ${new Date(e.otp.verifiedAt).toLocaleString('cs-CZ')}` : `Potvrzení: jednorázový kód odeslaný SMS na ${e.signer.phoneMasked}, zadán ${new Date(e.otp.verifiedAt).toLocaleString('cs-CZ')}`,
         `Čas podpisu: ${new Date(e.signedAt).toLocaleString('cs-CZ')}`,
         `IP adresa: ${e.ip}`,
         `Prohlížeč: ${e.userAgent.slice(0, 110)}`,

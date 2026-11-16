@@ -29,7 +29,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string;
     }
 
     // SMS kód
-    const { data: otps } = await db.from('signature_otps').select('id, code_hash, expires_at, attempts, used').eq('request_id', r.id).eq('used', false).order('created_at', { ascending: false }).limit(1);
+    const { data: otps } = await db.from('signature_otps').select('id, code_hash, expires_at, attempts, used, channel').eq('request_id', r.id).eq('used', false).order('created_at', { ascending: false }).limit(1);
     const otp = otps?.[0];
     const code = typeof body.code === 'string' ? body.code.replace(/\s/g, '') : '';
     if (!otp || new Date(otp.expires_at as string).getTime() < Date.now()) return NextResponse.json({ error: 'otp', message: 'Kód vypršel nebo nebyl poslán. Pošlete si nový.' }, { status: 400 });
@@ -46,7 +46,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string;
     const evidence: Evidence = {
         v: 1, requestId: r.id, title: r.title, level: 'advanced', docSha256: r.doc_sha256,
         signer: { name: identity.given ? `${identity.given} ${identity.family}` : (r.signer_name || link.client_name || ''), phoneMasked: maskPhone(r.signer_phone) },
-        identity, otp: { channel: 'sms', verifiedAt: now }, signedAt: now, ip: clientIp(req), userAgent: (req.headers.get('user-agent') ?? '').slice(0, 300), consent: CONSENT_TEXT,
+        identity, otp: { channel: otp.channel === 'lawyer' ? 'lawyer' : 'sms', verifiedAt: now }, signedAt: now, ip: clientIp(req), userAgent: (req.headers.get('user-agent') ?? '').slice(0, 300), consent: CONSENT_TEXT,
     };
     const seal = await sealEvidence(sealSecret(), evidence);
     const { data: done, error } = await db.from('signature_requests').update({ status: 'signed', signed_at: now, evidence, evidence_seal: seal }).eq('id', r.id).eq('status', 'pending').select('id');

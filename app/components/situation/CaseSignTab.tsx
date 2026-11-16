@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BadgeCheck, Download, FileSignature, Loader2, Plus, ShieldCheck, X } from 'lucide-react';
+import { BadgeCheck, Download, FileSignature, KeyRound, Loader2, Plus, ShieldCheck, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { encryptFile } from '@/lib/e2ee';
 import { fetchDecrypted } from '@/lib/e2eeFiles';
@@ -26,7 +26,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
     const [busy, setBusy] = useState('');
     const [msg, setMsg] = useState('');
     const [open, setOpen] = useState(false);
-    const [f, setF] = useState({ kind: 'smlouva' as SignKind, title: '', name: item.client_name ?? '', phone: item.client_phone ?? '', identity: 'bankid' as IdentityMethod, note: '', days: 14 });
+    const [f, setF] = useState({ kind: 'smlouva' as SignKind, title: '', name: item.client_name ?? '', phone: item.client_phone ?? '', identity: 'lawyer' as IdentityMethod, note: '', days: 14 });
     const [file, setFile] = useState<File | null>(null);
     const picker = useRef<HTMLInputElement>(null);
 
@@ -57,7 +57,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
         if (!link || !file) return;
         await run('create', async () => {
             const problem = isAllowedUpload(file.name, file.size); if (problem) throw new Error(problem);
-            if (f.kind && KINDS[f.kind].level === 'advanced' && !normalizePhone(f.phone)) throw new Error('Zadejte telefon klienta (SMS kód se posílá na něj).');
+            if (f.phone.trim() && !normalizePhone(f.phone)) throw new Error('Telefon nevypadá správně.');
             if (f.identity === 'lawyer' && f.note.trim().length < 3) throw new Error('U osobního ověření uveďte, jak jste totožnost ověřili (např. doklad, datum).');
             const hash = await sha256Hex(new Uint8Array(await file.arrayBuffer()));
             let row: CaseFile;
@@ -100,6 +100,15 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
             setMsg(out.intact ? 'Pečeť souhlasí: doklad o podpisu nebyl po podpisu změněn.' : 'POZOR: pečeť nesouhlasí, doklad byl změněn nebo poškozen.');
         });
     }
+    async function giveCode(r: Req) {
+        await run(`code-${r.id}`, async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch('/api/sign/code', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ id: r.id }) });
+            const out = await res.json().catch(() => ({})) as { code?: string; minutes?: number };
+            if (!res.ok || !out.code) throw new Error('Kód se nepodařilo vytvořit.');
+            setMsg(`Kód pro klienta: ${out.code} (platí ${out.minutes} minut). Sdělte mu ho telefonicky nebo osobně, až bude mít dokument přečtený. Po zavření této zprávy už ho nezobrazíme.`);
+        });
+    }
     async function setStatus(r: Req, status: SignStatus) { await run(`st-${r.id}`, async () => { const { error } = await supabase.from('signature_requests').update({ status }).eq('id', r.id); if (error) throw new Error(error.message); await load(); }); }
     async function remove(r: Req) { if (!window.confirm('Smazat žádost o podpis?')) return; await run(`del-${r.id}`, async () => { const { error } = await supabase.from('signature_requests').delete().eq('id', r.id); if (error) throw new Error(error.message); await load(); }); }
 
@@ -112,7 +121,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                     <h2 className="flex flex-1 items-center gap-2 text-lg font-bold text-slate-900"><FileSignature size={18} className="text-indigo-700" aria-hidden="true" /> Podpisy dokumentů</h2>
                     {link && <button type="button" onClick={() => setOpen((v) => !v)} className={primaryBtn}><Plus size={15} /> Nová žádost o podpis</button>}
                 </div>
-                <p className="mt-1 text-sm text-slate-600">Klient dokument v portálu přečte, ověří totožnost přes Bank iD, potvrdí SMS kódem a vznikne doklad o podpisu s časem, otiskem dokumentu a IP adresou.</p>
+                <p className="mt-1 text-sm text-slate-600">Klient dokument v portálu přečte, potvrdí jednorázovým kódem (SMS, nebo kódem od vás) a vznikne doklad o podpisu s časem, otiskem dokumentu a IP adresou.</p>
                 {link === null && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Nejdřív vytvořte klientskou stránku v záložce Klient. Podpis probíhá přes ni.</p>}
                 {msg && <p role="status" className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">{msg}</p>}
                 {open && link && (
@@ -123,11 +132,11 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                             <label className="block text-xs font-semibold text-slate-600">Název pro klienta<input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder={KINDS[f.kind].label} maxLength={200} className={`${inputCls} mt-1 font-normal`} /></label>
                             <label className="block text-xs font-semibold text-slate-600">Platnost žádosti (dny)<input type="number" min={1} max={90} value={f.days} onChange={(e) => setF({ ...f, days: Number(e.target.value) || 14 })} className={`${inputCls} mt-1 font-normal`} /></label>
                             <label className="block text-xs font-semibold text-slate-600">Jméno podepisujícího<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className={`${inputCls} mt-1 font-normal`} /></label>
-                            {advanced && <label className="block text-xs font-semibold text-slate-600">Telefon pro SMS kód<input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} inputMode="tel" placeholder="777 123 456" className={`${inputCls} mt-1 font-normal`} /></label>}
+                            {advanced && <label className="block text-xs font-semibold text-slate-600">Telefon (jen pro SMS kód, je-li zapnutá SMS brána)<input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} inputMode="tel" placeholder="777 123 456" className={`${inputCls} mt-1 font-normal`} /></label>}
                         </div>
                         {advanced && (
                             <fieldset className="space-y-1.5 text-sm"><legend className="text-xs font-semibold text-slate-600">Ověření totožnosti</legend>
-                                {([['bankid', 'Klient se ověří přes Bank iD (doporučeno)'], ['lawyer', 'Totožnost jsem ověřil osobně (doklad totožnosti)'], ['none', 'Neověřovat (jen SMS kód, nejnižší jistota)']] as const).map(([v, label]) => <label key={v} className="flex items-center gap-2"><input type="radio" name="idm" checked={f.identity === v} onChange={() => setF({ ...f, identity: v })} className="accent-indigo-800" /> {label}</label>)}
+                                {([['lawyer', 'Totožnost jsem ověřil osobně (doklad totožnosti)'], ['bankid', 'Klient se ověří přes Bank iD (vyžaduje zapnutý Bank iD)'], ['none', 'Neověřovat (jen SMS kód, nejnižší jistota)']] as const).map(([v, label]) => <label key={v} className="flex items-center gap-2"><input type="radio" name="idm" checked={f.identity === v} onChange={() => setF({ ...f, identity: v })} className="accent-indigo-800" /> {label}</label>)}
                                 {f.identity === 'lawyer' && <input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="Jak jste ověřili (např. OP č. …, dne …)" maxLength={400} className={inputCls} />}
                             </fieldset>)}
                         <div className="flex flex-wrap items-center gap-2">
@@ -155,6 +164,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                                 {r.status === 'signed' && r.evidence && <button type="button" onClick={() => void verify(r)} disabled={busy === `ver-${r.id}`} className={ghostBtn}><ShieldCheck size={14} /> Ověřit pečeť</button>}
                                 {r.status === 'awaiting_check' && ext && <button type="button" onClick={() => void run(`ext-${r.id}`, async () => save(await bytesOf(ext), shown(ext), 'application/octet-stream'))} className={ghostBtn}><Download size={14} /> Stáhnout podepsaný soubor</button>}
                                 {r.status === 'awaiting_check' && <><button type="button" onClick={() => void setStatus(r, 'signed')} className={primaryBtn}>Ověřil jsem podpis</button><button type="button" onClick={() => void setStatus(r, 'declined')} className={ghostBtn}>Podpis je neplatný</button></>}
+                                {r.status === 'pending' && r.level === 'advanced' && <button type="button" onClick={() => void giveCode(r)} disabled={busy === `code-${r.id}`} className={ghostBtn}><KeyRound size={14} /> Vytvořit kód pro klienta</button>}
                                 {r.status === 'pending' && <button type="button" onClick={() => void setStatus(r, 'cancelled')} className={ghostBtn}><X size={14} /> Zrušit žádost</button>}
                                 {r.status !== 'signed' && <button type="button" onClick={() => void remove(r)} className={ghostBtn}>Smazat</button>}
                                 {cf && r.status !== 'signed' && <button type="button" onClick={() => void run(`orig-${r.id}`, async () => save(await bytesOf(cf), shown(cf), 'application/octet-stream'))} className={ghostBtn}>Stáhnout dokument</button>}

@@ -47,7 +47,7 @@ export type Evidence = {
     requestId: string; title: string; level: 'advanced'; docSha256: string;
     signer: { name: string; phoneMasked: string };
     identity: { method: IdentityMethod; given?: string; family?: string; birthdate?: string; sub?: string; verifiedAt?: string; note?: string; phoneMatch?: boolean };
-    otp: { channel: 'sms'; verifiedAt: string };
+    otp: { channel: 'sms' | 'lawyer'; verifiedAt: string };
     signedAt: string; ip: string; userAgent: string; consent: string;
 };
 

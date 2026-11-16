@@ -119,11 +119,11 @@ function Card({ r, list, token, e2ee, cryptoKey, open, reload }: { r: Req; list:
                         </li>)}
                     {r.identity_method === 'lawyer' && <li><p className="font-semibold text-slate-900">2. Totožnost</p><p className="mt-1 text-slate-600">Vaši totožnost ověřil advokát osobně.</p></li>}
                     <li><p className="font-semibold text-slate-900">{r.identity_method === 'none' ? '2' : '3'}. Potvrďte SMS kódem</p>
-                        {!list.sms ? <p className="mt-2 text-amber-900">Odesílání SMS zatím není zapnuté. Napište advokátovi.</p> : !r.phone ? <p className="mt-2 text-amber-900">U žádosti chybí telefonní číslo. Napište advokátovi.</p> : (
+                        {list.sms && !r.phone ? <p className="mt-2 text-amber-900">U žádosti chybí telefonní číslo. Napište advokátovi.</p> : (
                             <div className="mt-2 space-y-2">
                                 <label className="flex items-start gap-2 text-slate-700"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-800" /> <span>{CONSENT_TEXT}</span></label>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <button type="button" onClick={sendCode} disabled={!seen?.ok || !identityOk || busy === 'otp'} className={ghost}>{busy === 'otp' && <Loader2 size={15} className="animate-spin" />} {sent ? 'Poslat kód znovu' : `Poslat SMS na ${r.phone}`}</button>
+                                    {list.sms ? <button type="button" onClick={sendCode} disabled={!seen?.ok || !identityOk || busy === 'otp'} className={ghost}>{busy === 'otp' && <Loader2 size={15} className="animate-spin" />} {sent ? 'Poslat kód znovu' : `Poslat SMS na ${r.phone}`}</button> : <p className="w-full text-slate-600">Kód vám sdělí váš advokát (telefonicky nebo osobně). Zadejte ho sem.</p>}
                                     <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="Kód z SMS" aria-label="Kód z SMS" className={`${field} max-w-40`} />
                                     <button type="button" onClick={sign} disabled={!seen?.ok || !identityOk || !agree || code.length !== 6 || busy === 'sign'} className={btn}>{busy === 'sign' && <Loader2 size={15} className="animate-spin" />} Podepsat</button>
                                 </div>
