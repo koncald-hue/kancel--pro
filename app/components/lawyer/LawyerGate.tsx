@@ -6,7 +6,8 @@ import { Briefcase, CalendarClock, Clock, Loader2, MessagesSquare, Scale, Shield
 import { useAuth } from '../site/AuthContext';
 import { hasLawyerAccess, requestAccess, startTrial, TRIAL_DAYS, useLawyerAccess, type LawyerAccess } from '@/lib/lawyer';
 import { primaryBtn, ghostBtn } from '../situation/caseUi';
-import ProfileForm from './ProfileForm';
+import Onboarding from './Onboarding';
+import { onboardingComplete } from '@/lib/onboarding';
 import AuthForm from '../site/AuthForm';
 
 const LawyerContext = createContext<{ access: LawyerAccess; userId: string; locked?: boolean } | null>(null);
@@ -56,16 +57,8 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
         // Člen týmu smí kancelář vyzkoušet bez zkušebního přístupu
         return <LawyerContext.Provider value={{ access: access ?? { user_id: account.id, email: account.email ?? '', status: 'active', until: null, firm_name: '', default_rate: 0 }, userId: account.id }}>{children}</LawyerContext.Provider>;
     }
-    // Nastavení zůstává dostupné i po vypršení, aby šlo předplatné obnovit
-    const profileGate = (a: LawyerAccess) => (
-        <div className="mx-auto max-w-2xl px-4 py-12">
-            <Briefcase size={30} className="text-indigo-700" aria-hidden="true" />
-            <h1 className="mt-3 text-3xl font-bold text-slate-900">Vyplňte svůj profil</h1>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">Než začnete aplikaci používat, vyplňte prosím údaje o sobě. Slouží k tomu, aby bylo zřejmé, kdo Službu používá, a klient uvidí, s kým komunikuje. Údaje můžete později upravit v Nastavení.</p>
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5"><ProfileForm access={a} submitLabel="Uložit a pokračovat" onSaved={() => setVersion((v) => v + 1)} /></div>
-        </div>
-    );
-    if (access && !isStaff && hasLawyerAccess(access) && access.verification_status !== 'verified') return profileGate(access);
+    // První krok: dokud advokát nevyplní profil, údaje kanceláře a nenastaví šifrování, nic jiného se neotevře (platí i po koupi balíčku)
+    if (access && !isStaff && hasLawyerAccess(access) && !onboardingComplete(access)) return <Onboarding access={access} onChanged={() => setVersion((v) => v + 1)} />;
     // Skončené nebo zrušené předplatné: data zůstávají ke čtení, funkce jsou zamčené (zápisy odmítá databáze)
     if (access && !isStaff && access.status !== 'requested' && !hasLawyerAccess(access)) return <LawyerContext.Provider value={{ access, userId: account.id, locked: true }}>{children}</LawyerContext.Provider>;
     if (access && allowExpired) return <LawyerContext.Provider value={{ access, userId: account.id }}>{children}</LawyerContext.Provider>;
