@@ -9,7 +9,7 @@ import { primaryBtn, ghostBtn } from '../situation/caseUi';
 import ProfileForm from './ProfileForm';
 import AuthForm from '../site/AuthForm';
 
-const LawyerContext = createContext<{ access: LawyerAccess; userId: string } | null>(null);
+const LawyerContext = createContext<{ access: LawyerAccess; userId: string; locked?: boolean } | null>(null);
 export const useLawyer = () => { const ctx = useContext(LawyerContext); if (!ctx) throw new Error('useLawyer mimo LawyerGate'); return ctx; };
 
 const Box = ({ children }: { children: React.ReactNode }) => <div className="mx-auto max-w-xl px-4 py-16 text-center">{children}</div>;
@@ -66,6 +66,8 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
         </div>
     );
     if (access && !isStaff && hasLawyerAccess(access) && access.verification_status !== 'verified') return profileGate(access);
+    // Skončené nebo zrušené předplatné: data zůstávají ke čtení, funkce jsou zamčené (zápisy odmítá databáze)
+    if (access && !isStaff && access.status !== 'requested' && !hasLawyerAccess(access)) return <LawyerContext.Provider value={{ access, userId: account.id, locked: true }}>{children}</LawyerContext.Provider>;
     if (access && allowExpired) return <LawyerContext.Provider value={{ access, userId: account.id }}>{children}</LawyerContext.Provider>;
     if (access && hasLawyerAccess(access)) return <LawyerContext.Provider value={{ access, userId: account.id }}>{children}</LawyerContext.Provider>;
 

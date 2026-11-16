@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Receipt, Tags, Scale, X } from 'lucide-react';
+import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Receipt, Tags, Scale, X } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -23,8 +23,9 @@ const SETTINGS: Item = ['nastaveni', '/kancelar/nastaveni', 'Nastavení', Settin
 const ALL: Item[] = [...GROUPS.flatMap((g) => g.items), SETTINGS];
 
 function Inner({ active, children }: { active: LawyerSection; children: React.ReactNode }) {
-    const { access } = useLawyer();
+    const { access, locked } = useLawyer();
     const { account, isStaff, logout } = useAuth();
+    const [lockNote, setLockNote] = useState(false);
     // Název kanceláře, ve které jsem členem, a moje role
     const [firm, setFirm] = useState<{ name: string; role: 'owner' | 'admin' | 'member' } | null>(null);
     useEffect(() => {
@@ -109,7 +110,19 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
                 <div className="mx-auto max-w-6xl">
                     <h1 className="mb-6 hidden text-2xl font-bold tracking-tight text-slate-900 lg:block">{current?.[2]}</h1>
+                    {locked && (
+                        <div role="status" className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                            <Lock size={18} className="shrink-0" aria-hidden="true" />
+                            <p className="min-w-0 flex-1 leading-relaxed"><strong>Přístup je zamčený.</strong> Předplatné skončilo nebo bylo zrušeno. Svá uložená data si můžete prohlížet a stahovat, ale všechny funkce jsou vypnuté, dokud předplatné nezaplatíte.{lockNote && <span className="mt-1 block font-semibold">Tuto akci nelze provést, dokud je přístup zamčený.</span>}</p>
+                            {active !== 'nastaveni' && <Link href="/kancelar/nastaveni" className="rounded-lg bg-amber-900 px-4 py-2 text-sm font-bold text-white hover:bg-amber-950">Obnovit předplatné</Link>}
+                        </div>
+                    )}
+                    <div
+                        onSubmitCapture={locked && active !== 'nastaveni' ? (e) => { e.preventDefault(); e.stopPropagation(); setLockNote(true); } : undefined}
+                        onClickCapture={locked && active !== 'nastaveni' ? (e) => { const el = (e.target as HTMLElement).closest('input[type=file], label:has(input[type=file]), button[type=submit]'); if (el && !(el.closest('[data-unlocked]'))) { e.preventDefault(); e.stopPropagation(); setLockNote(true); } } : undefined}
+                    >
                     {children}
+                    </div>
                 </div>
             </main>
         </div>
