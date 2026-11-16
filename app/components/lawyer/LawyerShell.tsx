@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Receipt, ShieldAlert, Tags, Scale, X } from 'lucide-react';
+import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Receipt, Search, ShieldAlert, Tags, Scale, X } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
+import GlobalSearch from './GlobalSearch';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
@@ -26,6 +27,17 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
     const { access, locked } = useLawyer();
     const { account, isStaff, logout } = useAuth();
     const [lockNote, setLockNote] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
+    // Zkratka Ctrl/Cmd+K nebo lomítko (mimo psaní do pole) otevře hledání
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            const t = e.target as HTMLElement | null;
+            const typing = !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+            if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && !typing && !e.metaKey && !e.ctrlKey)) { e.preventDefault(); setSearchOpen(true); }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
     // Název kanceláře, ve které jsem členem, a moje role
     const [firm, setFirm] = useState<{ name: string; role: 'owner' | 'admin' | 'member' } | null>(null);
     useEffect(() => {
@@ -71,6 +83,9 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                     <p className="truncate text-xs text-slate-500">{subtitle}</p>
                 </div>
             </div>
+            <div className="px-3 pb-3">
+                <button type="button" onClick={() => { setOpen(false); setSearchOpen(true); }} className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-500 hover:border-indigo-300 hover:bg-white cursor-pointer"><Search size={15} aria-hidden="true" /><span className="flex-1">Hledat…</span><kbd className="rounded border border-slate-300 bg-white px-1.5 text-[10px] font-semibold text-slate-500">⌘K</kbd></button>
+            </div>
             <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="Části kanceláře">
                 {GROUPS.map((g) => (
                     <div key={g.title || 'main'}>
@@ -95,6 +110,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
                 <button type="button" onClick={() => setOpen(true)} aria-label="Otevřít nabídku" aria-expanded={open} className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100"><Menu size={20} /></button>
                 <p className="flex-1 truncate text-sm font-bold text-slate-900">{current?.[2] ?? 'Kancelář'}</p>
+                <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat" className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100"><Search size={18} /></button>
                 {unread > 0 && <Link href="/kancelar/chat" className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] font-bold text-white">{unread}</Link>}
             </div>
             {open && (
@@ -106,6 +122,8 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                     </aside>
                 </div>
             )}
+
+            <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
 
             <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
                 <div className="mx-auto max-w-6xl">

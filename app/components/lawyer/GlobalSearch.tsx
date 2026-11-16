@@ -1,0 +1,92 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2, Search, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { KINDS, groupResults, splitMatch, type SearchRow } from '@/lib/search';
+
+// Hledání napříč celou kanceláří: věci, klienti, poznámky, kontakty, soubory, lhůty, poptávky, vzory, výkazy, faktury
+export default function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
+    const router = useRouter();
+    const [q, setQ] = useState('');
+    const [rows, setRows] = useState<SearchRow[]>([]);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+    const [active, setActive] = useState(0);
+    const input = useRef<HTMLInputElement>(null);
+    const seq = useRef(0);
+
+    useEffect(() => { if (open) window.setTimeout(() => input.current?.focus(), 0); }, [open]);
+
+    useEffect(() => {
+        const text = q.trim();
+        const mine = ++seq.current;
+        const t = window.setTimeout(async () => {
+            if (text.length < 2) { if (mine === seq.current) { setRows([]); setError(''); setBusy(false); } return; }
+            setBusy(true); setError('');
+            const { data, error: err } = await supabase.rpc('search_all', { p_q: text });
+            if (mine !== seq.current) return;
+            setBusy(false);
+            if (err) { setRows([]); setError(/search_all|schema cache|find the function/i.test(err.message) ? 'Hledání zatím není v databázi zapnuté (chybí spuštění souboru hledani.sql).' : err.message); return; }
+            setRows((data ?? []) as SearchRow[]); setActive(0);
+        }, text.length < 2 ? 0 : 250);
+        return () => window.clearTimeout(t);
+    }, [q]);
+
+    const groups = groupResults(rows);
+    const flat = groups.flatMap((g) => g.rows);
+
+    function go(r: SearchRow) { onClose(); router.push(KINDS[r.kind]?.href(r) ?? '/kancelar'); }
+
+    function onKey(e: React.KeyboardEvent) {
+        if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); setActive((a) => Math.min(a + 1, flat.length - 1)); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
+        else if (e.key === 'Enter' && flat[active]) { e.preventDefault(); go(flat[active]); }
+    }
+
+    useEffect(() => { document.getElementById(`sr-${active}`)?.scrollIntoView({ block: 'nearest' }); }, [active]);
+
+    if (!open) return null;
+    let index = -1;
+    const mark = (text: string) => { const [a, m, b] = splitMatch(text, q); return m ? <>{a}<mark className="rounded bg-amber-200 px-0.5 text-slate-900">{m}</mark>{b}</> : text; };
+    return (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/40 p-4 pt-[8vh]" onClick={onClose}>
+            <div role="dialog" aria-modal="true" aria-label="Hledání" onClick={(e) => e.stopPropagation()} onKeyDown={onKey} className="flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
+                    {busy ? <Loader2 size={18} className="shrink-0 animate-spin text-slate-400" aria-hidden="true" /> : <Search size={18} className="shrink-0 text-slate-400" aria-hidden="true" />}
+                    <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hledat ve věcech, klientech, poznámkách, souborech…" aria-label="Hledaný text" className="min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400" />
+                    <button type="button" onClick={onClose} aria-label="Zavřít hledání" className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 cursor-pointer"><X size={18} /></button>
+                </div>
+                <div className="overflow-y-auto" role="listbox" aria-label="Výsledky">
+                    {error && <p role="alert" className="m-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
+                    {!error && q.trim().length < 2 && <p className="px-5 py-8 text-center text-sm text-slate-500">Pište aspoň dvě písmena. Hledá se bez ohledu na velikost písmen a diakritiku. <span className="block mt-1 text-xs text-slate-400">Šifrované zprávy a chat se prohledat nedají, server je nevidí.</span></p>}
+                    {!error && q.trim().length >= 2 && !busy && flat.length === 0 && <p className="px-5 py-8 text-center text-sm text-slate-500">Nic nenalezeno.</p>}
+                    {groups.map((g) => {
+                        const meta = KINDS[g.kind];
+                        const Icon = meta.icon;
+                        return (
+                            <section key={g.kind} aria-label={meta.label}>
+                                <h3 className="sticky top-0 flex items-center gap-1.5 bg-slate-50 px-5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500"><Icon size={12} aria-hidden="true" /> {meta.label} ({g.rows.length})</h3>
+                                <ul>{g.rows.map((r) => {
+                                    index += 1;
+                                    const i = index;
+                                    return (
+                                        <li key={`${r.kind}-${r.id}`}>
+                                            <button type="button" id={`sr-${i}`} role="option" aria-selected={active === i} onMouseEnter={() => setActive(i)} onClick={() => go(r)} className={`block w-full px-5 py-2.5 text-left cursor-pointer ${active === i ? 'bg-indigo-50' : ''}`}>
+                                                <span className="block truncate text-sm font-semibold text-slate-900">{mark(r.title)}</span>
+                                                {r.snippet && <span className="mt-0.5 block line-clamp-2 text-xs text-slate-600">{mark(r.snippet)}</span>}
+                                            </button>
+                                        </li>
+                                    );
+                                })}</ul>
+                            </section>
+                        );
+                    })}
+                </div>
+                <p className="border-t border-slate-100 px-5 py-2 text-[11px] text-slate-400">↑↓ výběr · Enter otevřít · Esc zavřít</p>
+            </div>
+        </div>
+    );
+}
