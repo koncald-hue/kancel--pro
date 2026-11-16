@@ -4,7 +4,7 @@ import { computeDeadlineEnd, deadlineById, type LegalCase } from './cases';
 export type CaseFolder = { id: string; case_id: string; name: string };
 export type CaseFile = { id: string; case_id: string; folder_id: string | null; name: string; path: string; size: number; mime: string; note: string; created_at: string; source?: string; client_visible?: boolean; request_id?: string | null; enc?: boolean };
 export type CaseEntry = { id: string; case_id: string; kind: 'event' | 'note'; title: string; body: string; happened_on: string | null; pinned: boolean; created_at: string; client_visible?: boolean };
-export type CaseDeadline = { id: string; case_id: string; title: string; due_date: string; done: boolean; client_visible?: boolean };
+export type CaseDeadline = { id: string; case_id: string; title: string; due_date: string; done: boolean; client_visible?: boolean; basis?: string; quote?: string; source_dm?: string | null; internal_date?: string | null };
 export type CaseContact = { id: string; case_id: string; role: string; name: string; email: string; phone: string; note: string };
 
 export type CaseBundle = { folders: CaseFolder[]; files: CaseFile[]; entries: CaseEntry[]; deadlines: CaseDeadline[]; contacts: CaseContact[] };
@@ -84,7 +84,7 @@ export function formatSize(bytes: number): string {
     return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`;
 }
 
-export type CaseDeadlineView = { key: string; title: string; date: Date; iso: string; done: boolean; source: 'law' | 'custom'; customId?: string };
+export type CaseDeadlineView = { key: string; title: string; date: Date; iso: string; done: boolean; source: 'law' | 'custom'; customId?: string; basis?: string; quote?: string; internal?: string | null };
 
 const toIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -97,7 +97,7 @@ export function collectDeadlines(item: Pick<LegalCase, 'event_date' | 'deadline_
             return deadline && end ? [{ key: `law-${id}`, title: deadline.title, date: end, iso: toIso(end), done: false, source: 'law' }] : [];
         })
         : [];
-    const custom = customs.map((c): CaseDeadlineView => ({ key: `c-${c.id}`, title: c.title, date: new Date(`${c.due_date}T12:00:00`), iso: c.due_date, done: c.done, source: 'custom', customId: c.id }));
+    const custom = customs.map((c): CaseDeadlineView => ({ key: `c-${c.id}`, title: c.title, date: new Date(`${c.due_date}T12:00:00`), iso: c.due_date, done: c.done, source: 'custom', customId: c.id, basis: c.basis ?? '', quote: c.quote ?? '', internal: c.internal_date ?? null }));
     return [...law, ...custom].sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 

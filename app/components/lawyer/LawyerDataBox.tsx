@@ -11,6 +11,7 @@ import { saveMessageToCase, suggestCase } from '@/lib/dataMessages';
 import { dropSession, getSession, putSession, touchSession } from '@/lib/isdsSession';
 import { isdsApi, type ApiRes } from '@/lib/isdsClient';
 import { setReceived } from '@/lib/dataBoxState';
+import DeadlinesFromMessage from './DeadlinesFromMessage';
 import { STATUS_LABELS, isDeleted, statusTone, type BoxHit, type Downloaded, type IsdsEnv, type Record_ } from '@/lib/isds';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
@@ -212,6 +213,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
     const [open, setOpen] = useState<Record_ | null>(null);
     const [compose, setCompose] = useState(false);
     const [inCases, setInCases] = useState<Record<string, string[]>>({});
+    const [checked, setChecked] = useState<Set<string>>(new Set());
     const { call, waiting } = useCaller(account.id, account.env, cred);
 
     const refresh = useCallback(async (t: Tab) => {
@@ -229,6 +231,8 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
             const map: Record<string, string[]> = {};
             for (const row of (data ?? []) as unknown as { dm_id: string; cases: { title: string } | { title: string }[] | null }[]) { const t = Array.isArray(row.cases) ? row.cases[0]?.title : row.cases?.title; if (t) (map[row.dm_id] ??= []).push(t); }
             setInCases(map);
+            const { data: chk } = await supabase.from('data_message_checks').select('dm_id').in('dm_id', list.map((x) => x.id));
+            setChecked(new Set(((chk ?? []) as { dm_id: string }[]).map((c) => c.dm_id)));
         }
     }, [call, account.id]);
 
@@ -247,6 +251,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
                 <button type="button" onClick={() => setCompose(true)} className={`${primaryBtn} ml-auto`}><Mail size={15} /> Napsat zprávu</button>
                 <button type="button" onClick={() => { if (window.confirm(`Odpojit schránku „${account.label}“? Smažou se uložené přihlašovací údaje (zprávy ve schránce zůstanou).`)) void onRemove(); }} aria-label="Odpojit schránku" className="rounded-lg p-2 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={15} /></button>
             </div>
+            {tab === 'received' && records && records.filter((r) => ['5', '6', '7'].includes(r.status) && !checked.has(r.id)).length > 0 && <p role="status" className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-950"><AlertTriangle size={15} aria-hidden="true" /> {records.filter((r) => ['5', '6', '7'].includes(r.status) && !checked.has(r.id)).length} přijatých zpráv zatím nemá zkontrolované lhůty. Otevřete zprávu a projděte její lhůty.</p>}
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
             {records === null ? <p className="text-sm text-slate-500" role="status">Načítám zprávy z datové schránky…</p> : records.length === 0 && !error ? <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">Za posledních 90 dnů tu nejsou žádné zprávy.</p> : (
                 <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -256,6 +261,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
                                 <span className="min-w-0 flex-1">
                                     <span className="block truncate text-sm font-semibold text-slate-900">{tab === 'received' ? r.sender : r.recipient || r.recipientBox}</span>
                                     <span className="block truncate text-sm text-slate-600">{r.annotation || '(bez věci)'}</span>
+                                    {tab === 'received' && ['5', '6', '7'].includes(r.status) && !checked.has(r.id) && <span className="mr-1.5 mt-0.5 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-950"><AlertTriangle size={11} aria-hidden="true" /> lhůty nezkontrolovány</span>}
                                     {inCases[r.id]?.length ? <span className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-900"><Check size={11} aria-hidden="true" /> ve věci: {inCases[r.id].join(', ')}</span> : null}
                                 </span>
                                 <span className="shrink-0 text-right text-xs text-slate-500">{fmtTime(r.delivered || r.accepted)}<span title={STATUS_LABELS[r.status] ?? r.status} className={`mt-1 block w-28 truncate rounded-full px-1.5 py-px text-center text-[10px] font-bold uppercase tracking-wide ${statusTone(r.status)}`}>{STATUS_LABELS[r.status] ?? r.status}</span></span>
@@ -278,6 +284,7 @@ function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Rec
     const [cases, setCases] = useState<LegalCase[]>([]);
     const [caseId, setCaseId] = useState('');
     const [done, setDone] = useState('');
+    const [justDelivered, setJustDelivered] = useState(false);
     useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => undefined); return () => { alive = false; }; }, []);
 
     async function download() {
@@ -286,7 +293,7 @@ function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Rec
         setBusy(false);
         if (r.status === 409) { setConfirm(true); return; }
         if (!r.ok) { setError(errText(r)); return; }
-        setMsg(r.json.message as Downloaded); onChanged();
+        setJustDelivered(record.undelivered && !record.accepted); setMsg(r.json.message as Downloaded); onChanged();
     }
     function save(f: Downloaded['files'][number]) { const file = fromBase64(f.base64, f.mime, f.name); const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = f.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
 
@@ -340,6 +347,7 @@ function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Rec
                     </div>
                     <p className="mt-1.5 text-xs text-slate-500">{tab === 'received' && !msg && !isDeleted(record.status) ? 'Záznam o zprávě jde uložit hned. Přílohy se uloží, až zprávu stáhnete (stažení nedoručené zprávy ji doručí). ' : ''}Zapíše se i do chronologie věci. {caseId && cases.find((c) => c.id === caseId)?.reference && suggestCase(cases, record.annotation) === caseId ? 'Věc jsem navrhl podle spisové značky.' : ''}</p>
                 </div>
+                {tab === 'received' && msg && <DeadlinesFromMessage key={record.id} record={record} msg={msg} downloadedNow={justDelivered} cases={cases} userId={userId} caseId={caseId} onSaved={onChanged} />}
                 {done && <p role="status" className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">{done}</p>}
                 {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
                 <button type="button" onClick={onClose} className={`${ghostBtn} mt-4`}><ArrowLeft size={14} /> Zavřít</button>

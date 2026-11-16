@@ -80,6 +80,7 @@ export default function CaseDeadlinesTab({ item, bundle, userId, patchItem, setB
                                 ) : <CalendarDays size={20} className="shrink-0 text-indigo-800" />}
                                 <div className="min-w-0 flex-1">
                                     <p className={`text-sm font-semibold ${d.done ? 'text-slate-400 line-through' : 'text-slate-900'}`}>{d.title}</p>
+                                    {d.basis && <details className="mt-0.5 text-xs text-slate-600"><summary className="cursor-pointer font-semibold text-indigo-800">Z datové zprávy: jak vznikla{d.internal ? ` · podat nejpozději ${new Date(`${d.internal}T12:00:00`).toLocaleDateString('cs-CZ')}` : ''}</summary><p className="mt-1 leading-relaxed">{d.basis}</p>{d.quote && <blockquote className="mt-1 border-l-2 border-indigo-300 pl-2 italic">{d.quote}</blockquote>}</details>}
                                     <p className="text-xs text-slate-500">{d.source === 'law' ? 'Zákonná lhůta' : 'Vlastní termín'} · {d.date.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
                                 </div>
                                 <span className={`shrink-0 text-right text-xs font-bold ${deadlineTone(left, d.done)}`}>{d.done ? 'splněno' : deadlineText(left)}</span>
