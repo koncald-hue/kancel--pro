@@ -15,6 +15,8 @@ import E2eeBox from '../situation/E2eeBox';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { PropertyCard, snapshotLabel } from './KatastrSearch';
 import { useSharingKeys } from './useSharingKeys';
+import Avatar from './Avatar';
+import ProfileModal from './ProfileModal';
 import { useLawyer } from './LawyerGate';
 
 type Msg = { id: string; sender_id: string; recipient_id: string; kind: ChatKind; payload: string; wrapped_key_recipient: string; wrapped_key_sender: string; created_at: string; read_at: string | null };
@@ -28,6 +30,7 @@ const time = (iso: string) => { const d = new Date(iso); const today = new Date(
 export default function LawyerChat() {
     const { access } = useLawyer();
     const keys = useSharingKeys();
+    const [profileOf, setProfileOf] = useState<string | null>(null);
     const { userId, master, colleagues, privateKey, myRow } = keys;
     const [peer, setPeer] = useState<string>('');
     const [summary, setSummary] = useState<Summary>({});
@@ -232,7 +235,8 @@ export default function LawyerChat() {
                 <>
                     <header className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-3">
                         <button type="button" onClick={() => setPeer('')} aria-label="Zpět na kolegy" className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 lg:hidden"><ArrowLeft size={18} /></button>
-                        <div className="min-w-0 flex-1"><p className="truncate font-bold text-slate-900">{peerName(peer)}</p><p className="truncate text-xs text-slate-500">{peerReady ? <>Šifrováno end-to-end · otisk klíče <span className="font-mono">{keys.prints[peer] || '…'}</span></> : 'Kolega ještě nemá zapnutý šifrovaný chat.'}</p></div>
+                        <button type="button" onClick={() => setProfileOf(peer)} aria-label={`Profil: ${peerName(peer)}`} className="shrink-0 rounded-full cursor-pointer"><Avatar name={peerName(peer)} src={(colleagues ?? []).find((c) => c.user_id === peer)?.avatar} size={36} /></button>
+                        <div className="min-w-0 flex-1"><button type="button" onClick={() => setProfileOf(peer)} className="block max-w-full truncate text-left font-bold text-slate-900 hover:underline cursor-pointer">{peerName(peer)}</button><p className="truncate text-xs text-slate-500">{peerReady ? <>Šifrováno end-to-end · otisk klíče <span className="font-mono">{keys.prints[peer] || '…'}</span></> : 'Kolega ještě nemá zapnutý šifrovaný chat.'}</p></div>
                     </header>
                     <div className="max-h-[32rem] min-h-[16rem] flex-1 space-y-3 overflow-y-auto bg-slate-50/60 p-4" aria-live="polite">
                         {messages.length === 0 && <p className="py-8 text-center text-sm text-slate-400">Zatím tu nic není.</p>}
@@ -296,7 +300,7 @@ export default function LawyerChat() {
                             return (
                                 <li key={c.user_id}>
                                     <button type="button" onClick={() => { setPeer(c.user_id); setAttach(null); setError(''); setMessages([]); void loadMessages(c.user_id); }} aria-current={peer === c.user_id ? 'true' : undefined} className={`flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 ${peer === c.user_id ? 'bg-indigo-50/60' : ''}`}>
-                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-900">{(c.name || c.email).charAt(0).toUpperCase()}</span>
+                                        <Avatar name={c.name || c.email} src={c.avatar} size={36} />
                                         <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-slate-900">{c.name || c.email}</span><span className="block truncate text-xs text-slate-500">{c.has_keys ? (s ? `${KIND_LABELS[s.last_kind]} · ${time(s.last_at)}` : 'Zatím bez zpráv') : 'chat zatím nezapnutý'}</span></span>
                                         {s && s.unread > 0 && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] font-bold text-white">{s.unread}</span>}
                                     </button>
@@ -307,6 +311,7 @@ export default function LawyerChat() {
                 )}
             </aside>
             <div className={peer ? '' : 'hidden lg:block'}>{thread}</div>
+            {profileOf && <ProfileModal userId={profileOf} onClose={() => setProfileOf(null)} />}
         </div>
     );
 }

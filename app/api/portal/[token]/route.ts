@@ -17,7 +17,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
     // Klientská stránka funguje po dobu předplatného advokáta
     if (!link.subscribed) return NextResponse.json({ inactive: true });
 
-    const { data: lawyerRow } = await db.from('lawyer_access').select('firm_name, display_name, phone, office, website, bar_number, contact_email').eq('user_id', link.user_id).maybeSingle();
+    const cols = 'firm_name, display_name, phone, office, website, bar_number, contact_email';
+    const first = await db.from('lawyer_access').select(`${cols}, avatar_large`)  .eq('user_id', link.user_id).maybeSingle();
+    let lawyerRow = first.data;
+    // Bez spuštěného profil-foto.sql sloupec s fotkou není; stránka musí fungovat i tak
+    if (first.error) ({ data: lawyerRow } = await db.from('lawyer_access').select(cols).eq('user_id', link.user_id).maybeSingle());
     const lawyer = {
         firm: (lawyerRow?.firm_name as string | undefined) ?? '',
         name: (lawyerRow?.display_name as string | undefined) ?? '',
@@ -29,6 +33,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
         profession: link.profession,
         verifiedAt: link.verified_at,
         email: (lawyerRow?.contact_email as string | undefined) ?? '',
+        photo: ((lawyerRow as { avatar_large?: string } | null)?.avatar_large) ?? '',
     };
     const { data: caseRow } = await db.from('cases').select('title, client_name').eq('id', link.case_id).maybeSingle();
     const title = link.label || (caseRow?.title as string | undefined) || 'Vaše věc';

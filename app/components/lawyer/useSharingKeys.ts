@@ -6,7 +6,7 @@ import { useMasterKey } from '@/lib/useE2ee';
 import { createMemberKeys, fingerprint, unlockMemberKey } from '@/lib/e2eeShare';
 import { useLawyer } from './LawyerGate';
 
-export type Colleague = { user_id: string; name: string; email: string; has_keys: boolean };
+export type Colleague = { user_id: string; name: string; email: string; role?: string; avatar?: string; has_keys: boolean };
 export type KeyRow = { user_id: string; public_key: string; wrapped_private: string };
 
 // Klíče člena kanceláře pro šifrovaný chat a sdílení: kolegové, jejich veřejné klíče, odemčený soukromý klíč
