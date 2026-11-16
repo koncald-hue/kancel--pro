@@ -1,13 +1,14 @@
 'use client';
 
 import { Fragment, useEffect, useState } from 'react';
-import { Check, Pencil, Trash2 } from 'lucide-react';
+import { Check, Pencil, ShieldAlert, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient } from '@/lib/lawyer';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import AresPicker from './AresPicker';
 import ClientSummary from './ClientSummary';
+import { INS_TONE, insView, isirActive, loadClientInsolvency, type ClientIns } from '@/lib/clientInsolvency';
 import { useLawyer } from './LawyerGate';
 
 const EMPTY = { name: '', email: '', phone: '', note: '', rate: '', address: '', ico: '', dic: '' };
@@ -21,6 +22,29 @@ export default function LawyerClients() {
     const [query, setQuery] = useState('');
     const [editing, setEditing] = useState<string | null>(null);
     const [edit, setEdit] = useState(EMPTY);
+    // Automatické hlídání insolvence klientů (jen s aktivním příplatkem)
+    const [ins, setIns] = useState<Record<string, ClientIns> | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            if (!(await isirActive())) return;
+            // Doplnění klientů mezi hlídané a kontrola těch, které se dlouho nekontrolovaly
+            const { data: { session } } = await supabase.auth.getSession();
+            const first = await loadClientInsolvency();
+            const stale = !first || first.some((c) => c.ic && (!c.last_checked_at || Date.now() - new Date(c.last_checked_at).getTime() > 12 * 3_600_000));
+            if (alive && first) setIns(Object.fromEntries(first.map((c) => [c.client_id, c])));
+            if (stale) {
+                setRefreshing(true);
+                await fetch('/api/isir', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ action: 'check' }) }).catch(() => undefined);
+                const fresh = await loadClientInsolvency();
+                if (alive && fresh) setIns(Object.fromEntries(fresh.map((c) => [c.client_id, c])));
+                if (alive) setRefreshing(false);
+            }
+        })();
+        return () => { alive = false; };
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -90,6 +114,12 @@ export default function LawyerClients() {
                 <input value={form.note} onChange={set('note')} placeholder="Poznámka" className={`${inputCls} sm:col-span-5`} aria-label="Poznámka" />
                 <button type="submit" disabled={!form.name.trim()} className={`${primaryBtn} justify-center`}>Přidat klienta</button>
             </form>
+            {ins && (() => {
+                const list = Object.values(ins);
+                const watched = list.filter((c) => c.watched).length;
+                const bad = list.filter((c) => c.active_count > 0);
+                return <p className={`flex flex-wrap items-center gap-2 rounded-xl p-3 text-sm ${bad.length ? 'bg-rose-50 text-rose-900' : 'bg-emerald-50 text-emerald-900'}`} role="status"><ShieldAlert size={15} aria-hidden="true" /><span><strong>Hlídání insolvence je aktivní.</strong> Klienti s IČO se hlídají automaticky ({watched} z {list.length}). {bad.length ? `V insolvenci: ${bad.length} (${bad.map((c) => clients.find((x) => x.id === c.client_id)?.name).filter(Boolean).join(', ')}).` : 'Nikdo z klientů není v insolvenci.'}{refreshing ? ' Právě kontroluji…' : ''}</span></p>;
+            })()}
             {clients.length > 5 && <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Hledat klienta…" className={inputCls} aria-label="Hledat klienta" />}
             {shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{clients.length ? 'Nic nenalezeno.' : 'Zatím žádní klienti. Přidejte prvního výše a pak ho vyberte u věci.'}</p> : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
@@ -101,7 +131,7 @@ export default function LawyerClients() {
                                 return (
                                     <Fragment key={c.id}>
                                     <tr>
-                                        <td className="px-4 py-2.5 font-semibold text-slate-900">{c.name}{c.note && <span className="block text-xs font-normal text-slate-500">{c.note}</span>}{(c.address || c.ico) && <span className="block text-xs font-normal text-slate-500">{[c.address, c.ico && `IČO ${c.ico}`, c.dic && `DIČ ${c.dic}`].filter(Boolean).join(' · ')}</span>}</td>
+                                        <td className="px-4 py-2.5 font-semibold text-slate-900">{c.name}{ins && (() => { const v = insView(ins[c.id], /^\d{8}$/.test(c.ico ?? '')); return <span className="mt-1 flex flex-wrap items-center gap-1.5"><span title={v.detail} className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${INS_TONE[v.tone]}`}>Insolvence: {v.text}</span>{v.tone === 'bad' && ins[c.id]?.url && <a href={ins[c.id].url ?? '#'} target="_blank" rel="noreferrer noopener" className="text-[11px] font-semibold text-rose-800 underline">rejstřík</a>}{v.detail && v.tone !== 'ok' && v.tone !== 'wait' && <span className="text-[11px] font-normal text-slate-500">{v.detail}</span>}</span>; })()}{c.note && <span className="block text-xs font-normal text-slate-500">{c.note}</span>}{(c.address || c.ico) && <span className="block text-xs font-normal text-slate-500">{[c.address, c.ico && `IČO ${c.ico}`, c.dic && `DIČ ${c.dic}`].filter(Boolean).join(' · ')}</span>}</td>
                                         <td className="px-3 py-2.5 text-slate-700">{[c.email, c.phone].filter(Boolean).join(' · ') || '–'}</td>
                                         <td className="px-3 py-2.5 text-slate-700">{mine.length ? `${mine.filter((m) => m.status === 'open').length} otevřených z ${mine.length}` : '–'}</td>
                                         <td className="px-3 py-2.5"><input defaultValue={c.hourly_rate ?? ''} key={`${c.id}-${c.hourly_rate}`} onBlur={(e) => void saveRate(c, e.target.value)} inputMode="decimal" aria-label={`Sazba ${c.name}`} className="w-24 rounded-lg border border-slate-300 px-2 py-1 text-sm" /></td>

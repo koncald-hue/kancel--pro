@@ -9,10 +9,11 @@ import { money, loadReceivables, round2, type Receivable } from '@/lib/billing';
 import { createDraftInvoice } from '@/lib/invoiceDraft';
 import { entryAmount, formatMinutes, type LawyerClient, type TimeEntry } from '@/lib/lawyer';
 import { useRouter } from 'next/navigation';
+import { INS_TONE, insView, loadClientInsolvency, type ClientIns } from '@/lib/clientInsolvency';
 import { ghostBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
-type Data = { cases: LegalCase[]; entries: TimeEntry[]; invoices: Receivable[]; inquiries: number; watched: boolean; inInsolvency: boolean };
+type Data = { cases: LegalCase[]; entries: TimeEntry[]; invoices: Receivable[]; inquiries: number; ins: ClientIns | undefined };
 
 // Souhrn klienta: jeho věci, nevyfakturovaný čas, pohledávky, poptávky a stav v insolvenčním rejstříku (propojené panely na jednom místě)
 export default function ClientSummary({ client }: { client: LawyerClient }) {
@@ -31,12 +32,10 @@ export default function ClientSummary({ client }: { client: LawyerClient }) {
                 ids.length ? supabase.from('time_entries').select('*').in('case_id', ids) : Promise.resolve({ data: [] }),
                 loadReceivables(!!access.vat_payer).catch(() => [] as Receivable[]),
                 supabase.from('lawyer_inquiries').select('id', { count: 'exact', head: true }).or(`email.eq.${client.email || '__none__'},name.ilike.${client.name.replace(/[,()%]/g, ' ')}`),
-                client.ico ? supabase.from('isir_watches').select('id').eq('ic', client.ico) : Promise.resolve({ data: [] }),
+                loadClientInsolvency(),
             ]);
-            const watchIds = ((w.data ?? []) as { id: string }[]).map((x) => x.id);
-            const hits = watchIds.length ? await supabase.from('isir_hits').select('ended').in('watch_id', watchIds) : { data: [] };
-            if (alive) setData({ cases, entries: (e.data ?? []) as TimeEntry[], invoices: inv.filter((i) => i.client_id === client.id), inquiries: q.count ?? 0, watched: watchIds.length > 0, inInsolvency: ((hits.data ?? []) as { ended: string | null }[]).some((h) => !h.ended) });
-        })().catch(() => { if (alive) setData({ cases: [], entries: [], invoices: [], inquiries: 0, watched: false, inInsolvency: false }); });
+            if (alive) setData({ cases, entries: (e.data ?? []) as TimeEntry[], invoices: inv.filter((i) => i.client_id === client.id), inquiries: q.count ?? 0, ins: (w ?? []).find((x) => x.client_id === client.id) });
+        })().catch(() => { if (alive) setData({ cases: [], entries: [], invoices: [], inquiries: 0, ins: undefined }); });
         return () => { alive = false; };
     }, [client.id, client.ico, client.email, client.name, access.vat_payer]);
 
@@ -70,8 +69,8 @@ export default function ClientSummary({ client }: { client: LawyerClient }) {
             <div className="flex flex-wrap items-center gap-2">
                 <button type="button" onClick={() => void invoiceAll()} disabled={open.length === 0 || busy} className={ghostBtn}><FilePlus2 size={14} /> Vyfakturovat čas klienta</button>
                 {overdue[0]?.due_date && <Link href={`/kancelar/kalkulacky?tab=urok&jistina=${overdue[0].outstanding}&splatnost=${overdue[0].due_date}`} className={ghostBtn}><Calculator size={14} /> Úrok z prodlení ({overdue.length} po splatnosti)</Link>}
-                {client.ico && <Link href={`/kancelar/insolvence?ic=${client.ico}&name=${encodeURIComponent(client.name)}`} className={ghostBtn}><ShieldAlert size={14} /> {data.watched ? 'Hlídáno v insolvenci' : 'Hlídat v insolvenci'}</Link>}
-                {data.inInsolvency && <span className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-900">V INSOLVENCI</span>}
+                {client.ico && <Link href={`/kancelar/insolvence?ic=${client.ico}&name=${encodeURIComponent(client.name)}`} className={ghostBtn}><ShieldAlert size={14} /> Insolvence</Link>}
+                {data.ins && (() => { const v = insView(data.ins, /^\d{8}$/.test(client.ico ?? '')); return <span title={v.detail} className={`rounded-full px-2.5 py-1 text-xs font-bold ${INS_TONE[v.tone]}`}>Insolvence: {v.text}{v.detail && v.tone === 'bad' ? ` (${v.detail})` : ''}</span>; })()}
             </div>
         </div>
     );

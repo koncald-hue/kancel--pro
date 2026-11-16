@@ -11,7 +11,7 @@ import AresPicker from './AresPicker';
 
 type Status = { active: boolean; scope: 'firm' | 'solo'; until: string | null; can_buy: boolean; firm: string | null };
 type Prices = { solo: Record<string, number>; firm: Record<string, number> };
-type Watch = { id: string; label: string; kind: 'firma' | 'osoba'; ic: string; name: string; first_name: string; birth: string | null; last_checked_at: string | null; last_error: string };
+type Watch = { id: string; auto?: boolean; client_id?: string | null; label: string; kind: 'firma' | 'osoba'; ic: string; name: string; first_name: string; birth: string | null; last_checked_at: string | null; last_error: string };
 type Hit = { id: string; watch_id: string; spis: string; court: string; debtor: string; state: string; started: string | null; ended: string | null; url: string; seen: boolean; first_seen_at: string; changed_at: string };
 
 const fmt = (iso: string | null) => (iso ? new Date(iso.length === 10 ? `${iso}T12:00:00` : iso).toLocaleDateString('cs-CZ') : '–');
@@ -154,7 +154,7 @@ export default function LawyerInsolvency() {
         <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
                 <Check size={16} aria-hidden="true" />
-                <span className="min-w-0 flex-1"><strong>Hlídání je aktivní do {fmt(status.until)}.</strong> {status.scope === 'firm' ? 'Hradí kancelář, platí pro všechny členy.' : 'Platí jen pro vás.'} Kontrola probíhá denně a při otevření této stránky.</span>
+                <span className="min-w-0 flex-1"><strong>Hlídání je aktivní do {fmt(status.until)}.</strong> {status.scope === 'firm' ? 'Hradí kancelář, platí pro všechny členy.' : 'Platí jen pro vás.'} Klienti s IČO se hlídají automaticky, ostatní osoby přidáte níže. Kontrola probíhá denně a při otevření této stránky.</span>
                 <button type="button" onClick={() => void checkAll()} disabled={busy === 'check' || watches.length === 0} className={ghostBtn}>{busy === 'check' ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Zkontrolovat nyní</button>
             </div>
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
@@ -190,7 +190,7 @@ export default function LawyerInsolvency() {
             </form>
 
             <section aria-label="Hlídané osoby">
-                <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Hlídané osoby ({watches.length}/50)</h2>
+                <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Hlídané osoby ({watches.filter((w) => !w.auto).length} ručně z 50, {watches.filter((w) => w.auto).length} klientů automaticky)</h2>
                 {watches.length === 0 ? <p className="mt-2 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">Zatím nikoho nehlídáte.</p> : (
                     <ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
                         {watches.map((w) => {
@@ -203,7 +203,7 @@ export default function LawyerInsolvency() {
                                         <p className="truncate text-xs text-slate-500">{w.kind === 'firma' ? `IČO ${w.ic}` : `nar. ${fmt(w.birth)}`} · {w.last_checked_at ? `zkontrolováno ${fmt(w.last_checked_at)}` : 'ještě nezkontrolováno'}{w.last_error ? ` · chyba: ${w.last_error}` : ''}</p>
                                     </div>
                                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${active.length ? 'bg-rose-100 text-rose-900' : mine.length ? 'bg-slate-100 text-slate-700' : 'bg-emerald-100 text-emerald-900'}`}>{active.length ? `v insolvenci (${active.length})` : mine.length ? 'řízení ukončeno' : 'bez nálezu'}</span>
-                                    <button type="button" onClick={() => void remove(w)} aria-label={`Přestat hlídat ${w.label}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={15} /></button>
+                                    {w.auto ? <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-900" title="Klient s IČO se hlídá automaticky. Přestane se, když klienta smažete nebo mu odeberete IČO.">klient</span> : <button type="button" onClick={() => void remove(w)} aria-label={`Přestat hlídat ${w.label}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={15} /></button>}
                                 </li>
                             );
                         })}

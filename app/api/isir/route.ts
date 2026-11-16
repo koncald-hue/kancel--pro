@@ -39,6 +39,8 @@ export async function POST(req: Request) {
     }
 
     if (action === 'check') {
+        // Klienti s IČO se nejdřív doplní mezi hlídané (pro nově aktivovaný příplatek nebo nové klienty)
+        await user.rpc('sync_client_watches');
         const db = serviceClient();
         if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
         let query = db.from('isir_watches').select('id, user_id, kind, ic, name, first_name, birth').eq('user_id', u.user.id).order('last_checked_at', { ascending: true, nullsFirst: true }).limit(50);
