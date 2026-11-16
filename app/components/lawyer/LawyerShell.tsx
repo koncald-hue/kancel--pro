@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, MailCheck, Receipt, Search, ShieldAlert, Tags, Scale, X } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
+import DataBoxLauncher from './DataBoxLauncher';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
@@ -121,6 +122,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             )}
 
             <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+            {!locked && active !== 'schranka' && <DataBoxLauncher />}
 
             <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
                 <div className="mx-auto max-w-6xl">
