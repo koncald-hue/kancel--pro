@@ -2,31 +2,29 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Settings, Users, UsersRound, MessagesSquare, Landmark, Receipt, Tags, Scale } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Receipt, Tags, Scale, X } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 
-const SECTIONS = [
-    ['prehled', '/kancelar', 'Přehled', LayoutDashboard],
-    ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox],
-    ['veci', '/kancelar/veci', 'Věci', Briefcase],
-    ['klienti', '/kancelar/klienti', 'Klienti', Users],
-    ['vykazy', '/kancelar/vykazy', 'Výkazy práce', Clock3],
-    ['faktury', '/kancelar/faktury', 'Fakturace', Receipt],
-    ['cenik', '/kancelar/cenik', 'Ceník', Tags],
-    ['katastr', '/kancelar/katastr', 'Katastr', Landmark],
-    ['knihovna', '/kancelar/knihovna', 'Knihovna', Library],
-    ['tym', '/kancelar/tym', 'Tým', UsersRound],
-    ['chat', '/kancelar/chat', 'Chat', MessagesSquare],
-    ['nastaveni', '/kancelar/nastaveni', 'Nastavení', Settings],
-] as const;
+export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'chat' | 'tym' | 'nastaveni';
+type Item = readonly [LawyerSection, string, string, LucideIcon];
 
-export type LawyerSection = (typeof SECTIONS)[number][0];
+// Nástroje jsou seskupené podle toho, k čemu slouží
+const GROUPS: { title: string; items: Item[] }[] = [
+    { title: '', items: [['prehled', '/kancelar', 'Přehled', LayoutDashboard]] },
+    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['knihovna', '/kancelar/knihovna', 'Knihovna', Library]] },
+    { title: 'Peníze', items: [['vykazy', '/kancelar/vykazy', 'Výkazy práce', Clock3], ['faktury', '/kancelar/faktury', 'Fakturace', Receipt], ['cenik', '/kancelar/cenik', 'Ceník', Tags]] },
+    { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound]] },
+];
+const SETTINGS: Item = ['nastaveni', '/kancelar/nastaveni', 'Nastavení', Settings];
+const ALL: Item[] = [...GROUPS.flatMap((g) => g.items), SETTINGS];
 
 function Inner({ active, children }: { active: LawyerSection; children: React.ReactNode }) {
     const { access } = useLawyer();
     const { isStaff, logout } = useAuth();
+    const [open, setOpen] = useState(false);
     // Počet nepřečtených zpráv v chatu kanceláře (když chat ještě není zapnutý, odznak se nezobrazí)
     const [unread, setUnread] = useState(0);
     useEffect(() => {
@@ -36,30 +34,70 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
         const id = window.setInterval(() => void load(), 30_000);
         return () => { cancelled = true; window.clearInterval(id); };
     }, []);
-    return (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                    <span className="rounded-xl bg-slate-900 p-2.5 text-indigo-300"><Scale size={20} aria-hidden="true" /></span>
-                    <div>
-                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-800">Kancelář</p>
-                        <p className="text-lg font-bold text-slate-900">{access.display_name || access.firm_name || 'Můj pracovní prostor'}</p>{access.display_name && access.firm_name && <p className="text-xs text-slate-500">{access.firm_name}</p>}
-                    </div>
+
+    const current = ALL.find(([id]) => id === active);
+    const name = access.display_name || access.firm_name || 'Můj pracovní prostor';
+
+    const link = ([id, href, label, Icon]: Item) => (
+        <Link key={id} href={href} onClick={() => setOpen(false)} aria-current={active === id ? 'page' : undefined}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${active === id ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
+            <Icon size={17} aria-hidden="true" className={active === id ? 'text-indigo-700' : 'text-slate-400'} />
+            <span className="flex-1">{label}</span>
+            {id === 'chat' && unread > 0 && <span className="rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white" aria-label={`${unread} nepřečtených`}>{unread}</span>}
+        </Link>
+    );
+
+    const sidebar = (
+        <div className="flex h-full flex-col">
+            <div className="flex items-center gap-3 px-5 py-5">
+                <span className="rounded-xl bg-indigo-600 p-2 text-white"><Scale size={18} aria-hidden="true" /></span>
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-slate-900">{name}</p>
+                    <p className="truncate text-xs text-slate-500">{access.display_name && access.firm_name ? access.firm_name : 'Kancelář'}</p>
                 </div>
-                <div className="flex items-center gap-3 text-sm">
-                    {isStaff && <Link href="/admin" className="font-semibold text-indigo-800 underline">Správa</Link>}
-                    <button type="button" onClick={logout} className="text-slate-500 underline hover:text-slate-800">Odhlásit se</button>
-                </div>
-                {access.status === 'trial' && access.until && <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-950">Zkušební přístup do {new Date(`${access.until}T12:00:00`).toLocaleDateString('cs-CZ')}</span>}
             </div>
-            <nav className="mt-5 flex gap-1 overflow-x-auto border-b border-slate-200" aria-label="Části kanceláře">
-                {SECTIONS.map(([id, href, label, Icon]) => (
-                    <Link key={id} href={href} aria-current={active === id ? 'page' : undefined} className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-semibold ${active === id ? 'border-indigo-800 text-indigo-900' : 'border-transparent text-slate-600 hover:text-slate-900'}`}>
-                        <Icon size={16} aria-hidden="true" /> {label}{id === 'chat' && unread > 0 && <span className="rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{unread}</span>}
-                    </Link>
+            <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="Části kanceláře">
+                {GROUPS.map((g) => (
+                    <div key={g.title || 'main'}>
+                        {g.title && <p className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>}
+                        <div className="space-y-0.5">{g.items.map((item) => link(item))}</div>
+                    </div>
                 ))}
             </nav>
-            <div className="mt-6">{children}</div>
+            <div className="space-y-0.5 border-t border-slate-100 px-3 py-3">
+                {link(SETTINGS)}
+                {isStaff && <Link href="/admin" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"><ShieldCheck size={17} aria-hidden="true" className="text-slate-400" /> Správa</Link>}
+                <button type="button" onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"><LogOut size={17} aria-hidden="true" className="text-slate-400" /> Odhlásit se</button>
+                {access.status === 'trial' && access.until && <p className="mx-3 mt-2 rounded-lg bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-950">Zkušební přístup do {new Date(`${access.until}T12:00:00`).toLocaleDateString('cs-CZ')}</p>}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="min-h-screen bg-slate-50 lg:flex">
+            <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-slate-200 bg-white lg:block">{sidebar}</aside>
+
+            <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+                <button type="button" onClick={() => setOpen(true)} aria-label="Otevřít nabídku" aria-expanded={open} className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100"><Menu size={20} /></button>
+                <p className="flex-1 truncate text-sm font-bold text-slate-900">{current?.[2] ?? 'Kancelář'}</p>
+                {unread > 0 && <Link href="/kancelar/chat" className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] font-bold text-white">{unread}</Link>}
+            </div>
+            {open && (
+                <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Nabídka">
+                    <button type="button" aria-label="Zavřít nabídku" onClick={() => setOpen(false)} className="absolute inset-0 bg-slate-900/50" />
+                    <aside className="relative h-full w-72 max-w-[85%] bg-white shadow-2xl">
+                        <button type="button" onClick={() => setOpen(false)} aria-label="Zavřít" className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"><X size={18} /></button>
+                        {sidebar}
+                    </aside>
+                </div>
+            )}
+
+            <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
+                <div className="mx-auto max-w-6xl">
+                    <h1 className="mb-6 hidden text-2xl font-bold tracking-tight text-slate-900 lg:block">{current?.[2]}</h1>
+                    {children}
+                </div>
+            </main>
         </div>
     );
 }
