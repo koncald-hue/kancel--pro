@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { BadgeCheck, Building2, CalendarDays, CheckCircle2, Circle, FileText, Globe, Loader2, Lock, Mail, MessageSquare, Phone, Send, Upload, LayoutDashboard, FolderOpen } from 'lucide-react';
+import { BadgeCheck, Building2, CalendarDays, CheckCircle2, Circle, FileText, Globe, Loader2, Lock, Mail, MessageSquare, Phone, Send, Upload, LayoutDashboard, FolderOpen, FileSignature } from 'lucide-react';
 import { SECURITY_TEXT_CLIENT, SECURITY_TEXT_CLIENT_E2EE, initials, isAllowedUpload, validateIdentity } from '@/lib/portal';
+import PortalSign from './PortalSign';
+import PortalAml from './PortalAml';
 import { KEY_FRAGMENT, decryptText, decryptToBlob, encryptFile, encryptText, importKey, isEncrypted } from '@/lib/e2ee';
 
 type Lawyer = { firm: string; name: string; phone: string; office: string; website: string; barNumber: string; email: string; photo?: string; verified?: boolean; profession?: string; verifiedAt?: string | null };
@@ -56,7 +58,7 @@ function LawyerCard({ lawyer }: { lawyer: Lawyer }) {
     );
 }
 
-type Tab = 'prehled' | 'dokumenty' | 'zpravy';
+type Tab = 'prehled' | 'dokumenty' | 'podpisy' | 'zpravy';
 
 // Soukromá stránka klienta: nejdřív údaje o klientovi, potom stav věci, dokumenty a zprávy
 export default function ClientPortal() {
@@ -69,6 +71,7 @@ export default function ClientPortal() {
     const [plain, setPlain] = useState<Record<string, string>>({});
     const [names, setNames] = useState<Record<string, string>>({});
     const [tab, setTab] = useState<Tab>('prehled');
+    const [back, setBack] = useState({ focus: '', notice: '' });
     const [error, setError] = useState('');
     const [busy, setBusy] = useState('');
     const [text, setText] = useState('');
@@ -94,6 +97,17 @@ export default function ClientPortal() {
         const timer = window.setTimeout(() => { void load(); }, 0);
         return () => window.clearTimeout(timer);
     }, [load]);
+
+    // Návrat z ověření totožnosti (Bank iD): otevře se příslušný podpis
+    useEffect(() => {
+        const t = window.setTimeout(() => {
+            const q = new URLSearchParams(window.location.search); const status = q.get('identita'); const sign = q.get('podpis');
+            if (!status || !sign) return;
+            setBack({ focus: sign, notice: status === 'ok' ? 'Totožnost je ověřená. Pokračujte potvrzením SMS kódem.' : status === 'zruseno' ? 'Ověření jste zrušili.' : 'Ověření totožnosti se nepodařilo dokončit. Zkuste to znovu.' });
+            setTab('podpisy');
+        }, 0);
+        return () => window.clearTimeout(t);
+    }, []);
 
     // Šifrovací klíč je v odkazu za znakem #; server ho nikdy nedostane. Po načtení se uloží do úložiště karty prohlížeče.
     useEffect(() => {
@@ -265,7 +279,7 @@ export default function ClientPortal() {
     const waiting = data.requests.filter((r) => !r.done && filesFor(r.id).length === 0).length;
     const lawyerName = data.lawyer.name || data.lawyer.firm || 'Advokát';
 
-    const tabs: [Tab, string, typeof FileText, number][] = [['prehled', 'Přehled', LayoutDashboard, waiting], ['dokumenty', 'Dokumenty', FolderOpen, 0], ['zpravy', 'Zprávy', MessageSquare, 0]];
+    const tabs: [Tab, string, typeof FileText, number][] = [['prehled', 'Přehled', LayoutDashboard, waiting], ['dokumenty', 'Dokumenty', FolderOpen, 0], ['podpisy', 'Podpisy', FileSignature, 0], ['zpravy', 'Zprávy', MessageSquare, 0]];
 
     return (
         <div className="min-h-screen bg-[#f8fafc]">
@@ -293,6 +307,7 @@ export default function ClientPortal() {
 
                 {tab === 'prehled' && (
                     <div className="space-y-4" role="tabpanel">
+                        <PortalAml token={token} />
                         <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5"><p className="text-xs font-bold uppercase tracking-wide text-indigo-800">Aktuální stav</p><p className="mt-1 text-base leading-relaxed text-slate-900">{data.status || 'Advokát zatím nenapsal stav věci. Uvidíte ho tady.'}</p></div>
 
                         {data.requests.length > 0 && (
@@ -344,6 +359,7 @@ export default function ClientPortal() {
                     </div>
                 )}
 
+                {tab === 'podpisy' && <PortalSign token={token} e2ee={data.e2ee} cryptoKey={key} focusId={back.focus} notice={back.notice} />}
                 {tab === 'zpravy' && (
                     <div role="tabpanel">
                         <Card title={`Zprávy s ${lawyerName}`}>

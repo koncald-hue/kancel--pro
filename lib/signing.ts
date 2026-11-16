@@ -1,0 +1,75 @@
+// Elektronický podpis dokumentů v klientském portálu: pokročilý podpis s ověřením identity a SMS kódem,
+// doklad o podpisu a pomocné funkce. Čisté funkce pro server i prohlížeč.
+
+export type SignLevel = 'advanced' | 'qualified';
+export type SignKind = 'smlouva' | 'souhlas' | 'protokol' | 'plna_moc' | 'podani' | 'jine';
+export type SignStatus = 'pending' | 'signed' | 'awaiting_check' | 'declined' | 'cancelled' | 'expired';
+export type IdentityMethod = 'bankid' | 'lawyer' | 'none';
+
+export const KINDS: Record<SignKind, { label: string; level: SignLevel; note: string }> = {
+    smlouva: { label: 'Smlouva o poskytování právních služeb', level: 'advanced', note: 'Pro smlouvu mezi advokátem a klientem stačí pokročilý podpis.' },
+    souhlas: { label: 'Souhlas (např. se zpracováním údajů)', level: 'advanced', note: 'Pokročilý podpis stačí.' },
+    protokol: { label: 'Předávací protokol, potvrzení převzetí', level: 'advanced', note: 'Pokročilý podpis stačí.' },
+    plna_moc: { label: 'Plná moc', level: 'qualified', note: 'Pro zastoupení před soudem a úřady ověřte, jakou formu konkrétní soud nebo úřad vyžaduje. Pokud trvá na kvalifikovaném podpisu, pokročilý nestačí.' },
+    podani: { label: 'Podání nebo dokument pro soud či úřad', level: 'qualified', note: 'Rozhoduje požadavek konkrétního soudu nebo úřadu. Aplikace kvalifikovaný podpis sama nevytváří.' },
+    jine: { label: 'Jiný dokument', level: 'advanced', note: 'Pokročilý podpis stačí, pokud ho příjemce dokumentu uzná.' },
+};
+export const defaultLevel = (kind: SignKind): SignLevel => KINDS[kind].level;
+
+export const LEVEL_LABEL: Record<SignLevel, string> = { advanced: 'Pokročilý podpis (ověření identity + SMS kód)', qualified: 'Kvalifikovaný podpis (mimo aplikaci)' };
+export const STATUS_LABEL: Record<SignStatus, string> = { pending: 'Čeká na podpis', signed: 'Podepsáno', awaiting_check: 'Čeká na ověření advokátem', declined: 'Odmítnuto', cancelled: 'Zrušeno', expired: 'Vypršelo' };
+
+// Prohlášení, které klient před podpisem potvrdí; ukládá se do dokladu
+export const CONSENT_TEXT = 'Seznámil/a jsem se s celým zněním dokumentu a souhlasím s ním. Chápu, že potvrzení SMS kódem po ověření mé totožnosti je můj elektronický podpis tohoto dokumentu.';
+
+export async function sha256Hex(data: Uint8Array | ArrayBuffer): Promise<string> {
+    const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+    const digest = await crypto.subtle.digest('SHA-256', bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer);
+    return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+export const isSha256 = (s: unknown): s is string => typeof s === 'string' && /^[0-9a-f]{64}$/.test(s);
+
+export function maskPhone(phone: string): string {
+    const d = phone.replace(/[^\d+]/g, '');
+    return d.length <= 5 ? '***' : `${d.slice(0, d.startsWith('+') ? 4 : 0)}${'•'.repeat(Math.max(3, d.length - (d.startsWith('+') ? 7 : 3)))}${d.slice(-3)}`;
+}
+// Telefon pro SMS: český formát převede na mezinárodní (+420…); jinak vrací null
+export function normalizePhone(raw: string): string | null {
+    const d = raw.replace(/[\s().-]/g, '');
+    if (/^\+\d{8,15}$/.test(d)) return d;
+    if (/^00\d{8,15}$/.test(d)) return `+${d.slice(2)}`;
+    if (/^\d{9}$/.test(d)) return `+420${d}`;
+    return null;
+}
+
+export type Evidence = {
+    v: 1;
+    requestId: string; title: string; level: 'advanced'; docSha256: string;
+    signer: { name: string; phoneMasked: string };
+    identity: { method: IdentityMethod; given?: string; family?: string; birthdate?: string; sub?: string; verifiedAt?: string; note?: string; phoneMatch?: boolean };
+    otp: { channel: 'sms'; verifiedAt: string };
+    signedAt: string; ip: string; userAgent: string; consent: string;
+};
+
+// Stabilní zápis JSON (seřazené klíče), aby šel doklad vždy stejně zapečetit i ověřit
+export function canonicalJson(v: unknown): string {
+    if (Array.isArray(v)) return `[${v.map(canonicalJson).join(',')}]`;
+    if (v && typeof v === 'object') return `{${Object.entries(v as Record<string, unknown>).filter(([, x]) => x !== undefined).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, x]) => `${JSON.stringify(k)}:${canonicalJson(x)}`).join(',')}}`;
+    return JSON.stringify(v);
+}
+
+async function hmac(secret: string, message: string): Promise<string> {
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message))), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+export const sealEvidence = (secret: string, e: Evidence) => hmac(secret, canonicalJson(e));
+export async function verifySeal(secret: string, e: Evidence, seal: string): Promise<boolean> { return (await sealEvidence(secret, e)) === seal; }
+
+// SMS kód
+export function generateOtp(): string { const n = crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000; return String(n).padStart(6, '0'); }
+export const otpHash = (secret: string, requestId: string, code: string) => hmac(secret, `otp:${requestId}:${code}`);
+export const OTP_TTL_MS = 10 * 60_000;
+export const OTP_MAX_ATTEMPTS = 5;
+export const OTP_MAX_SENDS_PER_HOUR = 3;
+
+export function isExpired(req: { expires_at: string | null }, now = new Date()): boolean { return !!req.expires_at && new Date(req.expires_at).getTime() <= now.getTime(); }
