@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 
 export type LawyerAccess = { user_id: string; email: string; status: 'trial' | 'active' | 'requested' | 'expired'; until: string | null; firm_name: string; default_rate: number; intake_code?: string | null; display_name?: string; phone?: string; office?: string; website?: string; bar_number?: string; contact_email?: string; profession?: 'advokat' | 'jiny'; verification_status?: 'none' | 'pending' | 'verified' | 'rejected'; register_name?: string; verified_at?: string | null; verification_note?: string; e2ee_salt?: string | null; e2ee_wrapped_master?: string | null; firm_id?: string | null; ico?: string; dic?: string; vat_payer?: boolean; bank_account?: string; due_days?: number; invoice_note?: string; avatar_small?: string; avatar_large?: string };
-export type LawyerClient = { id: string; name: string; email: string; phone: string; note: string; hourly_rate: number | null; address?: string; ico?: string; dic?: string };
+export type LawyerClient = { id: string; name: string; email: string; phone: string; note: string; hourly_rate: number | null; address?: string; ico?: string; dic?: string; birth?: string | null };
 export type TimeEntry = { id: string; case_id: string | null; entry_date: string; minutes: number; description: string; rate: number; billed: boolean };
 
 export const TRIAL_DAYS = 14;

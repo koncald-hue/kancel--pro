@@ -70,7 +70,7 @@ export default function ClientSummary({ client }: { client: LawyerClient }) {
                 <button type="button" onClick={() => void invoiceAll()} disabled={open.length === 0 || busy} className={ghostBtn}><FilePlus2 size={14} /> Vyfakturovat čas klienta</button>
                 {overdue[0]?.due_date && <Link href={`/kancelar/kalkulacky?tab=urok&jistina=${overdue[0].outstanding}&splatnost=${overdue[0].due_date}`} className={ghostBtn}><Calculator size={14} /> Úrok z prodlení ({overdue.length} po splatnosti)</Link>}
                 {client.ico && <Link href={`/kancelar/insolvence?ic=${client.ico}&name=${encodeURIComponent(client.name)}`} className={ghostBtn}><ShieldAlert size={14} /> Insolvence</Link>}
-                {data.ins && (() => { const v = insView(data.ins, /^\d{8}$/.test(client.ico ?? '')); return <span title={v.detail} className={`rounded-full px-2.5 py-1 text-xs font-bold ${INS_TONE[v.tone]}`}>Insolvence: {v.text}{v.detail && v.tone === 'bad' ? ` (${v.detail})` : ''}</span>; })()}
+                {data.ins && (() => { const v = insView(data.ins, /^\d{8}$/.test(client.ico ?? '') || !!client.birth); return <span title={v.detail} className={`rounded-full px-2.5 py-1 text-xs font-bold ${INS_TONE[v.tone]}`}>Insolvence: {v.text}{v.detail && v.tone === 'bad' ? ` (${v.detail})` : ''}</span>; })()}
             </div>
         </div>
     );

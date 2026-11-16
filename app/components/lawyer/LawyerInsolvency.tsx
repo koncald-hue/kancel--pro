@@ -154,7 +154,7 @@ export default function LawyerInsolvency() {
         <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
                 <Check size={16} aria-hidden="true" />
-                <span className="min-w-0 flex-1"><strong>Hlídání je aktivní do {fmt(status.until)}.</strong> {status.scope === 'firm' ? 'Hradí kancelář, platí pro všechny členy.' : 'Platí jen pro vás.'} Klienti s IČO se hlídají automaticky, ostatní osoby přidáte níže. Kontrola probíhá denně a při otevření této stránky.</span>
+                <span className="min-w-0 flex-1"><strong>Hlídání je aktivní do {fmt(status.until)}.</strong> {status.scope === 'firm' ? 'Hradí kancelář, platí pro všechny členy.' : 'Platí jen pro vás.'} Klienti s IČO (nebo s datem narození) se hlídají automaticky, ostatní osoby přidáte níže. Kontrola probíhá denně a při otevření této stránky.</span>
                 <button type="button" onClick={() => void checkAll()} disabled={busy === 'check' || watches.length === 0} className={ghostBtn}>{busy === 'check' ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Zkontrolovat nyní</button>
             </div>
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
@@ -203,7 +203,7 @@ export default function LawyerInsolvency() {
                                         <p className="truncate text-xs text-slate-500">{w.kind === 'firma' ? `IČO ${w.ic}` : `nar. ${fmt(w.birth)}`} · {w.last_checked_at ? `zkontrolováno ${fmt(w.last_checked_at)}` : 'ještě nezkontrolováno'}{w.last_error ? ` · chyba: ${w.last_error}` : ''}</p>
                                     </div>
                                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${active.length ? 'bg-rose-100 text-rose-900' : mine.length ? 'bg-slate-100 text-slate-700' : 'bg-emerald-100 text-emerald-900'}`}>{active.length ? `v insolvenci (${active.length})` : mine.length ? 'řízení ukončeno' : 'bez nálezu'}</span>
-                                    {w.auto ? <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-900" title="Klient s IČO se hlídá automaticky. Přestane se, když klienta smažete nebo mu odeberete IČO.">klient</span> : <button type="button" onClick={() => void remove(w)} aria-label={`Přestat hlídat ${w.label}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={15} /></button>}
+                                    {w.auto ? <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-900" title="Klient se hlídá automaticky podle IČO nebo data narození. Přestane se, když klienta smažete nebo mu údaj odeberete.">klient</span> : <button type="button" onClick={() => void remove(w)} aria-label={`Přestat hlídat ${w.label}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={15} /></button>}
                                 </li>
                             );
                         })}

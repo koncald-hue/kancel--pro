@@ -5,7 +5,7 @@ const base: ClientIns = { client_id: '1', ic: '27082440', watched: true, last_ch
 
 describe('client insolvency view', () => {
     it('says what is going on for each state', () => {
-        expect(insView(undefined, false).tone).toBe('none');
+        expect(insView(undefined, false)).toMatchObject({ tone: 'none', text: 'nehlídá se' });
         expect(insView(undefined, true).tone).toBe('wait');
         expect(insView({ ...base, watched: false }, true).tone).toBe('wait');
         expect(insView({ ...base, last_checked_at: null }, true).text).toBe('čeká na první kontrolu');

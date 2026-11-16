@@ -4,8 +4,8 @@ export type ClientIns = { client_id: string; ic: string; watched: boolean; last_
 export type InsView = { tone: 'none' | 'ok' | 'wait' | 'bad' | 'ended' | 'error'; text: string; detail?: string };
 
 // Co se o klientovi ukáže v seznamu: v insolvenci, bez nálezu, čeká na první kontrolu, bez IČO…
-export function insView(c: ClientIns | undefined, hasIco: boolean): InsView {
-    if (!hasIco) return { tone: 'none', text: 'bez IČO se nehlídá', detail: 'Doplňte IČO (u fyzické osoby hlídejte ručně v Insolvenci).' };
+export function insView(c: ClientIns | undefined, watchable: boolean): InsView {
+    if (!watchable) return { tone: 'none', text: 'nehlídá se', detail: 'Doplňte IČO (firma), nebo datum narození (fyzická osoba, ve tvaru Jméno Příjmení).' };
     if (!c || !c.watched) return { tone: 'wait', text: 'čeká na zařazení' };
     if (c.active_count > 0) return { tone: 'bad', text: 'V INSOLVENCI', detail: [c.state, c.spis].filter(Boolean).join(' · ') };
     if (c.last_error && !c.last_checked_at) return { tone: 'error', text: 'kontrola selhala', detail: c.last_error };

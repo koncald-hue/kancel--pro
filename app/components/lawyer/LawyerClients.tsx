@@ -8,10 +8,13 @@ import type { LawyerClient } from '@/lib/lawyer';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import AresPicker from './AresPicker';
 import ClientSummary from './ClientSummary';
+import { parseCzDate } from '@/lib/isir';
 import { INS_TONE, insView, isirActive, loadClientInsolvency, type ClientIns } from '@/lib/clientInsolvency';
 import { useLawyer } from './LawyerGate';
 
-const EMPTY = { name: '', email: '', phone: '', note: '', rate: '', address: '', ico: '', dic: '' };
+const EMPTY = { name: '', email: '', phone: '', note: '', rate: '', address: '', ico: '', dic: '', birth: '' };
+const fmtBirth = (iso?: string | null) => (iso ? new Date(`${iso}T12:00:00`).toLocaleDateString('cs-CZ') : '');
+const BIRTH_HINT = 'Datum narození zadejte ve tvaru den. měsíc. rok, např. 5. 3. 1980 (rok čtyřmístně).';
 
 export default function LawyerClients() {
     const { userId } = useLawyer();
@@ -60,7 +63,9 @@ export default function LawyerClients() {
         const name = form.name.trim();
         if (!name) return;
         const rate = form.rate.trim() ? Number(form.rate.replace(',', '.')) : null;
-        const { data, error: err } = await supabase.from('lawyer_clients').insert({ user_id: userId, name, email: form.email.trim(), phone: form.phone.trim(), note: form.note.trim(), address: form.address.trim(), ico: form.ico.trim(), dic: form.dic.trim(), hourly_rate: Number.isFinite(rate) ? rate : null }).select('*').single();
+        const birth = form.birth.trim() ? parseCzDate(form.birth) : null;
+        if (form.birth.trim() && !birth) { setError(BIRTH_HINT); return; }
+        const { data, error: err } = await supabase.from('lawyer_clients').insert({ user_id: userId, birth, name, email: form.email.trim(), phone: form.phone.trim(), note: form.note.trim(), address: form.address.trim(), ico: form.ico.trim(), dic: form.dic.trim(), hourly_rate: Number.isFinite(rate) ? rate : null }).select('*').single();
         if (err) { setError(err.code === '23505' ? 'Klient s tímto jménem už existuje.' : err.message); return; }
         setClients((c) => [...c, data as LawyerClient].sort((a, b) => a.name.localeCompare(b.name, 'cs')));
         setForm(EMPTY); setError('');
@@ -81,14 +86,16 @@ export default function LawyerClients() {
 
     function startEdit(c: LawyerClient) {
         setEditing(c.id);
-        setEdit({ name: c.name, email: c.email, phone: c.phone, note: c.note, rate: c.hourly_rate !== null ? String(c.hourly_rate) : '', address: c.address ?? '', ico: c.ico ?? '', dic: c.dic ?? '' });
+        setEdit({ name: c.name, email: c.email, phone: c.phone, note: c.note, rate: c.hourly_rate !== null ? String(c.hourly_rate) : '', address: c.address ?? '', ico: c.ico ?? '', dic: c.dic ?? '', birth: fmtBirth(c.birth) });
     }
 
     async function saveEdit(c: LawyerClient) {
         const name = edit.name.trim();
         if (!name) return;
         const rate = edit.rate.trim() ? Number(edit.rate.replace(',', '.')) : null;
-        const patch = { name, email: edit.email.trim(), phone: edit.phone.trim(), note: edit.note.trim(), address: edit.address.trim(), ico: edit.ico.trim(), dic: edit.dic.trim(), hourly_rate: rate !== null && Number.isFinite(rate) ? rate : null };
+        const birth = edit.birth.trim() ? parseCzDate(edit.birth) : null;
+        if (edit.birth.trim() && !birth) { setError(BIRTH_HINT); return; }
+        const patch = { birth, name, email: edit.email.trim(), phone: edit.phone.trim(), note: edit.note.trim(), address: edit.address.trim(), ico: edit.ico.trim(), dic: edit.dic.trim(), hourly_rate: rate !== null && Number.isFinite(rate) ? rate : null };
         const { error: err } = await supabase.from('lawyer_clients').update(patch).eq('id', c.id);
         if (err) { setError(err.code === '23505' ? 'Klient s tímto jménem už existuje.' : err.message); return; }
         setClients((list) => list.map((x) => (x.id === c.id ? { ...x, ...patch } : x)).sort((a, b) => a.name.localeCompare(b.name, 'cs')));
@@ -110,7 +117,7 @@ export default function LawyerClients() {
                 <input value={form.address} onChange={set('address')} placeholder="Adresa (pro faktury)" className={`${inputCls} sm:col-span-3`} aria-label="Adresa" />
                 <input value={form.ico} onChange={set('ico')} placeholder="IČO" className={inputCls} aria-label="IČO" />
                 <input value={form.dic} onChange={set('dic')} placeholder="DIČ" className={inputCls} aria-label="DIČ" />
-                <span />
+                <input value={form.birth} onChange={set('birth')} placeholder="Nar. 5. 3. 1980" inputMode="numeric" maxLength={12} className={inputCls} aria-label="Datum narození (fyzická osoba, pro hlídání insolvence)" title="Nepovinné: u fyzické osoby bez IČO se podle něj hlídá insolvence" />
                 <input value={form.note} onChange={set('note')} placeholder="Poznámka" className={`${inputCls} sm:col-span-5`} aria-label="Poznámka" />
                 <button type="submit" disabled={!form.name.trim()} className={`${primaryBtn} justify-center`}>Přidat klienta</button>
             </form>
@@ -131,7 +138,7 @@ export default function LawyerClients() {
                                 return (
                                     <Fragment key={c.id}>
                                     <tr>
-                                        <td className="px-4 py-2.5 font-semibold text-slate-900">{c.name}{ins && (() => { const v = insView(ins[c.id], /^\d{8}$/.test(c.ico ?? '')); return <span className="mt-1 flex flex-wrap items-center gap-1.5"><span title={v.detail} className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${INS_TONE[v.tone]}`}>Insolvence: {v.text}</span>{v.tone === 'bad' && ins[c.id]?.url && <a href={ins[c.id].url ?? '#'} target="_blank" rel="noreferrer noopener" className="text-[11px] font-semibold text-rose-800 underline">rejstřík</a>}{v.detail && v.tone !== 'ok' && v.tone !== 'wait' && <span className="text-[11px] font-normal text-slate-500">{v.detail}</span>}</span>; })()}{c.note && <span className="block text-xs font-normal text-slate-500">{c.note}</span>}{(c.address || c.ico) && <span className="block text-xs font-normal text-slate-500">{[c.address, c.ico && `IČO ${c.ico}`, c.dic && `DIČ ${c.dic}`].filter(Boolean).join(' · ')}</span>}</td>
+                                        <td className="px-4 py-2.5 font-semibold text-slate-900">{c.name}{ins && (() => { const v = insView(ins[c.id], /^\d{8}$/.test(c.ico ?? '') || !!c.birth); return <span className="mt-1 flex flex-wrap items-center gap-1.5"><span title={v.detail} className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${INS_TONE[v.tone]}`}>Insolvence: {v.text}</span>{v.tone === 'bad' && ins[c.id]?.url && <a href={ins[c.id].url ?? '#'} target="_blank" rel="noreferrer noopener" className="text-[11px] font-semibold text-rose-800 underline">rejstřík</a>}{v.detail && v.tone !== 'ok' && v.tone !== 'wait' && <span className="text-[11px] font-normal text-slate-500">{v.detail}</span>}</span>; })()}{c.note && <span className="block text-xs font-normal text-slate-500">{c.note}</span>}{(c.address || c.ico || c.birth) && <span className="block text-xs font-normal text-slate-500">{[c.address, c.ico && `IČO ${c.ico}`, c.dic && `DIČ ${c.dic}`, c.birth && `nar. ${fmtBirth(c.birth)}`].filter(Boolean).join(' · ')}</span>}</td>
                                         <td className="px-3 py-2.5 text-slate-700">{[c.email, c.phone].filter(Boolean).join(' · ') || '–'}</td>
                                         <td className="px-3 py-2.5 text-slate-700">{mine.length ? `${mine.filter((m) => m.status === 'open').length} otevřených z ${mine.length}` : '–'}</td>
                                         <td className="px-3 py-2.5"><input defaultValue={c.hourly_rate ?? ''} key={`${c.id}-${c.hourly_rate}`} onBlur={(e) => void saveRate(c, e.target.value)} inputMode="decimal" aria-label={`Sazba ${c.name}`} className="w-24 rounded-lg border border-slate-300 px-2 py-1 text-sm" /></td>
@@ -142,7 +149,7 @@ export default function LawyerClients() {
                                             <ClientSummary client={c} />
                                             <div className="mb-2"><AresPicker compact onPick={(c) => setEdit((f) => ({ ...f, name: c.name, ico: c.ico, dic: c.dic, address: c.address }))} label="Najít firmu v ARES a přepsat údaje" /></div>
                                             <div className="grid gap-2 sm:grid-cols-6">
-                                                {([['name', 'Jméno', 2], ['email', 'E-mail', 2], ['phone', 'Telefon', 1], ['rate', 'Sazba Kč/h', 1], ['address', 'Adresa', 3], ['ico', 'IČO', 1], ['dic', 'DIČ', 1], ['note', 'Poznámka', 5]] as const).map(([k, label, span]) => <label key={k} className={`block text-xs font-semibold text-slate-600 sm:col-span-${span}`}>{label}<input value={edit[k]} onChange={(e) => setEdit((f) => ({ ...f, [k]: e.target.value }))} className={`${inputCls} mt-1 font-normal`} /></label>)}
+                                                {([['name', 'Jméno', 2], ['email', 'E-mail', 2], ['phone', 'Telefon', 1], ['rate', 'Sazba Kč/h', 1], ['address', 'Adresa', 3], ['ico', 'IČO', 1], ['dic', 'DIČ', 1], ['birth', 'Datum narození', 1], ['note', 'Poznámka', 4]] as const).map(([k, label, span]) => <label key={k} className={`block text-xs font-semibold text-slate-600 sm:col-span-${span}`}>{label}<input value={edit[k]} onChange={(e) => setEdit((f) => ({ ...f, [k]: e.target.value }))} className={`${inputCls} mt-1 font-normal`} /></label>)}
                                             </div>
                                             <div className="mt-3 flex gap-2"><button type="button" onClick={() => void saveEdit(c)} className={primaryBtn}><Check size={15} /> Uložit</button><button type="button" onClick={() => setEditing(null)} className={ghostBtn}>Zrušit</button></div>
                                         </td></tr>
