@@ -172,7 +172,18 @@ function Connect({ master, onDone, first }: { master: CryptoKey; onDone: () => P
                 <label className={label}>Název (jak se bude zobrazovat)<input value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} maxLength={120} placeholder="např. Kancelář Novák" className={`${inputCls} mt-1 font-normal`} /></label>
                 <label className={label}>Prostředí<select value={form.env} onChange={(e) => setForm((f) => ({ ...f, env: e.target.value as IsdsEnv }))} className={`${inputCls} mt-1 font-normal`}><option value="prod">Ostrý provoz (mojedatovaschranka.cz)</option><option value="test">Testovací (czebox.cz)</option></select></label>
                 <label className={`${label} sm:col-span-2`}>Způsob přihlášení<select value={form.method} onChange={(e) => setForm((f) => ({ ...f, method: e.target.value as 'password' | 'mobile_key' }))} className={`${inputCls} mt-1 font-normal`}><option value="password">Jméno a heslo</option><option value="mobile_key">Mobilní klíč (komunikační kód)</option></select></label>
-                {form.method === 'mobile_key' && <p className="rounded-lg bg-indigo-50 p-3 text-xs leading-relaxed text-indigo-950 sm:col-span-2"><Smartphone size={13} className="mr-1 inline" aria-hidden="true" /> V portálu datových schránek otevřete <strong>Nastavení → Možnosti přihlášení → Přihlášení mobilním klíčem</strong>, aktivujte mobilní klíč a stiskněte <strong>Vygenerovat přístupové údaje</strong>. Získaný komunikační kód zadejte níže místo hesla. Při každém přihlášení vám v telefonu přijde oznámení, které potvrdíte.</p>}
+                {form.method === 'mobile_key' && (
+                    <div className="rounded-lg bg-indigo-50 p-3 text-xs leading-relaxed text-indigo-950 sm:col-span-2">
+                        <p className="flex items-center gap-1.5 font-bold"><Smartphone size={13} aria-hidden="true" /> Jak získat komunikační kód (stačí jednou)</p>
+                        <ol className="mt-1.5 list-decimal space-y-1 pl-5">
+                            <li>Přihlaste se do <strong>portálu datových schránek</strong> (mojedatovaschranka.cz), třeba bankovní identitou nebo eObčankou.</li>
+                            <li>Otevřete <strong>Nastavení → Možnosti přihlášení → Přihlášení mobilním klíčem</strong> a mobilní klíč aktivujte (v telefonu aplikace „Mobilní klíč eGovernmentu“).</li>
+                            <li>Na téže stránce stiskněte <strong>Vygenerovat přístupové údaje</strong> a komunikační kód si zkopírujte.</li>
+                            <li>Zadejte ho sem místo hesla spolu s přihlašovacím jménem ke schránce. Při každém přihlášení z Kanceláře vám v telefonu přijde oznámení, které potvrdíte.</li>
+                        </ol>
+                        <p className="mt-1.5 text-indigo-900/80">Bankovní identitu datové schránky pro cizí aplikace nenabízejí, použije se jen k jednorázovému nastavení mobilního klíče.</p>
+                    </div>
+                )}
                 <label className={label}>Přihlašovací jméno *<input value={form.login} onChange={(e) => setForm((f) => ({ ...f, login: e.target.value }))} required autoComplete="off" className={`${inputCls} mt-1 font-normal`} /></label>
                  <label className={label}>{form.method === 'mobile_key' ? 'Komunikační kód *' : 'Heslo *'}<input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} required autoComplete="new-password" className={`${inputCls} mt-1 font-normal`} /></label>
             </div>
