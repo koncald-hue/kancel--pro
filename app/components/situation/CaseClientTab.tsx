@@ -97,8 +97,9 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
 
     async function createLink() {
         try {
-            const e2ee = !!master;
-            const k = e2ee ? await generateKey() : null;
+            if (!master) throw new Error('Nejdřív nastavte nebo odemkněte šifrovací heslo.');
+            const e2ee = true;
+            const k = await generateKey();
             const row = await insertRow<Link>('client_links', { case_id: item.id, user_id: userId, token: generateToken(), label: item.title, expires_at: plusDays(90), e2ee, wrapped_key: k && master ? await wrapKey(master, k) : null });
             setLink(row); setStatus(row.status_text);
         } catch (err) { fail(err); }
@@ -202,8 +203,8 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                         ) : !link || !active ? (
                             <div className="mt-3">
                                 {link && !active && <p className="mb-2 text-sm font-semibold text-rose-800">{link.revoked ? 'Odkaz je zrušený.' : 'Platnost odkazu vypršela.'}</p>}
-                                <button type="button" onClick={() => void createLink()} className={primaryBtn}><Plus size={16} /> Vytvořit odkaz pro klienta</button>
-                                {!master && <p className="mt-2 text-xs text-slate-500">Tip: nejdřív odemkněte šifrování, ať je komunikace end-to-end šifrovaná hned od začátku.</p>}
+                                <button type="button" onClick={() => void createLink()} disabled={!master} className={primaryBtn}><Plus size={16} /> Vytvořit odkaz pro klienta</button>
+                                {!master && <p className="mt-2 rounded-lg bg-amber-50 p-2.5 text-xs text-amber-950">Komunikace s klientem je end-to-end šifrovaná, proto nejdřív <strong>nastavte (nebo odemkněte) šifrovací heslo</strong> v rámečku výše. Je to jednorázové a zabere minutu.</p>}
                             </div>
                         ) : (
                             <div className="mt-3 space-y-3">

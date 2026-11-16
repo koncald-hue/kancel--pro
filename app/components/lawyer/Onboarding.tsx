@@ -8,7 +8,6 @@ import { toIban } from '@/lib/qrPayment';
 import { onboardingSteps } from '@/lib/onboarding';
 import type { LawyerAccess } from '@/lib/lawyer';
 import { inputCls, primaryBtn } from '../situation/caseUi';
-import E2eeBox from '../situation/E2eeBox';
 import ProfileForm from './ProfileForm';
 import AresPicker from './AresPicker';
 
@@ -39,7 +38,7 @@ export default function Onboarding({ access, onChanged }: { access: LawyerAccess
         <div className="mx-auto max-w-2xl px-4 py-12">
             <Briefcase size={30} className="text-indigo-700" aria-hidden="true" />
             <h1 className="mt-3 text-3xl font-bold text-slate-900">První krok: nastavte svůj účet</h1>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">Než začnete Kancelář používat, vyplňte prosím všechny údaje níže. Klientům se zobrazují na jejich stránce, objevují se na vašich vyúčtováních a bez šifrovacího hesla nelze vytvořit klientskou stránku. Zabere to pár minut a děláte to jen jednou.</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">Než začnete Kancelář používat, vyplňte prosím údaje níže. Klientům se zobrazují na jejich stránce a objevují se na vašich vyúčtováních. Zabere to pár minut a děláte to jen jednou. Šifrovací heslo nastavíte až ve chvíli, kdy poprvé vytvoříte klientskou stránku.</p>
             <ol className="mt-5 space-y-2" aria-label="Postup">
                 {steps.map((s, i) => (
                     <li key={s.id} className={`flex items-start gap-3 rounded-xl border p-3 text-sm ${s.done ? 'border-emerald-200 bg-emerald-50' : s.id === current?.id ? 'border-indigo-300 bg-indigo-50' : 'border-slate-200 bg-white'}`}>
@@ -66,7 +65,6 @@ export default function Onboarding({ access, onChanged }: { access: LawyerAccess
                 </form>
             )}
 
-            {current?.id === 'sifrovani' && <div className="mt-6"><E2eeBox access={access} onChanged={onChanged} /></div>}
         </div>
     );
 }
