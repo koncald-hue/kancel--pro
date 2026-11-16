@@ -1,10 +1,10 @@
-import JSZip from 'jszip';
+import { buildRichDocx, type DocxOptions } from './docx';
 import type { LegalCase } from './cases';
 import type { LawyerAccess } from './lawyer';
 
 // Vzory dokumentů s poli. Pole se píše do dvojitých složených závorek: {{klient.jmeno}}.
 // Pole, která počítač zná (věc, klient, advokát, datum), se vyplní sama; ostatní (např. {{castka}}) se při vyplňování zeptají.
-export type LawyerTemplate = { id: string; user_id: string; title: string; category: string; body: string; shared: boolean; created_at: string; updated_at: string };
+export type LawyerTemplate = { id: string; user_id: string; title: string; category: string; body: string; shared: boolean; created_at: string; updated_at: string; note?: string; starter_id?: string | null };
 
 export type AutoField = { key: string; label: string; group: 'Klient' | 'Věc' | 'Advokát' | 'Obecné' };
 export const AUTO_FIELDS: AutoField[] = [
@@ -13,6 +13,8 @@ export const AUTO_FIELDS: AutoField[] = [
     { key: 'klient.telefon', label: 'Telefon klienta', group: 'Klient' },
     { key: 'klient.adresa', label: 'Adresa / sídlo klienta', group: 'Klient' },
     { key: 'klient.ico', label: 'IČO klienta', group: 'Klient' },
+    { key: 'klient.identifikace', label: 'IČO, nebo datum narození klienta', group: 'Klient' },
+    { key: 'klient.narozeni', label: 'Datum narození klienta', group: 'Klient' },
     { key: 'klient.dic', label: 'DIČ klienta', group: 'Klient' },
     { key: 'vec.nazev', label: 'Název věci', group: 'Věc' },
     { key: 'vec.spisova_znacka', label: 'Spisová značka / číslo jednací', group: 'Věc' },
@@ -24,6 +26,8 @@ export const AUTO_FIELDS: AutoField[] = [
     { key: 'advokat.adresa', label: 'Adresa kanceláře', group: 'Advokát' },
     { key: 'advokat.telefon', label: 'Telefon advokáta', group: 'Advokát' },
     { key: 'advokat.email', label: 'E-mail advokáta', group: 'Advokát' },
+    { key: 'advokat.ico', label: 'IČO advokáta', group: 'Advokát' },
+    { key: 'advokat.ucet', label: 'Číslo účtu advokáta', group: 'Advokát' },
     { key: 'datum', label: 'Dnešní datum', group: 'Obecné' },
 ];
 const AUTO_KEYS = new Set(AUTO_FIELDS.map((f) => f.key));
@@ -48,12 +52,12 @@ export const customLabel = (key: string) => { const s = key.replace(/_/g, ' '); 
 export const todayCs = (d = new Date()) => `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
 
 // Hodnoty automatických polí z věci a profilu advokáta (co se neví, zůstane prázdné a pole se nechá viditelné)
-export function autoValues(c: Pick<LegalCase, 'title' | 'situation' | 'client_name' | 'client_email' | 'client_phone' | 'reference' | 'authority'> | null, me: Partial<LawyerAccess> | null, now = new Date(), client?: { address?: string; ico?: string; dic?: string } | null): Record<string, string> {
+export function autoValues(c: Pick<LegalCase, 'title' | 'situation' | 'client_name' | 'client_email' | 'client_phone' | 'reference' | 'authority'> | null, me: Partial<LawyerAccess> | null, now = new Date(), client?: { address?: string; ico?: string; dic?: string; birth?: string | null } | null): Record<string, string> {
     return {
-        'klient.jmeno': c?.client_name ?? '', 'klient.email': c?.client_email ?? '', 'klient.telefon': c?.client_phone ?? '', 'klient.adresa': client?.address ?? '', 'klient.ico': client?.ico ?? '', 'klient.dic': client?.dic ?? '',
+        'klient.jmeno': c?.client_name ?? '', 'klient.email': c?.client_email ?? '', 'klient.telefon': c?.client_phone ?? '', 'klient.adresa': client?.address ?? '', 'klient.ico': client?.ico ?? '', 'klient.dic': client?.dic ?? '', 'klient.narozeni': client?.birth ? todayCs(new Date(`${client.birth}T12:00:00`)) : '', 'klient.identifikace': client?.ico ? `IČO ${client.ico}` : client?.birth ? `nar. ${todayCs(new Date(`${client.birth}T12:00:00`))}` : '',
         'vec.nazev': c?.title ?? '', 'vec.spisova_znacka': c?.reference ?? '', 'vec.urad': c?.authority ?? '', 'vec.popis': c?.situation ?? '',
         'advokat.jmeno': me?.display_name ?? '', 'advokat.kancelar': me?.firm_name ?? '', 'advokat.cak': me?.bar_number ?? '', 'advokat.adresa': me?.office ?? '',
-        'advokat.telefon': me?.phone ?? '', 'advokat.email': me?.contact_email || me?.email || '',
+        'advokat.ico': me?.ico ?? '', 'advokat.ucet': me?.bank_account ?? '', 'advokat.telefon': me?.phone ?? '', 'advokat.email': me?.contact_email || me?.email || '',
         datum: todayCs(now),
     };
 }
@@ -70,14 +74,5 @@ export function fillTemplate(body: string, auto: Record<string, string>, custom:
 
 export const missingFields = (filled: string) => fieldsIn(filled);
 
-const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-// Jednoduchý soubor .docx (každý řádek je odstavec); otevře se ve Wordu i v LibreOffice
-export async function buildDocx(text: string): Promise<Blob> {
-    const paragraphs = text.replace(/\r\n/g, '\n').split('\n').map((line) => `<w:p><w:r><w:t xml:space="preserve">${esc(line)}</w:t></w:r></w:p>`).join('');
-    const zip = new JSZip();
-    zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
-    zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
-    zip.file('word/document.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paragraphs}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1417" w:right="1417" w:bottom="1417" w:left="1417" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>`);
-    return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-}
+// Soubor .docx s úpravou stránky, písmem, číslováním stránek a jednoduchým značením (viz lib/docx.ts); otevře se ve Wordu i v LibreOffice
+export const buildDocx = (text: string, opt?: DocxOptions): Promise<Blob> => buildRichDocx(text, opt);

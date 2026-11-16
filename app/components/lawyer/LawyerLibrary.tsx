@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { AUTO_FIELDS, autoValues, buildDocx, customLabel, fieldsIn, fillTemplate, type LawyerTemplate } from '@/lib/templates';
 import { insertRow, uploadCaseFile } from '@/lib/caseFile';
+import { plainPreview } from '@/lib/docx';
+import { STARTER_TEMPLATES } from '@/lib/starterTemplates';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
@@ -78,11 +80,12 @@ export default function LawyerLibrary() {
                 <p className="max-w-2xl text-sm leading-relaxed text-slate-600">Vlastní vzory podání, smluv a dopisů. Do textu vložíte pole a počítač je vyplní z věci, klienta a vašeho profilu.</p>
                 <button type="button" onClick={() => setView({ mode: 'edit', id: null })} className={primaryBtn}><Plus size={16} /> Nový vzor</button>
             </div>
+            <StarterPack items={items} userId={userId} onAdded={reload} />
             <details className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 text-sm leading-relaxed text-slate-700">
                 <summary className="cursor-pointer font-bold text-indigo-900">Jak vytvořit vzor dokumentu (návod)</summary>
                 <ol className="mt-3 list-decimal space-y-2 pl-5">
                     <li>Klikněte na <strong>Nový vzor</strong>, pojmenujte ho a případně zadejte kategorii (např. Dopisy, Podání, Smlouvy).</li>
-                    <li>Do pole <strong>Text vzoru</strong> vložte hotový dokument, třeba zkopírovaný z Wordu. Formátování (tučné písmo, tabulky) se nepřenáší, vzor je čistý text; dokument si po stažení ve Wordu doformátujete.</li>
+                    <li>Do pole <strong>Text vzoru</strong> vložte hotový dokument, třeba zkopírovaný z Wordu. Jednoduché značení se do Wordu převede samo: řádek začínající <code className="rounded bg-white px-1">#</code> je nadpis dokumentu, <code className="rounded bg-white px-1">##</code> nadpis článku, <code className="rounded bg-white px-1">1.</code> číslovaný odstavec, <code className="rounded bg-white px-1">**text**</code> tučně, <code className="rounded bg-white px-1">| a | b |</code> tabulka a <code className="rounded bg-white px-1">::podpisy Klient | Advokát</code> místa pro podpis. Ostatní formátování si ve Wordu doupravíte.</li>
                     <li>Místa, která se u každého klienta mění, nahraďte <strong>poli</strong>. Klikněte na místo v textu a v pravém panelu zvolte pole, nebo ho napište rukou ve dvojitých složených závorkách, např. <code className="rounded bg-white px-1">{'{{klient.jmeno}}'}</code>.</li>
                     <li><strong>Pole, která vyplní počítač sám</strong> (z věci, klienta a vašeho profilu): klient (jméno, e-mail, telefon, adresa, IČO, DIČ), věc (název, spisová značka, soud či úřad, popis), advokát (jméno, kancelář, číslo ČAK, adresa, telefon, e-mail) a dnešní datum. Údaje o věci a klientovi se berou z karty věci, vyplňte je tam.</li>
                     <li><strong>Vlastní pole</strong> pro cokoli jiného: napište např. <code className="rounded bg-white px-1">{'{{castka}}'}</code> nebo <code className="rounded bg-white px-1">{'{{datum_splatnosti}}'}</code>. Při vyplňování se na ně program zeptá. Název pište bez mezer (místo mezery podtržítko), stejné pole použité víckrát se zadává jen jednou.</li>
@@ -189,7 +192,7 @@ function Editor({ template, userId, onDone, onCancel }: { template: LawyerTempla
 
 function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; access: ReturnType<typeof useLawyer>['access']; userId: string; onBack: () => void }) {
     const [cases, setCases] = useState<LegalCase[]>([]);
-    const [clients, setClients] = useState<{ id: string; address?: string; ico?: string; dic?: string }[]>([]);
+    const [clients, setClients] = useState<{ id: string; address?: string; ico?: string; dic?: string; birth?: string | null }[]>([]);
     const [caseId, setCaseId] = useState('');
     const [custom, setCustom] = useState<Record<string, string>>({});
     const [override, setOverride] = useState<Record<string, string>>({});
@@ -198,7 +201,7 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
     const [saving, setSaving] = useState(false);
     const fields = useMemo(() => fieldsIn(template.body), [template.body]);
 
-    useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => {}); supabase.from('lawyer_clients').select('id, address, ico, dic').then(({ data }) => { if (alive && data) setClients(data); }); return () => { alive = false; }; }, []);
+    useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => {}); supabase.from('lawyer_clients').select('id, address, ico, dic, birth').then(({ data }) => { if (alive && data) setClients(data); }); return () => { alive = false; }; }, []);
 
     const chosen = cases.find((c) => c.id === caseId) ?? null;
     const auto = useMemo(() => ({ ...autoValues(chosen, access, undefined, clients.find((c) => c.id === chosen?.client_id)), ...override }), [chosen, access, override, clients]);
@@ -233,7 +236,7 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
         const w = window.open('', '_blank');
         if (!w) return;
         const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-        w.document.write(`<!doctype html><meta charset="utf-8"><title>${esc(template.title)}</title><pre style="font:14px/1.6 Georgia,serif;white-space:pre-wrap;max-width:44rem;margin:2rem auto">${esc(text)}</pre>`);
+        w.document.write(`<!doctype html><meta charset="utf-8"><title>${esc(template.title)}</title><pre style="font:14px/1.6 Georgia,serif;white-space:pre-wrap;max-width:44rem;margin:2rem auto">${esc(plainPreview(text))}</pre>`);
         w.document.close(); w.print();
     }
 
@@ -257,8 +260,9 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
                     ))}
                 </div>
                 <div className="min-w-0">
+                    {template.note && <details className="mb-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950"><summary className="cursor-pointer font-bold">Co zkontrolovat před použitím</summary><p className="mt-1.5">{template.note}</p></details>}
                     {remaining.length > 0 && <p className="mb-2 rounded-lg bg-amber-50 p-2.5 text-xs font-semibold text-amber-900">Zbývá doplnit: {remaining.join(', ')}. V textu jsou vidět jako {'{{pole}}'}.</p>}
-                    <pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words rounded-2xl border border-slate-200 bg-white p-5 font-serif text-[14px] leading-relaxed text-slate-900">{text}</pre>
+                    <pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words rounded-2xl border border-slate-200 bg-white p-5 font-serif text-[14px] leading-relaxed text-slate-900">{plainPreview(text)}</pre>
                     <div className="mt-3 flex flex-wrap gap-2">
                         <button type="button" onClick={() => void download()} className={primaryBtn}><Download size={15} /> Stáhnout Word (.docx)</button>
                         <button type="button" onClick={() => void copy()} className={ghostBtn}><Copy size={14} /> {copied ? 'Zkopírováno' : 'Kopírovat text'}</button>
@@ -270,5 +274,31 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
                 </div>
             </div>
         </div>
+    );
+}
+
+// Základní sada vzorů: přidá do knihovny advokáta kopie, které si může upravit
+function StarterPack({ items, userId, onAdded }: { items: LawyerTemplate[]; userId: string; onAdded: () => Promise<void> }) {
+    const have = new Set(items.filter((t) => t.user_id === userId && t.starter_id).map((t) => t.starter_id));
+    const missing = STARTER_TEMPLATES.filter((t) => !have.has(t.id));
+    const [busy, setBusy] = useState(false);
+    const [msg, setMsg] = useState('');
+    if (missing.length === 0) return null;
+    async function add() {
+        setBusy(true); setMsg('');
+        const { error } = await supabase.from('lawyer_templates').insert(missing.map((t) => ({ user_id: userId, title: t.title, category: t.category, body: t.body, shared: false, starter_id: t.id, note: t.note })));
+        setBusy(false);
+        if (error) { setMsg(/starter_id|note|schema cache/i.test(error.message) ? 'Základní sada zatím není v databázi zapnutá (chybí spuštění souboru vzory.sql).' : error.message); return; }
+        await onAdded();
+    }
+    return (
+        <section className="rounded-2xl border border-indigo-200 bg-white p-5" aria-label="Základní sada vzorů">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Library size={18} className="text-indigo-700" aria-hidden="true" /> Základní sada vzorů ({missing.length})</h2>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">Hotové obecné vzory pro běžnou praxi: smlouva o právních službách, plné moci, informace o osobních údajích, souhlas s elektronickou komunikací, záznam o poradě, předávací protokol, předžalobní výzva, odstoupení od smlouvy, uznání dluhu a splátky, oznámení o zastoupení, žádost o informace a další. Pole se vyplní z věci a klienta a výstup je upravený Word s číslováním stránek a místy pro podpis.</p>
+            <ul className="mt-3 grid gap-x-6 gap-y-1 text-sm text-slate-700 sm:grid-cols-2">{missing.map((t) => <li key={t.id} className="truncate">• {t.title}</li>)}</ul>
+            <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">Vzory jsou obecné a slouží jako výchozí bod, nenahrazují právní posouzení konkrétní věci. U každého je poznámka „Co zkontrolovat před použitím“. Za použití vzoru a jeho obsah odpovídá advokát. Do vlastní knihovny se zkopírují a můžete je libovolně upravit.</p>
+            <button type="button" onClick={() => void add()} disabled={busy} className={`${primaryBtn} mt-3`}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Přidat do mé knihovny</button>
+            {msg && <p role="alert" className="mt-2 text-sm text-rose-800">{msg}</p>}
+        </section>
     );
 }
