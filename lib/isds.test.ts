@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decodeMessageText, cookieSafe, cookieValue, loginUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
+import { firstCookie, decodeMessageText, cookieSafe, cookieValue, loginUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
 
 // Ukázkové odpovědi jsou sestavené podle dokumentace ISDS, ne z ostrého provozu.
 const LIST = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><p:GetListOfReceivedMessagesResponse xmlns:p="http://isds.czechpoint.cz/v20"><p:dmRecords><p:dmRecord><p:dmID>123</p:dmID><p:dbIDSender>abc1234</p:dbIDSender><p:dmSender>Městský soud &amp; spol.</p:dmSender><p:dmRecipient>JUDr. Novák</p:dmRecipient><p:dmAnnotation>Usnesení</p:dmAnnotation><p:dmMessageStatus>3</p:dmMessageStatus><p:dmAttachmentSize>12</p:dmAttachmentSize><p:dmDeliveryTime>2026-11-10T10:00:00</p:dmDeliveryTime></p:dmRecord><p:dmRecord><p:dmID>124</p:dmID><p:dmSender>FÚ</p:dmSender><p:dmMessageStatus>5</p:dmMessageStatus></p:dmRecord></p:dmRecords><p:dmStatus><p:dmStatusCode>0000</p:dmStatusCode><p:dmStatusMessage>OK</p:dmStatusMessage></p:dmStatus></p:GetListOfReceivedMessagesResponse></s:Body></s:Envelope>`;
@@ -67,5 +67,10 @@ describe('ISDS', () => {
     it('decodes the ISDS message header', () => {
         expect(decodeMessageText('=?UTF-8?B?Q2h5YmEgcMWZaWhsw6HFoWVuw60sIHpub3Z1IHphZGVqdGUgw7pkYWplLg==?=')).toBe('Chyba přihlášení, znovu zadejte údaje.');
         expect(decodeMessageText(null)).toBe('');
+    });
+    it('finds the first-step cookie under either name without confusing similar names', () => {
+        expect(firstCookie(['IPCZ-S-COOKIE=abcdefgh1; Path=/'], ['IPCZ-S-COOKIE', 'S-COOKIE'])).toEqual({ name: 'IPCZ-S-COOKIE', value: 'abcdefgh1' });
+        expect(firstCookie(['S-COOKIE=zzzzzzzz2; Path=/'], ['IPCZ-S-COOKIE', 'S-COOKIE'])).toEqual({ name: 'S-COOKIE', value: 'zzzzzzzz2' });
+        expect(firstCookie(['IPCZ-X-COOKIE=x'], ['S-COOKIE'])).toBeNull();
     });
 });

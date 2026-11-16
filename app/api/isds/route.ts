@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimited } from '@/lib/serverSupabase';
-import { USER_AGENT, basicHeader, decodeMessageText, cookieSafe, cookieValue, callIsds, loginUrl, logoutUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isFault, isOk, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf, type Auth, type Credentials, type IsdsEnv } from '@/lib/isds';
+import { USER_AGENT, S_COOKIE_NAMES, basicHeader, decodeMessageText, firstCookie, cookieSafe, cookieValue, callIsds, loginUrl, logoutUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isFault, isOk, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf, type Auth, type Credentials, type IsdsEnv } from '@/lib/isds';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
@@ -29,28 +29,30 @@ export async function POST(req: Request) {
 
     // Přihlášení Mobilním klíčem (komunikační kód): tři kroky, mezi nimi potvrzuje uživatel v telefonu
     if (typeof action === 'string' && action.startsWith('mk_')) {
-        const sCookie = clean(body.sCookie, 2000);
+        const sCookie = clean(body.sCookie, 4000);
+        const sName = (S_COOKIE_NAMES as readonly string[]).includes(String(body.sName)) ? String(body.sName) : 'IPCZ-S-COOKIE';
         const hdr = { 'User-Agent': USER_AGENT };
         try {
             if (action === 'mk_start' || action === 'mk_finish') {
                 if (!cred.login || !cred.password) return NextResponse.json({ error: 'bad_request', message: 'Chybí přihlašovací jméno nebo komunikační kód.' }, { status: 400 });
                 if (action === 'mk_finish' && !cookieSafe(sCookie)) return NextResponse.json({ error: 'bad_request' }, { status: 400 });
-                const res = await fetch(loginUrl(env), { method: 'POST', redirect: 'manual', headers: { ...hdr, Authorization: basicHeader(cred), ...(action === 'mk_finish' ? { Cookie: `S-COOKIE=${sCookie}` } : {}) }, cache: 'no-store', signal: AbortSignal.timeout(30_000) });
+                const res = await fetch(loginUrl(env), { method: 'POST', redirect: 'manual', headers: { ...hdr, Authorization: basicHeader(cred), ...(action === 'mk_finish' ? { Cookie: `${sName}=${sCookie}` } : {}) }, cache: 'no-store', signal: AbortSignal.timeout(30_000) });
                 if (res.status === 401) { const t = decodeMessageText(res.headers.get('x-response-message-text')); return NextResponse.json({ error: 'isds_auth', message: `Přihlášení odmítnuto${t ? ` („${t}“)` : ''}. Zkontrolujte jméno a komunikační kód a zda je u účtu aktivní Mobilní klíč.` }, { status: 401, headers: NO_STORE }); }
                 const cookies = res.headers.getSetCookie();
-                const value = cookieValue(cookies, action === 'mk_start' ? 'S-COOKIE' : 'IPCZ-X-COOKIE');
-                if (!value || !cookieSafe(value)) {
+                const found = action === 'mk_start' ? firstCookie(cookies, S_COOKIE_NAMES) : (() => { const v = cookieValue(cookies, 'IPCZ-X-COOKIE'); return v ? { name: 'IPCZ-X-COOKIE', value: v } : null; })();
+                const value = found?.value ?? null;
+                if (!found || !value || !cookieSafe(value)) {
                     // Co přesně datové schránky vrátily (jen stavový kód, text hlášení a názvy cookie, nikdy hodnoty)
                     const text = decodeMessageText(res.headers.get('x-response-message-text'));
                     const names = cookies.map((c) => c.split('=')[0]).join(', ') || 'žádné';
                     console.warn(`[isds] ${action}: HTTP ${res.status}, cookies: ${names}, message: ${text}`);
                     return NextResponse.json({ error: 'upstream', message: `Datové schránky nevrátily přihlašovací cookie (HTTP ${res.status}${text ? `, „${text}“` : ''}; cookie: ${names}).` }, { status: 502, headers: NO_STORE });
                 }
-                return NextResponse.json(action === 'mk_start' ? { sCookie: value } : { session: value }, { headers: NO_STORE });
+                return NextResponse.json(action === 'mk_start' ? { sCookie: value, sName: found.name } : { session: value }, { headers: NO_STORE });
             }
             if (action === 'mk_poll') {
                 if (!cookieSafe(sCookie)) return NextResponse.json({ error: 'bad_request' }, { status: 400 });
-                const res = await fetch(stateUrl(env), { headers: { ...hdr, Cookie: `S-COOKIE=${sCookie}` }, redirect: 'manual', cache: 'no-store', signal: AbortSignal.timeout(20_000) });
+                const res = await fetch(stateUrl(env), { headers: { ...hdr, Cookie: `${sName}=${sCookie}` }, redirect: 'manual', cache: 'no-store', signal: AbortSignal.timeout(20_000) });
                 return NextResponse.json({ state: parseMkState(await res.text()) }, { headers: NO_STORE });
             }
             if (action === 'mk_end') {

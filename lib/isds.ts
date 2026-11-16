@@ -95,6 +95,13 @@ export const appsUrl = (env: IsdsEnv, service: IsdsService) => `https://${HOSTS[
 
 export const basicHeader = (c: Credentials) => `Basic ${Buffer.from(`${c.login}:${c.password}`).toString('base64')}`;
 
+// Cookie z prvního kroku se ve skutečnosti jmenuje IPCZ-S-COOKIE (dokument uvádí S-COOKIE), proto se přijímají oba názvy
+export const S_COOKIE_NAMES = ['IPCZ-S-COOKIE', 'S-COOKIE'] as const;
+export function firstCookie(setCookies: string[], names: readonly string[]): { name: string; value: string } | null {
+    for (const name of names) { const value = cookieValue(setCookies, name); if (value) return { name, value }; }
+    return null;
+}
+
 // Hodnota cookie podle jména z hlaviček Set-Cookie
 export function cookieValue(setCookies: string[], name: string): string | null {
     for (const line of setCookies) {

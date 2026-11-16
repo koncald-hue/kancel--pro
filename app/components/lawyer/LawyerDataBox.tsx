@@ -37,17 +37,18 @@ async function mkLogin(env: IsdsEnv, cred: Cred, onWait: (w: boolean) => void): 
     const start = await api({ action: 'mk_start', env, login: cred.login, password: cred.password });
     if (!start.ok) return { ok: false, res: start };
     const sCookie = String(start.json.sCookie ?? '');
+    const sName = String(start.json.sName ?? '');
     onWait(true);
     try {
         for (let i = 0; i < 75; i++) {
             await sleep(2000);
-            const st = await api({ action: 'mk_poll', env, sCookie });
+            const st = await api({ action: 'mk_poll', env, sCookie, sName });
             const state = String(st.json.state ?? '');
             if (state === 'confirmed') break;
             if (state === 'expired' || state === 'error' || i === 74) return { ok: false, res: { ok: false, status: 408, json: { message: state === 'expired' ? 'Potvrzení v aplikaci Mobilní klíč vypršelo. Zkuste to znovu.' : 'Přihlášení nebylo potvrzeno v aplikaci Mobilní klíč.' } } };
         }
     } finally { onWait(false); }
-    const fin = await api({ action: 'mk_finish', env, login: cred.login, password: cred.password, sCookie });
+    const fin = await api({ action: 'mk_finish', env, login: cred.login, password: cred.password, sCookie, sName });
     return fin.ok ? { ok: true, session: String(fin.json.session ?? '') } : { ok: false, res: fin };
 }
 
