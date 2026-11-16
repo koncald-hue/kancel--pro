@@ -1,7 +1,7 @@
 // End-to-end šifrování komunikace advokáta s klientem (WebCrypto, AES-256-GCM).
 // Klíče vznikají a zůstávají v prohlížečích. Server a databáze vidí jen zašifrovaná data.
 //
-//  hlavní klíč advokáta  = náhodný klíč, zabalený heslem kanceláře (PBKDF2) a záložně záchranným kódem
+//  hlavní klíč advokáta  = náhodný klíč, zabalený osobním šifrovacím heslem (PBKDF2) a záložně záchranným kódem
 //  klíč odkazu (věci)    = náhodný klíč, zabalený hlavním klíčem a uložený u odkazu
 //  odkaz pro klienta     = https://…/klient/<token>#k=<klíč odkazu>; část za # se na server nikdy neodesílá
 
@@ -56,7 +56,7 @@ export async function decryptText(key: CryptoKey, text: string): Promise<string>
     return td.decode(await decryptBytes(key, fromB64u(text.slice(PREFIX.length))));
 }
 
-// Hlavní klíč a heslo kanceláře
+// Hlavní klíč a osobní šifrovací heslo
 async function deriveKek(passphrase: string, salt: Uint8Array, iterations = KDF_ITERATIONS): Promise<CryptoKey> {
     const base = await subtle().importKey('raw', te.encode(passphrase.normalize('NFKC')), 'PBKDF2', false, ['deriveKey']);
     return subtle().deriveKey({ name: 'PBKDF2', salt: toBuf(salt), iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);

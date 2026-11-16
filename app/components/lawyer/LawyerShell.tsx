@@ -23,7 +23,14 @@ const ALL: Item[] = [...GROUPS.flatMap((g) => g.items), SETTINGS];
 
 function Inner({ active, children }: { active: LawyerSection; children: React.ReactNode }) {
     const { access } = useLawyer();
-    const { isStaff, logout } = useAuth();
+    const { account, isStaff, logout } = useAuth();
+    // Název kanceláře, ve které jsem členem, a moje role
+    const [firm, setFirm] = useState<{ name: string; role: 'owner' | 'member' } | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        supabase.rpc('firm_overview').then(({ data, error }) => { const f = (data as { firm?: { name: string; role: 'owner' | 'member' } } | null)?.firm; if (!cancelled && !error && f) setFirm({ name: f.name, role: f.role }); });
+        return () => { cancelled = true; };
+    }, []);
     const [open, setOpen] = useState(false);
     // Počet nepřečtených zpráv v chatu kanceláře (když chat ještě není zapnutý, odznak se nezobrazí)
     const [unread, setUnread] = useState(0);
@@ -40,7 +47,9 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
     }, []);
 
     const current = ALL.find(([id]) => id === active);
-    const name = access.display_name || access.firm_name || 'Můj pracovní prostor';
+    // Vždy jméno přihlášeného uživatele; teprve když chybí, e-mail
+    const name = access.display_name || account?.email || 'Můj pracovní prostor';
+    const subtitle = firm ? `${firm.name} · ${firm.role === 'owner' ? 'vedoucí' : 'člen'}` : access.firm_name || 'Kancelář';
 
     const link = ([id, href, label, Icon]: Item) => (
         <Link key={id} href={href} onClick={() => setOpen(false)} aria-current={active === id ? 'page' : undefined}
@@ -57,7 +66,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                 <span className="rounded-xl bg-indigo-600 p-2 text-white"><Scale size={18} aria-hidden="true" /></span>
                 <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-slate-900">{name}</p>
-                    <p className="truncate text-xs text-slate-500">{access.display_name && access.firm_name ? access.firm_name : 'Kancelář'}</p>
+                    <p className="truncate text-xs text-slate-500">{subtitle}</p>
                 </div>
             </div>
             <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="Části kanceláře">

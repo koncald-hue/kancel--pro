@@ -22,7 +22,7 @@ export default function E2eeBox({ access, onChanged }: { access: LawyerAccess | 
     const [busy, setBusy] = useState(false);
 
     async function setup() {
-        if (pass.length < 10) { setError('Heslo kanceláře musí mít aspoň 10 znaků.'); return; }
+        if (pass.length < 10) { setError('Šifrovací heslo musí mít aspoň 10 znaků.'); return; }
         if (pass !== pass2) { setError('Hesla se neshodují.'); return; }
         setBusy(true); setError('');
         try {
@@ -67,20 +67,27 @@ export default function E2eeBox({ access, onChanged }: { access: LawyerAccess | 
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="End-to-end šifrování">
             <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900"><ShieldCheck size={18} className="text-indigo-800" /> End-to-end šifrování</h3>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">Zprávy a soubory mezi vámi a klientem se zašifrují ve vašem prohlížeči. Server, správce webu ani poskytovatel databáze je nepřečtou. Klíč se vám ukládá jen v zašifrované podobě a odemyká se heslem kanceláře.</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">Zprávy a soubory mezi vámi a klientem se zašifrují ve vašem prohlížeči. Server, správce webu ani poskytovatel databáze je nepřečtou. Klíč se vám ukládá jen v zašifrované podobě a odemyká se vaším šifrovacím heslem.</p>
             {!configured ? (
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Heslo kanceláře (min. 10 znaků)" autoComplete="new-password" className={inputCls} aria-label="Heslo kanceláře" />
+                    <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Šifrovací heslo (min. 10 znaků)" autoComplete="new-password" className={inputCls} aria-label="Šifrovací heslo" />
                     <input type="password" value={pass2} onChange={(e) => setPass2(e.target.value)} placeholder="Heslo znovu" autoComplete="new-password" className={inputCls} aria-label="Heslo znovu" />
-                    <p className="text-xs text-slate-500 sm:col-span-2">Toto heslo je jiné než heslo k účtu a nelze ho obnovit. Dostanete záchranný kód.</p>
+                    <div role="alert" className="rounded-xl border-2 border-rose-300 bg-rose-50 p-4 text-sm leading-relaxed text-rose-950 sm:col-span-2">
+                        <p className="font-bold">Toto heslo si musíte pamatovat. Nelze ho obnovit.</p>
+                        <ul className="mt-1.5 list-disc space-y-1 pl-5">
+                            <li>Šifrovací heslo si nastavuje <strong>každý uživatel sám za sebe</strong>. Nezná ho vedoucí kanceláře, provozovatel ani nikdo jiný, proto je ani nikdo nemůže resetovat.</li>
+                            <li>Je jiné než heslo k účtu (to jde obnovit e-mailem).</li>
+                            <li>Když ho zapomenete, pomůže jen <strong>záchranný kód</strong>, který dostanete hned po nastavení. Bez hesla i kódu budou vaše zašifrované zprávy a soubory <strong>nenávratně ztracené</strong>.</li>
+                        </ul>
+                    </div>
                     <button type="button" onClick={() => void setup()} disabled={busy} className={`${primaryBtn} sm:col-span-2 justify-center`}><Lock size={16} /> Nastavit šifrování</button>
                 </div>
             ) : (
                 <div className="mt-3 space-y-2">
-                    {useRecovery ? <input value={recovery} onChange={(e) => setRecovery(e.target.value)} placeholder="Záchranný kód" className={inputCls} aria-label="Záchranný kód" /> : <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Heslo kanceláře" autoComplete="current-password" className={inputCls} aria-label="Heslo kanceláře" onKeyDown={(e) => { if (e.key === 'Enter') void unlock(); }} />}
+                    {useRecovery ? <input value={recovery} onChange={(e) => setRecovery(e.target.value)} placeholder="Záchranný kód" className={inputCls} aria-label="Záchranný kód" /> : <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Šifrovací heslo" autoComplete="current-password" className={inputCls} aria-label="Šifrovací heslo" onKeyDown={(e) => { if (e.key === 'Enter') void unlock(); }} />}
                     <div className="flex flex-wrap items-center gap-3">
                         <button type="button" onClick={() => void unlock()} disabled={busy} className={primaryBtn}><LockOpen size={16} /> Odemknout</button>
-                        <button type="button" onClick={() => { setUseRecovery((v) => !v); setError(''); }} className={ghostBtn}>{useRecovery ? 'Použít heslo kanceláře' : 'Zapomenuté heslo kanceláře? Použít záchranný kód'}</button>
+                        <button type="button" onClick={() => { setUseRecovery((v) => !v); setError(''); }} className={ghostBtn}>{useRecovery ? 'Použít šifrovací heslo' : 'Zapomenuté šifrovací heslo? Použít záchranný kód'}</button>
                     </div>
                 </div>
             )}

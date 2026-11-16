@@ -39,13 +39,13 @@ export default function Page() {
                 <Sub>
                     <li>šifrování přenosu (TLS) mezi prohlížečem a Službou;</li>
                     <li>end-to-end šifrování chatu a sdílení (zprávy, soubory, věci, klienti) mezi členy Kanceláře: obsah se šifruje klíčem odesílatele a příjemce, soukromé klíče členů jsou uložené jen zašifrované jejich hlavním klíčem;</li>
-                    <li>end-to-end šifrování zpráv a souborů ve sdíleném kanálu s klientem: klíč je jen u Správce (chráněn heslem kanceláře a záložním kódem) a v klientském odkazu, <strong>Zpracovatel k němu nemá přístup</strong>;</li>
+                    <li>end-to-end šifrování zpráv a souborů ve sdíleném kanálu s klientem: klíč je jen u Správce (chráněn osobním šifrovacím heslem a záložním kódem) a v klientském odkazu, <strong>Zpracovatel k němu nemá přístup</strong>;</li>
                     <li>oddělení dat jednotlivých zákazníků pravidly přístupu na úrovni databáze (každý uživatel vidí jen své záznamy);</li>
                     <li>omezení přístupu Zpracovatele k Údajům na osoby, které je nezbytně potřebují, a ochranu přístupových klíčů a tajných údajů;</li>
                     <li>šifrované uložení dat u poskytovatele infrastruktury.</li>
                 </Sub>
                 <Cl n="5.2">Ostatní Údaje (např. názvy věcí, poznámky, chronologie, lhůty, údaje o klientech) end-to-end šifrovány nejsou. Jsou chráněny opatřeními uvedenými výše a Zpracovatel k nim může mít technický přístup; využije jej jen v nezbytném rozsahu pro provoz, podporu a zabezpečení Služby.</Cl>
-                <Cl n="5.3">Správce odpovídá za zabezpečení svých přístupových údajů, hesla kanceláře a záložního kódu a za nastavení sdílení vůči klientům (co klient vidí).</Cl>
+                <Cl n="5.3">Správce odpovídá za zabezpečení svých přístupových údajů, šifrovacího hesla a záložního kódu a za nastavení sdílení vůči klientům (co klient vidí).</Cl>
             </Section>
 
             <Section n={6} title="Porušení zabezpečení">

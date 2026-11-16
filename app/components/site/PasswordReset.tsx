@@ -52,7 +52,7 @@ export default function PasswordReset() {
                         <div><label htmlFor="new-password2" className="mb-1 block text-sm font-semibold text-slate-800">Heslo znovu</label><input id="new-password2" type="password" required autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-200" /></div>
                         {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
                         <button type="submit" disabled={busy} className="w-full rounded-xl bg-indigo-700 py-3 text-sm font-bold text-white hover:bg-indigo-800 disabled:opacity-60">{busy ? 'Ukládám…' : 'Nastavit nové heslo'}</button>
-                        <p className="text-xs leading-relaxed text-slate-500">Toto je heslo k účtu. Heslo kanceláře k šifrování zpráv a souborů je jiné a touto cestou se neobnovuje (k tomu slouží záchranný kód).</p>
+                        <p className="text-xs leading-relaxed text-slate-500">Toto je heslo k účtu. Šifrovací heslo k zprávám a souborům je jiné a touto cestou se neobnovuje (k tomu slouží záchranný kód).</p>
                     </form>
                 )}
                 {state === 'done' && (

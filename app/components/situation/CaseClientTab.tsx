@@ -208,7 +208,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                         ) : (
                             <div className="mt-3 space-y-3">
                                 {mustUnlock ? (
-                                    <p className="rounded-xl border border-indigo-300 bg-white p-3 text-sm text-indigo-950">Odkaz je šifrovaný. Odemkněte šifrování heslem kanceláře nahoře, jinak odkaz s klíčem nelze zobrazit.</p>
+                                    <p className="rounded-xl border border-indigo-300 bg-white p-3 text-sm text-indigo-950">Odkaz je šifrovaný. Odemkněte šifrování svým šifrovacím heslem nahoře, jinak odkaz s klíčem nelze zobrazit.</p>
                                 ) : (
                                     <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 pl-3">
                                         <code className="min-w-0 flex-1 truncate text-xs text-slate-700">{url}</code>

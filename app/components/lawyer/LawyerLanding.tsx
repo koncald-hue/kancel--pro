@@ -87,7 +87,7 @@ export default function LawyerLanding() {
                         <span className="inline-flex w-fit rounded-2xl bg-white/10 p-4 text-indigo-300"><ShieldCheck size={30} aria-hidden="true" /></span>
                         <div>
                             <h3 className="text-xl font-bold">Postavené na ochraně důvěrných údajů</h3>
-                            <p className="mt-2 text-sm leading-relaxed text-slate-300"><Lock size={13} className="mr-1 inline" aria-hidden="true" />Zprávy a soubory s klientem jsou end-to-end šifrované: klíč je jen v odkazu a v heslu kanceláře. Každý uživatel má vyplněný profil, takže je jasné, kdo Službu používá. Stav věci a poznámky ve spisu šifrované end-to-end nejsou, citlivé podrobnosti patří do zpráv.</p>
+                            <p className="mt-2 text-sm leading-relaxed text-slate-300"><Lock size={13} className="mr-1 inline" aria-hidden="true" />Zprávy a soubory s klientem jsou end-to-end šifrované: klíč je jen v odkazu a ve vašem šifrovacím heslu. Každý uživatel má vyplněný profil, takže je jasné, kdo Službu používá. Stav věci a poznámky ve spisu šifrované end-to-end nejsou, citlivé podrobnosti patří do zpráv.</p>
                         </div>
                     </div>
                 </div>
