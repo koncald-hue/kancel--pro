@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import AdminBilling from './AdminBilling';
 import AdminFirms from './AdminFirms';
 import AdminGrantPackage from './AdminGrantPackage';
+import AdminIsir from './AdminIsir';
 import AdminLawyers from './AdminLawyers';
 import type { LawyerAccess } from '@/lib/lawyer';
 
@@ -45,6 +46,7 @@ export default function LawyerAdmin() {
             {message && <p role="alert" className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-slate-800">{message}</p>}
 
             <AdminGrantPackage onDone={() => setReload((n) => n + 1)} />
+            <AdminIsir />
             <AdminFirms rows={rows} onDone={() => setReload((n) => n + 1)} />
 
             <AdminBilling rows={rows} />

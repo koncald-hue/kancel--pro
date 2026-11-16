@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, Clock3, FolderOpen, Plus, Users } from 'lucide-react';
+import { CalendarClock, Clock3, FolderOpen, Plus, ShieldAlert, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { collectDeadlines, loadAllDeadlines, type CaseDeadline } from '@/lib/caseFile';
 import { daysUntil, loadCases, type LegalCase } from '@/lib/cases';
@@ -34,6 +34,12 @@ export default function LawyerDashboard() {
     }, [access.vat_payer]);
     const [data, setData] = useState<{ cases: LegalCase[]; customs: CaseDeadline[]; entries: TimeEntry[]; inquiries: number; unread: number } | null>(null);
     const [error, setError] = useState('');
+    const [isirNew, setIsirNew] = useState(0);
+    useEffect(() => {
+        let alive = true;
+        supabase.from('isir_hits').select('id', { count: 'exact', head: true }).eq('seen', false).then(({ count }) => { if (alive) setIsirNew(count ?? 0); });
+        return () => { alive = false; };
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -65,6 +71,7 @@ export default function LawyerDashboard() {
     return (
         <div className="space-y-6">
             <DayPanel deadlinesToday={upcoming.filter((u) => u.left === 0).length} />
+            {isirNew > 0 && <Link href="/kancelar/insolvence" className="flex items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-950 hover:bg-amber-100"><ShieldAlert size={18} aria-hidden="true" /> Hlídání insolvence: {isirNew} {isirNew === 1 ? 'nový nález' : isirNew < 5 ? 'nové nálezy' : 'nových nálezů'}. Zobrazit →</Link>}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <Tile label="Otevřené věci" value={String(open.length)} />
                 <Tile label="Lhůty do 7 dní" value={String(week.length)} tone={week.some((w) => w.left <= 2) ? 'text-rose-700' : undefined} note={week[0] ? `nejbližší: ${deadlineText(week[0].left)}` : 'žádná nehrozí'} />

@@ -3,19 +3,19 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Receipt, Tags, Scale, X } from 'lucide-react';
+import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Receipt, ShieldAlert, Tags, Scale, X } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
 
-export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'chat' | 'tym' | 'nastaveni';
+export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'chat' | 'tym' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
 
 // Nástroje jsou seskupené podle toho, k čemu slouží
 const GROUPS: { title: string; items: Item[] }[] = [
     { title: '', items: [['prehled', '/kancelar', 'Přehled', LayoutDashboard]] },
-    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['knihovna', '/kancelar/knihovna', 'Knihovna', Library]] },
+    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['knihovna', '/kancelar/knihovna', 'Knihovna', Library]] },
     { title: 'Peníze', items: [['vykazy', '/kancelar/vykazy', 'Výkazy práce', Clock3], ['faktury', '/kancelar/faktury', 'Fakturace', Receipt], ['cenik', '/kancelar/cenik', 'Ceník', Tags]] },
     { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound]] },
 ];
