@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export const metadata: Metadata = { title: 'Správa | Kancelář', robots: { index: false } };
 
 export default function Page() {
     return (
         <div className="mx-auto max-w-3xl px-4 py-12">
-            <h1 className="text-2xl font-bold text-slate-900">Správa</h1>
+            <Link href="/kancelar" className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-800 hover:underline"><ArrowLeft size={15} aria-hidden="true" /> Zpět do Kanceláře</Link>
+            <h1 className="mt-3 text-2xl font-bold text-slate-900">Správa</h1>
             <p className="mt-2 text-sm text-slate-600">Jen pro provozovatele služby: přehled uživatelů, platby, statistiky a judikatura.</p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                 <li><Link href="/admin/advokati" className="block rounded-2xl border border-slate-200 bg-white p-5 font-semibold text-slate-900 hover:border-indigo-400">Uživatelé, platby a ceny</Link></li>
