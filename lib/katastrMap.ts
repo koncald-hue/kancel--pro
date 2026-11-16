@@ -1,7 +1,7 @@
 import { parseParcelNumber } from './katastr';
 
 // Pomůcky pro mapu katastru: parcely z veřejné INSPIRE služby ČÚZK (WFS) a adresy z RÚIAN.
-export type MapParcel = { ref: string; ku: number; kmen: number; poddeleni?: number; druh: 1 | 2; label: string; area: number | null; ring: [number, number][] };
+export type MapParcel = { ref: string; ku: number; kmen: number; poddeleni?: number; druh: 1 | 2; label: string; area: number | null; ring: [number, number][]; holes: [number, number][][] };
 
 export const WFS_URL = 'https://services.cuzk.gov.cz/wfs/inspire-cp-wfs.asp';
 export const WMS_URL = 'https://services.cuzk.gov.cz/wms/inspire-cp-wms.asp';
@@ -23,12 +23,19 @@ export function parseWfsParcels(xml: string): MapParcel[] {
         const block = m[0];
         const ref = block.match(/<cp:nationalCadastralReference>([^<]+)</)?.[1]?.trim() ?? '';
         const parsed = parseRef(ref);
-        const ring = block.match(/<gml:exterior>[\s\S]*?<gml:posList[^>]*>([^<]+)</)?.[1]?.trim().split(/\s+/).map(Number) ?? [];
-        if (!parsed || ring.length < 6 || ring.some((n) => !Number.isFinite(n))) continue;
-        const pts: [number, number][] = [];
-        for (let i = 0; i + 1 < ring.length; i += 2) pts.push([ring[i], ring[i + 1]]);
+        const toPts = (list: string): [number, number][] | null => {
+            const n = list.trim().split(/\s+/).map(Number);
+            if (n.length < 6 || n.some((v) => !Number.isFinite(v))) return null;
+            const pts: [number, number][] = [];
+            for (let i = 0; i + 1 < n.length; i += 2) pts.push([n[i], n[i + 1]]);
+            return pts;
+        };
+        const ring = toPts(block.match(/<gml:exterior>[\s\S]*?<gml:posList[^>]*>([^<]+)</)?.[1] ?? '');
+        if (!parsed || !ring) continue;
+        // Díry: stavební parcela uvnitř pozemku je v pozemku vyříznutá
+        const holes = [...block.matchAll(/<gml:interior>[\s\S]*?<gml:posList[^>]*>([^<]+)</g)].map((h) => toPts(h[1])).filter((h): h is [number, number][] => h !== null);
         const area = Number(block.match(/<cp:areaValue[^>]*>([^<]+)</)?.[1]);
-        out.push({ ref, ...parsed, label: block.match(/<cp:label>([^<]+)</)?.[1]?.trim() ?? ref, area: Number.isFinite(area) ? area : null, ring: pts });
+        out.push({ ref, ...parsed, label: block.match(/<cp:label>([^<]+)</)?.[1]?.trim() ?? ref, area: Number.isFinite(area) ? area : null, ring, holes });
     }
     return out;
 }
@@ -42,6 +49,9 @@ export function pointInRing(lat: number, lon: number, ring: [number, number][]):
     }
     return inside;
 }
+
+// Je bod uvnitř parcely: v obrysu a ne v některé z děr
+export const pointInParcel = (lat: number, lon: number, p: Pick<MapParcel, 'ring' | 'holes'>) => pointInRing(lat, lon, p.ring) && !p.holes.some((h) => pointInRing(lat, lon, h));
 
 export const wfsPointUrl = (lat: number, lon: number) => {
     const d = 0.00001;

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { RUIAN_ADDRESS_URL, addressWhere, parseWfsParcels, pickByArea, pointInRing, wfsPointUrl, wfsRefUrl } from '@/lib/katastrMap';
+import { RUIAN_ADDRESS_URL, addressWhere, parseWfsParcels, pickByArea, pointInParcel, wfsPointUrl, wfsRefUrl } from '@/lib/katastrMap';
 import { CUZK_BASE, RIZENI_TYPY, normalizeJednotka, normalizeNeighbor, normalizeParcel, normalizeRizeni, normalizeStavba, searchCastiObce, searchKu, type CastObce, type KatastralniUzemi } from '@/lib/katastr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -107,7 +107,7 @@ export async function GET(req: Request) {
                     if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < 48 || lat > 51.2 || lon < 12 || lon > 18.9) return NextResponse.json({ error: 'bad_request' }, { status: 400 });
                     const res = await fetch(wfsPointUrl(lat, lon), { cache: 'no-store', signal: AbortSignal.timeout(15_000) });
                     if (!res.ok) return NextResponse.json({ error: 'upstream' }, { status: 502 });
-                    const hit = parseWfsParcels(await res.text()).find((p) => pointInRing(lat, lon, p.ring));
+                    const hit = parseWfsParcels(await res.text()).filter((p) => pointInParcel(lat, lon, p)).sort((a, b) => (a.area ?? Infinity) - (b.area ?? Infinity))[0];
                     return NextResponse.json(hit ? { found: true, parcel: hit } : { found: false });
                 }
                 if (mapOp === 'obrys') {
