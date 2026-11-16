@@ -83,9 +83,6 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                     <p className="truncate text-xs text-slate-500">{subtitle}</p>
                 </div>
             </div>
-            <div className="px-3 pb-3">
-                <button type="button" onClick={() => { setOpen(false); setSearchOpen(true); }} className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-500 hover:border-indigo-300 hover:bg-white cursor-pointer"><Search size={15} aria-hidden="true" /><span className="flex-1">Hledat…</span><kbd className="rounded border border-slate-300 bg-white px-1.5 text-[10px] font-semibold text-slate-500">⌘K</kbd></button>
-            </div>
             <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="Části kanceláře">
                 {GROUPS.map((g) => (
                     <div key={g.title || 'main'}>
@@ -127,7 +124,10 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
 
             <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
                 <div className="mx-auto max-w-6xl">
-                    <h1 className="mb-6 hidden text-2xl font-bold tracking-tight text-slate-900 lg:block">{current?.[2]}</h1>
+                    <div className="mb-6 hidden items-center justify-between gap-4 lg:flex">
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{current?.[2]}</h1>
+                        <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat v celé kanceláři" className="flex w-72 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-left text-sm text-slate-500 shadow-xs hover:border-indigo-300 cursor-pointer"><Search size={15} aria-hidden="true" /><span className="flex-1">Hledat…</span><kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-500">Ctrl/⌘ K</kbd></button>
+                    </div>
                     {locked && (
                         <div role="status" className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
                             <Lock size={18} className="shrink-0" aria-hidden="true" />
