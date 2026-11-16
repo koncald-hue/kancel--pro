@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildRequest, diffHits, parseResponse, stateLabel } from './isir';
+import { buildRequest, diffHits, parseCzDate, parseResponse, stateLabel } from './isir';
 
 const OK = `<soap:Envelope><soap:Body><ns2:getIsirWsCuzkDataResponse xmlns:ns2="http://isirws.cca.cz/types/"><data><ic>09322060</ic><cisloSenatu>92</cisloSenatu><druhVec>INS</druhVec><bcVec>19385</bcVec><rocnik>2025</rocnik><nazevOrganizace>Městský soud v Praze</nazevOrganizace><nazevOsoby>Stavby Friede s.r.o.</nazevOsoby><druhStavKonkursu>KONKURS</druhStavKonkursu><urlDetailRizeni>https://isir.justice.cz/isir/ueu/evidence_upadcu_detail.do?id=ABC</urlDetailRizeni><datumPmZahajeniUpadku>2025-12-30Z</datumPmZahajeniUpadku></data><stav><pocetVysledku>1</pocetVysledku></stav></ns2:getIsirWsCuzkDataResponse></soap:Body></soap:Envelope>`;
 const EMPTY = `<soap:Envelope><soap:Body><ns2:getIsirWsCuzkDataResponse xmlns:ns2="x"><stav><kodChyby>WS2</kodChyby><textChyby>Prázdný výsledek</textChyby></stav></ns2:getIsirWsCuzkDataResponse></soap:Body></soap:Envelope>`;
@@ -32,4 +32,12 @@ describe('ISIR', () => {
         expect(d.changed.map((h) => h.spis)).toEqual(['B']);
     });
     it('labels states', () => { expect(stateLabel('REORGANIZ')).toBe('Reorganizace'); expect(stateLabel('NEZNAMY')).toBe('Neznamy'); });
+    it('parses Czech dates with a four-digit year', () => {
+        expect(parseCzDate('5. 3. 1980')).toBe('1980-03-05');
+        expect(parseCzDate('05.03.1980')).toBe('1980-03-05');
+        expect(parseCzDate('31.2.1980')).toBeNull();
+        expect(parseCzDate('1.1.80')).toBeNull();
+        expect(parseCzDate('1.1.1850')).toBeNull();
+        expect(parseCzDate('1.1.2999')).toBeNull();
+    });
 });

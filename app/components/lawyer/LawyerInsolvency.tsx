@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, Check, ExternalLink, Loader2, Lock, Plus, RefreshCw, ShieldAlert, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { PLANS } from '@/lib/plans';
+import { parseCzDate } from '@/lib/isir';
 import { czk } from '@/lib/lawyer';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import AresPicker from './AresPicker';
@@ -67,10 +68,13 @@ export default function LawyerInsolvency() {
 
     async function add(e: React.FormEvent) {
         e.preventDefault();
-        setBusy('add'); setError(''); setMsg('');
+        setError(''); setMsg('');
+        const birthIso = kind === 'osoba' ? parseCzDate(form.birth) : null;
+        if (kind === 'osoba' && !birthIso) { setError('Datum narození zadejte ve tvaru den. měsíc. rok, např. 5. 3. 1980 (rok čtyřmístně).'); return; }
+        setBusy('add');
         const row = kind === 'firma'
             ? { kind, label: form.label.trim() || `IČO ${form.ic}`, ic: form.ic.replace(/\s+/g, '') }
-            : { kind, label: form.label.trim() || `${form.firstName} ${form.name}`.trim(), name: form.name.trim(), first_name: form.firstName.trim(), birth: form.birth };
+            : { kind, label: form.label.trim() || `${form.firstName} ${form.name}`.trim(), name: form.name.trim(), first_name: form.firstName.trim(), birth: birthIso };
         const { data: { user } } = await supabase.auth.getUser();
         const { data, error: err } = await supabase.from('isir_watches').insert({ ...row, user_id: user?.id }).select('*').single();
         if (err) { setBusy(''); setError(/check constraint/i.test(err.message) ? (kind === 'firma' ? 'Zadejte 8místné IČO.' : 'Vyplňte jméno, příjmení a datum narození.') : err.message); return; }
@@ -170,7 +174,7 @@ export default function LawyerInsolvency() {
                     <div className="grid gap-3 sm:grid-cols-3">
                         <label className={label}>Jméno *<input value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} required maxLength={80} className={`${inputCls} mt-1 font-normal`} /></label>
                         <label className={label}>Příjmení *<input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required maxLength={80} className={`${inputCls} mt-1 font-normal`} /></label>
-                        <label className={label}>Datum narození *<input type="date" value={form.birth} onChange={(e) => setForm((f) => ({ ...f, birth: e.target.value }))} required className={`${inputCls} mt-1 font-normal`} /></label>
+                        <label className={label}>Datum narození *<input value={form.birth} onChange={(e) => setForm((f) => ({ ...f, birth: e.target.value.replace(/[^\d.\s/-]/g, '') }))} required inputMode="numeric" maxLength={12} placeholder="např. 5. 3. 1980" aria-invalid={form.birth !== '' && !parseCzDate(form.birth)} className={`${inputCls} mt-1 font-normal`} /></label>
                     </div>
                 )}
                 <button type="submit" disabled={busy === 'add'} className={primaryBtn}>{busy === 'add' ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} Přidat a zkontrolovat</button>

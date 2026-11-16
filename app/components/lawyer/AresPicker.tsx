@@ -1,10 +1,10 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Building, Loader2, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { AresCompany } from '@/lib/ares';
-import { ghostBtn, inputCls } from '../situation/caseUi';
+import { inputCls } from '../situation/caseUi';
 
 // Vyhledání firmy v ARES podle IČO nebo názvu; po výběru předá název, IČO, DIČ a adresu
 export default function AresPicker({ onPick, label = 'Najít firmu v ARES', compact = false }: { onPick: (c: AresCompany) => void; label?: string; compact?: boolean }) {
@@ -14,34 +14,40 @@ export default function AresPicker({ onPick, label = 'Najít firmu v ARES', comp
     const [note, setNote] = useState('');
     const seq = useRef(0);
 
-    async function search() {
-        const text = q.trim();
-        if (text.length < 3) { setNote('Zadejte IČO nebo aspoň 3 znaky názvu.'); setResults([]); return; }
-        const mine = ++seq.current;
-        setBusy(true); setNote(''); setResults([]);
+    const run = async (text: string, mine: number) => {
+        setBusy(true); setNote('');
         try {
             const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch(`/api/ares?${new URLSearchParams({ q: text })}`, { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } });
             if (mine !== seq.current) return;
-            if (res.status === 429) { setNote('Příliš mnoho dotazů, zkuste to za chvíli.'); return; }
-            if (!res.ok) { setNote('Registr ARES teď neodpovídá. Údaje můžete vyplnit ručně.'); return; }
+            if (res.status === 429) { setNote('Příliš mnoho dotazů, zkuste to za chvíli.'); setResults([]); return; }
+            if (!res.ok) { setNote('Registr ARES teď neodpovídá. Údaje můžete vyplnit ručně.'); setResults([]); return; }
             const body = await res.json() as { results?: AresCompany[]; note?: string };
             const list = body.results ?? [];
-            if (list.length === 1 && /^\s*\d[\d\s]{6,}\d\s*$/.test(text)) { onPick(list[0]); setQ(''); return; }
             setResults(list);
             if (!list.length) setNote(body.note ?? 'Nic nenalezeno. Zkontrolujte IČO nebo název.');
-        } catch { if (mine === seq.current) setNote('Registr ARES teď neodpovídá. Údaje můžete vyplnit ručně.'); }
+        } catch { if (mine === seq.current) { setNote('Registr ARES teď neodpovídá. Údaje můžete vyplnit ručně.'); setResults([]); } }
         finally { if (mine === seq.current) setBusy(false); }
-    }
+    };
+
+    // Hledá se průběžně během psaní (s krátkou prodlevou), není potřeba nic odesílat
+    useEffect(() => {
+        const text = q.trim();
+        const mine = ++seq.current;
+        if (/^[\d\s]+$/.test(text) && text.replace(/\s/g, '').length < 8) { const t = window.setTimeout(() => { if (mine === seq.current) { setResults([]); setNote(text.replace(/\s/g, '').length >= 3 ? 'IČO má 8 číslic, pokračujte v psaní.' : ''); setBusy(false); } }, 0); return () => window.clearTimeout(t); }
+        if (text.length < 3) { const t = window.setTimeout(() => { if (mine === seq.current) { setResults([]); setNote(''); setBusy(false); } }, 0); return () => window.clearTimeout(t); }
+        const t = window.setTimeout(() => { void run(text, mine); }, 450);
+        return () => window.clearTimeout(t);
+    }, [q]);
 
     return (
         <div className={`relative ${compact ? '' : 'rounded-xl border border-indigo-100 bg-indigo-50/50 p-3'}`}>
             <div className="flex gap-2">
                 <div className="relative min-w-0 flex-1">
                     <Building size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                    <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void search(); } }} placeholder="IČO nebo název firmy" aria-label={label} className={`${inputCls} pl-9`} />
+                    <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} placeholder="IČO nebo název firmy" aria-label={label} className={`${inputCls} pl-9`} />
                 </div>
-                <button type="button" onClick={() => void search()} disabled={busy} className={ghostBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />} ARES</button>
+                <span className="inline-flex w-16 items-center justify-center text-xs font-semibold text-slate-500" aria-live="polite">{busy ? <Loader2 size={15} className="animate-spin" aria-label="Hledám" /> : <><Search size={13} className="mr-1" aria-hidden="true" />ARES</>}</span>
             </div>
             {note && <p role="status" className="mt-1.5 text-xs text-slate-600">{note}</p>}
             {results.length > 0 && (

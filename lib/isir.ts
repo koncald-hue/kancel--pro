@@ -67,3 +67,14 @@ export function diffHits(known: { spis: string; state: string; ended: string | n
     }
     return { added, changed };
 }
+
+// Datum narození zapsané česky (např. 5. 3. 1980 nebo 05.03.1980) na ISO tvar RRRR-MM-DD; neplatné datum vrátí null
+export function parseCzDate(input: string, now = new Date()): string | null {
+    const m = input.trim().match(/^(\d{1,2})\s*[.\/-]\s*(\d{1,2})\s*[.\/-]\s*(\d{4})$/);
+    if (!m) return null;
+    const [d, mo, y] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const date = new Date(Date.UTC(y, mo - 1, d));
+    if (date.getUTCFullYear() !== y || date.getUTCMonth() !== mo - 1 || date.getUTCDate() !== d) return null;
+    if (y < 1900 || date.getTime() > now.getTime()) return null;
+    return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
