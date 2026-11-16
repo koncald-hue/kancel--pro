@@ -77,6 +77,19 @@ export default function LawyerLibrary() {
                 <p className="max-w-2xl text-sm leading-relaxed text-slate-600">Vlastní vzory podání, smluv a dopisů. Do textu vložíte pole a počítač je vyplní z věci, klienta a vašeho profilu.</p>
                 <button type="button" onClick={() => setView({ mode: 'edit', id: null })} className={primaryBtn}><Plus size={16} /> Nový vzor</button>
             </div>
+            <details className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 text-sm leading-relaxed text-slate-700">
+                <summary className="cursor-pointer font-bold text-indigo-900">Jak vytvořit vzor dokumentu (návod)</summary>
+                <ol className="mt-3 list-decimal space-y-2 pl-5">
+                    <li>Klikněte na <strong>Nový vzor</strong>, pojmenujte ho a případně zadejte kategorii (např. Dopisy, Podání, Smlouvy).</li>
+                    <li>Do pole <strong>Text vzoru</strong> vložte hotový dokument, třeba zkopírovaný z Wordu. Formátování (tučné písmo, tabulky) se nepřenáší, vzor je čistý text; dokument si po stažení ve Wordu doformátujete.</li>
+                    <li>Místa, která se u každého klienta mění, nahraďte <strong>poli</strong>. Klikněte na místo v textu a v pravém panelu zvolte pole, nebo ho napište rukou ve dvojitých složených závorkách, např. <code className="rounded bg-white px-1">{'{{klient.jmeno}}'}</code>.</li>
+                    <li><strong>Pole, která vyplní počítač sám</strong> (z věci, klienta a vašeho profilu): klient (jméno, e-mail, telefon), věc (název, spisová značka, soud či úřad, popis), advokát (jméno, kancelář, číslo ČAK, adresa, telefon, e-mail) a dnešní datum. Údaje o věci a klientovi se berou z karty věci, vyplňte je tam.</li>
+                    <li><strong>Vlastní pole</strong> pro cokoli jiného: napište např. <code className="rounded bg-white px-1">{'{{castka}}'}</code> nebo <code className="rounded bg-white px-1">{'{{datum_splatnosti}}'}</code>. Při vyplňování se na ně program zeptá. Název pište bez mezer (místo mezery podtržítko), stejné pole použité víckrát se zadává jen jednou.</li>
+                    <li>Zaškrtněte <strong>Sdílet s kolegy</strong>, mají-li vzor používat i ostatní v kanceláři. Upravovat ho můžete jen vy.</li>
+                    <li><strong>Použití:</strong> u vzoru klikněte na Vyplnit, vyberte věc, doplňte vlastní pole a stáhněte hotový Word (.docx), nebo text zkopírujte či vytiskněte. Co zůstalo nevyplněné, je vidět jako <code className="rounded bg-white px-1">{'{{pole}}'}</code>, aby vám nic neuniklo.</li>
+                </ol>
+                <p className="mt-3 rounded-lg bg-white p-3 text-xs"><strong>Příklad:</strong> „Vážený pane {'{{klient.jmeno}}'}, vyzývám Vás k úhradě částky {'{{castka}}'} Kč do {'{{datum_splatnosti}}'}. Ve věci vedené pod sp. zn. {'{{vec.spisova_znacka}}'}. {'{{advokat.jmeno}}'}“. Po vyplnění: „Vážený pane Jan Novák, vyzývám Vás k úhradě částky 15 000 Kč do 30. 11. 2026…“ Dokument vždy před odesláním zkontrolujte, odpovídá za něj advokát.</p>
+            </details>
             {mine.length === 0 && others.length === 0 && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
                     <Library size={28} className="mx-auto text-indigo-700" aria-hidden="true" />
