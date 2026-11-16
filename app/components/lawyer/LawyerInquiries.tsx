@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, Check, Copy, Eye, FileText, Lock, Mail, MessageSquare, Phone, X } from 'lucide-react';
+import { AlertTriangle, Check, Copy, Eye, FileText, Lock, Mail, MessageSquare, Paperclip, Phone, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { createCase, BLANK_CASE, loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient } from '@/lib/lawyer';
@@ -25,6 +25,7 @@ export default function LawyerInquiries() {
     const [error, setError] = useState('');
     const [accepted, setAccepted] = useState<Record<string, Invite>>({});
     const [copied, setCopied] = useState('');
+    const [openId, setOpenId] = useState<string | null>(null);
     const [files, setFiles] = useState<InquiryFile[]>([]);
     const master = useMasterKey();
 
@@ -105,6 +106,7 @@ export default function LawyerInquiries() {
         setItems((list) => list.map((x) => (x.id === q.id ? { ...x, status: 'declined' } : x)));
     }
 
+    const opened = items.find((i) => i.id === openId) ?? null;
     const fresh = items.filter((i) => i.status === 'new');
     const rest = items.filter((i) => i.status !== 'new');
 
@@ -112,22 +114,23 @@ export default function LawyerInquiries() {
         <div className="space-y-5">
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
             {items.length === 0 && !error && <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-600">Zatím žádné poptávky. Odkaz pro zájemce najdete v Nastavení, můžete ho vložit na web nebo do podpisu e-mailu.</p>}
-            <ul className="space-y-3">
+            {fresh.length > 0 && <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Nové ({fresh.length})</h2>}
+            <ul className="space-y-2">
                 {fresh.map((q) => {
-                    const clash = conflicts(q);
+                    const n = files.filter((f) => f.inquiry_id === q.id).length;
                     return (
-                        <li key={q.id} className="rounded-2xl border border-indigo-200 bg-white p-5">
-                            <div className="flex flex-wrap items-start justify-between gap-2"><p className="text-lg font-bold text-slate-900">{q.name}</p><span className="text-xs text-slate-500">{shortDate(new Date(q.created_at))}</span></div>
-                            <p className="mt-1 flex flex-wrap gap-x-4 text-sm text-indigo-900">{q.email && <a href={`mailto:${q.email}`} className="inline-flex items-center gap-1.5 hover:underline"><Mail size={14} />{q.email}</a>}{q.phone && <a href={`tel:${q.phone.replace(/\s+/g, '')}`} className="inline-flex items-center gap-1.5 hover:underline"><Phone size={14} />{q.phone}</a>}</p>
-                            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-700">{q.message}</p>
-                            {files.some((f) => f.inquiry_id === q.id) && (
-                                <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Přiložené dokumenty (do spisu až po přijetí)</p>
-                                    <ul className="mt-2 space-y-1.5">{files.filter((f) => f.inquiry_id === q.id).map((f) => <li key={f.id} className="flex items-center gap-2 text-sm text-slate-800"><FileText size={14} className="shrink-0 text-slate-400" aria-hidden="true" /><span className="min-w-0 flex-1 truncate">{f.name}<span className="ml-1.5 text-xs text-slate-500">{formatSize(f.size)}</span></span><button type="button" onClick={() => void preview(f)} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-0.5 text-xs font-semibold text-slate-800 hover:bg-white cursor-pointer"><Eye size={12} /> Náhled</button></li>)}</ul>
-                                </div>
-                            )}
-                            {clash.length > 0 && <p className="mt-3 flex items-start gap-2 rounded-lg bg-rose-50 p-2.5 text-xs font-semibold text-rose-900"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Možný střet zájmů nebo stávající klient: {clash.join(', ')}.</p>}
-                            <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => void accept(q)} className={primaryBtn}><Check size={16} /> Přijmout jako věc</button><button type="button" onClick={() => void decline(q)} className={ghostBtn}><X size={15} /> Odmítnout</button></div>
+                        <li key={q.id}>
+                            <button type="button" onClick={() => setOpenId(q.id)} className="flex w-full items-start gap-3 rounded-2xl border border-indigo-200 bg-white p-4 text-left hover:bg-indigo-50/40 cursor-pointer">
+                                <span className="min-w-0 flex-1">
+                                    <span className="flex flex-wrap items-center justify-between gap-2"><span className="font-bold text-slate-900">{q.name}</span><span className="text-xs text-slate-500">{shortDate(new Date(q.created_at))}</span></span>
+                                    <span className="mt-1 line-clamp-2 block text-sm text-slate-600">{q.message}</span>
+                                    <span className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                                        {n > 0 && <span className="inline-flex items-center gap-1"><Paperclip size={12} /> {n} {n === 1 ? 'příloha' : n < 5 ? 'přílohy' : 'příloh'}</span>}
+                                        {conflicts(q).length > 0 && <span className="inline-flex items-center gap-1 font-semibold text-rose-800"><AlertTriangle size={12} /> možný střet zájmů</span>}
+                                        <span className="ml-auto font-semibold text-indigo-900">Zobrazit a rozhodnout →</span>
+                                    </span>
+                                </span>
+                            </button>
                         </li>
                     );
                 })}
@@ -154,8 +157,30 @@ export default function LawyerInquiries() {
                 <div>
                     <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Vyřízené</h2>
                     <ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
-                        {rest.map((q) => <li key={q.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"><span className="font-semibold text-slate-800">{q.name}</span><span className="text-xs text-slate-500">{q.status === 'accepted' ? <>přijato{(q.case_id ?? accepted[q.id]?.caseId) && <> · <Link href={`/kancelar/veci/${q.case_id ?? accepted[q.id]?.caseId}`} className="font-semibold text-indigo-900 underline">otevřít věc</Link></>}</> : 'odmítnuto'} · {shortDate(new Date(q.created_at))}</span></li>)}
+                        {rest.map((q) => <li key={q.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"><button type="button" onClick={() => setOpenId(q.id)} className="font-semibold text-slate-800 hover:underline cursor-pointer">{q.name}</button><span className="text-xs text-slate-500">{q.status === 'accepted' ? <>přijato{(q.case_id ?? accepted[q.id]?.caseId) && <> · <Link href={`/kancelar/veci/${q.case_id ?? accepted[q.id]?.caseId}`} className="font-semibold text-indigo-900 underline">otevřít věc</Link></>}</> : 'odmítnuto'} · {shortDate(new Date(q.created_at))}</span></li>)}
                     </ul>
+                </div>
+            )}
+            {opened && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-900/40 p-4 sm:items-center" onClick={() => setOpenId(null)}>
+                    <div role="dialog" aria-modal="true" aria-label={`Poptávka: ${opened.name}`} onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
+                        <div className="flex items-start justify-between gap-3">
+                            <div><p className="text-xs font-bold uppercase tracking-wide text-indigo-800">{opened.status === 'new' ? 'Nová poptávka' : opened.status === 'accepted' ? 'Přijatá poptávka' : 'Odmítnutá poptávka'}</p><h2 className="text-xl font-bold text-slate-900">{opened.name}</h2><p className="text-xs text-slate-500">{shortDate(new Date(opened.created_at))}</p></div>
+                            <button type="button" onClick={() => setOpenId(null)} aria-label="Zavřít" className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 cursor-pointer"><X size={18} /></button>
+                        </div>
+                        <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-indigo-900">{opened.email && <a href={`mailto:${opened.email}`} className="inline-flex items-center gap-1.5 hover:underline"><Mail size={14} />{opened.email}</a>}{opened.phone && <a href={`tel:${opened.phone.replace(/\s+/g, '')}`} className="inline-flex items-center gap-1.5 hover:underline"><Phone size={14} />{opened.phone}</a>}</p>
+                        <p className="mt-4 text-xs font-bold uppercase tracking-wide text-slate-500">Popis věci</p>
+                        <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-800">{opened.message}</p>
+                        {files.some((f) => f.inquiry_id === opened.id) && (
+                            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Přiložené dokumenty {opened.status === 'new' && '(do spisu až po přijetí)'}</p>
+                                <ul className="mt-2 space-y-1.5">{files.filter((f) => f.inquiry_id === opened.id).map((f) => <li key={f.id} className="flex items-center gap-2 text-sm text-slate-800"><FileText size={14} className="shrink-0 text-slate-400" aria-hidden="true" /><span className="min-w-0 flex-1 truncate">{f.name}<span className="ml-1.5 text-xs text-slate-500">{formatSize(f.size)}</span></span><button type="button" onClick={() => void preview(f)} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-0.5 text-xs font-semibold text-slate-800 hover:bg-white cursor-pointer"><Eye size={12} /> Náhled</button></li>)}</ul>
+                            </div>
+                        )}
+                        {conflicts(opened).length > 0 && <p className="mt-4 flex items-start gap-2 rounded-lg bg-rose-50 p-2.5 text-xs font-semibold text-rose-900"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Možný střet zájmů nebo stávající klient: {conflicts(opened).join(', ')}.</p>}
+                        {opened.status === 'new' && <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => { setOpenId(null); void accept(opened); }} className={primaryBtn}><Check size={16} /> Přijmout jako věc</button><button type="button" onClick={() => { setOpenId(null); void decline(opened); }} className={ghostBtn}><X size={15} /> Odmítnout</button></div>}
+                        {opened.status === 'accepted' && (opened.case_id ?? accepted[opened.id]?.caseId) && <div className="mt-5"><Link href={`/kancelar/veci/${opened.case_id ?? accepted[opened.id]?.caseId}`} className={ghostBtn}>Otevřít věc</Link></div>}
+                    </div>
                 </div>
             )}
         </div>
