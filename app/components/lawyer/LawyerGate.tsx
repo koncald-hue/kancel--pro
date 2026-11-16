@@ -2,11 +2,12 @@
 
 import { createContext, useContext, useState } from 'react';
 import Link from 'next/link';
-import { Briefcase, Clock, Loader2, LogIn } from 'lucide-react';
+import { Briefcase, CalendarClock, Clock, Loader2, MessagesSquare, Scale, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import { hasLawyerAccess, requestAccess, startTrial, TRIAL_DAYS, useLawyerAccess, type LawyerAccess } from '@/lib/lawyer';
 import { primaryBtn, ghostBtn } from '../situation/caseUi';
 import ProfileForm from './ProfileForm';
+import AuthForm from '../site/AuthForm';
 
 const LawyerContext = createContext<{ access: LawyerAccess; userId: string } | null>(null);
 export const useLawyer = () => { const ctx = useContext(LawyerContext); if (!ctx) throw new Error('useLawyer mimo LawyerGate'); return ctx; };
@@ -15,7 +16,7 @@ const Box = ({ children }: { children: React.ReactNode }) => <div className="mx-
 
 // Ochrana pracovního prostoru: přihlášení, zahájení zkušebního přístupu nebo žádost o placený přístup
 export default function LawyerGate({ children, allowExpired = false }: { children: React.ReactNode; allowExpired?: boolean }) {
-    const { account, authReady, openLogin, isStaff, logout } = useAuth();
+    const { account, authReady, isStaff, logout } = useAuth();
     const [version, setVersion] = useState(0);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -24,13 +25,28 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
     if (!authReady || state.loading) return <p className="mx-auto max-w-4xl px-4 py-12 text-sm text-slate-500" role="status">Načítám…</p>;
     if (!account) {
         return (
-            <Box>
-                <Briefcase size={30} className="mx-auto text-indigo-800" aria-hidden="true" />
-                <h1 className="mt-3 text-3xl font-bold text-slate-900">Kancelář</h1>
-                <p className="mt-2 text-sm text-slate-600">Pracovní prostor pro advokáty a právníky. Přihlaste se nebo si vytvořte účet.</p>
-                <button type="button" onClick={() => openLogin('login')} className={`${primaryBtn} mt-5`}><LogIn size={16} /> Přihlásit se</button>
-                <p className="mt-4 text-xs"><Link href="/" className="font-semibold text-indigo-900 underline">Co kancelář obsahuje</Link></p>
-            </Box>
+            <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white">
+                <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-5 sm:px-6">
+                    <Link href="/" className="flex items-center gap-2.5 font-bold text-slate-900"><span className="rounded-lg bg-indigo-600 p-1.5 text-white"><Scale size={18} aria-hidden="true" /></span> Kancelář</Link>
+                    <Link href="/" className="text-sm font-semibold text-slate-600 hover:text-slate-900">← Zpět na úvodní stránku</Link>
+                </header>
+                <main className="mx-auto grid max-w-5xl items-center gap-10 px-4 pb-16 pt-6 sm:px-6 md:grid-cols-2 md:pt-14">
+                    <div>
+                        <h1 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl">Vítejte v Kanceláři</h1>
+                        <p className="mt-3 text-base leading-relaxed text-slate-600">Přihlaste se do svého pracovního prostoru, nebo si založte účet a vyzkoušejte ho 14 dní zdarma.</p>
+                        <ul className="mt-7 space-y-4 text-sm text-slate-700">
+                            {([[CalendarClock, 'Lhůty a spisy', 'Hlídání lhůt, věci, klienti, výkazy a vyúčtování na jednom místě.'], [MessagesSquare, 'Šifrovaný chat kanceláře', 'Zprávy, soubory i celé věci mezi kolegy, čitelné jen pro vás.'], [ShieldCheck, 'Vaše data jsou jen vaše', 'Každý advokát vidí jen svá data, ani provozovatel je nepřečte.']] as const).map(([Icon, title, text]) => (
+                                <li key={title} className="flex gap-3"><span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700"><Icon size={18} aria-hidden="true" /></span><span><strong className="block text-slate-900">{title}</strong>{text}</span></li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
+                        <h2 className="text-xl font-bold text-slate-900">Přihlášení</h2>
+                        <p className="mb-5 mt-1 text-sm text-slate-500">Zadejte e-mail a heslo ke svému účtu.</p>
+                        <AuthForm idPrefix="gate" />
+                    </div>
+                </main>
+            </div>
         );
     }
     if (state.error === 'setup') return <Box><p className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-slate-700">Kancelář ještě není v databázi zapnutá (chybí spuštění SQL lawyer.sql).</p></Box>;
