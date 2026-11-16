@@ -1,4 +1,4 @@
-import { Briefcase, CalendarClock, Clock3, FileText, Inbox, Landmark, Library, NotebookText, Receipt, Users, UserRound, type LucideIcon } from 'lucide-react';
+import { Briefcase, CalendarClock, Clock3, FileText, Inbox, Landmark, Library, MailCheck, NotebookText, Receipt, Users, UserRound, type LucideIcon } from 'lucide-react';
 
 export type SearchRow = { kind: string; id: string; case_id: string | null; title: string; snippet: string | null; rank: number };
 
@@ -17,9 +17,10 @@ export const KINDS: Record<string, Meta> = {
     vzor: { label: 'Vzory', icon: Library, href: () => '/kancelar/knihovna' },
     vykaz: { label: 'Výkazy práce', icon: Clock3, href: () => '/kancelar/vykazy' },
     faktura: { label: 'Faktury', icon: Receipt, href: (r) => `/kancelar/faktury/${r.id}` },
+    datovka: { label: 'Datové zprávy', icon: MailCheck, href: inCase },
     nemovitost: { label: 'Nemovitosti', icon: Landmark, href: inCase },
 };
-export const KIND_ORDER = ['vec', 'klient', 'zapis', 'kontakt', 'soubor', 'lhuta', 'poptavka', 'vzor', 'vykaz', 'faktura', 'nemovitost'];
+export const KIND_ORDER = ['datovka', 'vec', 'klient', 'zapis', 'kontakt', 'soubor', 'lhuta', 'poptavka', 'vzor', 'vykaz', 'faktura', 'nemovitost'];
 
 // Seskupení podle druhu, uvnitř skupiny lepší shody (v názvu) nahoře
 export function groupResults(rows: SearchRow[]): { kind: string; rows: SearchRow[] }[] {

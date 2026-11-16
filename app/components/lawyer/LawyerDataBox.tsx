@@ -9,13 +9,14 @@ import { loadCases, type LegalCase } from '@/lib/cases';
 import { safeFileName } from '@/lib/caseFile';
 import { saveMessageToCase, suggestCase } from '@/lib/dataMessages';
 import { dropSession, getSession, putSession, touchSession } from '@/lib/isdsSession';
-import { STATUS_LABELS, isDeleted, type BoxHit, type Downloaded, type IsdsEnv, type Record_ } from '@/lib/isds';
+import { isdsApi, type ApiRes } from '@/lib/isdsClient';
+import { setReceived } from '@/lib/dataBoxState';
+import { STATUS_LABELS, isDeleted, statusTone, type BoxHit, type Downloaded, type IsdsEnv, type Record_ } from '@/lib/isds';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
 type Account = { id: string; label: string; env: IsdsEnv; enc_cred: string };
 type Cred = { login: string; password: string; method?: 'password' | 'mobile_key' };
-type ApiRes = { ok: boolean; status: number; json: Record<string, unknown> };
 type Caller = (body: Record<string, unknown>) => Promise<ApiRes>;
 type Tab = 'received' | 'sent';
 
@@ -23,11 +24,7 @@ const MAX_SEND = 10 * 1024 * 1024;
 const fmtSize = (b: number) => (b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} kB` : `${(b / 1024 / 1024).toFixed(1).replace('.', ',')} MB`);
 const fmtTime = (iso: string) => (iso ? new Date(iso).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '–');
 
-async function api(body: Record<string, unknown>): Promise<ApiRes> {
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch('/api/isds', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify(body) });
-    return { ok: res.ok, status: res.status, json: await res.json().catch(() => ({})) as Record<string, unknown> };
-}
+const api = isdsApi;
 const errText = (r: { status: number; json: Record<string, unknown> }) => (typeof r.json.message === 'string' ? r.json.message : r.status === 429 ? 'Příliš mnoho dotazů, zkuste to za chvíli.' : r.status === 403 ? 'Přístup je zamčený.' : 'Operace se nepodařila.');
 
 
@@ -225,6 +222,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
         if (!r.ok) { setError(errText(r)); setRecords([]); return; }
         const list = (r.json.records as Record_[]) ?? [];
         setRecords(list);
+        if (t === 'received') setReceived(account.id, list);
         // U zpráv, které už jsou uložené ve věci, se ukáže ve které
         if (list.length) {
             const { data } = await supabase.from('case_data_messages').select('dm_id, cases(title)').in('dm_id', list.map((x) => x.id));
@@ -232,7 +230,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
             for (const row of (data ?? []) as unknown as { dm_id: string; cases: { title: string } | { title: string }[] | null }[]) { const t = Array.isArray(row.cases) ? row.cases[0]?.title : row.cases?.title; if (t) (map[row.dm_id] ??= []).push(t); }
             setInCases(map);
         }
-    }, [call]);
+    }, [call, account.id]);
 
     const switchTab = (t: Tab) => { setTab(t); setRecords(null); setOpen(null); void refresh(t); };
     // První načtení po otevření schránky
@@ -260,7 +258,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
                                     <span className="block truncate text-sm text-slate-600">{r.annotation || '(bez věci)'}</span>
                                     {inCases[r.id]?.length ? <span className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-900"><Check size={11} aria-hidden="true" /> ve věci: {inCases[r.id].join(', ')}</span> : null}
                                 </span>
-                                <span className="shrink-0 text-right text-xs text-slate-500">{fmtTime(r.delivered || r.accepted)}<span title={STATUS_LABELS[r.status] ?? r.status} className={`mt-1 block w-44 truncate rounded-full px-2 py-0.5 text-center font-bold ${r.undelivered && tab === 'received' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}`}>{STATUS_LABELS[r.status] ?? r.status}</span></span>
+                                <span className="shrink-0 text-right text-xs text-slate-500">{fmtTime(r.delivered || r.accepted)}<span title={STATUS_LABELS[r.status] ?? r.status} className={`mt-1 block w-28 truncate rounded-full px-1.5 py-px text-center text-[10px] font-bold uppercase tracking-wide ${statusTone(r.status)}`}>{STATUS_LABELS[r.status] ?? r.status}</span></span>
                             </button>
                         </li>
                     ))}

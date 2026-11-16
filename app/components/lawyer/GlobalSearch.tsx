@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Search, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { KINDS, groupResults, splitMatch, type SearchRow } from '@/lib/search';
+import { requestOpen, searchCached } from '@/lib/dataBoxState';
+import { STATUS_LABELS } from '@/lib/isds';
 
 // Hledání napříč celou kanceláří: věci, klienti, poznámky, kontakty, soubory, lhůty, poptávky, vzory, výkazy, faktury
 export default function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -29,7 +31,9 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
             if (mine !== seq.current) return;
             setBusy(false);
             if (err) { setRows([]); setError(/search_all|schema cache|find the function/i.test(err.message) ? 'Hledání zatím není v databázi zapnuté (chybí spuštění souboru hledani.sql).' : err.message); return; }
-            setRows((data ?? []) as SearchRow[]); setActive(0);
+            // Zprávy načtené z datové schránky (jen z této relace) se přidají k výsledkům; kliknutím se otevře schránka
+            const live: SearchRow[] = searchCached(text).map((r) => ({ kind: 'datovka', id: `live:${r.id}`, case_id: null, title: r.annotation || '(bez věci)', snippet: `V datové schránce · od ${r.sender} · ${STATUS_LABELS[r.status] ?? r.status}`, rank: 1 }));
+            setRows([...live, ...((data ?? []) as SearchRow[])]); setActive(0);
         }, text.length < 2 ? 0 : 250);
         return () => window.clearTimeout(t);
     }, [q]);
@@ -37,7 +41,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
     const groups = groupResults(rows);
     const flat = groups.flatMap((g) => g.rows);
 
-    function go(r: SearchRow) { onClose(); router.push(KINDS[r.kind]?.href(r) ?? '/kancelar'); }
+    function go(r: SearchRow) { onClose(); if (r.id.startsWith('live:')) { requestOpen(); return; } router.push(KINDS[r.kind]?.href(r) ?? '/kancelar'); }
 
     function onKey(e: React.KeyboardEvent) {
         if (e.key === 'Escape') { e.preventDefault(); onClose(); }

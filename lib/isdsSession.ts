@@ -23,3 +23,11 @@ export async function endAllSessions(send: (env: 'test' | 'prod', session: strin
     store.clear();
     await Promise.allSettled(all.map((e) => send(e.env, e.value)));
 }
+
+// Ukončí relace, které jsou nečinné déle než limit (volá se pravidelně; relace se tím ukončí i v datové schránce)
+export async function reapExpired(send: (env: 'test' | 'prod', session: string) => Promise<unknown>, now = Date.now()): Promise<number> {
+    const dead: Entry[] = [];
+    for (const [k, e] of store) if (now - e.lastUsed > IDLE_LIMIT_MS) { store.delete(k); dead.push(e); }
+    await Promise.allSettled(dead.map((e) => send(e.env, e.value)));
+    return dead.length;
+}

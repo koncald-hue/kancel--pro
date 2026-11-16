@@ -2,7 +2,7 @@
 -- FULLTEXTOVÉ HLEDÁNÍ NAPŘÍČ KANCELÁŘÍ
 -- Spusť JEDNOU v Supabase: SQL Editor -> New query -> vložit -> Run. Jde spustit i opakovaně.
 -- Hledá se bez ohledu na velikost písmen a diakritiku (např. „novak“ najde „Novák“) ve věcech, klientech,
--- zápisech a poznámkách, kontaktech, názvech souborů, lhůtách, poptávkách, vzorech, výkazech, fakturách a nemovitostech.
+-- zápisech a poznámkách, kontaktech, datových zprávách uložených ve věcech, názvech souborů, lhůtách, poptávkách, vzorech, výkazech, fakturách a nemovitostech.
 -- Funkce běží s právy přihlášeného, takže najde jen to, co smí vidět (vlastní data a sdílené vzory kolegů).
 -- Šifrovaný obsah (zprávy klientů, chat, šifrované názvy souborů) se prohledat nedá, server ho nevidí.
 -- =====================================================================
@@ -64,6 +64,9 @@ begin
   union all
   (select 'faktura', v.id, v.case_id, coalesce(nullif(v.number, ''), 'Koncept') || coalesce(' · ' || nullif(v.title, ''), ''), public.snip(concat_ws(' · ', v.client_snapshot ->> 'name', v.note), q), 2
    from public.invoices v where position(q in public.norm(concat_ws(' ', v.number, v.title, v.note, v.client_snapshot ->> 'name', v.client_snapshot ->> 'ico'))) > 0 limit 6)
+  union all
+  (select 'datovka', d.id, d.case_id, d.annotation, public.snip(concat_ws(' · ', case when d.direction = 'received' then 'od ' || d.sender else 'komu ' || d.recipient end, 'ID ' || d.dm_id), q), 2
+   from public.case_data_messages d where position(q in public.norm(concat_ws(' ', d.annotation, d.sender, d.recipient, d.dm_id))) > 0 limit 8)
   union all
   (select 'nemovitost', p.id, p.case_id, p.label, null::text, 2
    from public.case_properties p where position(q in public.norm(p.label)) > 0 limit 6);

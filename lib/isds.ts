@@ -41,6 +41,11 @@ export const isFault = (xml: string) => /<(?:\w+:)?Fault[\s>]/.test(xml);
 export const STATUS_LABELS: Record<string, string> = { '1': 'podána', '2': 'podána s časovým razítkem', '3': 'neprošla antivirovou kontrolou', '4': 'dodána (zatím nepřevzata)', '5': 'doručena fikcí', '6': 'doručena přihlášením', '7': 'přečtena', '8': 'nedoručitelná', '9': 'smazána', '10': 'v datovém trezoru' };
 // Dokud je zpráva jen dodaná (4), stažení ji doručí
 export const isUndelivered = (status: string) => status === '4';
+// Barva štítku podle stavu (Tailwind třídy)
+export const STATUS_TONES: Record<string, string> = { '1': 'bg-sky-100 text-sky-900', '2': 'bg-sky-100 text-sky-900', '3': 'bg-rose-100 text-rose-900', '4': 'bg-amber-200 text-amber-950', '5': 'bg-violet-100 text-violet-900', '6': 'bg-indigo-100 text-indigo-900', '7': 'bg-emerald-100 text-emerald-900', '8': 'bg-rose-100 text-rose-900', '9': 'bg-slate-200 text-slate-700', '10': 'bg-teal-100 text-teal-900' };
+export const statusTone = (status: string) => STATUS_TONES[status] ?? 'bg-slate-100 text-slate-700';
+// Nová zpráva = doručená, ale ještě nepřečtená (dodána 4, doručena fikcí 5, doručena přihlášením 6)
+export const isNewMessage = (status: string) => status === '4' || status === '5' || status === '6';
 export const isDeleted = (status: string) => status === '9';
 
 export type Record_ = { id: string; sender: string; senderBox: string; recipient: string; recipientBox: string; annotation: string; status: string; delivered: string; accepted: string; attachmentSize: number; undelivered: boolean };

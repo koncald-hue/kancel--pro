@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STATUS_LABELS, isDeleted, firstCookie, decodeMessageText, cookieSafe, cookieValue, loginUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
+import { isNewMessage, statusTone, STATUS_LABELS, isDeleted, firstCookie, decodeMessageText, cookieSafe, cookieValue, loginUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
 
 // Ukázkové odpovědi jsou sestavené podle dokumentace ISDS, ne z ostrého provozu.
 const LIST = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><p:GetListOfReceivedMessagesResponse xmlns:p="http://isds.czechpoint.cz/v20"><p:dmRecords><p:dmRecord><p:dmID>123</p:dmID><p:dbIDSender>abc1234</p:dbIDSender><p:dmSender>Městský soud &amp; spol.</p:dmSender><p:dmRecipient>JUDr. Novák</p:dmRecipient><p:dmAnnotation>Usnesení</p:dmAnnotation><p:dmMessageStatus>4</p:dmMessageStatus><p:dmAttachmentSize>12</p:dmAttachmentSize><p:dmDeliveryTime>2026-11-10T10:00:00</p:dmDeliveryTime></p:dmRecord><p:dmRecord><p:dmID>124</p:dmID><p:dmSender>FÚ</p:dmSender><p:dmMessageStatus>7</p:dmMessageStatus></p:dmRecord></p:dmRecords><p:dmStatus><p:dmStatusCode>0000</p:dmStatusCode><p:dmStatusMessage>OK</p:dmStatusMessage></p:dmStatus></p:GetListOfReceivedMessagesResponse></s:Body></s:Envelope>`;
@@ -76,5 +76,9 @@ describe('ISDS', () => {
         expect(firstCookie(['IPCZ-S-COOKIE=abcdefgh1; Path=/'], ['IPCZ-S-COOKIE', 'S-COOKIE'])).toEqual({ name: 'IPCZ-S-COOKIE', value: 'abcdefgh1' });
         expect(firstCookie(['S-COOKIE=zzzzzzzz2; Path=/'], ['IPCZ-S-COOKIE', 'S-COOKIE'])).toEqual({ name: 'S-COOKIE', value: 'zzzzzzzz2' });
         expect(firstCookie(['IPCZ-X-COOKIE=x'], ['S-COOKIE'])).toBeNull();
+    });
+    it('counts only delivered but unread messages as new and colours every known status', () => {
+        expect(['4', '5', '6', '7', '9'].map(isNewMessage)).toEqual([true, true, true, false, false]);
+        for (const k of Object.keys(STATUS_LABELS)) expect(statusTone(k)).not.toContain('slate-100');
     });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { IDLE_LIMIT_MS, dropSession, endAllSessions, getSession, hasSessions, putSession, touchSession } from './isdsSession';
+import { reapExpired, IDLE_LIMIT_MS, dropSession, endAllSessions, getSession, hasSessions, putSession, touchSession } from './isdsSession';
 
 describe('data box sessions', () => {
     it('keeps a session while it is used and expires it after idle time', () => {
@@ -17,5 +17,14 @@ describe('data box sessions', () => {
         expect(sent.sort()).toEqual(['prod:c1', 'test:c2']);
         expect(getSession('a')).toBeNull();
         dropSession('b');
+    });
+    it('reaps only idle sessions and logs them out', async () => {
+        putSession('old', 'prod', 'c-old', 0); putSession('fresh', 'prod', 'c-fresh', IDLE_LIMIT_MS);
+        const sent: string[] = [];
+        const n = await reapExpired(async (_e, s) => { sent.push(s); }, IDLE_LIMIT_MS + 1000);
+        expect(n).toBe(1);
+        expect(sent).toEqual(['c-old']);
+        expect(getSession('fresh', IDLE_LIMIT_MS + 1000)?.value).toBe('c-fresh');
+        dropSession('fresh');
     });
 });

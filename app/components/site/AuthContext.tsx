@@ -5,6 +5,7 @@ import type { User as AuthUser } from '@supabase/supabase-js';
 import { X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { endAllSessions } from '@/lib/isdsSession';
+import { clearBoxState } from '@/lib/dataBoxState';
 import AuthForm from './AuthForm';
 
 // Přihlášení do aplikace pro právníky: jeden účet, přihlašování e-mailem a heslem
@@ -64,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const { data: { session } } = await supabase.auth.getSession();
                 await endAllSessions((env, value) => fetch('/api/isds', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ action: 'mk_end', env, session: value }) }));
             } catch { /* odhlášení se nesmí zdržet */ }
+            clearBoxState();
             await supabase.auth.signOut();
         })();
     }, []);
