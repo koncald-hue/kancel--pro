@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { DUE_SOON_DAYS, loadReceivables, money, round2, type Receivable } from '@/lib/billing';
 import { czk, entryAmount, formatMinutes, type TimeEntry } from '@/lib/lawyer';
 import { useLawyer } from './LawyerGate';
+import ProfitSection from './ProfitSection';
 
 function Tile({ label, value, note, tone, href }: { label: string; value: string; note?: string; tone?: string; href: string }) {
     return <Link href={href} className="rounded-2xl border border-slate-200 bg-white p-4 hover:border-indigo-300 sm:p-5"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p><p className={`mt-1 text-2xl font-bold ${tone ?? 'text-slate-900'}`}>{value}</p>{note && <p className="mt-0.5 text-xs text-slate-500">{note}</p>}</Link>;
@@ -71,6 +72,7 @@ export default function MoneyOverview() {
                     </ul>
                 </section>
             )}
+            <ProfitSection />
             <p className="flex items-center gap-1.5 text-xs text-slate-500"><Tags size={12} aria-hidden="true" /> Sazby a služby, které fakturujete nejčastěji, spravujete v <Link href="/kancelar/cenik" className="font-semibold text-indigo-800 underline">Ceníku</Link>.</p>
         </div>
     );

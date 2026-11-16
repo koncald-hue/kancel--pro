@@ -95,7 +95,7 @@ export async function loadPriceItems(): Promise<PriceItem[]> {
 export type Payment = { id: string; invoice_id: string; amount: number; paid_on: string; note: string };
 export const DUE_SOON_DAYS = 7;
 export type ReceivableState = 'draft' | 'cancelled' | 'paid' | 'overdue' | 'due_soon' | 'partial' | 'open';
-export type Receivable = Invoice & { total: number; paid: number; outstanding: number; state: ReceivableState; daysToDue: number | null };
+export type Receivable = Invoice & { base: number; total: number; paid: number; outstanding: number; state: ReceivableState; daysToDue: number | null };
 
 export const RECEIVABLE_LABELS: Record<ReceivableState, string> = { draft: 'Koncept', cancelled: 'Storno', paid: 'Zaplaceno', overdue: 'Po splatnosti', due_soon: 'Blíží se splatnost', partial: 'Částečně zaplaceno', open: 'Čeká na zaplacení' };
 
@@ -127,8 +127,9 @@ export async function loadReceivables(vatPayerNow: boolean): Promise<Receivable[
     // Chybějící tabulka plateb (nespuštěné SQL) znamená nulové platby
     if (!pays.error) for (const p of (pays.data ?? []) as { invoice_id: string; amount: number }[]) paidBy.set(p.invoice_id, round2((paidBy.get(p.invoice_id) ?? 0) + Number(p.amount)));
     return ((inv.data ?? []) as Invoice[]).map((i) => {
-        const total = computeTotals(byInvoice.get(i.id) ?? [], i.status === 'draft' ? vatPayerNow : i.supplier_snapshot.vat_payer === true).total;
+        const calc = computeTotals(byInvoice.get(i.id) ?? [], i.status === 'draft' ? vatPayerNow : i.supplier_snapshot.vat_payer === true);
+        const total = calc.total;
         const paid = i.status === 'paid' && !paidBy.get(i.id) ? total : (paidBy.get(i.id) ?? 0);
-        return { ...i, total, paid, outstanding: round2(total - paid), ...receivableState(i, total, paid) };
+        return { ...i, base: calc.base, total, paid, outstanding: round2(total - paid), ...receivableState(i, total, paid) };
     });
 }

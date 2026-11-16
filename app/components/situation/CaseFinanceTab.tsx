@@ -7,6 +7,7 @@ import { Calculator, Clock3, FilePlus2, Loader2, Percent, Plus } from 'lucide-re
 import { supabase } from '@/lib/supabase';
 import { RECEIVABLE_LABELS, lineFromTimeEntry, loadReceivables, money, round2, todayIso, type Receivable } from '@/lib/billing';
 import { createDraftInvoice } from '@/lib/invoiceDraft';
+import { profitOf } from '@/lib/profit';
 import { entryAmount, formatMinutes, parseDuration, type TimeEntry } from '@/lib/lawyer';
 import { useLawyer } from '../lawyer/LawyerGate';
 import { ghostBtn, inputCls, primaryBtn, type TabProps } from './caseUi';
@@ -49,6 +50,7 @@ export default function CaseFinanceTab({ item, userId, fail }: TabProps) {
     const openAmount = round2(open.reduce((s, e) => s + entryAmount(e), 0));
     const live = invoices.filter((i) => i.state !== 'draft' && i.state !== 'cancelled');
     const outstanding = round2(live.reduce((s, i) => s + i.outstanding, 0));
+    const prof = profitOf(entries, invoices.map((i) => ({ case_id: i.case_id ?? null, status: i.status, state: i.state, base: i.base, total: i.total, paid: i.paid, currency: i.currency })));
     const paid = round2(live.reduce((s, i) => s + i.paid, 0));
 
     async function addTime(e: React.FormEvent) {
@@ -82,6 +84,14 @@ export default function CaseFinanceTab({ item, userId, fail }: TabProps) {
                 {tile('Zaplaceno', money(paid))}
                 {tile('Po splatnosti', money(round2(live.filter((i) => i.state === 'overdue').reduce((s, i) => s + i.outstanding, 0))), undefined, live.some((i) => i.state === 'overdue') ? 'text-rose-700' : undefined)}
             </div>
+
+            {(prof.effectiveRate !== null || prof.realization !== null) && (
+                <div className="grid grid-cols-3 gap-3">
+                    {tile('Za hodinu (zaplaceno)', prof.effectiveRate === null ? '–' : money(prof.effectiveRate), `z ${String(prof.hours).replace('.', ',')} h práce`)}
+                    {tile('Realizace', prof.realization === null ? '–' : `${prof.realization} %`, 'vyfakturováno z hodnoty práce', prof.realization !== null && prof.realization < 70 ? 'text-amber-700' : undefined)}
+                    {tile('Inkaso', prof.collection === null ? '–' : `${prof.collection} %`, 'zaplaceno z vyfakturovaného', prof.collection !== null && prof.collection < 50 ? 'text-rose-700' : undefined)}
+                </div>
+            )}
 
             <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => void invoiceOpen()} disabled={open.length === 0 || busy === 'invoice'} className={primaryBtn}>{busy === 'invoice' ? <Loader2 size={15} className="animate-spin" /> : <FilePlus2 size={15} />} Vyfakturovat nevyfakturovaný čas</button>
