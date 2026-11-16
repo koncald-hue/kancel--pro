@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useMasterKey } from '@/lib/useE2ee';
 import { createMemberKeys, fingerprint, unlockMemberKey } from '@/lib/e2eeShare';
@@ -62,6 +62,14 @@ export function useSharingKeys() {
             await reload();
         } catch (e) { setError(e instanceof Error ? e.message : 'Klíče se nepodařilo vytvořit.'); } finally { setBusy(false); }
     }, [master, userId, reload]);
+
+    // Jakmile je šifrování odemčené a klíče pro chat ještě nejsou, vytvoří se samy (bez dalšího klikání)
+    const autoTried = useRef(false);
+    useEffect(() => {
+        if (autoTried.current || !master || colleagues === undefined || colleagues === null || myRow) return;
+        autoTried.current = true;
+        void enable().then(() => supabase.rpc('dismiss_nudges'));
+    }, [master, colleagues, myRow, enable]);
 
     return { userId, master, colleagues, keys, prints, privateKey, keyProblem, myRow, error, busy, enable, reload };
 }

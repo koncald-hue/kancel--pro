@@ -29,7 +29,11 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
     const [unread, setUnread] = useState(0);
     useEffect(() => {
         let cancelled = false;
-        const load = () => supabase.rpc('chat_summary').then(({ data, error }) => { if (!cancelled && !error) setUnread(((data ?? []) as { unread: number }[]).reduce((s, r) => s + Number(r.unread), 0)); });
+        const load = async () => {
+            const [sum, nud] = await Promise.all([supabase.rpc('chat_summary'), supabase.rpc('my_nudges')]);
+            if (cancelled || sum.error) return;
+            setUnread(((sum.data ?? []) as { unread: number }[]).reduce((s, r) => s + Number(r.unread), 0) + (nud.error ? 0 : ((nud.data ?? []) as unknown[]).length));
+        };
         void load();
         const id = window.setInterval(() => void load(), 30_000);
         return () => { cancelled = true; window.clearInterval(id); };

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Briefcase, Building2, Check, Download, FileText, Landmark, Loader2, Lock, MessageSquare, Paperclip, Send, Trash2, User } from 'lucide-react';
+import { ArrowLeft, Bell, Briefcase, Building2, Check, Download, FileText, Landmark, Loader2, Lock, MessageSquare, Paperclip, Send, Trash2, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { formatSize } from '@/lib/caseFile';
@@ -43,6 +43,22 @@ export default function LawyerChat() {
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     const [info, setInfo] = useState('');
+    const [nudges, setNudges] = useState<{ from_id: string; name: string }[]>([]);
+    const [nudged, setNudged] = useState<Record<string, boolean>>({});
+    useEffect(() => {
+        let cancelled = false;
+        supabase.rpc('my_nudges').then(({ data }) => { if (!cancelled) setNudges((data ?? []) as { from_id: string; name: string }[]); });
+        return () => { cancelled = true; };
+    }, []);
+
+    async function nudge(id: string) {
+        setError('');
+        const { data, error: err } = await supabase.rpc('nudge_colleague', { p_user: id });
+        if (err) { setError(/function|schema cache/i.test(err.message) ? 'Výzvy zatím nejsou v databázi zapnuté (chybí spuštění souboru chat-vyzva.sql).' : err.message); return; }
+        setNudged((n) => ({ ...n, [id]: true }));
+        setInfo(data === 'already' ? 'Výzvu jste kolegovi poslali nedávno, zkuste to později.' : 'Kolega dostal výzvu a po zapnutí chatu mu budete moct psát.');
+    }
+
     const firmId = useRef('');
     const bottom = useRef<HTMLDivElement>(null);
     const fileInput = useRef<HTMLInputElement>(null);
@@ -198,6 +214,7 @@ export default function LawyerChat() {
     );
     if (!privateKey) return (
         <section className="rounded-2xl border border-slate-200 bg-white p-6">
+            {nudges.length > 0 && <p role="status" className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-950"><strong>{nudges.map((n) => n.name).join(', ')}</strong> {nudges.length > 1 ? 'vás vyzývají' : 'vás vyzývá'} k zapnutí šifrovaného chatu, aby vám mohli psát. Stačí níže nastavit šifrování.</p>}
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><MessageSquare size={18} className="text-indigo-700" /> Šifrovaný chat kanceláře</h2>
             <p className="mt-1 text-sm leading-relaxed text-slate-600">Zprávy, soubory i celé věci se šifrují ve vašem prohlížeči. Server, provozovatel ani vedoucí kanceláře je přečíst nemohou. Nejdřív odemkněte šifrování a zapněte sdílení.</p>
             {keys.error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{keys.error}</p>}
@@ -247,6 +264,12 @@ export default function LawyerChat() {
                             <p className="mt-2 text-xs text-slate-500">Text napsaný níže se přidá jako zpráva k příloze.</p>
                         </div>
                     )}
+                    {!peerReady ? (
+                        <footer className="border-t border-slate-100 bg-slate-50 p-4 text-sm">
+                            <p className="text-slate-700"><strong>{peerName(peer)}</strong> si zatím nezapnul(a) šifrovaný chat. Zprávy jsou šifrované jen pro něj nebo ni, proto mu zatím nejde napsat. Pošlete mu výzvu a po zapnutí mu budete moct psát.</p>
+                            <button type="button" onClick={() => void nudge(peer)} disabled={nudged[peer]} className={`${primaryBtn} mt-3`}><Bell size={15} /> {nudged[peer] ? 'Výzva odeslána' : 'Vyzvat k zapnutí chatu'}</button>
+                        </footer>
+                    ) : (
                     <footer className="border-t border-slate-100 p-3">
                         <div className="mb-2 flex flex-wrap gap-1.5">
                             {([['file', 'Soubor', Paperclip], ['case', 'Věc', Briefcase], ['client', 'Klient', User], ['property', 'Nemovitost', Landmark]] as const).map(([k, label, Icon]) => <button key={k} type="button" onClick={() => void openAttach(k)} disabled={!peerReady} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${attach === k ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700 hover:bg-slate-50'} disabled:opacity-40`}><Icon size={13} aria-hidden="true" /> {label}</button>)}
@@ -256,6 +279,7 @@ export default function LawyerChat() {
                             <button type="submit" disabled={!peerReady || (!attach && !text.trim()) || busy === 'text' || busy === 'attach'} className={primaryBtn} aria-label="Odeslat">{busy === 'text' ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}</button>
                         </form>
                     </footer>
+                    )}
                 </>
             )}
         </section>
