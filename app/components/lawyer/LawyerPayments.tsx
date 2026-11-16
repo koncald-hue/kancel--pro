@@ -1,5 +1,6 @@
 'use client';
 
+import { isCamt, parseCamt053 } from '@/lib/camt';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, Ban, Check, KeyRound, Landmark, Loader2, Plus, RefreshCw, Trash2, Undo2, Upload, Zap } from 'lucide-react';
@@ -178,14 +179,14 @@ function BankPanel({ accounts, master, userId, vat, busy, run, setMsg }: { accou
     async function pickFile(f: File | undefined) {
         if (!f) return;
         const text = await f.text();
-        const r = parseBankCsv(text, 'csv');
+        const r = isCamt(text) ? { ...parseCamt053(text, 'csv'), missing: [] as string[] } : parseBankCsv(text, 'csv');
         setCsv({ name: f.name, txs: r.txs, skipped: r.skipped, missing: r.missing, accountId: accounts.find((a) => a.provider === 'csv')?.id ?? 'new' });
     }
     async function importCsv() {
         if (!csv) return;
         await run('csv', async () => {
             let account = accounts.find((a) => a.id === csv.accountId);
-            if (!account) { const { data, error } = await supabase.from('bank_accounts').insert({ user_id: userId, label: 'Účet z výpisů (CSV)', provider: 'csv' }).select('*').single(); if (error) throw new Error(error.message); account = data as Account; }
+            if (!account) { const { data, error } = await supabase.from('bank_accounts').insert({ user_id: userId, label: 'Účet z výpisů', provider: 'csv' }).select('*').single(); if (error) throw new Error(error.message); account = data as Account; }
             const acc = account;
             // ID pohybů v CSV mají předponu účtu, aby se stejný výpis nenahrál dvakrát
             const txs = csv.txs.map((t) => ({ ...t, txid: t.txid.replace(/^csv:/, `${acc.id.slice(0, 8)}:`) }));
@@ -198,7 +199,7 @@ function BankPanel({ accounts, master, userId, vat, busy, run, setMsg }: { accou
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Bankovní účet">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Landmark size={18} className="text-indigo-700" /> Bankovní účet</h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">Příchozí platby se stahují z banky a podle variabilního symbolu se samy spárují s vyúčtováním. Co jistě nesedí, nechá aplikace na vás. Token se ukládá zašifrovaný vaším šifrovacím heslem, server ho neukládá.</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">Příchozí platby se samy spárují s vyúčtováním. Výpis z libovolné banky nahrajete jako CSV nebo XML (camt.053); u Fio banky lze účet připojit a platby se pak stahují samy. Token se ukládá zašifrovaný vaším šifrovacím heslem, server ho neukládá.</p>
             {accounts.length > 0 && (
                 <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
                     {accounts.map((a) => (
@@ -214,8 +215,8 @@ function BankPanel({ accounts, master, userId, vat, busy, run, setMsg }: { accou
             {!master && <p className="mt-3 flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600"><KeyRound size={15} aria-hidden="true" /> Pro připojení a stahování odemkněte šifrovací heslo v Nastavení.</p>}
             <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" onClick={() => setShowFio((v) => !v)} disabled={!master} className={primaryBtn}><Plus size={15} /> Připojit účet u Fio banky</button>
-                <button type="button" onClick={() => file.current?.click()} className={ghostBtn}><Upload size={14} /> Nahrát výpis (CSV)</button>
-                <input ref={file} type="file" accept=".csv,text/csv,text/plain" onChange={(e) => void pickFile(e.target.files?.[0])} className="sr-only" aria-label="Soubor s výpisem" />
+                <button type="button" onClick={() => file.current?.click()} className={ghostBtn}><Upload size={14} /> Nahrát výpis z jakékoli banky (CSV nebo XML)</button>
+                <input ref={file} type="file" accept=".csv,.xml,text/csv,text/plain,text/xml,application/xml" onChange={(e) => void pickFile(e.target.files?.[0])} className="sr-only" aria-label="Soubor s výpisem" />
             </div>
             {showFio && master && (
                 <form onSubmit={connectFio} className="mt-3 space-y-3 rounded-xl bg-slate-50 p-4">
