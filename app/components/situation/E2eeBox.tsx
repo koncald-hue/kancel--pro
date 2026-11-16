@@ -80,7 +80,7 @@ export default function E2eeBox({ access, onChanged }: { access: LawyerAccess | 
                     {useRecovery ? <input value={recovery} onChange={(e) => setRecovery(e.target.value)} placeholder="Záchranný kód" className={inputCls} aria-label="Záchranný kód" /> : <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Heslo kanceláře" autoComplete="current-password" className={inputCls} aria-label="Heslo kanceláře" onKeyDown={(e) => { if (e.key === 'Enter') void unlock(); }} />}
                     <div className="flex flex-wrap items-center gap-3">
                         <button type="button" onClick={() => void unlock()} disabled={busy} className={primaryBtn}><LockOpen size={16} /> Odemknout</button>
-                        <button type="button" onClick={() => { setUseRecovery((v) => !v); setError(''); }} className={ghostBtn}>{useRecovery ? 'Použít heslo' : 'Zapomněl jsem heslo'}</button>
+                        <button type="button" onClick={() => { setUseRecovery((v) => !v); setError(''); }} className={ghostBtn}>{useRecovery ? 'Použít heslo kanceláře' : 'Zapomenuté heslo kanceláře? Použít záchranný kód'}</button>
                     </div>
                 </div>
             )}
