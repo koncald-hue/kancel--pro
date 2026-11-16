@@ -42,7 +42,7 @@ export default function IntakeForm() {
             <div className="mx-auto max-w-lg px-4 py-10 sm:py-16">
                 {state === 'loading' && <p className="text-center text-sm text-slate-500" role="status">Načítám…</p>}
                 {state === 'invalid' && <div className="text-center"><Lock size={30} className="mx-auto text-indigo-800" aria-hidden="true" /><h1 className="mt-3 text-2xl font-bold text-slate-900">Odkaz není platný</h1><p className="mt-2 text-sm text-slate-600">Požádejte kancelář o aktuální odkaz.</p></div>}
-                {state === 'sent' && <div className="text-center"><CheckCircle2 size={34} className="mx-auto text-emerald-600" aria-hidden="true" /><h1 className="mt-3 text-2xl font-bold text-slate-900">Děkujeme, poptávka je odeslaná</h1><p className="mt-2 text-sm leading-relaxed text-slate-600">{firm || 'Kancelář'} se vám ozve na uvedený kontakt. Do té doby nic dalšího nepodnikejte a případné dokumenty si schovejte.</p></div>}
+                {state === 'sent' && <div className="text-center"><CheckCircle2 size={34} className="mx-auto text-emerald-600" aria-hidden="true" /><h1 className="mt-3 text-2xl font-bold text-slate-900">Děkujeme, poptávka je odeslaná</h1><p className="mt-2 text-sm leading-relaxed text-slate-600">{firm || 'Kancelář'} se vám ozve na uvedený kontakt. Jakmile vaši věc převezme, pošle vám zabezpečený odkaz, přes který mu budete moct psát a posílat dokumenty. Do té doby nic dalšího nepodnikejte a případné dokumenty si schovejte.</p></div>}
                 {state === 'ok' && (
                     <>
                         {firm && <p className="text-xs font-semibold uppercase tracking-wider text-indigo-800">{firm}</p>}

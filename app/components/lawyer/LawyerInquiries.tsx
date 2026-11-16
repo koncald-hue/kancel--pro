@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, Check, Mail, Phone, X } from 'lucide-react';
+import { AlertTriangle, Check, Copy, Lock, Mail, MessageSquare, Phone, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { createCase, BLANK_CASE, loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient } from '@/lib/lawyer';
+import { generateKey, wrapKey, linkWithKey, exportKey } from '@/lib/e2ee';
+import { generateToken, portalUrl } from '@/lib/portal';
+import { useMasterKey } from '@/lib/useE2ee';
 import { ghostBtn, primaryBtn, shortDate } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
-type Inquiry = { id: string; name: string; email: string; phone: string; message: string; status: 'new' | 'accepted' | 'declined'; created_at: string };
+type Inquiry = { id: string; name: string; email: string; phone: string; message: string; status: 'new' | 'accepted' | 'declined'; created_at: string; case_id?: string | null };
+type Invite = { caseId: string; url: string; secure: boolean };
 
 export default function LawyerInquiries() {
     const { userId } = useLawyer();
@@ -17,7 +21,9 @@ export default function LawyerInquiries() {
     const [clients, setClients] = useState<LawyerClient[]>([]);
     const [cases, setCases] = useState<LegalCase[]>([]);
     const [error, setError] = useState('');
-    const [accepted, setAccepted] = useState<Record<string, string>>({});
+    const [accepted, setAccepted] = useState<Record<string, Invite>>({});
+    const [copied, setCopied] = useState('');
+    const master = useMasterKey();
 
     useEffect(() => {
         let cancelled = false;
@@ -33,19 +39,35 @@ export default function LawyerInquiries() {
         ...cases.filter((c) => (c.client_name ?? '').toLowerCase() === q.name.toLowerCase()).map((c) => `věc „${c.title}“`),
     ];
 
+    // Přijetí: věc se založí rovnou s kontaktem klienta (klient se najde nebo založí a doplní se mu e-mail a telefon),
+    // původní zpráva zájemce je popis věci a vznikne zabezpečený odkaz, přes který si s klientem můžete psát a posílat dokumenty.
     async function accept(q: Inquiry) {
+        setError('');
         try {
-            if (!clients.some((c) => c.name.toLowerCase() === q.name.toLowerCase())) {
-                const { data } = await supabase.from('lawyer_clients').insert({ user_id: userId, name: q.name, email: q.email, phone: q.phone, note: 'Z poptávky' }).select('*').single();
-                if (data) setClients((c) => [...c, data as LawyerClient]);
-            }
             const created = await createCase(userId, { ...BLANK_CASE, title: `Věc: ${q.name}`, situation: q.message });
-            await supabase.from('cases').update({ client_name: q.name }).eq('id', created.id);
-            await supabase.from('lawyer_inquiries').update({ status: 'accepted' }).eq('id', q.id);
-            setItems((list) => list.map((x) => (x.id === q.id ? { ...x, status: 'accepted' } : x)));
-            setAccepted((a) => ({ ...a, [q.id]: created.id }));
-        } catch { setError('Poptávku se nepodařilo přijmout.'); }
+            const { error: caseErr } = await supabase.from('cases').update({ client_name: q.name, client_email: q.email, client_phone: q.phone }).eq('id', created.id);
+            if (caseErr) throw new Error(caseErr.message);
+            const { error: stErr } = await supabase.from('lawyer_inquiries').update({ status: 'accepted' }).eq('id', q.id);
+            if (stErr) throw new Error(stErr.message);
+            await supabase.from('lawyer_inquiries').update({ case_id: created.id }).eq('id', q.id); // vyžaduje poptavky-propojeni.sql
+            setItems((list) => list.map((x) => (x.id === q.id ? { ...x, status: 'accepted', case_id: created.id } : x)));
+            const { data: fresh } = await supabase.from('lawyer_clients').select('*');
+            if (fresh) setClients(fresh as LawyerClient[]);
+
+            // Zabezpečený odkaz pro klienta; šifrovaný je jen s odemčeným šifrovacím heslem
+            const k = master ? await generateKey() : null;
+            const token = generateToken();
+            const exp = new Date(); exp.setDate(exp.getDate() + 90);
+            const { error: linkErr } = await supabase.from('client_links').insert({ case_id: created.id, user_id: userId, token, label: created.title, expires_at: exp.toISOString(), e2ee: !!k, wrapped_key: k && master ? await wrapKey(master, k) : null });
+            if (linkErr) return;
+            const base = portalUrl(window.location.origin, token);
+            const url = k ? linkWithKey(base, await exportKey(k)) : base;
+            setAccepted((a) => ({ ...a, [q.id]: { caseId: created.id, url, secure: !!k } }));
+        } catch (err) { setError(err instanceof Error ? `Poptávku se nepodařilo přijmout: ${err.message}` : 'Poptávku se nepodařilo přijmout.'); }
     }
+
+    const inviteText = (q: Inquiry, url: string) => `Dobrý den, ${q.name},\n\nděkuji za vaši poptávku. Věc jsem převzal(a). Na tomto zabezpečeném odkazu mi můžete psát, posílat dokumenty a uvidíte stav věci:\n\n${url}\n\nOdkaz je osobní, nikomu ho prosím nepředávejte.`;
+    async function copy(id: string, text: string) { await navigator.clipboard?.writeText(text); setCopied(id); window.setTimeout(() => setCopied(''), 1500); }
 
     async function decline(q: Inquiry) {
         const { error: err } = await supabase.from('lawyer_inquiries').update({ status: 'declined' }).eq('id', q.id);
@@ -73,11 +95,29 @@ export default function LawyerInquiries() {
                     );
                 })}
             </ul>
+            {Object.entries(accepted).map(([id, inv]) => {
+                const q = items.find((x) => x.id === id);
+                if (!q) return null;
+                return (
+                    <section key={id} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5" aria-label={`Přijato: ${q.name}`}>
+                        <p className="flex items-center gap-2 font-bold text-emerald-900"><Check size={16} /> Věc „{q.name}“ je založená</p>
+                        <p className="mt-1 text-sm text-slate-700">Klient i jeho kontakt ({[q.phone, q.email].filter(Boolean).join(', ')}) jsou uložené u věci a v seznamu klientů, původní zpráva zájemce je v popisu věci.</p>
+                        <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-900"><MessageSquare size={15} /> Zabezpečený chat a dokumenty s klientem</p>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-600">Pošlete klientovi tento odkaz. Otevře si svou stránku věci, kde vám může psát a nahrávat dokumenty. {inv.secure ? <><Lock size={11} className="mb-0.5 inline" /> Zprávy a soubory jsou šifrované end-to-end, klíč je součástí odkazu.</> : 'Odemkněte šifrovací heslo (Nastavení) a odkaz si ve věci vytvořte znovu, ať jsou zprávy šifrované end-to-end.'}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <button type="button" onClick={() => void copy(id, inviteText(q, inv.url))} className={primaryBtn}><Copy size={15} /> {copied === id ? 'Zkopírováno' : 'Zkopírovat zprávu s odkazem'}</button>
+                            {q.email && <a href={`mailto:${q.email}?subject=${encodeURIComponent('Vaše věc – zabezpečený odkaz')}&body=${encodeURIComponent(inviteText(q, inv.url))}`} className={ghostBtn}><Mail size={15} /> Otevřít e-mail</a>}
+                            <Link href={`/kancelar/veci/${inv.caseId}`} className={ghostBtn}>Otevřít věc</Link>
+                        </div>
+                        <p className="mt-2 text-[11px] text-slate-500">Odkaz zůstává i ve věci v záložce Klient. Tady se ukazuje jen teď, protože klíč se po opuštění stránky už nezobrazí.</p>
+                    </section>
+                );
+            })}
             {rest.length > 0 && (
                 <div>
                     <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Vyřízené</h2>
                     <ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
-                        {rest.map((q) => <li key={q.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"><span className="font-semibold text-slate-800">{q.name}</span><span className="text-xs text-slate-500">{q.status === 'accepted' ? <>přijato{accepted[q.id] && <> · <Link href={`/kancelar/veci/${accepted[q.id]}`} className="font-semibold text-indigo-900 underline">otevřít věc</Link></>}</> : 'odmítnuto'} · {shortDate(new Date(q.created_at))}</span></li>)}
+                        {rest.map((q) => <li key={q.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"><span className="font-semibold text-slate-800">{q.name}</span><span className="text-xs text-slate-500">{q.status === 'accepted' ? <>přijato{(q.case_id ?? accepted[q.id]?.caseId) && <> · <Link href={`/kancelar/veci/${q.case_id ?? accepted[q.id]?.caseId}`} className="font-semibold text-indigo-900 underline">otevřít věc</Link></>}</> : 'odmítnuto'} · {shortDate(new Date(q.created_at))}</span></li>)}
                     </ul>
                 </div>
             )}
