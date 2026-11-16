@@ -18,6 +18,8 @@ export function useSharingKeys() {
     const [prints, setPrints] = useState<Record<string, string>>({});
     const [privateKey, setPrivateKey] = useState<CryptoKey | null>(null);
     const [keyProblem, setKeyProblem] = useState(false);
+    // Klíče se načítají až po seznamu kolegů; dokud nedoběhnou, nesmí se usuzovat, že ještě neexistují
+    const [keysLoaded, setKeysLoaded] = useState(false);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
 
@@ -31,6 +33,7 @@ export function useSharingKeys() {
         const map: Record<string, KeyRow> = {};
         for (const r of (k.data ?? []) as KeyRow[]) map[r.user_id] = r;
         setKeys(map);
+        setKeysLoaded(true);
         const printMap: Record<string, string> = {};
         for (const r of Object.values(map)) printMap[r.user_id] = await fingerprint(r.public_key).catch(() => '');
         setPrints(printMap);
@@ -52,12 +55,13 @@ export function useSharingKeys() {
         return () => { cancelled = true; };
     }, [master, myRow]);
 
-    const enable = useCallback(async () => {
+    // force = vědomě vytvořit klíče znovu (staré zprávy pak nepůjde otevřít); jinak se existující klíče nikdy nepřepíšou
+    const enable = useCallback(async (force = false) => {
         if (!master) return;
         setBusy(true); setError('');
         try {
             const created = await createMemberKeys(master);
-            const { error: err } = await supabase.from('member_keys').upsert({ user_id: userId, public_key: created.publicKey, wrapped_private: created.wrappedPrivate });
+            const { error: err } = await supabase.from('member_keys').upsert({ user_id: userId, public_key: created.publicKey, wrapped_private: created.wrappedPrivate }, { onConflict: 'user_id', ignoreDuplicates: !force });
             if (err) throw new Error(err.message);
             await reload();
         } catch (e) { setError(e instanceof Error ? e.message : 'Klíče se nepodařilo vytvořit.'); } finally { setBusy(false); }
@@ -66,10 +70,10 @@ export function useSharingKeys() {
     // Jakmile je šifrování odemčené a klíče pro chat ještě nejsou, vytvoří se samy (bez dalšího klikání)
     const autoTried = useRef(false);
     useEffect(() => {
-        if (autoTried.current || !master || colleagues === undefined || colleagues === null || myRow) return;
+        if (autoTried.current || !master || !keysLoaded || colleagues === undefined || colleagues === null || myRow) return;
         autoTried.current = true;
         void enable().then(() => supabase.rpc('dismiss_nudges'));
-    }, [master, colleagues, myRow, enable]);
+    }, [master, keysLoaded, colleagues, myRow, enable]);
 
     return { userId, master, colleagues, keys, prints, privateKey, keyProblem, myRow, error, busy, enable, reload };
 }

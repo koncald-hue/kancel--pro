@@ -220,7 +220,7 @@ export default function LawyerChat() {
             {keys.error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{keys.error}</p>}
             {!master ? <div className="mt-4"><E2eeBox access={access} onChanged={() => window.location.reload()} /></div>
                 : !myRow ? <button type="button" onClick={() => void keys.enable()} disabled={keys.busy} className={`${primaryBtn} mt-4`}>{keys.busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />} Zapnout šifrovaný chat</button>
-                : keys.keyProblem ? <div className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-950"><p><strong>Klíče nejdou odemknout</strong> aktuálním šifrováním (po změně hesla nebo záchranného kódu). Nové klíče vytvoříte tady, ale dříve přijaté zprávy pak nepůjde otevřít.</p><button type="button" onClick={() => { if (window.confirm('Vytvořit nové klíče? Dříve přijaté zprávy pak nepůjde otevřít.')) void keys.enable(); }} className={`${ghostBtn} mt-3`}>Vytvořit nové klíče</button></div>
+                : keys.keyProblem ? <div className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-950"><p><strong>Klíče nejdou odemknout</strong> aktuálním šifrováním (po změně hesla nebo záchranného kódu). Nové klíče vytvoříte tady, ale dříve přijaté zprávy pak nepůjde otevřít.</p><button type="button" onClick={() => { if (window.confirm('Vytvořit nové klíče? Dříve přijaté zprávy pak nepůjde otevřít.')) void keys.enable(true); }} className={`${ghostBtn} mt-3`}>Vytvořit nové klíče</button></div>
                 : <p className="mt-4 text-sm text-slate-500" role="status">Odemykám…</p>}
         </section>
     );
