@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { decryptText, unwrapKey } from '@/lib/e2ee';
+import { decryptText, unwrapFromAdmin, unwrapKey } from '@/lib/e2ee';
+import { unlockMemberKey } from '@/lib/e2eeShare';
 import type { CaseFile } from '@/lib/caseFile';
 import { useMasterKey } from '@/lib/useE2ee';
 
@@ -26,8 +27,32 @@ export function useChannelKey(caseId: string): { key: CryptoKey | null; hasEncry
         return () => { cancelled = true; };
     }, [master, wrapped]);
 
-    const key = unwrapped && unwrapped.wrapped === wrapped && master ? unwrapped.key : null;
-    return { key, hasEncrypted: !!wrapped, locked: !!wrapped && !key };
+    // Kolega, kterému vlastník věci klíč kanálu zabalil jeho veřejným klíčem (sdílená věc)
+    const [shared, setShared] = useState<{ wrapped: string; key: CryptoKey | null } | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        void (async () => {
+            if (wrapped) return;
+            const { data: { session } } = await supabase.auth.getSession();
+            const uid = session?.user.id; if (!uid) return;
+            const m = await supabase.from('case_members').select('wrapped_key').eq('case_id', caseId).eq('user_id', uid).maybeSingle();
+            const w = (m.data?.wrapped_key as string | null | undefined) ?? null;
+            if (!w) { if (!cancelled) setShared(null); return; }
+            if (!master) { if (!cancelled) setShared({ wrapped: w, key: null }); return; }
+            try {
+                const mk = await supabase.from('member_keys').select('wrapped_private').eq('user_id', uid).maybeSingle();
+                const priv = await unlockMemberKey(master, mk.data?.wrapped_private as string);
+                const k = await unwrapFromAdmin(priv, w);
+                if (!cancelled) setShared({ wrapped: w, key: k });
+            } catch { if (!cancelled) setShared({ wrapped: w, key: null }); }
+        })();
+        return () => { cancelled = true; };
+    }, [caseId, master, wrapped]);
+
+    const own = unwrapped && unwrapped.wrapped === wrapped && master ? unwrapped.key : null;
+    const key = own ?? (master ? shared?.key ?? null : null);
+    const has = !!wrapped || !!shared;
+    return { key, hasEncrypted: has, locked: has && !key };
 }
 
 // Dešifrované názvy šifrovaných souborů (id souboru → název)

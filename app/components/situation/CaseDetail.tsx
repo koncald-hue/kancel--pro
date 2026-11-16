@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpenCheck, BadgeCheck, BookUser, CalendarClock, CalendarPlus, Check, Clock, FileSignature, FileText, FolderOpen, LayoutDashboard, Pin, PinOff, ShieldCheck, Share2, Landmark, Link2, MailCheck, Trash2, Wallet } from 'lucide-react';
+import { ArrowLeft, BookOpenCheck, BadgeCheck, BookUser, CalendarClock, CalendarPlus, Check, Clock, FileSignature, FileText, FolderOpen, LayoutDashboard, Pin, PinOff, ShieldCheck, Share2, Landmark, Link2, MailCheck, Trash2, Users, Wallet } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { hasLawyerAccess, useLawyerAccess } from '@/lib/lawyer';
@@ -24,6 +24,8 @@ import CaseContactsTab from './CaseContactsTab';
 import CaseDefenseTab from './CaseDefenseTab';
 import CaseExportPanel from './CaseExportPanel';
 import CaseClientTab from './CaseClientTab';
+import CaseSharePanel from './CaseSharePanel';
+import { loadShare, ROLE_LABEL, type ShareRole, type ShareRow } from '@/lib/caseShare';
 import { ghostBtn, type TabProps } from './caseUi';
 
 type TabId = 'prehled' | 'katastr' | 'obrana' | 'klient' | 'soubory' | 'lhuty' | 'chronologie' | 'kontakty' | 'datovky' | 'resers' | 'finance' | 'podpisy' | 'identifikace';
@@ -47,9 +49,17 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
     const [error, setError] = useState('');
     const [missing, setMissing] = useState(false);
     const [exportOpen, setExportOpen] = useState(false);
+    const [shareOpen, setShareOpen] = useState(false);
+    const [shareRows, setShareRows] = useState<ShareRow[]>([]);
     const [unread, setUnread] = useState(0);
 
     const accountId = account?.id;
+    useEffect(() => {
+        if (!accountId || !caseId || !isLawyer) return;
+        let cancelled = false;
+        loadShare(caseId).then((r) => { if (!cancelled) setShareRows(r); }).catch(() => undefined);
+        return () => { cancelled = true; };
+    }, [accountId, caseId, isLawyer, shareOpen]);
     useEffect(() => {
         if (!accountId || !caseId) return;
         let cancelled = false;
@@ -124,7 +134,15 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
     };
     // Advokát vidí šest hlavních záložek a v nich podzáložky; občan zůstává u krátkého plochého seznamu
     type Group = { id: string; label: string; icon: typeof FileText; items: TabDef[]; count?: number };
-    const groups: Group[] = isLawyer ? [
+    // Kolega u sdílené věci vidí soubory, lhůty, chronologii a kontakty; klientská stránka, podpisy, peníze a rešerše patří vlastníkovi
+    const isOwner = !item.user_id || item.user_id === account.id;
+    const myRole = shareRows.find((r) => r.user_id === account.id)?.role;
+    const shared: Group[] = [
+        { id: 'prehled', label: 'Přehled', icon: LayoutDashboard, items: [T.prehled] },
+        { id: 'dokumenty', label: 'Dokumenty', icon: FolderOpen, items: [T.soubory], count: bundle.files.length },
+        { id: 'prubeh', label: 'Průběh', icon: CalendarClock, items: [T.lhuty, T.chronologie, T.kontakty], count: open.length },
+    ];
+    const groups: Group[] = isLawyer && !isOwner ? shared : isLawyer ? [
         { id: 'prehled', label: 'Přehled', icon: LayoutDashboard, items: [T.prehled] },
         { id: 'klient', label: 'Klient', icon: Link2, items: [T.klient, T.podpisy, T.identifikace], count: unread },
         { id: 'dokumenty', label: 'Dokumenty', icon: FolderOpen, items: [T.soubory, T.datovky], count: bundle.files.length },
@@ -154,6 +172,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <button type="button" onClick={() => patchItem({ pinned: !item.pinned })} aria-pressed={item.pinned} className={ghostBtn}>{item.pinned ? <PinOff size={15} /> : <Pin size={15} />} {item.pinned ? 'Odepnout' : 'Připnout'}</button>
+                        {isLawyer && <button type="button" onClick={() => setShareOpen((v) => !v)} aria-expanded={shareOpen} className={ghostBtn}><Users size={15} /> Sdílení{shareRows.filter((r) => !r.is_owner).length ? ` (${shareRows.filter((r) => !r.is_owner).length})` : ''}</button>}
                         <button type="button" onClick={exportIcs} className={ghostBtn}><CalendarPlus size={15} /> Kalendář</button>
                         <button type="button" onClick={() => setExportOpen((v) => !v)} aria-expanded={exportOpen} className={ghostBtn}><Share2 size={15} /> {isLawyer ? 'Předat spis' : 'Souhrn k tisku'}</button>
                     </div>
@@ -165,6 +184,8 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
                 )}
             </header>
 
+            {isLawyer && !isOwner && <p className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-950">Tuto věc vám sdílí {shareRows.find((r) => r.is_owner)?.name || 'kolega'}. Vaše role: <strong>{ROLE_LABEL[(myRole ?? 'viewer') as ShareRole]}</strong>.</p>}
+            {shareOpen && isLawyer && <CaseSharePanel item={item} userId={account.id} onClose={() => setShareOpen(false)} onLeft={() => router.push(listPath)} fail={fail} />}
             {exportOpen && <CaseExportPanel item={item} bundle={bundle} deadlines={deadlines} lawyer={isLawyer} onClose={() => setExportOpen(false)} fail={fail} />}
 
             {error && <p role="alert" className="mt-4 flex items-start justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}<button type="button" onClick={() => setError('')} className="font-semibold underline cursor-pointer">Zavřít</button></p>}
@@ -205,7 +226,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
 
             <footer className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-5">
                 <button type="button" onClick={() => patchItem({ status: item.status === 'done' ? 'open' : 'done' })} className={ghostBtn}><Check size={15} /> {item.status === 'done' ? 'Znovu otevřít případ' : 'Označit jako vyřešený'}</button>
-                <button type="button" onClick={() => void remove()} className="inline-flex items-center gap-1.5 text-sm text-rose-700 hover:underline cursor-pointer"><Trash2 size={14} /> Smazat celý spis</button>
+                {isOwner && <button type="button" onClick={() => void remove()} className="inline-flex items-center gap-1.5 text-sm text-rose-700 hover:underline cursor-pointer"><Trash2 size={14} /> Smazat celý spis</button>}
             </footer>
         </div>
     );

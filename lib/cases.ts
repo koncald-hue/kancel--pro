@@ -7,6 +7,8 @@ export type CaseUrgency = 'high' | 'medium' | 'low';
 
 export type LegalCase = {
     id: string;
+    // Vlastník věci; u věci sdílené kolegou je to jiný uživatel než já
+    user_id?: string;
     title: string;
     situation: string;
     summary: string;
