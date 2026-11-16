@@ -8,7 +8,7 @@ import { useMasterKey } from '@/lib/useE2ee';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { insertRow, safeFileName, uploadCaseFile } from '@/lib/caseFile';
 import { dropSession, getSession, putSession, touchSession } from '@/lib/isdsSession';
-import { STATUS_LABELS, type BoxHit, type Downloaded, type IsdsEnv, type Record_ } from '@/lib/isds';
+import { STATUS_LABELS, isDeleted, type BoxHit, type Downloaded, type IsdsEnv, type Record_ } from '@/lib/isds';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
@@ -302,10 +302,10 @@ function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Rec
                     <div><dt className="text-xs text-slate-500">Dodáno</dt><dd className="text-slate-900">{fmtTime(record.delivered)}</dd></div>
                     <div><dt className="text-xs text-slate-500">Doručeno</dt><dd className="text-slate-900">{fmtTime(record.accepted)}</dd></div>
                 </dl>
-                {tab === 'received' && !msg && record.status === '7' && (
+                {tab === 'received' && !msg && isDeleted(record.status) && (
                     <p className="mt-5 rounded-lg bg-slate-100 p-3 text-sm leading-relaxed text-slate-700"><strong>Zpráva je ve schránce smazaná.</strong> Zůstal jen záznam o doručení (obálka), samotný text a přílohy už stáhnout nejdou. Smazat ji mohl uživatel schránky, nebo se smazala sama po uplynutí lhůty pro uložení (u schránek bez dlouhodobého úložiště obvykle po 90 dnech).</p>
                 )}
-                {tab === 'received' && !msg && record.status !== '7' && (
+                {tab === 'received' && !msg && !isDeleted(record.status) && (
                     <div className="mt-5">
                         {record.undelivered && <p className="mb-3 flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-950"><AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden="true" /><span><strong>Zpráva ještě nebyla doručena.</strong> Jakmile ji stáhnete, považuje se za doručenou a začnou běžet lhůty. Pokračujte, jen když jste na to připraven(a).</span></p>}
                         {confirm && <p role="alert" className="mb-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">Opravdu zprávu stáhnout a tím ji doručit?</p>}

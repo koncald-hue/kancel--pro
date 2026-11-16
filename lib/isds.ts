@@ -35,9 +35,13 @@ export const statusOf = (xml: string): Status => ({ code: tag(xml, 'dmStatusCode
 export const isOk = (s: Status) => s.code === '0000';
 export const isFault = (xml: string) => /<(?:\w+:)?Fault[\s>]/.test(xml);
 
-// Stav zprávy podle ISDS: 1 podána, 2 s časovým razítkem, 3 dodána (ještě nepřevzatá), 4 doručena přihlášením, 5 přečtena, 6 nedoručitelná, 7 smazána, 8 v úložišti
-export const STATUS_LABELS: Record<string, string> = { '1': 'podána', '2': 'podána s časovým razítkem', '3': 'dodána (zatím nepřevzata)', '4': 'doručena', '5': 'přečtena', '6': 'nedoručitelná', '7': 'smazána', '8': 'v úložišti' };
-export const isUndelivered = (status: string) => status === '1' || status === '2' || status === '3';
+// Stav zprávy (dmMessageStatus) podle dokumentace ISDS: 1 podána, 2 podána s časovým razítkem, 3 neprošla antivirovou kontrolou,
+// 4 dodána do schránky (zatím nepřevzata), 5 doručena fikcí, 6 doručena přihlášením, 7 přečtena, 8 nedoručitelná (schránka zrušena),
+// 9 obsah smazán (zpráva v archivu), 10 v datovém trezoru
+export const STATUS_LABELS: Record<string, string> = { '1': 'podána', '2': 'podána s časovým razítkem', '3': 'neprošla antivirovou kontrolou', '4': 'dodána (zatím nepřevzata)', '5': 'doručena fikcí', '6': 'doručena přihlášením', '7': 'přečtena', '8': 'nedoručitelná', '9': 'smazána', '10': 'v datovém trezoru' };
+// Dokud je zpráva jen dodaná (4), stažení ji doručí
+export const isUndelivered = (status: string) => status === '4';
+export const isDeleted = (status: string) => status === '9';
 
 export type Record_ = { id: string; sender: string; senderBox: string; recipient: string; recipientBox: string; annotation: string; status: string; delivered: string; accepted: string; attachmentSize: number; undelivered: boolean };
 export function parseList(xml: string): Record_[] {

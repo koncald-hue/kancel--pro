@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { firstCookie, decodeMessageText, cookieSafe, cookieValue, loginUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
+import { STATUS_LABELS, isDeleted, firstCookie, decodeMessageText, cookieSafe, cookieValue, loginUrl, parseMkState, stateUrl, createRequest, downloadRequest, findRequest, isUndelivered, listRequest, parseCreated, parseDownload, parseFind, parseList, statusOf } from './isds';
 
 // Ukázkové odpovědi jsou sestavené podle dokumentace ISDS, ne z ostrého provozu.
-const LIST = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><p:GetListOfReceivedMessagesResponse xmlns:p="http://isds.czechpoint.cz/v20"><p:dmRecords><p:dmRecord><p:dmID>123</p:dmID><p:dbIDSender>abc1234</p:dbIDSender><p:dmSender>Městský soud &amp; spol.</p:dmSender><p:dmRecipient>JUDr. Novák</p:dmRecipient><p:dmAnnotation>Usnesení</p:dmAnnotation><p:dmMessageStatus>3</p:dmMessageStatus><p:dmAttachmentSize>12</p:dmAttachmentSize><p:dmDeliveryTime>2026-11-10T10:00:00</p:dmDeliveryTime></p:dmRecord><p:dmRecord><p:dmID>124</p:dmID><p:dmSender>FÚ</p:dmSender><p:dmMessageStatus>5</p:dmMessageStatus></p:dmRecord></p:dmRecords><p:dmStatus><p:dmStatusCode>0000</p:dmStatusCode><p:dmStatusMessage>OK</p:dmStatusMessage></p:dmStatus></p:GetListOfReceivedMessagesResponse></s:Body></s:Envelope>`;
+const LIST = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><p:GetListOfReceivedMessagesResponse xmlns:p="http://isds.czechpoint.cz/v20"><p:dmRecords><p:dmRecord><p:dmID>123</p:dmID><p:dbIDSender>abc1234</p:dbIDSender><p:dmSender>Městský soud &amp; spol.</p:dmSender><p:dmRecipient>JUDr. Novák</p:dmRecipient><p:dmAnnotation>Usnesení</p:dmAnnotation><p:dmMessageStatus>4</p:dmMessageStatus><p:dmAttachmentSize>12</p:dmAttachmentSize><p:dmDeliveryTime>2026-11-10T10:00:00</p:dmDeliveryTime></p:dmRecord><p:dmRecord><p:dmID>124</p:dmID><p:dmSender>FÚ</p:dmSender><p:dmMessageStatus>7</p:dmMessageStatus></p:dmRecord></p:dmRecords><p:dmStatus><p:dmStatusCode>0000</p:dmStatusCode><p:dmStatusMessage>OK</p:dmStatusMessage></p:dmStatus></p:GetListOfReceivedMessagesResponse></s:Body></s:Envelope>`;
 const DOWNLOAD = `<s:Envelope><s:Body><p:MessageDownloadResponse xmlns:p="http://isds.czechpoint.cz/v20"><p:dmReturnedMessage><p:dmDm><p:dmID>123</p:dmID><p:dmSender>Soud</p:dmSender><p:dmAnnotation>Usnesení</p:dmAnnotation><p:dmFiles><p:dmFile dmMimeType="application/pdf" dmFileMetaType="main" dmFileDescr="usneseni.pdf"><p:dmEncodedContent>SGVsbG8=
 </p:dmEncodedContent></p:dmFile></p:dmFiles></p:dmDm></p:dmReturnedMessage><p:dmStatus><p:dmStatusCode>0000</p:dmStatusCode></p:dmStatus></p:MessageDownloadResponse></s:Body></s:Envelope>`;
 
@@ -10,10 +10,14 @@ describe('ISDS', () => {
     it('parses a message list and flags undelivered messages', () => {
         const l = parseList(LIST);
         expect(l).toHaveLength(2);
-        expect(l[0]).toMatchObject({ id: '123', sender: 'Městský soud & spol.', status: '3', undelivered: true, attachmentSize: 12 });
+        expect(l[0]).toMatchObject({ id: '123', sender: 'Městský soud & spol.', status: '4', undelivered: true, attachmentSize: 12 });
         expect(l[1].undelivered).toBe(false);
         expect(statusOf(LIST)).toEqual({ code: '0000', message: 'OK' });
-        expect(isUndelivered('4')).toBe(false);
+        expect(isUndelivered('6')).toBe(false);
+        expect(isUndelivered('7')).toBe(false);
+        expect(isDeleted('9')).toBe(true);
+        expect(isDeleted('7')).toBe(false);
+        expect(STATUS_LABELS['7']).toBe('přečtena');
     });
     it('parses a downloaded message with attachments', () => {
         const d = parseDownload(DOWNLOAD);
