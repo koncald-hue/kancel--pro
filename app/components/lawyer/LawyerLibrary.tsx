@@ -1,14 +1,241 @@
 'use client';
 
-import { Library } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Copy, Download, FilePlus2, Library, Loader2, Pencil, Plus, Printer, Trash2, Users } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { loadCases, type LegalCase } from '@/lib/cases';
+import { AUTO_FIELDS, autoValues, buildDocx, customLabel, fieldsIn, fillTemplate, type LawyerTemplate } from '@/lib/templates';
+import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
+import { useLawyer } from './LawyerGate';
 
-// Knihovna šablon a judikatury: bude mít vlastní databázi přímo v této aplikaci
+type View = { mode: 'list' } | { mode: 'edit'; id: string | null } | { mode: 'fill'; id: string };
+
+const STARTER = `NÁZEV DOKUMENTU
+
+{{advokat.kancelar}}
+{{advokat.adresa}}
+
+V {{misto}} dne {{datum}}
+
+Věc: {{vec.nazev}}
+Spisová značka: {{vec.spisova_znacka}}
+Klient: {{klient.jmeno}}
+
+Text dokumentu…
+
+{{advokat.jmeno}}
+advokát, ev. č. ČAK {{advokat.cak}}
+`;
+
+// Knihovna: vlastní vzory dokumentů s poli, která počítač vyplní z věci, klienta a profilu advokáta
 export default function LawyerLibrary() {
+    const { userId, access } = useLawyer();
+    const [items, setItems] = useState<LawyerTemplate[] | null | undefined>(undefined);
+    const [view, setView] = useState<View>({ mode: 'list' });
+    const [error, setError] = useState('');
+
+    async function reload() {
+        const { data, error: err } = await supabase.from('lawyer_templates').select('*').order('updated_at', { ascending: false });
+        if (err) { setError(/lawyer_templates|schema cache|does not exist/i.test(err.message) ? 'Vzory zatím nejsou v databázi zapnuté (chybí spuštění souboru poptavky-prilohy.sql).' : err.message); setItems(null); return; }
+        setItems((data ?? []) as LawyerTemplate[]);
+    }
+    useEffect(() => {
+        let alive = true;
+        supabase.from('lawyer_templates').select('*').order('updated_at', { ascending: false }).then(({ data, error: err }) => {
+            if (!alive) return;
+            if (err) { setError(/lawyer_templates|schema cache|does not exist/i.test(err.message) ? 'Vzory zatím nejsou v databázi zapnuté (chybí spuštění souboru poptavky-prilohy.sql).' : err.message); setItems(null); return; }
+            setItems((data ?? []) as LawyerTemplate[]);
+        });
+        return () => { alive = false; };
+    }, []);
+
+    if (items === undefined) return <p className="text-sm text-slate-500" role="status">Načítám…</p>;
+    if (items === null) return <p role="alert" className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-slate-700">{error}</p>;
+
+    if (view.mode === 'edit') return <Editor template={items.find((t) => t.id === view.id) ?? null} userId={userId} onDone={async () => { await reload(); setView({ mode: 'list' }); }} onCancel={() => setView({ mode: 'list' })} />;
+    if (view.mode === 'fill') {
+        const t = items.find((x) => x.id === view.id);
+        if (t) return <Fill template={t} access={access} onBack={() => setView({ mode: 'list' })} />;
+    }
+
+    const mine = items.filter((t) => t.user_id === userId);
+    const others = items.filter((t) => t.user_id !== userId);
+    const row = (t: LawyerTemplate, own: boolean) => (
+        <li key={t.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+            <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-slate-900">{t.title}</p>
+                <p className="truncate text-xs text-slate-500">{[t.category, `${fieldsIn(t.body).auto.length + fieldsIn(t.body).custom.length} polí`, t.shared && own ? 'sdíleno s kanceláří' : ''].filter(Boolean).join(' · ')}</p>
+            </div>
+            <button type="button" onClick={() => setView({ mode: 'fill', id: t.id })} className={primaryBtn}><FilePlus2 size={15} /> Vyplnit</button>
+            {own && <button type="button" onClick={() => setView({ mode: 'edit', id: t.id })} className={ghostBtn}><Pencil size={14} /> Upravit</button>}
+        </li>
+    );
+
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
-            <Library size={28} className="mx-auto text-indigo-700" aria-hidden="true" />
-            <h2 className="mt-3 text-lg font-bold text-slate-900">Knihovna se připravuje</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-600">Tady budou šablony podání a smluv, judikatura a vzory pro práci se spisem. Zatím je knihovna prázdná.</p>
+        <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="max-w-2xl text-sm leading-relaxed text-slate-600">Vlastní vzory podání, smluv a dopisů. Do textu vložíte pole a počítač je vyplní z věci, klienta a vašeho profilu.</p>
+                <button type="button" onClick={() => setView({ mode: 'edit', id: null })} className={primaryBtn}><Plus size={16} /> Nový vzor</button>
+            </div>
+            {mine.length === 0 && others.length === 0 && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+                    <Library size={28} className="mx-auto text-indigo-700" aria-hidden="true" />
+                    <h2 className="mt-3 text-lg font-bold text-slate-900">Zatím tu nemáte žádný vzor</h2>
+                    <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-600">Vložte text svého oblíbeného podání a na místa, která se mění, dejte pole, třeba {'{{klient.jmeno}}'} nebo {'{{castka}}'}. Příště stačí vybrat věc a dokument je hotový.</p>
+                    <button type="button" onClick={() => setView({ mode: 'edit', id: null })} className={`${primaryBtn} mt-4`}><Plus size={16} /> Vytvořit první vzor</button>
+                </div>
+            )}
+            {mine.length > 0 && <section><h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Moje vzory</h2><ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">{mine.map((t) => row(t, true))}</ul></section>}
+            {others.length > 0 && <section><h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500"><Users size={13} /> Sdílené od kolegů</h2><ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">{others.map((t) => row(t, false))}</ul></section>}
+        </div>
+    );
+}
+
+function Editor({ template, userId, onDone, onCancel }: { template: LawyerTemplate | null; userId: string; onDone: () => Promise<void>; onCancel: () => void }) {
+    const [title, setTitle] = useState(template?.title ?? '');
+    const [category, setCategory] = useState(template?.category ?? '');
+    const [body, setBody] = useState(template?.body ?? STARTER);
+    const [shared, setShared] = useState(template?.shared ?? false);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+    const area = useRef<HTMLTextAreaElement>(null);
+    const [newField, setNewField] = useState('');
+    const fields = useMemo(() => fieldsIn(body), [body]);
+
+    function insert(key: string) {
+        const el = area.current;
+        const token = `{{${key}}}`;
+        if (!el) { setBody((b) => b + token); return; }
+        const start = el.selectionStart; const end = el.selectionEnd;
+        setBody(body.slice(0, start) + token + body.slice(end));
+        requestAnimationFrame(() => { el.focus(); el.setSelectionRange(start + token.length, start + token.length); });
+    }
+    function addCustom() {
+        const key = newField.trim().replace(/[{}]/g, '').replace(/\s+/g, '_').slice(0, 40);
+        if (!key) return;
+        insert(key); setNewField('');
+    }
+
+    async function save(e: React.FormEvent) {
+        e.preventDefault();
+        setBusy(true); setError('');
+        const row = { title: title.trim(), category: category.trim(), body, shared, updated_at: new Date().toISOString() };
+        const { error: err } = template ? await supabase.from('lawyer_templates').update(row).eq('id', template.id) : await supabase.from('lawyer_templates').insert({ ...row, user_id: userId });
+        setBusy(false);
+        if (err) { setError(err.message); return; }
+        await onDone();
+    }
+    async function remove() {
+        if (!template || !window.confirm('Opravdu smazat tento vzor?')) return;
+        const { error: err } = await supabase.from('lawyer_templates').delete().eq('id', template.id);
+        if (err) { setError(err.message); return; }
+        await onDone();
+    }
+
+    const groups = ['Klient', 'Věc', 'Advokát', 'Obecné'] as const;
+    return (
+        <form onSubmit={save} className="space-y-4">
+            <button type="button" onClick={onCancel} className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"><ArrowLeft size={15} /> Zpět do knihovny</button>
+            <div className="grid gap-3 sm:grid-cols-[1fr_14rem]">
+                <label className="block text-xs font-semibold text-slate-600">Název vzoru *<input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={160} className={`${inputCls} mt-1 font-normal`} placeholder="např. Výzva k plnění" /></label>
+                <label className="block text-xs font-semibold text-slate-600">Kategorie<input value={category} onChange={(e) => setCategory(e.target.value)} maxLength={60} className={`${inputCls} mt-1 font-normal`} placeholder="např. Dopisy" /></label>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-[1fr_16rem]">
+                <label className="block text-xs font-semibold text-slate-600">Text vzoru
+                    <textarea ref={area} value={body} onChange={(e) => setBody(e.target.value)} rows={22} maxLength={60000} className={`${inputCls} mt-1 font-mono text-[13px] font-normal leading-relaxed`} />
+                </label>
+                <aside className="space-y-3 text-xs">
+                    <div>
+                        <p className="font-bold uppercase tracking-wide text-slate-500">Vložit pole (na místo kurzoru)</p>
+                        {groups.map((g) => (
+                            <div key={g} className="mt-2"><p className="font-semibold text-slate-600">{g}</p><div className="mt-1 flex flex-wrap gap-1">{AUTO_FIELDS.filter((f) => f.group === g).map((f) => <button key={f.key} type="button" onClick={() => insert(f.key)} title={f.label} className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-semibold text-indigo-900 hover:bg-indigo-100 cursor-pointer">{f.label}</button>)}</div></div>
+                        ))}
+                    </div>
+                    <div>
+                        <p className="font-semibold text-slate-600">Vlastní pole (zeptá se při vyplňování)</p>
+                        <div className="mt-1 flex gap-1"><input value={newField} onChange={(e) => setNewField(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustom(); } }} placeholder="např. castka" aria-label="Název vlastního pole" className={`${inputCls} py-1.5 text-xs`} /><button type="button" onClick={addCustom} className={ghostBtn}>Vložit</button></div>
+                    </div>
+                    <div className="rounded-lg bg-slate-50 p-3 text-slate-600">
+                        <p className="font-semibold text-slate-700">V textu je {fields.auto.length + fields.custom.length} polí</p>
+                        {fields.custom.length > 0 && <p className="mt-1">Doplníte ručně: {fields.custom.map(customLabel).join(', ')}.</p>}
+                        <p className="mt-1">Pole můžete psát i rukou: {'{{klient.jmeno}}'}.</p>
+                    </div>
+                </aside>
+            </div>
+            <label className="flex items-start gap-2 text-sm text-slate-700"><input type="checkbox" checked={shared} onChange={(e) => setShared(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-800" /><span>Sdílet s kolegy z kanceláře (uvidí a mohou vyplňovat, upravovat můžete jen vy)</span></label>
+            {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
+            <div className="flex flex-wrap gap-2">
+                <button type="submit" disabled={busy || !title.trim()} className={primaryBtn}>{busy && <Loader2 size={15} className="animate-spin" />} Uložit vzor</button>
+                <button type="button" onClick={onCancel} className={ghostBtn}>Zrušit</button>
+                {template && <button type="button" onClick={() => void remove()} className={`${ghostBtn} ml-auto text-rose-800`}><Trash2 size={14} /> Smazat</button>}
+            </div>
+        </form>
+    );
+}
+
+function Fill({ template, access, onBack }: { template: LawyerTemplate; access: ReturnType<typeof useLawyer>['access']; onBack: () => void }) {
+    const [cases, setCases] = useState<LegalCase[]>([]);
+    const [caseId, setCaseId] = useState('');
+    const [custom, setCustom] = useState<Record<string, string>>({});
+    const [override, setOverride] = useState<Record<string, string>>({});
+    const [copied, setCopied] = useState(false);
+    const fields = useMemo(() => fieldsIn(template.body), [template.body]);
+
+    useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => {}); return () => { alive = false; }; }, []);
+
+    const chosen = cases.find((c) => c.id === caseId) ?? null;
+    const auto = useMemo(() => ({ ...autoValues(chosen, access), ...override }), [chosen, access, override]);
+    const text = fillTemplate(template.body, auto, custom);
+    const open = fieldsIn(text);
+    const remaining = [...open.auto, ...open.custom];
+
+    async function copy() { await navigator.clipboard?.writeText(text); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }
+    async function download() {
+        const blob = await buildDocx(text);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${template.title.replace(/[^\p{L}\p{N}]+/gu, '_')}.docx`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    }
+    function print() {
+        const w = window.open('', '_blank');
+        if (!w) return;
+        const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        w.document.write(`<!doctype html><meta charset="utf-8"><title>${esc(template.title)}</title><pre style="font:14px/1.6 Georgia,serif;white-space:pre-wrap;max-width:44rem;margin:2rem auto">${esc(text)}</pre>`);
+        w.document.close(); w.print();
+    }
+
+    return (
+        <div className="space-y-4">
+            <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"><ArrowLeft size={15} /> Zpět do knihovny</button>
+            <h2 className="text-xl font-bold text-slate-900">{template.title}</h2>
+            <div className="grid gap-5 lg:grid-cols-[18rem_1fr]">
+                <div className="space-y-3">
+                    <label className="block text-xs font-semibold text-slate-600">Věc, ze které se vyplní údaje
+                        <select value={caseId} onChange={(e) => { setCaseId(e.target.value); setOverride({}); }} className={`${inputCls} mt-1 font-normal`}>
+                            <option value="">Bez věci (jen údaje advokáta)</option>
+                            {cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}
+                        </select>
+                    </label>
+                    {fields.custom.map((k) => (
+                        <label key={k} className="block text-xs font-semibold text-slate-600">{customLabel(k)}<input value={custom[k] ?? ''} onChange={(e) => setCustom((c) => ({ ...c, [k]: e.target.value }))} className={`${inputCls} mt-1 font-normal`} /></label>
+                    ))}
+                    {fields.auto.filter((k) => !auto[k]?.trim()).map((k) => (
+                        <label key={k} className="block text-xs font-semibold text-slate-600">{AUTO_FIELDS.find((f) => f.key === k)?.label ?? k}<span className="ml-1 font-normal text-slate-400">(není ve věci)</span><input value={override[k] ?? ''} onChange={(e) => setOverride((o) => ({ ...o, [k]: e.target.value }))} className={`${inputCls} mt-1 font-normal`} /></label>
+                    ))}
+                </div>
+                <div className="min-w-0">
+                    {remaining.length > 0 && <p className="mb-2 rounded-lg bg-amber-50 p-2.5 text-xs font-semibold text-amber-900">Zbývá doplnit: {remaining.join(', ')}. V textu jsou vidět jako {'{{pole}}'}.</p>}
+                    <pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words rounded-2xl border border-slate-200 bg-white p-5 font-serif text-[14px] leading-relaxed text-slate-900">{text}</pre>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        <button type="button" onClick={() => void download()} className={primaryBtn}><Download size={15} /> Stáhnout Word (.docx)</button>
+                        <button type="button" onClick={() => void copy()} className={ghostBtn}><Copy size={14} /> {copied ? 'Zkopírováno' : 'Kopírovat text'}</button>
+                        <button type="button" onClick={print} className={ghostBtn}><Printer size={14} /> Tisk</button>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">Vyplněný dokument se nikam neukládá. Stáhněte si ho a uložte do spisu ve věci. Před odesláním ho vždy zkontrolujte.</p>
+                </div>
+            </div>
         </div>
     );
 }

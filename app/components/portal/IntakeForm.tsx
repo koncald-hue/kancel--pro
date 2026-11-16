@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { CheckCircle2, Loader2, Lock, Send } from 'lucide-react';
+import { CheckCircle2, Loader2, Lock, Paperclip, Send, X } from 'lucide-react';
+import { ALLOWED_EXTENSIONS, isAllowedUpload } from '@/lib/portal';
 
 const field = 'w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-700/40';
 
@@ -12,6 +13,7 @@ export default function IntakeForm() {
     const [firm, setFirm] = useState<string | null>(null);
     const [state, setState] = useState<'loading' | 'ok' | 'invalid' | 'sent'>('loading');
     const [form, setForm] = useState({ name: '', email: '', phone: '', message: '', website: '' });
+    const [files, setFiles] = useState<File[]>([]);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
 
@@ -25,12 +27,30 @@ export default function IntakeForm() {
 
     const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
+    function addFiles(list: FileList | null) {
+        if (!list) return;
+        const next = [...files];
+        for (const f of Array.from(list)) {
+            const problem = isAllowedUpload(f.name, Math.min(f.size, 10 * 1024 * 1024)) ?? (f.size > 10 * 1024 * 1024 ? 'Soubor je větší než 10 MB.' : null);
+            if (problem) { setError(`${f.name}: ${problem}`); return; }
+            if (next.length >= 5) { setError('Přiložit jde nejvýše 5 souborů.'); return; }
+            next.push(f);
+        }
+        if (next.reduce((s, f) => s + f.size, 0) > 25 * 1024 * 1024) { setError('Přílohy jsou dohromady větší než 25 MB.'); return; }
+        setError(''); setFiles(next);
+    }
+
     async function submit() {
         if (form.message.trim().length < 10) { setError('Popište věc aspoň několika větami.'); return; }
         if (!form.email.trim() && !form.phone.trim()) { setError('Uveďte e-mail nebo telefon, ať se vám můžeme ozvat.'); return; }
         setBusy(true); setError('');
         try {
-            const res = await fetch('/api/intake', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, ...form }) });
+            const body = new FormData();
+            body.set('code', code);
+            for (const [k, v] of Object.entries(form)) body.set(k, v);
+            for (const f of files) body.append('files', f);
+            const res = await fetch('/api/intake', { method: 'POST', body });
+            if (res.status === 400) { const j = await res.json().catch(() => null); if (j?.message) throw new Error(j.message); }
             if (res.status === 429) throw new Error('Příliš mnoho odeslání. Zkuste to prosím později.');
             if (!res.ok) throw new Error('Poptávku se nepodařilo odeslat. Zkuste to prosím znovu.');
             setState('sent');
@@ -55,6 +75,11 @@ export default function IntakeForm() {
                                 <input type="tel" value={form.phone} onChange={set('phone')} maxLength={40} placeholder="Telefon" aria-label="Telefon" className={field} autoComplete="tel" />
                             </div>
                             <textarea value={form.message} onChange={set('message')} required rows={6} maxLength={3000} placeholder="Co se stalo? Kdy? Jaké dokumenty máte? Hrozí nějaký termín?" aria-label="Popis věci" className={field} />
+                            <div>
+                                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"><Paperclip size={15} aria-hidden="true" /> Přiložit dokumenty (nepovinné)<input type="file" multiple accept={ALLOWED_EXTENSIONS.map((e) => `.${e}`).join(',')} onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} className="sr-only" /></label>
+                                {files.length > 0 && <ul className="mt-2 space-y-1">{files.map((f, i) => <li key={i} className="flex items-center gap-2 text-xs text-slate-700"><span className="min-w-0 flex-1 truncate">{f.name}</span><button type="button" onClick={() => setFiles((l) => l.filter((_, j) => j !== i))} aria-label={`Odebrat ${f.name}`} className="rounded p-0.5 text-slate-500 hover:bg-slate-100"><X size={14} /></button></li>)}</ul>}
+                                <p className="mt-1.5 text-xs text-slate-500">Až 5 souborů, každý do 10 MB (PDF, Word, Excel, text, obrázky). Kancelář je uvidí v náhledu poptávky. Do spisu se uloží, až když věc převezme.</p>
+                            </div>
                             <input value={form.website} onChange={set('website')} tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
                             {error && <p role="alert" className="text-sm text-rose-800">{error}</p>}
                             <button type="submit" disabled={busy || !form.name.trim()} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-800 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-900 disabled:opacity-60 cursor-pointer">{busy ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} Odeslat poptávku</button>
