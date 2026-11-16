@@ -10,6 +10,7 @@ import { czk, entryAmount, formatMinutes, type TimeEntry } from '@/lib/lawyer';
 import { DUE_SOON_DAYS, loadReceivables, money, round2, type Receivable } from '@/lib/billing';
 import { deadlineText, deadlineTone } from '../situation/CaseDeadlinesTab';
 import { useLawyer } from './LawyerGate';
+import DayPanel from './DayPanel';
 import { ghostBtn } from '../situation/caseUi';
 
 function Tile({ label, value, note, tone }: { label: string; value: string; note?: string; tone?: string }) {
@@ -63,6 +64,7 @@ export default function LawyerDashboard() {
 
     return (
         <div className="space-y-6">
+            <DayPanel deadlinesToday={upcoming.filter((u) => u.left === 0).length} />
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <Tile label="Otevřené věci" value={String(open.length)} />
                 <Tile label="Lhůty do 7 dní" value={String(week.length)} tone={week.some((w) => w.left <= 2) ? 'text-rose-700' : undefined} note={week[0] ? `nejbližší: ${deadlineText(week[0].left)}` : 'žádná nehrozí'} />
