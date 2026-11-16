@@ -6,14 +6,25 @@ import { supabase } from '@/lib/supabase';
 import { primaryBtn, ghostBtn, inputCls } from '../situation/caseUi';
 import { intakeUrl, isValidIntakeCode, SECURITY_TEXT_LAWYER } from '@/lib/portal';
 import { czk } from '@/lib/lawyer';
+import { ROLE_LABELS } from '@/lib/firm';
 import { PLANS, planName, type PlanId, type Prices } from '@/lib/plans';
 import { useLawyer } from './LawyerGate';
 import ProfileForm from './ProfileForm';
+import FirmSettings from './FirmSettings';
+import { useAuth } from '../site/AuthContext';
 
 const STATUS: Record<string, string> = { trial: 'Zkušební přístup', active: 'Aktivní předplatné', requested: 'Čeká na potvrzení', expired: 'Vypršelo' };
 
 export default function LawyerSettings() {
     const { access } = useLawyer();
+    const { account } = useAuth();
+    const [tab, setTab] = useState<'profil' | 'kancelar'>('profil');
+    const [firmInfo, setFirmInfo] = useState<{ name: string; role: 'owner' | 'admin' | 'member' } | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        supabase.rpc('firm_overview').then(({ data }) => { const f = (data as { firm?: { name: string; role: 'owner' | 'admin' | 'member' } } | null)?.firm; if (!cancelled && f) setFirmInfo({ name: f.name, role: f.role }); });
+        return () => { cancelled = true; };
+    }, []);
     const [prices, setPrices] = useState<Prices | null>(null);
     const [orders, setOrders] = useState<{ id: string; plan: PlanId; price_czk: number; status: string; period_end: string | null }[]>([]);
     const [payMsg, setPayMsg] = useState('');
@@ -69,10 +80,18 @@ export default function LawyerSettings() {
     const link = code.trim() && isValidIntakeCode(code.trim().toLowerCase()) && typeof window !== 'undefined' ? intakeUrl(window.location.origin, code.trim().toLowerCase()) : '';
 
     return (
-        <div className="max-w-xl space-y-5">
+        <div className="max-w-3xl space-y-5">
+            <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5" aria-label="Přihlášený uživatel">
+                <div><p className="text-lg font-bold text-slate-900">{access.display_name || account?.email}</p><p className="text-sm text-slate-500">{firmInfo ? `${firmInfo.name} · ${ROLE_LABELS[firmInfo.role]}` : 'Bez kanceláře'}</p></div>
+                <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1" role="tablist" aria-label="Nastavení">
+                    {([['profil', 'Můj profil'], ['kancelar', 'Kancelář']] as const).map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'}`}>{label}</button>)}
+                </div>
+            </section>
+            {tab === 'kancelar' ? <FirmSettings /> : (<>
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="text-lg font-bold text-slate-900">Kancelář</h2>
-                <label className="mt-3 block text-sm font-semibold text-slate-700">Název kanceláře
+                <h2 className="text-lg font-bold text-slate-900">Údaje na dokladech</h2>
+                <p className="mt-1 text-sm text-slate-600">Osobní nastavení: co se uvede na vašich vyúčtováních a klientské stránce a vaše výchozí sazba. Nastavení kanceláře je v záložce Kancelář.</p>
+                <label className="mt-3 block text-sm font-semibold text-slate-700">Název kanceláře na dokladech
                     <input value={firm} onChange={(e) => setFirm(e.target.value)} maxLength={120} className={`${inputCls} mt-1 font-normal`} placeholder="např. Advokátní kancelář Novák" />
                 </label>
                 <label className="mt-3 block text-sm font-semibold text-slate-700">Výchozí hodinová sazba (Kč)
@@ -139,6 +158,7 @@ export default function LawyerSettings() {
                 <p className="mt-2"><strong>{STATUS[access.status] ?? access.status}</strong>{access.until && <> do {new Date(`${access.until}T12:00:00`).toLocaleDateString('cs-CZ')}</>}</p>
                 <p className="mt-1 text-xs text-slate-500">Prodloužení nebo změnu tarifu vám potvrdíme e-mailem na adrese {access.email || 'vašeho účtu'}.</p>
             </section>
+            </>)}
         </div>
     );
 }

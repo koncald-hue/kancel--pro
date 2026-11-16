@@ -5,7 +5,7 @@ import { Check, Copy, CreditCard, Loader2, Mail, Trash2, UserPlus, Users } from 
 import { supabase } from '@/lib/supabase';
 import { czk } from '@/lib/lawyer';
 import { PLANS, type PlanId } from '@/lib/plans';
-import { EMPTY_FIRM_PRICES, FIRM_SIZES, VERIFICATION_LABEL, inviteUrl, type FirmOverview, type FirmPrices, type FirmSize } from '@/lib/firm';
+import { EMPTY_FIRM_PRICES, FIRM_SIZES, ROLE_HELP, ROLE_LABELS, VERIFICATION_LABEL, canManageFirm, inviteUrl, type FirmRole, type FirmOverview, type FirmPrices, type FirmSize } from '@/lib/firm';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
@@ -23,11 +23,13 @@ export default function LawyerTeam() {
     const [email, setEmail] = useState('');
     const [inviteName, setInviteName] = useState('');
     const [size, setSize] = useState<FirmSize>(3);
+    const [colleagues, setColleagues] = useState<{ user_id: string; name: string; email: string; role: FirmRole }[]>([]);
     const [copied, setCopied] = useState('');
     const paymentUrl = process.env.NEXT_PUBLIC_LAWYER_PAYMENT_URL ?? '';
 
     const load = useCallback(async () => {
-        const [o, p] = await Promise.all([supabase.rpc('firm_overview'), supabase.rpc('firm_prices')]);
+        const [o, p, c] = await Promise.all([supabase.rpc('firm_overview'), supabase.rpc('firm_prices'), supabase.rpc('firm_colleagues')]);
+        if (!c.error && c.data) setColleagues(c.data as typeof colleagues);
         if (o.error) { setError(/firm_overview|does not exist|find the function/i.test(o.error.message) ? 'Kanceláře ještě nejsou v databázi zapnuté (chybí spuštění souboru firms.sql).' : o.error.message); setOverview(null); return; }
         setError('');
         setOverview((o.data as FirmOverview | null) ?? null);
@@ -69,6 +71,7 @@ export default function LawyerTeam() {
     if (overview === undefined) return <p className="text-sm text-slate-500" role="status">Načítám…</p>;
     const f = overview?.firm;
     const isOwner = f?.role === 'owner';
+    const canManage = canManageFirm(f?.role);
     const active = !!f && f.seats > 0 && !!f.until && f.until >= new Date().toISOString().slice(0, 10);
     const used = (overview?.members?.length ?? 0) + (overview?.invites?.length ?? 0);
 
@@ -94,7 +97,7 @@ export default function LawyerTeam() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <h2 className="text-lg font-bold text-slate-900">{f.name}</h2>
-                            <p className="mt-1 text-sm text-slate-600">{isOwner ? 'Jste vedoucí kanceláře.' : 'Jste členem kanceláře. Vaše věci a klienty vidíte jen vy.'}</p>
+                            <p className="mt-1 text-sm text-slate-600">Vaše role: <strong>{ROLE_LABELS[f.role]}</strong>. {ROLE_HELP[f.role]} Vaše věci a klienty vidíte jen vy.</p>
                         </div>
                         <span className={`rounded-full px-3 py-1 text-xs font-bold ${active ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-100 text-slate-700'}`}>{active ? `Balíček pro ${f.seats} do ${dateCz(f.until)}` : 'Bez aktivního balíčku'}</span>
                     </div>
@@ -102,9 +105,19 @@ export default function LawyerTeam() {
                 </section>
             )}
 
-            {isOwner && (
+            {f && !canManage && (
+                <section className="rounded-2xl border border-slate-200 bg-white p-6" aria-label="Kolegové">
+                    <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Users size={18} className="text-indigo-700" /> Kolegové v kanceláři</h2>
+                    <p className="mt-1 text-xs text-slate-500">Vidíte jméno, e-mail a roli kolegů. Členy a pozvánky spravuje vedoucí nebo správce. S kolegy si můžete psát v záložce Chat.</p>
+                    <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
+                        {colleagues.length === 0 ? <li className="px-4 py-3 text-slate-500">Zatím tu nejsou další členové.</li> : colleagues.map((c) => <li key={c.user_id} className="flex items-center justify-between gap-2 px-4 py-2.5"><span><strong className="text-slate-900">{c.name || c.email}</strong><span className="block text-xs text-slate-500">{c.email}</span></span><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${c.role === 'owner' ? 'bg-indigo-100 text-indigo-900' : c.role === 'admin' ? 'bg-sky-100 text-sky-900' : 'bg-slate-100 text-slate-600'}`}>{ROLE_LABELS[c.role]}</span></li>)}
+                    </ul>
+                </section>
+            )}
+
+            {canManage && (
                 <>
-                    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                    {isOwner && <section className="rounded-2xl border border-slate-200 bg-white p-6">
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><CreditCard size={18} className="text-indigo-700" /> Balíček pro kancelář</h2>
                         <p className="mt-1 text-sm text-slate-600">Platí za celou kancelář. Po zaplacení se přístup aktivuje všem členům. Objednat může vedoucí s vyplněným profilem.</p>
                         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Počet advokátů">
@@ -114,7 +127,7 @@ export default function LawyerTeam() {
                             {PLANS.filter((pl) => prices[size][pl.id] > 0).map((pl, i) => <button key={pl.id} type="button" onClick={() => void buy(pl.id)} disabled={busy} className={i === 0 ? primaryBtn : ghostBtn}>{pl.name} · {czk(prices[size][pl.id])}</button>)}
                             {PLANS.every((pl) => !(prices[size][pl.id] > 0)) && <p className="text-sm text-slate-600">Ceny balíčků budou brzy zveřejněny.</p>}
                         </div>
-                    </section>
+                    </section>}
 
                     <section className="rounded-2xl border border-slate-200 bg-white p-6">
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><UserPlus size={18} className="text-indigo-700" /> Členové ({overview?.members?.length ?? 0} z {f?.seats || 0})</h2>
@@ -122,8 +135,9 @@ export default function LawyerTeam() {
                         <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
                             {(overview?.members ?? []).map((m) => (
                                 <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
-                                    <span><strong className="text-slate-900">{m.name || m.email || 'Člen'}</strong>{m.role === 'owner' && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-900">Vedoucí</span>}<span className="block text-xs text-slate-500">{m.email} · {VERIFICATION_LABEL[m.verification]}{m.until ? ` · přístup do ${dateCz(m.until)}` : ''}</span></span>
-                                    {m.user_id !== userId && <button type="button" onClick={() => { if (window.confirm('Odebrat člena? Ztratí přístup z balíčku kanceláře, jeho data zůstanou jeho.')) void run(() => supabase.rpc('remove_firm_member', { p_user: m.user_id })); }} disabled={busy} aria-label={`Odebrat ${m.name || m.email}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button>}
+                                    <span><strong className="text-slate-900">{m.name || m.email || 'Člen'}</strong><span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${m.role === 'owner' ? 'bg-indigo-100 text-indigo-900' : m.role === 'admin' ? 'bg-sky-100 text-sky-900' : 'bg-slate-100 text-slate-600'}`}>{ROLE_LABELS[m.role]}</span><span className="block text-xs text-slate-500">{m.email} · {VERIFICATION_LABEL[m.verification]}{m.until ? ` · přístup do ${dateCz(m.until)}` : ''}</span></span>
+                                    {isOwner && m.role !== 'owner' && <select value={m.role} onChange={(e) => void run(() => supabase.rpc('set_member_role', { p_user: m.user_id, p_role: e.target.value }), 'Role byla změněna.')} aria-label={`Role: ${m.name || m.email}`} className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"><option value="member">Člen</option><option value="admin">Správce</option></select>}
+                                    {m.user_id !== userId && m.role !== 'owner' && (isOwner || m.role === 'member') && <button type="button" onClick={() => { if (window.confirm('Odebrat člena? Ztratí přístup z balíčku kanceláře, jeho data zůstanou jeho.')) void run(() => supabase.rpc('remove_firm_member', { p_user: m.user_id })); }} disabled={busy} aria-label={`Odebrat ${m.name || m.email}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button>}
                                 </li>
                             ))}
                         </ul>

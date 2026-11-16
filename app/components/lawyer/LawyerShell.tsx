@@ -7,6 +7,7 @@ import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, LogOut, Menu, Setti
 import LawyerGate, { useLawyer } from './LawyerGate';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { ROLE_LABELS } from '@/lib/firm';
 
 export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'chat' | 'tym' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
@@ -25,10 +26,10 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
     const { access } = useLawyer();
     const { account, isStaff, logout } = useAuth();
     // Název kanceláře, ve které jsem členem, a moje role
-    const [firm, setFirm] = useState<{ name: string; role: 'owner' | 'member' } | null>(null);
+    const [firm, setFirm] = useState<{ name: string; role: 'owner' | 'admin' | 'member' } | null>(null);
     useEffect(() => {
         let cancelled = false;
-        supabase.rpc('firm_overview').then(({ data, error }) => { const f = (data as { firm?: { name: string; role: 'owner' | 'member' } } | null)?.firm; if (!cancelled && !error && f) setFirm({ name: f.name, role: f.role }); });
+        supabase.rpc('firm_overview').then(({ data, error }) => { const f = (data as { firm?: { name: string; role: 'owner' | 'admin' | 'member' } } | null)?.firm; if (!cancelled && !error && f) setFirm({ name: f.name, role: f.role }); });
         return () => { cancelled = true; };
     }, []);
     const [open, setOpen] = useState(false);
@@ -49,7 +50,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
     const current = ALL.find(([id]) => id === active);
     // Vždy jméno přihlášeného uživatele; teprve když chybí, e-mail
     const name = access.display_name || account?.email || 'Můj pracovní prostor';
-    const subtitle = firm ? `${firm.name} · ${firm.role === 'owner' ? 'vedoucí' : 'člen'}` : access.firm_name || 'Kancelář';
+    const subtitle = firm ? `${firm.name} · ${ROLE_LABELS[firm.role].toLowerCase()}` : access.firm_name || 'Kancelář';
 
     const link = ([id, href, label, Icon]: Item) => (
         <Link key={id} href={href} onClick={() => setOpen(false)} aria-current={active === id ? 'page' : undefined}
