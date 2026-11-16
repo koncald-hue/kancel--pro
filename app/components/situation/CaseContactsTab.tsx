@@ -6,6 +6,7 @@ import { deleteRow, insertRow, type CaseContact } from '@/lib/caseFile';
 import { inputCls, primaryBtn, type TabProps } from './caseUi';
 import { limitsFor } from '@/lib/tiers';
 import UpgradeNote from './UpgradeNote';
+import AresPicker from '../lawyer/AresPicker';
 
 const ROLES = ['Úřad', 'Soud', 'Policie', 'Advokát', 'Protistrana', 'Svědek', 'Pojišťovna', 'Jiné'];
 
@@ -54,6 +55,7 @@ export default function CaseContactsTab({ item, bundle, userId, lawyer, setBundl
             )}
 
             <form onSubmit={(e) => { e.preventDefault(); void add(); }} className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+                <div className="sm:col-span-2"><AresPicker compact onPick={(c) => setForm((f) => ({ ...f, name: c.name.slice(0, 120), note: `IČO ${c.ico}${c.dic ? `, DIČ ${c.dic}` : ''}${c.address ? `, ${c.address}` : ''}`.slice(0, 500) }))} label="Najít firmu v ARES a vyplnit kontakt" /></div>
                 <select value={form.role} onChange={set('role')} className={inputCls} aria-label="Role kontaktu">{ROLES.map((r) => <option key={r}>{r}</option>)}</select>
                 <input value={form.name} onChange={set('name')} placeholder="Jméno nebo název (např. Městský úřad Plzeň)" maxLength={120} className={inputCls} aria-label="Jméno kontaktu" />
                 <input type="email" value={form.email} onChange={set('email')} placeholder="E-mail" className={inputCls} aria-label="E-mail" />

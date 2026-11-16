@@ -13,6 +13,8 @@ import ProfileForm from './ProfileForm';
 import FirmSettings from './FirmSettings';
 import { useAuth } from '../site/AuthContext';
 
+import AresPicker from './AresPicker';
+
 const STATUS: Record<string, string> = { trial: 'Zkušební přístup', active: 'Aktivní předplatné', requested: 'Čeká na potvrzení', expired: 'Vypršelo' };
 
 export default function LawyerSettings() {
@@ -104,6 +106,7 @@ export default function LawyerSettings() {
                 <h2 className="text-lg font-bold text-slate-900">Fakturační údaje</h2>
                 <p className="mt-1 text-sm text-slate-600">Uvádějí se na vašich vyúčtováních a fakturách (spolu s jménem a adresou z profilu).</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div className="sm:col-span-2"><AresPicker compact onPick={(c) => setBill((b) => ({ ...b, ico: c.ico, dic: c.dic || b.dic }))} label="Doplnit IČO a DIČ z ARES" /></div>
                     <label className="block text-xs font-semibold text-slate-600">IČO<input value={bill.ico} onChange={(e) => setBill((b) => ({ ...b, ico: e.target.value }))} maxLength={20} className={`${inputCls} mt-1 font-normal`} /></label>
                     <label className="block text-xs font-semibold text-slate-600">DIČ<input value={bill.dic} onChange={(e) => setBill((b) => ({ ...b, dic: e.target.value }))} maxLength={20} className={`${inputCls} mt-1 font-normal`} placeholder="CZ…" /></label>
                     <label className="block text-xs font-semibold text-slate-600">Číslo účtu / IBAN<input value={bill.bank} onChange={(e) => setBill((b) => ({ ...b, bank: e.target.value }))} maxLength={60} className={`${inputCls} mt-1 font-normal`} placeholder="123456789/0100" /></label>

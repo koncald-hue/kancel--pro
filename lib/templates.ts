@@ -11,6 +11,9 @@ export const AUTO_FIELDS: AutoField[] = [
     { key: 'klient.jmeno', label: 'Jméno klienta', group: 'Klient' },
     { key: 'klient.email', label: 'E-mail klienta', group: 'Klient' },
     { key: 'klient.telefon', label: 'Telefon klienta', group: 'Klient' },
+    { key: 'klient.adresa', label: 'Adresa / sídlo klienta', group: 'Klient' },
+    { key: 'klient.ico', label: 'IČO klienta', group: 'Klient' },
+    { key: 'klient.dic', label: 'DIČ klienta', group: 'Klient' },
     { key: 'vec.nazev', label: 'Název věci', group: 'Věc' },
     { key: 'vec.spisova_znacka', label: 'Spisová značka / číslo jednací', group: 'Věc' },
     { key: 'vec.urad', label: 'Soud nebo úřad', group: 'Věc' },
@@ -45,9 +48,9 @@ export const customLabel = (key: string) => { const s = key.replace(/_/g, ' '); 
 export const todayCs = (d = new Date()) => `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
 
 // Hodnoty automatických polí z věci a profilu advokáta (co se neví, zůstane prázdné a pole se nechá viditelné)
-export function autoValues(c: Pick<LegalCase, 'title' | 'situation' | 'client_name' | 'client_email' | 'client_phone' | 'reference' | 'authority'> | null, me: Partial<LawyerAccess> | null, now = new Date()): Record<string, string> {
+export function autoValues(c: Pick<LegalCase, 'title' | 'situation' | 'client_name' | 'client_email' | 'client_phone' | 'reference' | 'authority'> | null, me: Partial<LawyerAccess> | null, now = new Date(), client?: { address?: string; ico?: string; dic?: string } | null): Record<string, string> {
     return {
-        'klient.jmeno': c?.client_name ?? '', 'klient.email': c?.client_email ?? '', 'klient.telefon': c?.client_phone ?? '',
+        'klient.jmeno': c?.client_name ?? '', 'klient.email': c?.client_email ?? '', 'klient.telefon': c?.client_phone ?? '', 'klient.adresa': client?.address ?? '', 'klient.ico': client?.ico ?? '', 'klient.dic': client?.dic ?? '',
         'vec.nazev': c?.title ?? '', 'vec.spisova_znacka': c?.reference ?? '', 'vec.urad': c?.authority ?? '', 'vec.popis': c?.situation ?? '',
         'advokat.jmeno': me?.display_name ?? '', 'advokat.kancelar': me?.firm_name ?? '', 'advokat.cak': me?.bar_number ?? '', 'advokat.adresa': me?.office ?? '',
         'advokat.telefon': me?.phone ?? '', 'advokat.email': me?.contact_email || me?.email || '',

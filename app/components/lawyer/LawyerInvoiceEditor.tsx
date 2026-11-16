@@ -9,6 +9,7 @@ import { loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient, TimeEntry } from '@/lib/lawyer';
 import { STATUS_LABELS, VAT_RATES, round2, todayIso, type Payment, buildInvoiceHtml, computeTotals, lineBase, lineFromPriceItem, lineFromTimeEntry, loadPriceItems, money, openPrint, parseAmount, qtyText, type DraftLine, type Invoice, type InvoiceLine, type Party, type PriceItem } from '@/lib/billing';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
+import AresPicker from './AresPicker';
 import { useLawyer } from './LawyerGate';
 
 type Line = DraftLine & { key: string; price_item_id: string | null; time_entry_id: string | null; qtyText: string; priceText: string };
@@ -212,6 +213,7 @@ export default function LawyerInvoiceEditor() {
                             {clientCases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                         </select>
                     </label>
+                    {!inv.client_id && draft && <div className="sm:col-span-3"><AresPicker compact onPick={(c) => patch({ client_snapshot: { ...inv.client_snapshot, name: c.name, address: c.address, ico: c.ico, dic: c.dic } })} label="Najít odběratele v ARES" /></div>}
                     {!inv.client_id && draft && (['name', 'address', 'ico', 'dic'] as const).map((k) => (
                         <label key={k} className="block text-xs font-semibold text-slate-600">{{ name: 'Jméno / firma', address: 'Adresa', ico: 'IČO', dic: 'DIČ' }[k]}<input value={inv.client_snapshot[k] ?? ''} onChange={(e) => patch({ client_snapshot: { ...inv.client_snapshot, [k]: e.target.value } })} maxLength={200} className={`${inputCls} mt-1 font-normal`} /></label>
                     ))}

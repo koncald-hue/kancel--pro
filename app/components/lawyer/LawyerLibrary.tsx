@@ -83,7 +83,7 @@ export default function LawyerLibrary() {
                     <li>Klikněte na <strong>Nový vzor</strong>, pojmenujte ho a případně zadejte kategorii (např. Dopisy, Podání, Smlouvy).</li>
                     <li>Do pole <strong>Text vzoru</strong> vložte hotový dokument, třeba zkopírovaný z Wordu. Formátování (tučné písmo, tabulky) se nepřenáší, vzor je čistý text; dokument si po stažení ve Wordu doformátujete.</li>
                     <li>Místa, která se u každého klienta mění, nahraďte <strong>poli</strong>. Klikněte na místo v textu a v pravém panelu zvolte pole, nebo ho napište rukou ve dvojitých složených závorkách, např. <code className="rounded bg-white px-1">{'{{klient.jmeno}}'}</code>.</li>
-                    <li><strong>Pole, která vyplní počítač sám</strong> (z věci, klienta a vašeho profilu): klient (jméno, e-mail, telefon), věc (název, spisová značka, soud či úřad, popis), advokát (jméno, kancelář, číslo ČAK, adresa, telefon, e-mail) a dnešní datum. Údaje o věci a klientovi se berou z karty věci, vyplňte je tam.</li>
+                    <li><strong>Pole, která vyplní počítač sám</strong> (z věci, klienta a vašeho profilu): klient (jméno, e-mail, telefon, adresa, IČO, DIČ), věc (název, spisová značka, soud či úřad, popis), advokát (jméno, kancelář, číslo ČAK, adresa, telefon, e-mail) a dnešní datum. Údaje o věci a klientovi se berou z karty věci, vyplňte je tam.</li>
                     <li><strong>Vlastní pole</strong> pro cokoli jiného: napište např. <code className="rounded bg-white px-1">{'{{castka}}'}</code> nebo <code className="rounded bg-white px-1">{'{{datum_splatnosti}}'}</code>. Při vyplňování se na ně program zeptá. Název pište bez mezer (místo mezery podtržítko), stejné pole použité víckrát se zadává jen jednou.</li>
                     <li>Zaškrtněte <strong>Sdílet s kolegy</strong>, mají-li vzor používat i ostatní v kanceláři. Upravovat ho můžete jen vy.</li>
                     <li><strong>Použití:</strong> u vzoru klikněte na Vyplnit, vyberte věc, doplňte vlastní pole a stáhněte hotový Word (.docx), nebo text zkopírujte či vytiskněte. Co zůstalo nevyplněné, je vidět jako <code className="rounded bg-white px-1">{'{{pole}}'}</code>, aby vám nic neuniklo.</li>
@@ -188,16 +188,17 @@ function Editor({ template, userId, onDone, onCancel }: { template: LawyerTempla
 
 function Fill({ template, access, onBack }: { template: LawyerTemplate; access: ReturnType<typeof useLawyer>['access']; onBack: () => void }) {
     const [cases, setCases] = useState<LegalCase[]>([]);
+    const [clients, setClients] = useState<{ id: string; address?: string; ico?: string; dic?: string }[]>([]);
     const [caseId, setCaseId] = useState('');
     const [custom, setCustom] = useState<Record<string, string>>({});
     const [override, setOverride] = useState<Record<string, string>>({});
     const [copied, setCopied] = useState(false);
     const fields = useMemo(() => fieldsIn(template.body), [template.body]);
 
-    useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => {}); return () => { alive = false; }; }, []);
+    useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => {}); supabase.from('lawyer_clients').select('id, address, ico, dic').then(({ data }) => { if (alive && data) setClients(data); }); return () => { alive = false; }; }, []);
 
     const chosen = cases.find((c) => c.id === caseId) ?? null;
-    const auto = useMemo(() => ({ ...autoValues(chosen, access), ...override }), [chosen, access, override]);
+    const auto = useMemo(() => ({ ...autoValues(chosen, access, undefined, clients.find((c) => c.id === chosen?.client_id)), ...override }), [chosen, access, override, clients]);
     const text = fillTemplate(template.body, auto, custom);
     const open = fieldsIn(text);
     const remaining = [...open.auto, ...open.custom];

@@ -9,6 +9,8 @@ import { supabase } from '@/lib/supabase';
 import { collectDeadlines, insertRow, type CaseEntry } from '@/lib/caseFile';
 import { daysUntil } from '@/lib/cases';
 import { inputCls, ghostBtn, type TabProps } from './caseUi';
+import AresPicker from '../lawyer/AresPicker';
+import { upsertAresClient } from '@/lib/aresClients';
 
 // Chytré rady podle toho, co ve spisu chybí
 export function caseHints(item: TabProps['item'], bundle: TabProps['bundle']): { tone: 'warn' | 'tip'; text: string }[] {
@@ -68,6 +70,7 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
 
             {lawyer && <section aria-label="Údaje o věci" className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                 <h3 className="text-sm font-semibold text-slate-900">Údaje o věci a klient</h3>
+                <AresPicker compact label="Klient je firma: najít v ARES" onPick={(c) => { void upsertAresClient(userId, c).then((name) => patchItem({ client_name: name })).catch(fail); }} />
                 <p className="text-xs text-slate-500">Klient, kterého sem zapíšete, se sám objeví v seznamu klientů (včetně e-mailu a telefonu) a půjde ho vybrat ve výkazech a ve vyúčtování.</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
                     {([['reference', 'Spisová značka / č. j.', 'např. 12 T 34/2026', ''], ['authority', 'Úřad nebo soud', 'např. Městský úřad Plzeň', ''], ['client_name', 'Klient / dotčená osoba', 'např. Jan Novák', 'clients'], ['client_email', 'E-mail klienta', 'jan@example.cz', ''], ['client_phone', 'Telefon klienta', '+420 …', '']] as const).map(([key, label, placeholder, list]) => (
