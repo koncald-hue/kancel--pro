@@ -21,6 +21,7 @@ export default function LawyerTeam() {
     const [busy, setBusy] = useState(false);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [inviteName, setInviteName] = useState('');
     const [size, setSize] = useState<FirmSize>(3);
     const [copied, setCopied] = useState('');
     const paymentUrl = process.env.NEXT_PUBLIC_LAWYER_PAYMENT_URL ?? '';
@@ -50,7 +51,7 @@ export default function LawyerTeam() {
     }
 
     async function createFirm() { if (await run(() => supabase.rpc('create_firm', { p_name: name }))) setName(''); }
-    async function invite() { if (await run(() => supabase.rpc('invite_firm_member', { p_email: email }), 'Pozvánka je vytvořena. Pošlete členovi odkaz níže.')) setEmail(''); }
+    async function invite() { if (await run(() => supabase.rpc('invite_firm_member', { p_email: email, p_name: inviteName }), 'Pozvánka je vytvořena. Pošlete kolegovi odkaz níže.')) { setEmail(''); setInviteName(''); } }
 
     async function buy(plan: PlanId) {
         setBusy(true); setMsg('');
@@ -122,7 +123,7 @@ export default function LawyerTeam() {
                             {(overview?.members ?? []).map((m) => (
                                 <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
                                     <span><strong className="text-slate-900">{m.name || m.email || 'Člen'}</strong>{m.role === 'owner' && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-900">Vedoucí</span>}<span className="block text-xs text-slate-500">{m.email} · {VERIFICATION_LABEL[m.verification]}{m.until ? ` · přístup do ${dateCz(m.until)}` : ''}</span></span>
-                                    {m.user_id !== userId && <button type="button" onClick={() => { if (window.confirm('Odebrat člena? Ztratí přístup z balíčku kanceláře, jeho data zůstanou jeho.')) void run(() => supabase.rpc('remove_firm_member', { p_user: m.user_id })); }} disabled={busy} aria-label={`Odebrat ${m.email}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button>}
+                                    {m.user_id !== userId && <button type="button" onClick={() => { if (window.confirm('Odebrat člena? Ztratí přístup z balíčku kanceláře, jeho data zůstanou jeho.')) void run(() => supabase.rpc('remove_firm_member', { p_user: m.user_id })); }} disabled={busy} aria-label={`Odebrat ${m.name || m.email}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button>}
                                 </li>
                             ))}
                         </ul>
@@ -131,8 +132,9 @@ export default function LawyerTeam() {
                             <div className="mt-5">
                                 <p className="text-sm font-semibold text-slate-900">Pozvat advokáta {used >= (f?.seats ?? 0) && <span className="font-normal text-slate-500">(všechna místa jsou obsazená)</span>}</p>
                                 <div className="mt-2 flex flex-wrap gap-2">
+                                    <input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="Jméno a příjmení kolegy" maxLength={120} className={`${inputCls} max-w-xs`} aria-label="Jméno kolegy" />
                                     <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="e-mail kolegy" className={`${inputCls} max-w-xs`} aria-label="E-mail kolegy" />
-                                    <button type="button" onClick={() => void invite()} disabled={busy || !email.includes('@') || used >= (f?.seats ?? 0)} className={primaryBtn}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />} Vytvořit pozvánku</button>
+                                    <button type="button" onClick={() => void invite()} disabled={busy || inviteName.trim().length < 3 || !email.includes('@') || used >= (f?.seats ?? 0)} className={primaryBtn}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />} Vytvořit pozvánku</button>
                                 </div>
                                 <p className="mt-2 text-xs text-slate-500">Pozvánka je odkaz, který kolegovi pošlete sami (e-mailem nebo zprávou). Platí 14 dní, jen pro tento e-mail a jen jednou. Kolega si pod ním vytvoří vlastní účet a heslo.</p>
                             </div>
@@ -142,10 +144,10 @@ export default function LawyerTeam() {
                             <ul className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
                                 {(overview?.invites ?? []).map((i) => (
                                     <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
-                                        <span><strong className="text-slate-900">{i.email}</strong><span className="block text-xs text-slate-500">Čeká na přijetí · platí do {new Date(i.expires_at).toLocaleDateString('cs-CZ')}</span></span>
+                                        <span><strong className="text-slate-900">{i.name || i.email}</strong><span className="block text-xs text-slate-500">{i.name ? `${i.email} · ` : ''}Čeká na přijetí · platí do {new Date(i.expires_at).toLocaleDateString('cs-CZ')}</span></span>
                                         <span className="flex gap-2">
                                             <button type="button" onClick={() => void copy(i.token)} className={ghostBtn}>{copied === i.token ? <><Check size={14} /> Zkopírováno</> : <><Copy size={14} /> Kopírovat odkaz</>}</button>
-                                            <button type="button" onClick={() => void run(() => supabase.rpc('revoke_firm_invite', { p_invite: i.id }), 'Pozvánka byla zrušena.')} disabled={busy} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50" aria-label={`Zrušit pozvánku ${i.email}`}><Trash2 size={15} /></button>
+                                            <button type="button" onClick={() => void run(() => supabase.rpc('revoke_firm_invite', { p_invite: i.id }), 'Pozvánka byla zrušena.')} disabled={busy} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50" aria-label={`Zrušit pozvánku ${i.name || i.email}`}><Trash2 size={15} /></button>
                                         </span>
                                     </li>
                                 ))}

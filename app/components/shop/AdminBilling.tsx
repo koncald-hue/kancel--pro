@@ -44,7 +44,7 @@ export default function AdminBilling({ rows }: { rows: LawyerAccess[] }) {
         setReload((n) => n + 1);
     }
 
-    const who = (id: string) => rows.find((r) => r.user_id === id)?.email || id.slice(0, 8);
+    const who = (id: string) => { const r = rows.find((x) => x.user_id === id); return r?.display_name || r?.register_name || r?.email || id.slice(0, 8); };
 
     return (
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5" aria-label="Předplatné advokátů">

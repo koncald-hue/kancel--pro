@@ -43,7 +43,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                     <span className="rounded-xl bg-slate-900 p-2.5 text-indigo-300"><Scale size={20} aria-hidden="true" /></span>
                     <div>
                         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-800">Kancelář</p>
-                        <p className="text-lg font-bold text-slate-900">{access.firm_name || 'Můj pracovní prostor'}</p>
+                        <p className="text-lg font-bold text-slate-900">{access.display_name || access.firm_name || 'Můj pracovní prostor'}</p>{access.display_name && access.firm_name && <p className="text-xs text-slate-500">{access.firm_name}</p>}
                     </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">

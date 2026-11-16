@@ -12,10 +12,10 @@ import { primaryBtn } from '../situation/caseUi';
 export default function AcceptInvite() {
     const token = (usePathname().split('/').filter(Boolean).pop() ?? '').replace(/[^a-z0-9]/gi, '');
     const { account, authReady, openLogin, logout } = useAuth();
-    const [info, setInfo] = useState<{ firm: string; email_hint: string } | null | undefined>(undefined);
+    const [info, setInfo] = useState<{ firm: string; name?: string; email_hint: string } | null | undefined>(undefined);
     useEffect(() => {
         let cancelled = false;
-        supabase.rpc('firm_invite_info', { p_token: token }).then(({ data, error: err }) => { if (!cancelled) setInfo(err ? undefined : (data as { firm: string; email_hint: string } | null)); });
+        supabase.rpc('firm_invite_info', { p_token: token }).then(({ data, error: err }) => { if (!cancelled) setInfo(err ? undefined : (data as { firm: string; name?: string; email_hint: string } | null)); });
         return () => { cancelled = true; };
     }, [token]);
     const [busy, setBusy] = useState(false);
@@ -34,7 +34,7 @@ export default function AcceptInvite() {
         <div className="mx-auto max-w-md px-4 py-20 text-center">
             <span className="mx-auto inline-flex rounded-xl bg-indigo-600 p-3 text-white"><Scale size={22} aria-hidden="true" /></span>
             <h1 className="mt-4 text-2xl font-bold text-slate-900">Pozvánka do kanceláře</h1>
-            {info && !firm && <p className="mt-3 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-950">Kancelář <strong>{info.firm}</strong> vás zve jako člena. Pozvánka je určena pro e-mail <strong>{info.email_hint}</strong>, na ten se musíte přihlásit nebo zaregistrovat.</p>}
+            {info && !firm && <p className="mt-3 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-950">Kancelář <strong>{info.firm}</strong> zve {info.name ? <strong>{info.name}</strong> : 'vás'} jako člena. Pozvánka je určena pro e-mail <strong>{info.email_hint}</strong>, na ten se musíte přihlásit nebo zaregistrovat.</p>}
             {info === null && !firm && <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">Pozvánka je neplatná nebo už vypršela. Požádejte vedoucího kanceláře o novou.</p>}
             {firm ? (
                 <>
