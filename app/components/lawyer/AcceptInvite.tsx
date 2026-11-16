@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CheckCircle2, Loader2, Scale } from 'lucide-react';
@@ -11,7 +11,13 @@ import { primaryBtn } from '../situation/caseUi';
 // Přijetí pozvánky do kanceláře. Kód je v adrese; přijmout ji lze jen pod účtem se stejným e-mailem.
 export default function AcceptInvite() {
     const token = (usePathname().split('/').filter(Boolean).pop() ?? '').replace(/[^a-z0-9]/gi, '');
-    const { account, authReady, openLogin } = useAuth();
+    const { account, authReady, openLogin, logout } = useAuth();
+    const [info, setInfo] = useState<{ firm: string; email_hint: string } | null | undefined>(undefined);
+    useEffect(() => {
+        let cancelled = false;
+        supabase.rpc('firm_invite_info', { p_token: token }).then(({ data, error: err }) => { if (!cancelled) setInfo(err ? undefined : (data as { firm: string; email_hint: string } | null)); });
+        return () => { cancelled = true; };
+    }, [token]);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [firm, setFirm] = useState('');
@@ -28,6 +34,8 @@ export default function AcceptInvite() {
         <div className="mx-auto max-w-md px-4 py-20 text-center">
             <span className="mx-auto inline-flex rounded-xl bg-indigo-600 p-3 text-white"><Scale size={22} aria-hidden="true" /></span>
             <h1 className="mt-4 text-2xl font-bold text-slate-900">Pozvánka do kanceláře</h1>
+            {info && !firm && <p className="mt-3 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-950">Kancelář <strong>{info.firm}</strong> vás zve jako člena. Pozvánka je určena pro e-mail <strong>{info.email_hint}</strong>, na ten se musíte přihlásit nebo zaregistrovat.</p>}
+            {info === null && !firm && <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">Pozvánka je neplatná nebo už vypršela. Požádejte vedoucího kanceláře o novou.</p>}
             {firm ? (
                 <>
                     <p className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-800"><CheckCircle2 size={18} /> Jste členem kanceláře {firm}.</p>
@@ -48,6 +56,7 @@ export default function AcceptInvite() {
                 <>
                     <p className="mt-3 text-sm leading-relaxed text-slate-600">Přihlášen jako <strong>{account.email}</strong>. Po přijetí budete členem kanceláře a získáte přístup z jejího balíčku. Vedoucí kanceláře neuvidí vaše věci ani klienty.</p>
                     {error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
+                    {error.includes('jiný e-mail') && <p className="mt-3 text-sm text-slate-600">Odhlaste se a přihlaste se (nebo zaregistrujte) účtem {info?.email_hint ?? 's e-mailem z pozvánky'}. <button type="button" onClick={logout} className="font-semibold text-indigo-700 underline">Odhlásit se</button></p>}
                     <button type="button" onClick={() => void accept()} disabled={busy} className={`${primaryBtn} mt-6`}>{busy ? <Loader2 size={16} className="animate-spin" /> : null} Přijmout pozvánku</button>
                 </>
             )}

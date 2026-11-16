@@ -22,7 +22,7 @@ export default function AuthForm({ initialMode = 'login', onDone, idPrefix = 'au
             if (isRegister) {
                 if (password.length < 10) { setNotice('Heslo musí mít alespoň 10 znaků.'); return; }
                 if (!agree) { setNotice('Pro vytvoření účtu je nutné souhlasit s obchodními podmínkami.'); return; }
-                const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/kancelar`, data: { terms_version: TERMS_VERSION, terms_accepted_at: new Date().toISOString(), professional_use: true } } });
+                const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.pathname.startsWith('/pozvanka/') ? window.location.href : `${window.location.origin}/kancelar`, data: { terms_version: TERMS_VERSION, terms_accepted_at: new Date().toISOString(), professional_use: true } } });
                 if (error) { setNotice('Registrace se nepodařila: ' + error.message); return; }
                 setPassword('');
                 if (data.session) { onDone?.(); } else { setMode('login'); setNotice('Účet je vytvořený. Poslali jsme vám e-mail s potvrzovacím odkazem, po potvrzení se přihlaste.'); }
