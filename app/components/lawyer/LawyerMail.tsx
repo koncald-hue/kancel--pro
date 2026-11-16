@@ -216,7 +216,7 @@ function Connect({ master, userId, onDone }: { master: CryptoKey; userId: string
         try {
             const creds: MailCreds = { email: f.email.trim(), password: f.password, imapHost: preset === 'jiny' ? f.imapHost : p.imapHost, imapPort: Number(preset === 'jiny' ? f.imapPort : p.imapPort), smtpHost: preset === 'jiny' ? f.smtpHost : p.smtpHost, smtpPort: Number(preset === 'jiny' ? f.smtpPort : p.smtpPort), skipAppend: p.skipAppend };
             const t = await mailApi<{ sentFolder: string }>('test', creds);
-            const { error: err } = await supabase.from('mail_accounts').insert({ user_id: userId, label: creds.email, email: creds.email, preset, imap_host: creds.imapHost, imap_port: creds.imapPort, smtp_host: creds.smtpHost, smtp_port: creds.smtpPort, sent_folder: t.sentFolder, skip_append: !!creds.skipAppend, enc_password: await encryptText(master, creds.password) });
+            const { error: err } = await supabase.from('mail_accounts').insert({ user_id: userId, label: creds.email, email: creds.email, preset: ['gmail', 'seznam', 'centrum'].includes(preset) ? preset : 'jiny', imap_host: creds.imapHost, imap_port: creds.imapPort, smtp_host: creds.smtpHost, smtp_port: creds.smtpPort, sent_folder: t.sentFolder, skip_append: !!creds.skipAppend, enc_password: await encryptText(master, creds.password) });
             if (err) throw new Error(/mail_accounts|schema cache/i.test(err.message) ? 'Pošta zatím není v databázi zapnutá (chybí spuštění souboru posta.sql).' : err.message);
             await onDone();
         } catch (ex) { setError(ex instanceof Error ? ex.message : 'Připojení se nepovedlo.'); }
