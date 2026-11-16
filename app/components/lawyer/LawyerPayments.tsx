@@ -15,7 +15,7 @@ import { useLawyer } from './LawyerGate';
 import RemindersPanel from './RemindersPanel';
 
 const dateCz = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString('cs-CZ');
-const summaryText = (s: ImportSummary) => `Nových pohybů ${s.added}${s.duplicates ? ` (${s.duplicates} už znám)` : ''}. Spárováno automaticky: ${s.auto}. K ručnímu potvrzení: ${s.suggest + s.overpay}. Bez návrhu: ${s.none}.`;
+const summaryText = (s: ImportSummary) => `Nových pohybů ${s.added}${s.duplicates ? ` (${s.duplicates} už znám)` : ''}. Spárováno automaticky: ${s.auto}. K potvrzení (nejasné případy): ${s.suggest + s.overpay}. Bez návrhu: ${s.none}.`;
 
 // Platby na jednom místě: účet, nespárované příchozí platby, rychlý zápis, spárované platby a upomínky
 export default function LawyerPayments() {
@@ -57,15 +57,15 @@ export default function LawyerPayments() {
             {msg && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">{msg}</p>}
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
 
-            <QuickPayment invoices={invoices} userId={userId} onDone={async (t) => { setMsg(t); setError(''); await load(); }} onError={setError} />
             <Unmatched todo={todo} open={open} invoices={invoices} userId={userId} vat={vat} busy={busy} run={run} />
             <BankPanel accounts={accounts} master={master} userId={userId} vat={vat} busy={busy} run={run} setMsg={setMsg} />
+            <details className="rounded-2xl border border-slate-200 bg-white"><summary className="cursor-pointer px-5 py-3 text-sm font-semibold text-slate-700">Klient zaplatil mimo banku (hotově, z jiného účtu)</summary><div className="border-t border-slate-100"><QuickPayment invoices={invoices} userId={userId} onDone={async (t) => { setMsg(t); setError(''); await load(); }} onError={setError} /></div></details>
             <RemindersPanel invoices={invoices} userId={userId} onChanged={load} />
 
             {matched.length > 0 && (
                 <section aria-label="Spárované platby"><h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Spárované platby z banky ({matched.length})</h2>
                     <ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white text-sm">{matched.slice(0, 20).map((t) => { const inv = invoices.find((i) => i.id === t.invoice_id); return (
-                        <li key={t.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5"><span className="w-20 shrink-0 text-xs text-slate-500">{dateCz(t.tx_date)}</span><span className="min-w-0 flex-1 truncate text-slate-800">{t.counterparty || 'platba'}{t.vs && <span className="ml-1.5 text-xs text-slate-400">VS {t.vs}</span>}</span><span className="shrink-0 font-semibold text-emerald-800">{money(t.amount, t.currency === 'EUR' ? 'EUR' : 'CZK')}</span>{inv && <Link href={`/kancelar/faktury/${inv.id}`} className="shrink-0 text-xs font-semibold text-indigo-800 hover:underline">→ {inv.number}</Link>}<span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">{t.matched_by === 'vs' ? 'automaticky' : 'ručně'}</span>
+                        <li key={t.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5"><span className="w-20 shrink-0 text-xs text-slate-500">{dateCz(t.tx_date)}</span><span className="min-w-0 flex-1 truncate text-slate-800">{t.counterparty || 'platba'}{t.vs && <span className="ml-1.5 text-xs text-slate-400">VS {t.vs}</span>}</span><span className="shrink-0 font-semibold text-emerald-800">{money(t.amount, t.currency === 'EUR' ? 'EUR' : 'CZK')}</span>{inv && <Link href={`/kancelar/faktury/${inv.id}`} className="shrink-0 text-xs font-semibold text-indigo-800 hover:underline">→ {inv.number}</Link>}<span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">{t.matched_by === 'vs' || t.matched_by === 'auto' ? 'automaticky' : 'ručně'}</span>
                             <button type="button" onClick={() => void run(`un-${t.id}`, async () => { await unmatchTx(t, vat); setMsg('Spárování zrušeno, platba se vrátila mezi nespárované.'); })} aria-label="Zrušit spárování" title="Zrušit spárování" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 cursor-pointer"><Undo2 size={14} /></button></li>
                     ); })}</ul>
                 </section>
@@ -100,7 +100,7 @@ function QuickPayment({ invoices, userId, onDone, onError }: { invoices: Receiva
     }
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Zapsat platbu">
-            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Plus size={18} className="text-indigo-700" /> Zapsat platbu</h2>
+            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Plus size={18} className="text-indigo-700" /> Zapsat platbu mimo banku</h2>
             <form onSubmit={save} className="mt-3 grid gap-2 sm:grid-cols-[2fr_1fr_1fr_1fr_auto] sm:items-end">
                 <label className="block text-xs font-semibold text-slate-600">Vyúčtování<select value={id} onChange={(e) => { setId(e.target.value); setAmount(''); }} className={`${inputCls} mt-1 font-normal`}><option value="">Vyberte neuhrazené…</option>{unpaid.map((i) => <option key={i.id} value={i.id}>{i.number} · {i.client_snapshot.name ?? i.title} · zbývá {money(i.outstanding, i.currency)}</option>)}</select></label>
                 <label className="block text-xs font-semibold text-slate-600">Částka<input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder={inv ? String(inv.outstanding).replace('.', ',') : ''} className={`${inputCls} mt-1 font-normal`} /></label>
@@ -108,7 +108,7 @@ function QuickPayment({ invoices, userId, onDone, onError }: { invoices: Receiva
                 <label className="block text-xs font-semibold text-slate-600">Způsob<select value={how} onChange={(e) => setHow(e.target.value)} className={`${inputCls} mt-1 font-normal`}>{['převodem', 'hotově', 'kartou', 'jinak'].map((h) => <option key={h}>{h}</option>)}</select></label>
                 <button type="submit" disabled={!inv || busy} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} Zapsat</button>
             </form>
-            <p className="mt-2 text-xs text-slate-500">Nechte částku prázdnou, pokud klient zaplatil celé zbývající vyúčtování. Platby z připojeného účtu se zapisují samy.</p>
+            <p className="mt-2 text-xs text-slate-500">Nechte částku prázdnou, pokud klient zaplatil celé zbývající vyúčtování. Platby z připojeného účtu se zapisují samy, tohle je jen pro to, co banka nevidí.</p>
         </section>
     );
 }

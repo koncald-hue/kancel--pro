@@ -56,9 +56,9 @@ describe('automatic pairing', () => {
         expect(decide(tx({ amount: 13000, vs: '2026001' }), invoices)).toMatchObject({ kind: 'overpay', invoiceId: 'a', apply: 12100 });
         expect(decide(tx({ amount: 12100, vs: '2026001', currency: 'EUR' }), invoices).kind).toBe('suggest');
     });
-    it('suggests (never auto-applies) by invoice number in the message or by amount and counterparty name', () => {
-        expect(decide(tx({ amount: 5000, message: 'za fakturu 2026-002 díky' }), invoices)).toMatchObject({ kind: 'suggest', invoiceId: 'b', confidence: 'cislo' });
-        expect(decide(tx({ amount: 5000, counterparty: 'Beta s.r.o.' }), invoices)).toMatchObject({ kind: 'suggest', invoiceId: 'b', confidence: 'castka' });
+    it('also auto-pairs by invoice number in the message or by exact amount plus counterparty name, but only suggests on amount alone', () => {
+        expect(decide(tx({ amount: 5000, message: 'za fakturu 2026-002 díky' }), invoices)).toMatchObject({ kind: 'auto', invoiceId: 'b', confidence: 'cislo' });
+        expect(decide(tx({ amount: 5000, counterparty: 'Beta s.r.o.' }), invoices)).toMatchObject({ kind: 'auto', invoiceId: 'b', confidence: 'castka' });
     });
     it('does not guess when two invoices have the same amount or the symbol is unknown', () => {
         expect(decide(tx({ amount: 5000 }), invoices).kind).toBe('none');

@@ -59,8 +59,8 @@ export async function processNew(userId: string, vatNow: boolean, auto: boolean)
             const inv = live.get(d.invoiceId);
             if (!inv) { sum.none += 1; continue; }
             const row = rows.find((r) => r.id === tx.txid);
-            const paymentId = await recordPayment(userId, inv, d.apply, tx.date, `Banka: ${tx.counterparty || 'platba'}${tx.vs ? `, VS ${tx.vs}` : ''}`);
-            await supabase.from('bank_transactions').update({ status: 'matched', invoice_id: inv.id, payment_id: paymentId, matched_by: 'vs' }).eq('id', row?.id ?? tx.txid);
+            const paymentId = await recordPayment(userId, inv, d.apply, tx.date, `Banka: ${tx.counterparty || 'platba'}${tx.vs ? `, VS ${tx.vs}` : ''}${d.confidence === 'vs' ? '' : ` (${d.reason})`}`);
+            await supabase.from('bank_transactions').update({ status: 'matched', invoice_id: inv.id, payment_id: paymentId, matched_by: d.confidence === 'vs' ? 'vs' : 'auto' }).eq('id', row?.id ?? tx.txid);
             inv.paid = round2(inv.paid + d.apply); inv.outstanding = round2(inv.total - inv.paid);
             sum.auto += 1;
         } else if (d.kind === 'auto') sum.suggest += 1;

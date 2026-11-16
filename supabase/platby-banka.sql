@@ -43,7 +43,7 @@ create table if not exists public.bank_transactions (
   status text not null default 'new' check (status in ('new', 'matched', 'ignored')),
   invoice_id uuid references public.invoices(id) on delete set null,
   payment_id uuid references public.invoice_payments(id) on delete set null,
-  matched_by text not null default '' check (matched_by in ('', 'vs', 'navrh', 'rucne')),
+  matched_by text not null default '' check (matched_by in ('', 'vs', 'auto', 'navrh', 'rucne')),
   note text not null default '' check (char_length(note) <= 300),
   created_at timestamptz not null default now(),
   unique (account_id, txid)

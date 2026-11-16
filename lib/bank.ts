@@ -123,11 +123,11 @@ export function decide(tx: BankTx, invoices: OpenInvoice[], now = ''): Decision 
     }
     // Číslo vyúčtování ve zprávě pro příjemce
     const inMessage = open.filter((i) => i.number && new RegExp(`(^|\\D)${i.number.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\D|$)`).test(tx.message));
-    if (inMessage.length === 1) { const inv = inMessage[0]; return { kind: 'suggest', invoiceId: inv.id, apply: Math.min(tx.amount, inv.outstanding), reason: `Ve zprávě je číslo ${inv.number}.`, confidence: 'cislo' }; }
+    if (inMessage.length === 1) { const inv = inMessage[0]; if (inv.currency === tx.currency && tx.amount <= inv.outstanding + 0.004) return { kind: 'auto', invoiceId: inv.id, apply: tx.amount, reason: `Ve zprávě je číslo ${inv.number}.`, confidence: 'cislo' }; return { kind: 'suggest', invoiceId: inv.id, apply: Math.min(tx.amount, inv.outstanding), reason: `Ve zprávě je číslo ${inv.number}.`, confidence: 'cislo' }; }
     // Přesná částka a shoda jména protistrany
     const same = open.filter((i) => i.currency === tx.currency && Math.abs(i.outstanding - tx.amount) < 0.005);
     const named = same.filter((i) => { const a = new Set(tokens(i.client)); return tokens(tx.counterparty).some((t) => a.has(t)); });
-    if (named.length === 1) return { kind: 'suggest', invoiceId: named[0].id, apply: tx.amount, reason: `Částka a jméno protistrany (${tx.counterparty}) sedí s ${named[0].number}.`, confidence: 'castka' };
+    if (named.length === 1) return { kind: 'auto', invoiceId: named[0].id, apply: tx.amount, reason: `Částka a jméno protistrany (${tx.counterparty}) sedí s ${named[0].number}.`, confidence: 'castka' };
     if (same.length === 1 && !vs) return { kind: 'suggest', invoiceId: same[0].id, apply: tx.amount, reason: `Přesná částka sedí jen s ${same[0].number}. Zkontrolujte, zda platba patří k němu.`, confidence: 'castka' };
     void now;
     return { kind: 'none', reason: vs ? `Variabilní symbol ${tx.vs} neodpovídá žádnému neuhrazenému vyúčtování.` : 'Platba nemá variabilní symbol.' };
