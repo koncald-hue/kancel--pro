@@ -59,7 +59,7 @@ function partyHtml(title: string, p: Party): string {
 }
 
 // Tisknutelný doklad (otevře se v novém okně a vytiskne / uloží jako PDF)
-export function buildInvoiceHtml(inv: Invoice, lines: DraftLine[], totals: Totals, vatPayer: boolean): string {
+export function buildInvoiceHtml(inv: Invoice, lines: DraftLine[], totals: Totals, vatPayer: boolean, qr?: { svg: string; amount: number }): string {
     const supplier = inv.supplier_snapshot;
     const vs = (inv.number ?? '').replace(/\D/g, '');
     const rows = lines.map((l) => `<tr><td>${esc(l.description)}</td><td class="r">${qtyText(l.qty)} ${esc(l.unit)}</td><td class="r">${money(l.unit_price, inv.currency)}</td>${vatPayer ? `<td class="r">${l.vat_rate} %</td>` : ''}<td class="r">${money(lineBase(l), inv.currency)}</td></tr>`).join('');
@@ -73,6 +73,7 @@ table{width:100%;border-collapse:collapse;margin-top:8px}th{text-align:left;font
 <div class="parties">${partyHtml('Dodavatel', supplier)}${partyHtml('Odběratel', inv.client_snapshot)}</div>
 <table><thead><tr><th>Popis</th><th class="r">Množství</th><th class="r">Cena za jednotku</th>${vatPayer ? '<th class="r">DPH</th>' : ''}<th class="r">Základ</th></tr></thead><tbody>${rows}${groups}</tbody></table>
 <p class="total">K úhradě: ${money(totals.total, inv.currency)}</p>
+${qr ? `<div style="display:flex;align-items:center;gap:14px;margin-top:12px"><div style="width:112px;height:112px">${qr.svg}</div><div><b>QR platba</b><br><small>Naskenujte v aplikaci své banky. Částka ${money(qr.amount, inv.currency)}, variabilní symbol ${vs}.</small></div></div>` : ''}
 <div class="meta">${supplier.bank_account ? `Číslo účtu: <b>${esc(supplier.bank_account)}</b>${vs ? ` · variabilní symbol: <b>${vs}</b>` : ''}<br>` : ''}${vatPayer ? '' : '<small>Dodavatel není plátcem DPH.</small><br>'}${inv.note ? `${esc(inv.note)}<br>` : ''}${supplier.note ? esc(supplier.note) : ''}</div>
 <p><small>Doklad vyhotoven v aplikaci Kancelář. Za správnost údajů a splnění náležitostí účetního a daňového dokladu odpovídá vystavovatel.</small></p></body></html>`;
 }

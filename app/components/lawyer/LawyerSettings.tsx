@@ -15,6 +15,7 @@ import FirmSettings from './FirmSettings';
 import { useAuth } from '../site/AuthContext';
 
 import AresPicker from './AresPicker';
+import { formatIban, toIban } from '@/lib/qrPayment';
 
 const STATUS: Record<string, string> = { trial: 'Zkušební přístup', active: 'Aktivní předplatné', requested: 'Čeká na potvrzení', expired: 'Vypršelo' };
 
@@ -110,7 +111,7 @@ export default function LawyerSettings() {
                     <div className="sm:col-span-2"><AresPicker compact onPick={(c) => setBill((b) => ({ ...b, ico: c.ico, dic: c.dic || b.dic }))} label="Doplnit IČO a DIČ z ARES" /></div>
                     <label className="block text-xs font-semibold text-slate-600">IČO<input value={bill.ico} onChange={(e) => setBill((b) => ({ ...b, ico: e.target.value }))} maxLength={20} className={`${inputCls} mt-1 font-normal`} /></label>
                     <label className="block text-xs font-semibold text-slate-600">DIČ<input value={bill.dic} onChange={(e) => setBill((b) => ({ ...b, dic: e.target.value }))} maxLength={20} className={`${inputCls} mt-1 font-normal`} placeholder="CZ…" /></label>
-                    <label className="block text-xs font-semibold text-slate-600">Číslo účtu / IBAN<input value={bill.bank} onChange={(e) => setBill((b) => ({ ...b, bank: e.target.value }))} maxLength={60} className={`${inputCls} mt-1 font-normal`} placeholder="123456789/0100" /></label>
+                    <label className="block text-xs font-semibold text-slate-600">Číslo účtu / IBAN<input value={bill.bank} onChange={(e) => setBill((b) => ({ ...b, bank: e.target.value }))} maxLength={60} className={`${inputCls} mt-1 font-normal`} placeholder="123456789/0100" />{bill.bank.trim() && <span className={`mt-1 block text-[11px] font-normal ${toIban(bill.bank) ? 'text-emerald-800' : 'text-rose-800'}`}>{toIban(bill.bank) ? `IBAN ${formatIban(toIban(bill.bank) ?? '')}: na fakturách bude QR platba.` : 'Neplatné číslo účtu, QR platba se nevytvoří. Zadejte např. 123456789/0100 nebo IBAN.'}</span>}</label>
                     <label className="block text-xs font-semibold text-slate-600">Výchozí splatnost (dny)<input value={bill.due} onChange={(e) => setBill((b) => ({ ...b, due: e.target.value }))} inputMode="numeric" className={`${inputCls} mt-1 max-w-32 font-normal`} /></label>
                     <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 sm:col-span-2"><input type="checkbox" checked={bill.vat} onChange={(e) => setBill((b) => ({ ...b, vat: e.target.checked }))} className="h-4 w-4 accent-indigo-700" /> Jsem plátce DPH</label>
                     <label className="block text-xs font-semibold text-slate-600 sm:col-span-2">Text pod fakturou (nepovinné)<input value={bill.note} onChange={(e) => setBill((b) => ({ ...b, note: e.target.value }))} maxLength={500} className={`${inputCls} mt-1 font-normal`} placeholder="např. Zapsán v seznamu advokátů ČAK pod ev. č. 12345." /></label>

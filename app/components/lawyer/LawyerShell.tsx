@@ -11,7 +11,7 @@ import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
 
-export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'nastaveni';
+export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
 
 // Nástroje jsou seskupené podle toho, k čemu slouží
@@ -62,7 +62,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
     }, []);
 
     // Výkazy, fakturace, ceník a kalkulačky patří pod jednu položku „Peníze“
-    const navActive: LawyerSection = ['vykazy', 'faktury', 'cenik', 'kalkulacky', 'penize'].includes(active) ? 'penize' : active;
+    const navActive: LawyerSection = ['vykazy', 'faktury', 'cenik', 'platby', 'kalkulacky', 'penize'].includes(active) ? 'penize' : active;
     const current = ALL.find(([id]) => id === navActive);
     // Vždy jméno přihlášeného uživatele; teprve když chybí, e-mail
     const name = access.display_name || account?.email || 'Můj pracovní prostor';

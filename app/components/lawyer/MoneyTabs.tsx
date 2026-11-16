@@ -1,11 +1,12 @@
 import Link from 'next/link';
-import { Calculator, Clock3, LayoutDashboard, Receipt, Tags } from 'lucide-react';
+import { Calculator, Clock3, Landmark, LayoutDashboard, Receipt, Tags } from 'lucide-react';
 
-export type MoneySection = 'penize' | 'vykazy' | 'faktury' | 'cenik' | 'kalkulacky';
+export type MoneySection = 'penize' | 'vykazy' | 'faktury' | 'platby' | 'cenik' | 'kalkulacky';
 const TABS = [
     ['penize', '/kancelar/penize', 'Přehled', LayoutDashboard],
     ['vykazy', '/kancelar/vykazy', 'Výkazy práce', Clock3],
     ['faktury', '/kancelar/faktury', 'Fakturace', Receipt],
+    ['platby', '/kancelar/platby', 'Platby', Landmark],
     ['cenik', '/kancelar/cenik', 'Ceník', Tags],
     ['kalkulacky', '/kancelar/kalkulacky', 'Kalkulačky', Calculator],
 ] as const;

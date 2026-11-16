@@ -10,6 +10,8 @@ import type { LawyerClient, TimeEntry } from '@/lib/lawyer';
 import { STATUS_LABELS, VAT_RATES, round2, todayIso, type Payment, buildInvoiceHtml, computeTotals, lineBase, lineFromPriceItem, lineFromTimeEntry, loadPriceItems, money, openPrint, parseAmount, qtyText, type DraftLine, type Invoice, type InvoiceLine, type Party, type PriceItem } from '@/lib/billing';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import AresPicker from './AresPicker';
+import { qrSvg, spayd } from '@/lib/qrPayment';
+import InvoiceQr from './InvoiceQr';
 import { useLawyer } from './LawyerGate';
 
 type Line = DraftLine & { key: string; price_item_id: string | null; time_entry_id: string | null; qtyText: string; priceText: string };
@@ -170,10 +172,15 @@ export default function LawyerInvoiceEditor() {
         await syncStatus(list);
     }
 
-    function print() {
+    // QR platba na výtisku: částka zbývající k úhradě, variabilní symbol = číslice čísla faktury; bez platného účtu se QR nevytiskne
+    async function print() {
         if (!inv) return;
         const view: Invoice = draft ? { ...inv, client_snapshot: buyer, supplier_snapshot: { name: access.display_name || access.email, firm: access.firm_name, address: access.office, ico: access.ico, dic: access.dic, vat_payer: access.vat_payer, bank_account: access.bank_account, email: access.contact_email || access.email, phone: access.phone, note: access.invoice_note } } : inv;
-        if (!openPrint(buildInvoiceHtml(view, parsed, totals, vatPayer))) setError('Prohlížeč zablokoval nové okno. Povolte vyskakovací okna.');
+        let qr: { svg: string; amount: number } | undefined;
+        const left = draft ? totals.total : remaining;
+        const payload = left > 0 && view.supplier_snapshot.bank_account ? spayd({ iban: view.supplier_snapshot.bank_account, amount: left, currency: view.currency === 'EUR' ? 'EUR' : 'CZK', vs: view.number ?? '', message: view.number ? `Faktura ${view.number}` : 'Vyuctovani', due: view.due_date ?? undefined, name: view.supplier_snapshot.firm || view.supplier_snapshot.name }) : null;
+        if (payload) { try { qr = { svg: await qrSvg(payload, 112), amount: left }; } catch { /* bez QR se vytiskne i tak */ } }
+        if (!openPrint(buildInvoiceHtml(view, parsed, totals, vatPayer, qr))) setError('Prohlížeč zablokoval nové okno. Povolte vyskakovací okna.');
     }
 
     if (missing) return <p className="rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-600">Vyúčtování nenalezeno. <Link href="/kancelar/faktury" className="font-semibold text-indigo-800 underline">Zpět na přehled</Link></p>;
@@ -184,7 +191,7 @@ export default function LawyerInvoiceEditor() {
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <Link href="/kancelar/faktury" className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-800 hover:underline"><ArrowLeft size={15} /> Fakturace</Link>
                 <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={print} className={ghostBtn}><Printer size={15} /> Tisk / PDF</button>
+                    <button type="button" onClick={() => void print()} className={ghostBtn}><Printer size={15} /> Tisk / PDF</button>
                     {!draft && <button type="button" onClick={() => void duplicate()} className={ghostBtn}><Copy size={15} /> Kopírovat jako nový</button>}
                     {inv.status === 'issued' && <><button type="button" onClick={() => void markPaidFully()} className={primaryBtn}><Check size={15} /> Označit jako zaplacené</button><button type="button" onClick={() => { if (window.confirm('Stornovat vyúčtování?')) void setStatus('cancelled'); }} className={`${ghostBtn} text-rose-700`}>Storno</button></>}
                     {inv.status === 'paid' && <button type="button" onClick={() => void setStatus('issued')} className={ghostBtn}>Vrátit na nezaplacené</button>}
@@ -289,6 +296,7 @@ export default function LawyerInvoiceEditor() {
                         <h2 className="text-lg font-bold text-slate-900">Platby</h2>
                         <p className="text-sm text-slate-600">Zaplaceno <strong className="text-slate-900">{money(paidSum, inv.currency)}</strong> z {money(totals.total, inv.currency)} · zbývá <strong className={remaining > 0 ? 'text-slate-900' : 'text-emerald-700'}>{money(Math.max(0, remaining), inv.currency)}</strong></p>
                     </div>
+                    {!draft && remaining > 0 && <InvoiceQr account={inv.supplier_snapshot.bank_account ?? ''} amount={remaining} currency={inv.currency === 'EUR' ? 'EUR' : 'CZK'} number={inv.number} due={inv.due_date} name={inv.supplier_snapshot.firm || inv.supplier_snapshot.name || ''} />}
                     {payments.length > 0 && (
                         <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
                             {payments.map((p) => <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-2"><span><strong className="text-slate-900">{money(p.amount, inv.currency)}</strong> · {dateCz(p.paid_on)}{p.note && <span className="text-slate-500"> · {p.note}</span>}</span><button type="button" onClick={() => void removePayment(p.id)} aria-label="Smazat platbu" className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button></li>)}
