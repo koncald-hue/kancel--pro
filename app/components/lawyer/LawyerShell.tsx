@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, MailCheck, Receipt, Search, ShieldAlert, Tags, Scale, X } from 'lucide-react';
+import { Briefcase, Clock3, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Receipt, Search, ShieldAlert, Tags, Scale, X } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
 import DataBoxLauncher from './DataBoxLauncher';
@@ -17,7 +17,7 @@ type Item = readonly [LawyerSection, string, string, LucideIcon];
 // Nástroje jsou seskupené podle toho, k čemu slouží
 const GROUPS: { title: string; items: Item[] }[] = [
     { title: '', items: [['prehled', '/kancelar', 'Přehled', LayoutDashboard]] },
-    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['schranka', '/kancelar/schranka', 'Datová schránka', MailCheck], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['knihovna', '/kancelar/knihovna', 'Knihovna', Library]] },
+    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['knihovna', '/kancelar/knihovna', 'Knihovna', Library]] },
     { title: 'Peníze', items: [['vykazy', '/kancelar/vykazy', 'Výkazy práce', Clock3], ['faktury', '/kancelar/faktury', 'Fakturace', Receipt], ['cenik', '/kancelar/cenik', 'Ceník', Tags]] },
     { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound]] },
 ];
@@ -122,7 +122,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             )}
 
             <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-            {!locked && active !== 'schranka' && <DataBoxLauncher />}
+            {!locked && <DataBoxLauncher />}
 
             <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
                 <div className="mx-auto max-w-6xl">

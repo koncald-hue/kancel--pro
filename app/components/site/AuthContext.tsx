@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, useSyncExt
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { endAllSessions } from '@/lib/isdsSession';
 import AuthForm from './AuthForm';
 
 // Přihlášení do aplikace pro právníky: jeden účet, přihlašování e-mailem a heslem
@@ -56,7 +57,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const openLogin = useCallback((m: 'login' | 'register' = 'login') => { setMode(m); setFormKey((k) => k + 1); setOpen(true); }, []);
-    const logout = useCallback(() => { void supabase.auth.signOut(); }, []);
+    // Při odhlášení z Kanceláře se ukončí i relace v datových schránkách
+    const logout = useCallback(() => {
+        void (async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                await endAllSessions((env, value) => fetch('/api/isds', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ action: 'mk_end', env, session: value }) }));
+            } catch { /* odhlášení se nesmí zdržet */ }
+            await supabase.auth.signOut();
+        })();
+    }, []);
 
     return (
         <AuthContext.Provider value={{ account, isStaff, authReady, openLogin, logout }}>

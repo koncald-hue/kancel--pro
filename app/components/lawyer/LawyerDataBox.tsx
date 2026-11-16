@@ -7,6 +7,7 @@ import { decryptText, encryptText } from '@/lib/e2ee';
 import { useMasterKey } from '@/lib/useE2ee';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { insertRow, safeFileName, uploadCaseFile } from '@/lib/caseFile';
+import { dropSession, getSession, putSession, touchSession } from '@/lib/isdsSession';
 import { STATUS_LABELS, type BoxHit, type Downloaded, type IsdsEnv, type Record_ } from '@/lib/isds';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
@@ -29,7 +30,6 @@ async function api(body: Record<string, unknown>): Promise<ApiRes> {
 const errText = (r: { status: number; json: Record<string, unknown> }) => (typeof r.json.message === 'string' ? r.json.message : r.status === 429 ? 'Příliš mnoho dotazů, zkuste to za chvíli.' : r.status === 403 ? 'Přístup je zamčený.' : 'Operace se nepodařila.');
 
 
-const SESSION_MS = 25 * 60_000;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Přihlášení Mobilním klíčem: odeslání požadavku, čekání na potvrzení v telefonu (až 2,5 minuty), získání relace
@@ -51,24 +51,25 @@ async function mkLogin(env: IsdsEnv, cred: Cred, onWait: (w: boolean) => void): 
     return fin.ok ? { ok: true, session: String(fin.json.session ?? '') } : { ok: false, res: fin };
 }
 
-// Volání datových schránek s doplněním přihlášení; u Mobilního klíče se relace drží v paměti (platí 30 minut) a sama se obnoví
-function useCaller(env: IsdsEnv, cred: Cred): { call: Caller; waiting: boolean } {
-    const sess = useRef<{ value: string; at: number } | null>(null);
+// Volání datových schránek s doplněním přihlášení. U Mobilního klíče se relace drží v paměti prohlížeče i po zavření panelu
+// (vyprší po 25 minutách nečinnosti nebo odhlášením z Kanceláře) a při dalším použití se sama obnoví potvrzením v telefonu.
+function useCaller(accountId: string, env: IsdsEnv, cred: Cred): { call: Caller; waiting: boolean } {
     const pending = useRef<Promise<{ ok: true; session: string } | { ok: false; res: ApiRes }> | null>(null);
     const [waiting, setWaiting] = useState(false);
-    useEffect(() => () => { if (sess.current) void api({ action: 'mk_end', env, session: sess.current.value }); }, [env]);
     const call = useCallback<Caller>(async (body) => {
         if (cred.method !== 'mobile_key') return api({ ...body, env, login: cred.login, password: cred.password });
-        if (!sess.current || Date.now() - sess.current.at > SESSION_MS) {
+        let sess = getSession(accountId);
+        if (!sess) {
             pending.current ??= mkLogin(env, cred, setWaiting).finally(() => { pending.current = null; });
             const r = await pending.current;
             if (!r.ok) return r.res;
-            sess.current = { value: r.session, at: Date.now() };
+            putSession(accountId, env, r.session);
+            sess = getSession(accountId);
         }
-        const res = await api({ ...body, env, session: sess.current.value });
-        if (res.status === 401) sess.current = null;
+        const res = await api({ ...body, env, session: sess?.value });
+        if (res.status === 401) dropSession(accountId); else touchSession(accountId);
         return res;
-    }, [env, cred]);
+    }, [accountId, env, cred]);
     return { call, waiting };
 }
 
@@ -200,7 +201,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
     const [error, setError] = useState('');
     const [open, setOpen] = useState<Record_ | null>(null);
     const [compose, setCompose] = useState(false);
-    const { call, waiting } = useCaller(account.env, cred);
+    const { call, waiting } = useCaller(account.id, account.env, cred);
 
     const refresh = useCallback(async (t: Tab) => {
         setBusy(true); setError('');
