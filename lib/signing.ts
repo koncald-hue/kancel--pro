@@ -7,16 +7,16 @@ export type SignStatus = 'pending' | 'signed' | 'awaiting_check' | 'declined' | 
 export type IdentityMethod = 'bankid' | 'lawyer' | 'none';
 
 export const KINDS: Record<SignKind, { label: string; level: SignLevel; note: string }> = {
-    smlouva: { label: 'Smlouva o poskytování právních služeb', level: 'advanced', note: 'Pro smlouvu mezi advokátem a klientem stačí pokročilý podpis.' },
-    souhlas: { label: 'Souhlas (např. se zpracováním údajů)', level: 'advanced', note: 'Pokročilý podpis stačí.' },
-    protokol: { label: 'Předávací protokol, potvrzení převzetí', level: 'advanced', note: 'Pokročilý podpis stačí.' },
-    plna_moc: { label: 'Plná moc', level: 'qualified', note: 'Pro zastoupení před soudem a úřady ověřte, jakou formu konkrétní soud nebo úřad vyžaduje. Pokud trvá na kvalifikovaném podpisu, pokročilý nestačí.' },
+    smlouva: { label: 'Smlouva o poskytování právních služeb', level: 'advanced', note: 'Pro smlouvu mezi advokátem a klientem stačí podpis s ověřením totožnosti.' },
+    souhlas: { label: 'Souhlas (např. se zpracováním údajů)', level: 'advanced', note: 'Podpis s ověřením totožnosti stačí.' },
+    protokol: { label: 'Předávací protokol, potvrzení převzetí', level: 'advanced', note: 'Podpis s ověřením totožnosti stačí.' },
+    plna_moc: { label: 'Plná moc', level: 'qualified', note: 'Pro zastoupení před soudem a úřady ověřte, jakou formu konkrétní soud nebo úřad vyžaduje. Pokud trvá na kvalifikovaném podpisu, běžný podpis s ověřením totožnosti nemusí stačit.' },
     podani: { label: 'Podání nebo dokument pro soud či úřad', level: 'qualified', note: 'Rozhoduje požadavek konkrétního soudu nebo úřadu. Aplikace kvalifikovaný podpis sama nevytváří.' },
-    jine: { label: 'Jiný dokument', level: 'advanced', note: 'Pokročilý podpis stačí, pokud ho příjemce dokumentu uzná.' },
+    jine: { label: 'Jiný dokument', level: 'advanced', note: 'Stačí podpis s ověřením totožnosti, pokud ho příjemce dokumentu uzná.' },
 };
 export const defaultLevel = (kind: SignKind): SignLevel => KINDS[kind].level;
 
-export const LEVEL_LABEL: Record<SignLevel, string> = { advanced: 'Pokročilý podpis (ověření identity + SMS kód)', qualified: 'Kvalifikovaný podpis (mimo aplikaci)' };
+export const LEVEL_LABEL: Record<SignLevel, string> = { advanced: 'Podpis s ověřením totožnosti (Bank iD nebo osobně + SMS kód)', qualified: 'Kvalifikovaný podpis (mimo aplikaci)' };
 export const STATUS_LABEL: Record<SignStatus, string> = { pending: 'Čeká na podpis', signed: 'Podepsáno', awaiting_check: 'Čeká na ověření advokátem', declined: 'Odmítnuto', cancelled: 'Zrušeno', expired: 'Vypršelo' };
 
 // Prohlášení, které klient před podpisem potvrdí; ukládá se do dokladu

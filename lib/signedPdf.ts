@@ -25,7 +25,7 @@ export function evidenceLines(e: Evidence, seal: string): string[] {
         `Pečeť dokladu (HMAC-SHA256): ${seal}`,
         `Identifikátor žádosti: ${e.requestId}`,
         '',
-        'Jde o pokročilý elektronický podpis ve smyslu nařízení (EU) č. 910/2014. Doklad je zapečetěn serverem; změna kteréhokoli údaje pečeť zneplatní.',
+        'Jde o elektronický podpis s ověřením totožnosti (nikoli kvalifikovaný podpis). Doklad je zapečetěn serverem; změna kteréhokoli údaje pečeť zneplatní.',
     ];
 }
 

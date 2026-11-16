@@ -7,7 +7,7 @@ export function bankIdConfig(origin: string): BankIdConfig | null {
     if (!clientId || !clientSecret) return null;
     // Bez výslovného nastavení se používá zkušební prostředí, ne ostré
     const base = (process.env.BANKID_BASE_URL || 'https://oidc.sandbox.bankid.cz').replace(/\/+$/, '');
-    const scopes = process.env.BANKID_SCOPES || 'openid profile.name profile.birthdate profile.email profile.phonenumbers profile.addresses';
+    const scopes = process.env.BANKID_SCOPES || 'openid profile.name profile.birthdate profile.email profile.phonenumber profile.addresses';
     return { clientId, clientSecret, base, scopes, redirectUri: `${origin.replace(/\/+$/, '')}/api/identity/bankid/callback` };
 }
 
