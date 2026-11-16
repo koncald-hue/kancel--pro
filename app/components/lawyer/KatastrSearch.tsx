@@ -1,8 +1,10 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import { Check, Landmark, Loader2, Plus, Search, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import type { MapParcel } from '@/lib/katastrMap';
 import { INFO_DISCLAIMER, RIZENI_TYPY, parseParcelNumber, type CastObce, type JednotkaView, type KatastralniUzemi, type NeighborView, type ParcelaView, type PropertySnapshot, type RizeniView, type StavbaView } from '@/lib/katastr';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 
@@ -16,6 +18,8 @@ const ERRORS: Record<string, string> = {
     upstream: 'Katastr se nepodařilo zeptat. Zkuste to později.',
     bad_request: 'Zkontrolujte zadané údaje.',
 };
+
+const KatastrMap = dynamic(() => import('./KatastrMap'), { ssr: false, loading: () => <p className="text-sm text-slate-500" role="status">Načítám mapu…</p> });
 
 async function call(params: Record<string, string>): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; message: string }> {
     const { data: { session } } = await supabase.auth.getSession();
@@ -129,8 +133,8 @@ export const snapshotLabel = (s: PropertySnapshot): string => {
     return `Parcela ${s.oznaceni}, k. ú. ${s.katastralniUzemi.nazev}`;
 };
 
-type Mode = 'parcela' | 'stavba' | 'jednotka' | 'rizeni';
-const MODES: [Mode, string][] = [['parcela', 'Parcela'], ['stavba', 'Stavba'], ['jednotka', 'Jednotka'], ['rizeni', 'Řízení']];
+type Mode = 'mapa' | 'parcela' | 'stavba' | 'jednotka' | 'rizeni';
+const MODES: [Mode, string][] = [['mapa', 'Mapa a adresa'], ['parcela', 'Parcela'], ['stavba', 'Stavba'], ['jednotka', 'Jednotka'], ['rizeni', 'Řízení']];
 type Found = { items: PropertySnapshot[]; dataAsOf: string | null };
 
 // Autocomplete: pole s nabídkou položek z číselníku
@@ -150,7 +154,7 @@ function Suggest<T extends { kod: number }>({ id, label, value, onType, onPick, 
 
 // Vyhledání v katastru (parcela, stavba, jednotka, řízení); ve spisu lze nalezené uložit.
 export default function KatastrSearch({ onSave }: { onSave?: (snapshot: PropertySnapshot, dataAsOf: string) => Promise<void> }) {
-    const [mode, setMode] = useState<Mode>('parcela');
+    const [mode, setMode] = useState<Mode>('mapa');
     const [kuText, setKuText] = useState(''); const [ku, setKu] = useState<KatastralniUzemi | null>(null); const [kuList, setKuList] = useState<KatastralniUzemi[]>([]);
     const [coText, setCoText] = useState(''); const [co, setCo] = useState<CastObce | null>(null); const [coList, setCoList] = useState<CastObce[]>([]);
     const [number, setNumber] = useState(''); const [evid, setEvid] = useState<'PKN' | 'PZE'>('PKN');
@@ -212,6 +216,12 @@ export default function KatastrSearch({ onSave }: { onSave?: (snapshot: Property
         }
     }
 
+    async function openFromMap(p: MapParcel) {
+        await run({ op: 'parcela', ku: String(p.ku), kmen: String(p.kmen), druh: String(p.druh), evid: 'PKN', ...(p.poddeleni !== undefined ? { podd: String(p.poddeleni) } : {}) },
+            (d) => ((d.parcels as ParcelaView[]) ?? []).map((x) => ({ kind: 'parcela' as const, ...x })),
+            `Parcela ${p.label} v k. ú. ${p.ku} není v katastru nemovitostí vedena (může jít o parcelu zjednodušené evidence).`);
+    }
+
     async function openNeighbor(id: number) {
         setError(''); setBusy(true);
         const r = await call({ op: 'parcelaId', id: String(id) });
@@ -242,7 +252,8 @@ export default function KatastrSearch({ onSave }: { onSave?: (snapshot: Property
                     {MODES.map(([id, name]) => <button key={id} type="button" role="tab" aria-selected={mode === id} onClick={() => switchMode(id)} className={`rounded-full border px-4 py-1.5 text-sm font-semibold ${mode === id ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700 hover:bg-slate-50'}`}>{name}</button>)}
                 </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-6 sm:items-end">
+                {mode === 'mapa' && <div className="mt-4"><KatastrMap call={call} onParcel={(p) => void openFromMap(p)} busy={busy} /></div>}
+                {mode !== 'mapa' && <div className="mt-4 grid gap-3 sm:grid-cols-6 sm:items-end">
                     {mode === 'parcela' && <>
                         <div className="sm:col-span-3"><Suggest id="ku" label="Katastrální území (název nebo kód)" value={kuText} onType={(v) => { setKuText(v); setKu(null); suggest('ku', v); }} onPick={(k: KatastralniUzemi) => { setKu(k); setKuText(`${k.nazev} (${k.kod})`); setKuList([]); }} suggestions={kuList} show={!ku} render={(k) => `${k.nazev} · ${k.kod}`} placeholder="např. Plzeň" /></div>
                         <label className={`${label} sm:col-span-2`}>Parcelní číslo<input value={number} onChange={(e) => setNumber(e.target.value)} className={`${inputCls} mt-1 font-normal`} placeholder="123/4 nebo st. 56" /></label>
@@ -261,8 +272,8 @@ export default function KatastrSearch({ onSave }: { onSave?: (snapshot: Property
                         <label className={`${label} sm:col-span-2`}>Katastrální pracoviště<select value={ws} onChange={(e) => setWs(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">{wsList.length ? 'Vyberte…' : 'Načítám…'}</option>{wsList.map((w) => <option key={w.kod} value={w.kod}>{w.nazev}</option>)}</select></label>
                     </>}
                     <button type="submit" disabled={busy} className={`${primaryBtn} justify-center sm:col-span-6 sm:justify-self-start`}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Hledat</button>
-                </div>
-                <p className="mt-3 text-xs text-slate-500">{mode === 'parcela' ? 'Stavební parcelu zadejte s předponou „st.“. ' : ''}Zdroj: bezplatné API katastru nemovitostí ČÚZK. Počet dotazů je omezený.</p>
+                </div>}
+                {mode !== 'mapa' && <p className="mt-3 text-xs text-slate-500">{mode === 'parcela' ? 'Stavební parcelu zadejte s předponou „st.“. ' : ''}Zdroj: bezplatné API katastru nemovitostí ČÚZK. Počet dotazů je omezený.</p>}
                 {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
             </form>
             {found?.items.map((item) => {
