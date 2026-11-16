@@ -68,6 +68,4 @@ export async function exchangeCode(cfg: BankIdConfig, ep: Endpoints, code: strin
     return normalizeUserinfo(await ui.json() as Record<string, unknown>);
 }
 
-// Jména se porovnávají bez diakritiky, velikosti písmen a pořadí
-const fold = (x: string) => x.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(' ').filter(Boolean).sort().join(' ');
-export const sameName = (a: string, b: string) => fold(a) === fold(b);
+export { sameName } from './signing';

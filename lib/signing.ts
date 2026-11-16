@@ -45,7 +45,7 @@ export function normalizePhone(raw: string): string | null {
 export type Evidence = {
     v: 1;
     requestId: string; title: string; level: 'advanced'; docSha256: string;
-    signer: { name: string; phoneMasked: string; emailMasked?: string };
+    signer: { name: string; typedName?: string; phoneMasked: string; emailMasked?: string };
     identity: { method: IdentityMethod; provider?: string; given?: string; family?: string; birthdate?: string; sub?: string; verifiedAt?: string; note?: string; phoneMatch?: boolean };
     otp: { channel: 'sms' | 'lawyer' | 'email'; verifiedAt: string };
     signedAt: string; ip: string; userAgent: string; consent: string;
@@ -73,3 +73,7 @@ export const OTP_MAX_ATTEMPTS = 5;
 export const OTP_MAX_SENDS_PER_HOUR = 3;
 
 export function isExpired(req: { expires_at: string | null }, now = new Date()): boolean { return !!req.expires_at && new Date(req.expires_at).getTime() <= now.getTime(); }
+
+// Jména se porovnávají bez diakritiky, velikosti písmen a pořadí slov
+const fold = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(' ').filter(Boolean).sort().join(' ');
+export const sameName = (a: string, b: string) => !!fold(a) && fold(a) === fold(b);

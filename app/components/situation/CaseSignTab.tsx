@@ -61,6 +61,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
             if (f.phone.trim() && !normalizePhone(f.phone)) throw new Error('Telefon nevypadá správně.');
             if (f.email.trim() && !isEmail(f.email)) throw new Error('E-mail nevypadá správně.');
             if (f.identity === 'lawyer' && f.note.trim().length < 3) throw new Error('U osobního ověření uveďte, jak jste totožnost ověřili (např. doklad, datum).');
+            if (defaultLevel(f.kind) === 'advanced' && f.name.trim().length < 3) throw new Error('Vyplňte celé jméno osoby, která má podepsat. Klient bude podepisovat přesně pod tímto jménem.');
             const hash = await sha256Hex(new Uint8Array(await file.arrayBuffer()));
             let row: CaseFile;
             if (link.e2ee) {
@@ -133,7 +134,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                         <div className="grid gap-3 sm:grid-cols-2">
                             <label className="block text-xs font-semibold text-slate-600">Název pro klienta<input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder={KINDS[f.kind].label} maxLength={200} className={`${inputCls} mt-1 font-normal`} /></label>
                             <label className="block text-xs font-semibold text-slate-600">Platnost žádosti (dny)<input type="number" min={1} max={90} value={f.days} onChange={(e) => setF({ ...f, days: Number(e.target.value) || 14 })} className={`${inputCls} mt-1 font-normal`} /></label>
-                            <label className="block text-xs font-semibold text-slate-600">Jméno podepisujícího<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className={`${inputCls} mt-1 font-normal`} /></label>
+                            <label className="block text-xs font-semibold text-slate-600">Celé jméno podepisujícího (podepíše pod ním)<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className={`${inputCls} mt-1 font-normal`} /></label>
                             {advanced && <label className="block text-xs font-semibold text-slate-600">E-mail klienta (pro kód, je-li zapnuté odesílání)<input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} className={`${inputCls} mt-1 font-normal`} /></label>}
                             {advanced && <label className="block text-xs font-semibold text-slate-600">Telefon (jen pro SMS kód, je-li zapnutá SMS brána)<input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} inputMode="tel" placeholder="777 123 456" className={`${inputCls} mt-1 font-normal`} /></label>}
                         </div>

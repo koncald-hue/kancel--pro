@@ -6,7 +6,7 @@ import { decryptBytes, encryptFile } from '@/lib/e2ee';
 import { CONSENT_TEXT, LEVEL_LABEL, STATUS_LABEL, sha256Hex, type SignLevel, type SignStatus } from '@/lib/signing';
 import { isAllowedUpload } from '@/lib/portal';
 
-type Req = { id: string; title: string; kind: string; level: SignLevel; status: SignStatus; file_id: string | null; doc_sha256: string; identity_method: 'bankid' | 'lawyer' | 'none'; identity_verified: boolean; phone: string; email: string; signed_at: string | null; expires_at: string | null; created_at: string; decline_reason: string };
+type Req = { id: string; signer_name: string; title: string; kind: string; level: SignLevel; status: SignStatus; file_id: string | null; doc_sha256: string; identity_method: 'bankid' | 'lawyer' | 'none'; identity_verified: boolean; phone: string; email: string; signed_at: string | null; expires_at: string | null; created_at: string; decline_reason: string };
 type List = { requests: Req[]; enabled: boolean; bankid: boolean; idp?: string; sms: boolean; mail: boolean };
 const btn = 'inline-flex items-center gap-2 rounded-xl bg-indigo-800 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-900 disabled:opacity-60 cursor-pointer';
 const ghost = 'inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer';
@@ -41,6 +41,7 @@ function Card({ r, list, token, e2ee, cryptoKey, open, reload }: { r: Req; list:
     const [info, setInfo] = useState('');
     const [code, setCode] = useState('');
     const [agree, setAgree] = useState(false);
+    const [typed, setTyped] = useState('');
     const [sent, setSent] = useState(false);
     const [reason, setReason] = useState('');
     const file = useRef<HTMLInputElement>(null);
@@ -71,7 +72,7 @@ function Card({ r, list, token, e2ee, cryptoKey, open, reload }: { r: Req; list:
     }
     async function identity() { setBusy('id'); setError(''); try { const o = await post('identity'); if (o.url) window.location.href = o.url; } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); setBusy(''); } }
     async function sendCode() { setBusy('otp'); setError(''); setInfo(''); try { const o = await post('otp'); setSent(true); setInfo(o.devCode ? `Zkušební režim: kód je ${o.devCode}` : list.sms && r.phone ? `Kód jsme poslali SMS na číslo ${r.phone}.` : `Kód jsme poslali e-mailem na ${r.email}.`); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
-    async function sign() { setBusy('sign'); setError(''); try { await post('sign', { code, docSha256: r.doc_sha256, agree }); await reload(); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
+    async function sign() { setBusy('sign'); setError(''); try { await post('sign', { code, docSha256: r.doc_sha256, agree, typedName: typed }); await reload(); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
     async function decline() { setBusy('decl'); setError(''); try { await post('decline', { reason }); await reload(); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
     async function uploadSigned(f: File | undefined) {
         if (!f) return;
@@ -121,11 +122,12 @@ function Card({ r, list, token, e2ee, cryptoKey, open, reload }: { r: Req; list:
                     <li><p className="font-semibold text-slate-900">{r.identity_method === 'none' ? '2' : '3'}. Potvrďte kódem</p>
                         {(list.sms || list.mail) && !r.phone && !r.email ? <p className="mt-2 text-amber-900">U žádosti chybí telefon i e-mail. Napište advokátovi.</p> : (
                             <div className="mt-2 space-y-2">
+                                <label className="block text-slate-700">Podepisujete jako <strong>{r.signer_name}</strong>. Pro potvrzení napište své celé jméno:<input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="name" className={`${field} mt-1`} /></label>
                                 <label className="flex items-start gap-2 text-slate-700"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-800" /> <span>{CONSENT_TEXT}</span></label>
                                 <div className="flex flex-wrap items-center gap-2">
                                     {(list.sms && r.phone) || (list.mail && r.email) ? <button type="button" onClick={sendCode} disabled={!seen?.ok || !identityOk || busy === 'otp'} className={ghost}>{busy === 'otp' && <Loader2 size={15} className="animate-spin" />} {sent ? 'Poslat kód znovu' : list.sms && r.phone ? `Poslat SMS na ${r.phone}` : `Poslat kód na ${r.email}`}</button> : <p className="w-full text-slate-600">Kód vám sdělí váš advokát (telefonicky nebo osobně). Zadejte ho sem.</p>}
                                     <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="Kód z SMS" aria-label="Kód z SMS" className={`${field} max-w-40`} />
-                                    <button type="button" onClick={sign} disabled={!seen?.ok || !identityOk || !agree || code.length !== 6 || busy === 'sign'} className={btn}>{busy === 'sign' && <Loader2 size={15} className="animate-spin" />} Podepsat</button>
+                                    <button type="button" onClick={sign} disabled={!seen?.ok || !identityOk || !agree || typed.trim().length < 3 || code.length !== 6 || busy === 'sign'} className={btn}>{busy === 'sign' && <Loader2 size={15} className="animate-spin" />} Podepsat</button>
                                 </div>
                                 {info && <p role="status" className="text-xs text-slate-600">{info}</p>}
                             </div>)}

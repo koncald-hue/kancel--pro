@@ -38,3 +38,13 @@ describe('signing', () => {
         expect(defaultLevel('podani')).toBe('qualified');
     });
 });
+
+describe('names', () => {
+    it('matches the typed name regardless of case, diacritics and order but not a different person', async () => {
+        const { sameName } = await import('./signing');
+        expect(sameName('jan novak', 'Jan Novák')).toBe(true);
+        expect(sameName('Novák Jan', 'Jan Novák')).toBe(true);
+        expect(sameName('Petr Novák', 'Jan Novák')).toBe(false);
+        expect(sameName('', '')).toBe(false);
+    });
+});
