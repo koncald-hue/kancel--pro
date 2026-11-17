@@ -11,7 +11,7 @@ const clean = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().sli
 
 // Veřejná poptávka: budoucí klient popíše věc, advokát ji uvidí v kanceláři ve složce Poptávky
 export async function POST(req: Request) {
-    if (rateLimited(`in:${clientIp(req)}`, 5, 60 * 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+    if (await rateLimited(`in:${clientIp(req)}`, 5, 60 * 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
     const db = serviceClient();
     if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
 
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
 
 // Název kanceláře k zobrazení nad formulářem
 export async function GET(req: Request) {
-    if (rateLimited(`ig:${clientIp(req)}`, 60, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+    if (await rateLimited(`ig:${clientIp(req)}`, 60, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
     const db = serviceClient();
     if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
     const code = clean(new URL(req.url).searchParams.get('code'), 40);

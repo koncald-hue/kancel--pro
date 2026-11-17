@@ -28,7 +28,7 @@ async function load(): Promise<NewsItem[]> {
 }
 
 export async function GET(req: Request) {
-    if (rateLimited(`news:${clientIp(req)}`, 60, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+    if (await rateLimited(`news:${clientIp(req)}`, 60, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
     if (!cache || Date.now() - cache.at > TTL_MS) {
         const items = await load();
         // Při výpadku všech zdrojů zůstane starší odpověď

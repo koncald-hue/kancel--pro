@@ -1,23 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimited } from '@/lib/serverSupabase';
 import { RUIAN_ADDRESS_URL, addressWhere, parseWfsParcels, pickByArea, pointInParcel, wfsPointUrl, wfsRefUrl } from '@/lib/katastrMap';
 import { CUZK_BASE, RIZENI_TYPY, normalizeJednotka, normalizeNeighbor, normalizeParcel, normalizeRizeni, normalizeStavba, searchCastiObce, searchKu, type CastObce, type KatastralniUzemi } from '@/lib/katastr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
 
-// Klíč k API katastru je JEN na serveru (podmínky ČÚZK zakazují jeho předání koncovému zařízení).
-// Počet volání ČÚZK je omezený pro celý klíč (bezplatný klíč: 500 volání za den), proto limity na uživatele (počítadlo je jen v paměti serveru).
-const hits = new Map<string, { count: number; resetAt: number }>();
-function limited(key: string, limit: number, windowMs: number): boolean {
-    const now = Date.now();
-    if (hits.size > 3000) for (const [k, v] of hits) if (v.resetAt < now) hits.delete(k);
-    const entry = hits.get(key);
-    if (!entry || entry.resetAt < now) { hits.set(key, { count: 1, resetAt: now + windowMs }); return false; }
-    entry.count += 1;
-    return entry.count > limit;
-}
-
+// Klíč k API katastru je JEN na serveru. Limity jsou sdílené mezi instancemi.
 let kuCache: { at: number; list: KatastralniUzemi[] } | null = null;
 let coCache: { at: number; list: CastObce[] } | null = null;
 let wsCache: { at: number; list: { kod: number; nazev: string }[] } | null = null;
@@ -100,7 +90,7 @@ export async function GET(req: Request) {
         // Mapa: parcela podle bodu a hledání adresy používají veřejné služby ČÚZK bez klíče, proto se nezapočítávají do denního limitu API
         const mapOp = url.searchParams.get('op');
         if (mapOp === 'bod' || mapOp === 'adresa' || mapOp === 'obrys') {
-            if (limited(`mm:${uid}`, 40, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+            if (await rateLimited(`mm:${uid}`, 40, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
             try {
                 if (mapOp === 'bod') {
                     const lat = Number(url.searchParams.get('lat')); const lon = Number(url.searchParams.get('lon'));
@@ -131,7 +121,7 @@ export async function GET(req: Request) {
             } catch { return NextResponse.json({ error: 'upstream' }, { status: 502 }); }
         }
 
-        if (limited(`m:${uid}`, 10, 60_000) || limited(`d:${uid}`, 60, 86_400_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+        if (await rateLimited(`m:${uid}`, 10, 60_000) || await rateLimited(`d:${uid}`, 60, 86_400_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
         const op = url.searchParams.get('op');
 
         if (op === 'ku') {

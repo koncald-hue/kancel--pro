@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimited } from '@/lib/serverSupabase';
 import { OFFENSES_DATABASE } from '../../data/offenses';
 import { deadlineById } from '@/lib/cases';
 
@@ -9,17 +10,6 @@ let openaiClient: OpenAI | null = null;
 const getOpenAI = () => (openaiClient ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
-
-// Limity na uživatele (počítadlo je jen v paměti běžícího serveru): 3 za minutu, 12 za den
-const hits = new Map<string, { count: number; resetAt: number }>();
-function limited(key: string, limit: number, windowMs: number): boolean {
-    const now = Date.now();
-    if (hits.size > 2000) for (const [k, v] of hits) if (v.resetAt < now) hits.delete(k);
-    const entry = hits.get(key);
-    if (!entry || entry.resetAt < now) { hits.set(key, { count: 1, resetAt: now + windowMs }); return false; }
-    entry.count += 1;
-    return entry.count > limit;
-}
 
 const text = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const list = (v: unknown, count: number, max: number) => (Array.isArray(v) ? v.map((x) => text(x, max)).filter(Boolean).slice(0, count) : []);
@@ -40,7 +30,7 @@ export async function POST(req: Request) {
         const { data: access } = await client.from('lawyer_access').select('status, until').eq('user_id', uid).maybeSingle();
         const today = new Date().toISOString().slice(0, 10);
         const lawyer = staffFlag === true || (!!access && (access.status === 'active' || access.status === 'trial') && (!access.until || String(access.until) >= today));
-        if (limited(`m:${uid}`, 3, 60_000) || limited(`d:${uid}`, lawyer ? 12 : 2, 86_400_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+        if (await rateLimited(`m:${uid}`, 3, 60_000) || await rateLimited(`d:${uid}`, lawyer ? 12 : 2, 86_400_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
 
         const body = await req.json();
         const caseId = typeof body?.caseId === 'string' ? body.caseId : '';

@@ -7,6 +7,7 @@ import { SECURITY_TEXT_CLIENT, SECURITY_TEXT_CLIENT_E2EE, initials, isAllowedUpl
 import PortalSign from './PortalSign';
 import PortalAml from './PortalAml';
 import { KEY_FRAGMENT, decryptText, decryptToBlob, encryptFile, encryptText, importKey, isEncrypted } from '@/lib/e2ee';
+import PortalCodeGate from './PortalCodeGate';
 
 type Lawyer = { firm: string; name: string; phone: string; office: string; website: string; barNumber: string; email: string; photo?: string; verified?: boolean; profession?: string; verifiedAt?: string | null };
 type PortalFile = { id: string; name: string; size: number; created_at: string; source: string; request_id: string | null; client_visible: boolean; enc?: boolean };
@@ -65,7 +66,8 @@ export default function ClientPortal() {
     const pathname = usePathname();
     const token = pathname.split('/').filter(Boolean).pop() ?? '';
     const [data, setData] = useState<Onboarded | Pending | null>(null);
-    const [state, setState] = useState<'loading' | 'ok' | 'invalid' | 'unavailable' | 'unverified' | 'inactive'>('loading');
+    const [state, setState] = useState<'loading' | 'ok' | 'invalid' | 'unavailable' | 'unverified' | 'inactive' | 'code'>('loading');
+    const [gate, setGate] = useState<{ email: string; title: string; lawyer: Lawyer } | null>(null);
     const [key, setKey] = useState<CryptoKey | null>(null);
     const [keyChecked, setKeyChecked] = useState(false);
     const [plain, setPlain] = useState<Record<string, string>>({});
@@ -84,7 +86,8 @@ export default function ClientPortal() {
             const res = await fetch(`/api/portal/${token}`);
             if (res.status === 404) { setState('invalid'); return; }
             if (!res.ok) { setState('unavailable'); return; }
-            const body = await res.json() as Onboarded | Pending | { unverified: true } | { inactive: true };
+            const body = await res.json() as Onboarded | Pending | { unverified: true } | { inactive: true } | { needsCode: true; email: string; title: string; lawyer: Lawyer };
+            if ('needsCode' in body) { setGate({ email: body.email, title: body.title, lawyer: body.lawyer }); setData(null); setState('code'); return; }
             if ('unverified' in body) { setState('unverified'); return; }
             if ('inactive' in body) { setState('inactive'); return; }
             if (!body.onboarded) setIdentity((i) => ({ ...i, name: i.name || body.prefillName }));
@@ -165,6 +168,7 @@ export default function ClientPortal() {
         setBusy('id'); setError('');
         try {
             const res = await fetch(`/api/portal/${token}/identify`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(identity) });
+            if (res.status === 401) { void load(); return; }
             const out = await res.json().catch(() => ({}));
             if (!res.ok) { setError(out.message ?? 'Údaje se nepodařilo uložit. Zkuste to prosím znovu.'); return; }
             await load();
@@ -210,6 +214,16 @@ export default function ClientPortal() {
     }
 
     if (state === 'loading') return <p className="mx-auto max-w-xl px-4 py-16 text-center text-sm text-slate-500" role="status">Načítám…</p>;
+    if (state === 'code' && gate) {
+        return (
+            <div className="min-h-screen bg-[#f8fafc]">
+                <div className="mx-auto max-w-xl space-y-4 px-4 py-8 sm:py-12">
+                    <PortalCodeGate token={token} email={gate.email} title={gate.title} onDone={() => { setState('loading'); void load(); }} />
+                    <LawyerCard lawyer={gate.lawyer} />
+                </div>
+            </div>
+        );
+    }
     if (state === 'inactive') {
         return (
             <div className="mx-auto max-w-md px-4 py-20 text-center">

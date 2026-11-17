@@ -67,7 +67,7 @@ export default function E2eeBox({ access, onChanged }: { access: LawyerAccess | 
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="End-to-end šifrování">
             <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900"><ShieldCheck size={18} className="text-indigo-800" /> End-to-end šifrování</h3>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">Zprávy a soubory mezi vámi a klientem se zašifrují ve vašem prohlížeči. Server, správce webu ani poskytovatel databáze je nepřečtou. Klíč se vám ukládá jen v zašifrované podobě a odemyká se vaším šifrovacím heslem.</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">Zprávy a soubory mezi vámi a klientem se zašifrují ve vašem prohlížeči. Odemčený klíč zůstává jen v paměti této stránky; po obnovení stránky ho znovu odemkněte heslem. Šifrování nechrání před škodlivým kódem spuštěným v této stránce.</p>
             {!configured ? (
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Šifrovací heslo (min. 10 znaků)" autoComplete="new-password" className={inputCls} aria-label="Šifrovací heslo" />

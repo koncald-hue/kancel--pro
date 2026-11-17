@@ -1,19 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimited } from '@/lib/serverSupabase';
 import { ARES_BASE, cleanIco, isSearchableName, isValidIco, normalizeCompany, type AresCompany } from '@/lib/ares';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
-
-const hits = new Map<string, { count: number; resetAt: number }>();
-function limited(key: string, limit: number, windowMs: number): boolean {
-    const now = Date.now();
-    if (hits.size > 3000) for (const [k, v] of hits) if (v.resetAt < now) hits.delete(k);
-    const e = hits.get(key);
-    if (!e || e.resetAt < now) { hits.set(key, { count: 1, resetAt: now + windowMs }); return false; }
-    e.count += 1;
-    return e.count > limit;
-}
 
 // Vyhledání firmy v ARES podle IČO (jedna firma) nebo podle názvu (až 8 výsledků). Smí jen přihlášený uživatel.
 export async function GET(req: Request) {
@@ -22,7 +13,7 @@ export async function GET(req: Request) {
     const client = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
     const { data: userData, error: userError } = await client.auth.getUser(token);
     if (userError || !userData.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-    if (limited(`ares:${userData.user.id}`, 40, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+    if (await rateLimited(`ares:${userData.user.id}`, 40, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
 
     const q = (new URL(req.url).searchParams.get('q') ?? '').trim();
     try {

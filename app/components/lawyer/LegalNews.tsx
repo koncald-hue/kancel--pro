@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, CalendarClock, FileText, Newspaper, RefreshCw, ScrollText } from 'lucide-react';
-import { KIND_LABEL, ago, daysFromToday, lawType, parseLawTitle, type NewsItem, type NewsKind } from '@/lib/news';
+import { ago, daysFromToday, lawType, parseLawTitle, type NewsItem, type NewsKind } from '@/lib/news';
+import { safeUrl } from '@/lib/safeUrl';
 
 type Tab = 'zmeny' | 'predpisy' | 'svet';
 const MONTHS = ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];
@@ -22,7 +23,7 @@ function Law({ it }: { it: NewsItem }) {
     const eff = it.effective; const left = eff ? daysFromToday(eff) : null;
     return (
         <li>
-            <a href={it.url} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-4 rounded-xl p-3 transition hover:bg-slate-50">
+            <a href={safeUrl(it.url)} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-4 rounded-xl p-3 transition hover:bg-slate-50">
                 {eff ? <DateTile iso={eff} hot={left !== null && left >= 0 && left <= 14} /> : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><ScrollText size={22} aria-hidden="true" /></span>}
                 <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
@@ -41,7 +42,7 @@ function Law({ it }: { it: NewsItem }) {
 
 function Article({ it, big }: { it: NewsItem; big?: boolean }) {
     return (
-        <a href={it.url} target="_blank" rel="noopener noreferrer" className={`group relative block overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-indigo-300 hover:shadow-md ${big ? 'p-6' : 'p-4'}`}>
+        <a href={safeUrl(it.url)} target="_blank" rel="noopener noreferrer" className={`group relative block overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-indigo-300 hover:shadow-md ${big ? 'p-6' : 'p-4'}`}>
             <span className={`absolute inset-y-0 left-0 w-1 ${KIND_BAR[it.kind]}`} aria-hidden="true" />
             <span className="flex flex-wrap items-center gap-2 text-xs"><span className={`rounded-full px-2 py-0.5 font-bold ${KIND_TONE[it.kind]}`}>{it.source}</span><span className="text-slate-400">{ago(it.date)}</span></span>
             <span className={`mt-2 block font-bold leading-snug text-slate-900 group-hover:text-indigo-800 ${big ? 'text-xl' : 'text-[15px]'}`}>{it.title}</span>

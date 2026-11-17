@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle, ExternalLink, ListPlus, Loader2, Scale, ShieldCheck, Copy, Check } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ghostBtn, primaryBtn, type TabProps } from './caseUi';
+import { safeUrl } from '@/lib/safeUrl';
 
 type Defense = {
     classification: string;
@@ -167,7 +168,7 @@ export default function CaseDefenseTab({ item, bundle, lawyer, patchItem, fail }
                                         <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900"><Scale size={15} className="text-indigo-800" />{l.court}, {l.ref}{l.decided_on && <span className="font-normal text-slate-500">({new Date(l.decided_on).toLocaleDateString('cs-CZ')})</span>}</p>
                                         <p className="mt-1 text-sm text-slate-700">{l.holding}</p>
                                         <p className="mt-1 text-xs text-indigo-900">{defense.judikatura.find((j) => j.id === l.id)?.why}</p>
-                                        {l.url && <a href={l.url} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-indigo-900 underline">Rozhodnutí v databázi soudu <ExternalLink size={12} /></a>}
+                                        {safeUrl(l.url) && <a href={safeUrl(l.url)} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-indigo-900 underline">Rozhodnutí v databázi soudu <ExternalLink size={12} /></a>}
                                     </li>
                                 ))}
                             </ul>

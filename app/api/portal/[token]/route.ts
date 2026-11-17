@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { clientIp, findActiveLink, rateLimited, serviceClient } from '@/lib/serverSupabase';
+import { secondFactorBlock, type FactorLink } from '@/lib/portalSession';
+import { maskEmail } from '@/lib/mail';
 
 const NOT_FOUND = () => NextResponse.json({ error: 'notfound' }, { status: 404 });
 
@@ -7,7 +9,7 @@ const NOT_FOUND = () => NextResponse.json({ error: 'notfound' }, { status: 404 }
 // klienta i to, co advokát výslovně zpřístupnil
 export async function GET(req: Request, ctx: { params: Promise<{ token: string }> }) {
     const { token } = await ctx.params;
-    if (rateLimited(`pg:${clientIp(req)}`, 60, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+    if (await rateLimited(`pg:${clientIp(req)}`, 60, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
     const db = serviceClient();
     if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
     const link = await findActiveLink(db, token);
@@ -35,14 +37,17 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
         email: (lawyerRow?.contact_email as string | undefined) ?? '',
         photo: ((lawyerRow as { avatar_large?: string } | null)?.avatar_large) ?? '',
     };
+    // Dokud klient nevyplní údaje, nečteme ani nevracíme údaje ze spisu.
+    const linkAny = link as unknown as { onboarded_at?: string | null; client_name?: string; client_email?: string; client_phone?: string; client_verified_at?: string | null };
+    // Druhý faktor: bez ověřeného kódu jen vizitka advokáta a výzva k zadání kódu, nic ze spisu
+    if (await secondFactorBlock(db, link as FactorLink, req)) {
+        return NextResponse.json({ needsCode: true, email: maskEmail((link as FactorLink).code_email ?? ''), e2ee: Boolean(link.e2ee), lawyer, title: link.label || 'Vaše věc' });
+    }
+    if (!linkAny.onboarded_at) {
+        return NextResponse.json({ onboarded: false, e2ee: Boolean(link.e2ee), lawyer, title: link.label || 'Vaše věc', prefillName: linkAny.client_name || '' });
+    }
     const { data: caseRow } = await db.from('cases').select('title, client_name').eq('id', link.case_id).maybeSingle();
     const title = link.label || (caseRow?.title as string | undefined) || 'Vaše věc';
-
-    // Dokud klient nevyplní údaje, ze spisu se nic neukáže
-    const linkAny = link as unknown as { onboarded_at?: string | null; client_name?: string; client_email?: string; client_phone?: string; client_verified_at?: string | null };
-    if (!linkAny.onboarded_at) {
-        return NextResponse.json({ onboarded: false, e2ee: Boolean(link.e2ee), lawyer, title, prefillName: linkAny.client_name || (caseRow?.client_name as string | undefined) || '' });
-    }
 
     const [requests, files, entries, deadlines, messages] = await Promise.all([
         db.from('client_requests').select('id, title, done').eq('case_id', link.case_id).order('created_at'),

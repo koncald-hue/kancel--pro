@@ -93,20 +93,57 @@ export async function unwrapKey(master: CryptoKey, wrapped: string): Promise<Cry
     return subtle().importKey('raw', toBuf(await decryptBytes(master, fromB64u(wrapped))), 'AES-GCM', true, ['encrypt', 'decrypt']);
 }
 
-// Odemčený hlavní klíč v paměti stránky (a v úložišti karty prohlížeče, aby po obnovení nežádal heslo znovu)
+// Odemčený hlavní klíč zůstává pouze v paměti této stránky.
 let masterKey: CryptoKey | null = null;
 const listeners = new Set<() => void>();
-const STORE = 'e2eeMaster';
 export const getMaster = () => masterKey;
 export const subscribeMaster = (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; };
-export async function setMaster(key: CryptoKey | null) {
+// Proč je klíč zamčený: 'idle' = zamčeno po nečinnosti, 'reload' = stránka se obnovila (klíč v paměti zanikl),
+// 'logout' = odhlášení. Ukládá se jen příznak (ne klíč), aby šlo uživateli vysvětlit, co se stalo.
+export type LockReason = 'idle' | 'reload' | 'logout' | null;
+export const IDLE_LOCK_MS = 30 * 60_000;
+const FLAG = 'e2eeWasUnlocked';
+let lockReason: LockReason = null;
+let idleTimer: number | null = null;
+let lastActivity = 0;
+export const getLockReason = () => lockReason;
+
+function onActivity() {
+    const now = Date.now();
+    if (now - lastActivity < 5_000) return; // stačí zaznamenat aktivitu jednou za pár sekund
+    lastActivity = now;
+    armIdle();
+}
+function armIdle() {
+    if (typeof window === 'undefined') return;
+    if (idleTimer !== null) window.clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(() => { void setMaster(null, 'idle'); }, IDLE_LOCK_MS);
+}
+const EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
+function watchActivity(on: boolean) {
+    if (typeof window === 'undefined') return;
+    for (const ev of EVENTS) { if (on) window.addEventListener(ev, onActivity, { passive: true }); else window.removeEventListener(ev, onActivity); }
+    if (!on && idleTimer !== null) { window.clearTimeout(idleTimer); idleTimer = null; }
+}
+
+export async function setMaster(key: CryptoKey | null, reason: Exclude<LockReason, 'reload'> = null) {
     masterKey = key;
-    try { if (key) sessionStorage.setItem(STORE, await exportKey(key)); else sessionStorage.removeItem(STORE); } catch { /* úložiště nemusí být dostupné */ }
+    lockReason = key ? null : reason;
+    try {
+        sessionStorage.removeItem('e2eeMaster');
+        if (key) sessionStorage.setItem(FLAG, '1'); else sessionStorage.removeItem(FLAG);
+    } catch { /* úložiště nemusí být dostupné */ }
+    if (key) { watchActivity(true); armIdle(); } else watchActivity(false);
     listeners.forEach((fn) => fn());
 }
+export const clearLockReason = () => { lockReason = null; listeners.forEach((fn) => fn()); };
 export async function restoreMaster() {
     if (masterKey) return;
-    try { const saved = sessionStorage.getItem(STORE); if (saved) { masterKey = await importKey(saved); listeners.forEach((fn) => fn()); } } catch { /* neplatný záznam se ignoruje */ }
+    try {
+        sessionStorage.removeItem('e2eeMaster');
+        // Klíč byl v této kartě odemčený, ale obnovením stránky zanikl: vysvětlíme to uživateli
+        if (sessionStorage.getItem(FLAG) === '1' && lockReason === null) { lockReason = 'reload'; sessionStorage.removeItem(FLAG); listeners.forEach((fn) => fn()); }
+    } catch { /* úložiště nemusí být dostupné */ }
 }
 
 // Šifrovaný soubor: obsah i název. Název se ukládá jako zašifrovaný text, typ se určí až po dešifrování

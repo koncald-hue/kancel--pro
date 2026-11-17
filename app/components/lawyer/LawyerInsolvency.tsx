@@ -8,6 +8,7 @@ import { parseCzDate } from '@/lib/isir';
 import { czk } from '@/lib/lawyer';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import AresPicker from './AresPicker';
+import { safeUrl } from '@/lib/safeUrl';
 
 type Status = { active: boolean; scope: 'firm' | 'solo'; until: string | null; can_buy: boolean; firm: string | null };
 type Prices = { solo: Record<string, number>; firm: Record<string, number> };
@@ -228,7 +229,7 @@ function HitRow({ h, watch, onSeen }: { h: Hit; watch?: Watch; onSeen?: () => vo
             <p className="mt-1 text-slate-700">{h.spis} · {h.court}</p>
             <p className="mt-0.5 text-xs text-slate-500">{h.started ? `zahájeno ${fmt(h.started)} · ` : ''}zjištěno {fmt(h.first_seen_at)}</p>
             <div className="mt-2 flex flex-wrap gap-2">
-                {h.url && <a href={h.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-50"><ExternalLink size={12} /> Otevřít v rejstříku</a>}
+                {safeUrl(h.url) && <a href={safeUrl(h.url)} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-50"><ExternalLink size={12} /> Otevřít v rejstříku</a>}
                 {onSeen && <button type="button" onClick={onSeen} className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-50 cursor-pointer">Přečteno</button>}
             </div>
         </li>

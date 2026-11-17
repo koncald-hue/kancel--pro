@@ -34,18 +34,18 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string;
     }
 
     // SMS kód
-    const { data: otps } = await db.from('signature_otps').select('id, code_hash, expires_at, attempts, used, channel').eq('request_id', r.id).eq('used', false).order('created_at', { ascending: false }).limit(1);
+    const { data: otps } = await db.from('signature_otps').select('id, expires_at, channel').eq('request_id', r.id).eq('used', false).order('created_at', { ascending: false }).limit(1);
     const otp = otps?.[0];
-    const code = typeof body.code === 'string' ? body.code.replace(/\s/g, '') : '';
-    if (!otp || new Date(otp.expires_at as string).getTime() < Date.now()) return NextResponse.json({ error: 'otp', message: 'Kód vypršel nebo nebyl poslán. Pošlete si nový.' }, { status: 400 });
-    if ((otp.attempts as number) >= OTP_MAX_ATTEMPTS) return NextResponse.json({ error: 'otp', message: 'Příliš mnoho pokusů. Pošlete si nový kód.' }, { status: 429 });
-    if (!/^\d{6}$/.test(code) || (await otpHash(sealSecret(), r.id, code)) !== otp.code_hash) {
-        await db.from('signature_otps').update({ attempts: (otp.attempts as number) + 1 }).eq('id', otp.id);
-        return NextResponse.json({ error: 'otp', message: 'Kód nesouhlasí.' }, { status: 400 });
-    }
-    // Kód se spotřebuje podmíněně, aby ho nešlo použít dvakrát souběžně
-    const { data: used } = await db.from('signature_otps').update({ used: true }).eq('id', otp.id).eq('used', false).select('id');
-    if (!used?.length) return NextResponse.json({ error: 'otp', message: 'Kód už byl použit.' }, { status: 409 });
+    if (!otp) return NextResponse.json({ error: 'otp', message: 'Kód vypršel nebo nebyl poslán. Pošlete si nový.' }, { status: 400 });
+    const code = typeof body.code === 'string' ? body.code.replace(/\s/g, '').slice(0, 32) : '';
+    const { data: otpResult, error: otpError } = await db.rpc('consume_signature_otp', {
+        p_request: r.id, p_otp: otp.id, p_code_hash: await otpHash(sealSecret(), r.id, code),
+        p_max_attempts: OTP_MAX_ATTEMPTS,
+    });
+    if (otpError) return NextResponse.json({ error: 'failed' }, { status: 500 });
+    if (otpResult === 'limit') return NextResponse.json({ error: 'otp', message: 'Příliš mnoho pokusů. Pošlete si nový kód.' }, { status: 429 });
+    if (otpResult === 'mismatch') return NextResponse.json({ error: 'otp', message: 'Kód nesouhlasí.' }, { status: 400 });
+    if (otpResult !== 'ok') return NextResponse.json({ error: 'otp', message: 'Kód vypršel nebo už byl použit.' }, { status: 409 });
 
     const now = new Date().toISOString();
     const evidence: Evidence = {

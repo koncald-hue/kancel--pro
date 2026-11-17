@@ -2,19 +2,23 @@ import { NextResponse } from 'next/server';
 import { clientIp, findActiveLink, rateLimited, serviceClient } from '@/lib/serverSupabase';
 import { isAllowedUpload, MAX_UPLOAD_BYTES } from '@/lib/portal';
 import { safeFileName } from '@/lib/caseFile';
+import { secondFactorBlock, type FactorLink } from '@/lib/portalSession';
 
 const MAX_CASE_BYTES = 100 * 1024 * 1024;
 
 // Klient nahrává soubor ke své věci; uloží se do soukromého úložiště advokáta
 export async function POST(req: Request, ctx: { params: Promise<{ token: string }> }) {
     const { token } = await ctx.params;
-    if (rateLimited(`up:${clientIp(req)}`, 30, 60 * 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+    if (await rateLimited(`up:${clientIp(req)}`, 30, 60 * 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
     const db = serviceClient();
     if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
     const link = await findActiveLink(db, token);
     if (!link) return NextResponse.json({ error: 'notfound' }, { status: 404 });
     if (!link.verified) return NextResponse.json({ error: 'unverified' }, { status: 403 });
     if (!link.subscribed) return NextResponse.json({ error: 'inactive' }, { status: 403 });
+    const block = await secondFactorBlock(db, link as FactorLink, req);
+    if (block) return block;
+    if (!(link as { onboarded_at?: string | null }).onboarded_at) return NextResponse.json({ error: 'not-onboarded' }, { status: 403 });
 
     const form = await req.formData().catch(() => null);
     const file = form?.get('file');

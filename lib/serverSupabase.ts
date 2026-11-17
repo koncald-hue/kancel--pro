@@ -22,15 +22,35 @@ export async function findActiveLink(db: SupabaseClient, token: string): Promise
     return { ...(data as object), verified: lawyer?.verification_status === 'verified', subscribed: !!lawyer && (lawyer.status === 'active' || lawyer.status === 'trial') && (!lawyer.until || String(lawyer.until) >= new Date().toISOString().slice(0, 10)), profession: (lawyer?.profession as string) ?? 'advokat', verified_at: (lawyer?.verified_at as string | null) ?? null, bar_number: (lawyer?.bar_number as string) ?? '' } as LinkRow;
 }
 
-// Jednoduchý limit počtu požadavků (jen v paměti běžícího serveru)
-const hits = new Map<string, { count: number; resetAt: number }>();
-export function rateLimited(key: string, limit: number, windowMs: number): boolean {
+// Atomic shared rate limits for serverless instances. The in-memory fallback is development-only.
+const localHits = new Map<string, { count: number; resetAt: number }>();
+function localRateLimited(key: string, limit: number, windowMs: number): boolean {
     const now = Date.now();
-    if (hits.size > 3000) for (const [k, v] of hits) if (v.resetAt < now) hits.delete(k);
-    const entry = hits.get(key);
-    if (!entry || entry.resetAt < now) { hits.set(key, { count: 1, resetAt: now + windowMs }); return false; }
+    if (localHits.size > 3000) for (const [k, v] of localHits) if (v.resetAt < now) localHits.delete(k);
+    const entry = localHits.get(key);
+    if (!entry || entry.resetAt < now) { localHits.set(key, { count: 1, resetAt: now + windowMs }); return false; }
     entry.count += 1;
     return entry.count > limit;
 }
 
-export const clientIp = (req: Request) => req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+export async function rateLimited(key: string, limit: number, windowMs: number): Promise<boolean> {
+    if (!key || key.length > 240 || !Number.isInteger(limit) || limit < 1 || !Number.isFinite(windowMs) || windowMs < 1000) return true;
+    const db = serviceClient();
+    if (!db) return process.env.NODE_ENV === 'production' ? true : localRateLimited(key, limit, windowMs);
+    try {
+        const { data, error } = await db.rpc('check_api_rate_limit', { p_key: key, p_limit: limit, p_window_ms: Math.ceil(windowMs) });
+        if (error || typeof data !== 'boolean') return process.env.NODE_ENV === 'production' ? true : localRateLimited(key, limit, windowMs);
+        return data;
+    } catch {
+        return process.env.NODE_ENV === 'production' ? true : localRateLimited(key, limit, windowMs);
+    }
+}
+
+// IP adresa pro limity požadavků. Spoléhá na hlavičky, které nastavuje hosting (Vercel: x-real-ip /
+// x-vercel-forwarded-for, ostatní proxy x-forwarded-for). Bez důvěryhodné proxy před aplikací jde IP podvrhnout,
+// proto citlivé operace (kódy, podpisy) mají navíc limity vázané na odkaz nebo žádost, ne jen na IP.
+export const clientIp = (req: Request) => {
+    const h = req.headers;
+    const ip = h.get('x-real-ip') || h.get('x-vercel-forwarded-for')?.split(',')[0] || h.get('x-forwarded-for')?.split(',')[0] || '';
+    return ip.trim().slice(0, 64) || 'unknown';
+};

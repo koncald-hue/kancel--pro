@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const user = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
     const { data: u, error: ue } = await user.auth.getUser(token);
     if (ue || !u.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-    if (rateLimited(`legal:${u.user.id}`, 20, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+    if (await rateLimited(`legal:${u.user.id}`, 20, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
     const { data: allowed } = await user.rpc('has_lawyer_access');
     if (allowed !== true) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
             });
             if (!accessToken || question.length < 10) return NextResponse.json({ error: 'bad_request', message: 'Zadejte právní otázku (aspoň několik slov).' }, { status: 400 });
             if (body.consent !== true) return NextResponse.json({ error: 'consent', message: 'Odeslání údajů je třeba potvrdit.' }, { status: 409 });
-            if (rateLimited(`legalr:${u.user.id}`, 30, 86_400_000)) return NextResponse.json({ error: 'rate', message: 'Dnešní limit rešerší je vyčerpán.' }, { status: 429 });
+            if (await rateLimited(`legalr:${u.user.id}`, 30, 86_400_000)) return NextResponse.json({ error: 'rate', message: 'Dnešní limit rešerší je vyčerpán.' }, { status: 429 });
 
             const ai = !!process.env.OPENAI_API_KEY;
             // 1) plán dotazů (bez AI se použije otázka sama)

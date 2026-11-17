@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const user = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
     const { data: u, error: ue } = await user.auth.getUser(token);
     if (ue || !u.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-    if (rateLimited(`isir:${u.user.id}`, 12, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+    if (await rateLimited(`isir:${u.user.id}`, 12, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
     const { data: allowed } = await user.rpc('has_isir');
     if (allowed !== true) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 

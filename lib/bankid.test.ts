@@ -24,7 +24,9 @@ describe('Bank iD', () => {
     });
     it('rejects discovery documents pointing to another domain', async () => {
         const evil = async () => new Response(JSON.stringify({ ...ep, token_endpoint: 'https://evil.example/token' }));
+        const lookalike = async () => new Response(JSON.stringify({ ...ep, token_endpoint: 'https://oidc.sandbox.evilbankid.cz/token' }));
         await expect(discover(cfg, evil as unknown as typeof fetch)).rejects.toThrow();
+        await expect(discover(cfg, lookalike as unknown as typeof fetch)).rejects.toThrow();
         const ok = async () => new Response(JSON.stringify(ep));
         await expect(discover(cfg, ok as unknown as typeof fetch)).resolves.toMatchObject(ep);
     });

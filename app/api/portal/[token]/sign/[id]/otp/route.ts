@@ -21,12 +21,16 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string;
         const { data: ok } = await db.from('identity_sessions').select('id').eq('purpose', 'signature').eq('ref_id', r.id).not('verified_at', 'is', null).limit(1);
         if (!ok?.length) return NextResponse.json({ error: 'identity', message: 'Nejdřív ověřte totožnost přes Bank iD.' }, { status: 403 });
     }
-    const since = new Date(Date.now() - 3600_000).toISOString();
-    const { count } = await db.from('signature_otps').select('id', { count: 'exact', head: true }).eq('request_id', r.id).gte('created_at', since);
-    if ((count ?? 0) >= OTP_MAX_SENDS_PER_HOUR) return NextResponse.json({ error: 'limit', message: 'Kód lze poslat nejvýše třikrát za hodinu.' }, { status: 429 });
     const code = generateOtp();
-    const { error } = await db.from('signature_otps').insert({ request_id: r.id, code_hash: await otpHash(sealSecret(), r.id, code), expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(), channel: useMail ? 'email' : 'sms' });
+    const channel = useMail ? 'email' : useSms ? 'sms' : 'lawyer';
+    const { data: issued, error } = await db.rpc('issue_signature_otp', {
+        p_request: r.id, p_code_hash: await otpHash(sealSecret(), r.id, code),
+        p_expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
+        p_channel: channel, p_max_sends: OTP_MAX_SENDS_PER_HOUR,
+    });
     if (error) return NextResponse.json({ error: 'failed' }, { status: 500 });
+    if (issued === 'limit') return NextResponse.json({ error: 'limit', message: 'Kód lze poslat nejvýše třikrát za hodinu.' }, { status: 429 });
+    if (issued !== 'ok') return NextResponse.json({ error: 'invalid' }, { status: 400 });
     if (!useSms && !useMail) return NextResponse.json({ sent: true, devCode: code });
     try {
         if (useSms && phone) await sendSms(phone, `Kód pro podpis dokumentu: ${code}. Platí 10 minut. Nikomu ho nesdělujte.`);

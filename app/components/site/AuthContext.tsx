@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { endAllSessions } from '@/lib/isdsSession';
 import { clearBoxState } from '@/lib/dataBoxState';
 import AuthForm from './AuthForm';
+import { setMaster } from '@/lib/e2ee';
 
 // Přihlášení do aplikace pro právníky: jeden účet, přihlašování e-mailem a heslem
 export type AuthInfo = {
@@ -53,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Uložené přihlášení může patřit účtu, který už neexistuje (např. smazaný v Supabase): pak se odhlásí
             if (session) supabase.auth.getUser().then(({ error }) => { if (error) void supabase.auth.signOut(); });
         });
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => apply(session?.user ?? null));
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => { if (event === 'SIGNED_OUT') void setMaster(null, 'logout'); apply(session?.user ?? null); });
         return () => subscription.unsubscribe();
     }, []);
 
@@ -66,6 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 await endAllSessions((env, value) => fetch('/api/isds', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ action: 'mk_end', env, session: value }) }));
             } catch { /* odhlášení se nesmí zdržet */ }
             clearBoxState();
+            // Odemčený šifrovací klíč nesmí přežít odhlášení v paměti stránky
+            await setMaster(null, 'logout');
             await supabase.auth.signOut();
         })();
     }, []);

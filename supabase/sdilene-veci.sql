@@ -71,6 +71,20 @@ create policy "cases_select_own" on public.cases for select using (auth.uid() = 
 drop policy if exists "cases_update_own" on public.cases;
 create policy "cases_update_own" on public.cases for update using (auth.uid() = user_id or public.can_write_case(id)) with check (auth.uid() = user_id or public.can_write_case(id));
 
+-- A shared editor may change case content, never transfer the case owner.
+create or replace function public.guard_case_owner_immutable()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if coalesce(auth.role(), '') <> 'service_role' and new.user_id is distinct from old.user_id then
+    raise exception 'Vlastníka věci nelze změnit běžnou úpravou.';
+  end if;
+  return new;
+end; $$;
+drop trigger if exists guard_case_owner_immutable on public.cases;
+create trigger guard_case_owner_immutable before update on public.cases
+for each row execute function public.guard_case_owner_immutable();
+
+
 -- Obsah věci: čtení pro každého, kdo věc vidí; zápis pro vlastníka a editory. Editor maže jen své záznamy, vlastník všechny.
 do $$
 declare t text;

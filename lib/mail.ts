@@ -6,13 +6,18 @@ export async function sendMail(to: string, subject: string, text: string, f: typ
     const from = process.env.MAIL_FROM ?? '';
     if (process.env.RESEND_API_KEY) {
         const res = await f('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, text }), cache: 'no-store' });
-        if (!res.ok) throw new Error('E-mail se nepodařilo odeslat.');
+        if (!res.ok) { console.warn(`[mail] Resend ${res.status}`); throw new Error('E-mail se nepodařilo odeslat.'); }
         return;
     }
     if (process.env.BREVO_API_KEY) {
         const m = from.match(/^(.*?)\s*<([^>]+)>$/); const sender = m ? { name: m[1].replace(/^"|"$/g, ''), email: m[2] } : { email: from };
         const res = await f('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ sender, to: [{ email: to }], subject, textContent: text }), cache: 'no-store' });
-        if (!res.ok) throw new Error('E-mail se nepodařilo odeslat.');
+        if (!res.ok) {
+            // Do logu serveru jen kód a hláška poskytovatele (bez příjemce a obsahu), např. zablokovaná IP adresa
+            const why = await res.json().catch(() => null) as { code?: string; message?: string } | null;
+            console.warn(`[mail] Brevo ${res.status} ${why?.code ?? ''}: ${(why?.message ?? '').slice(0, 200)}`);
+            throw new Error('E-mail se nepodařilo odeslat.');
+        }
         return;
     }
     throw new Error('Odesílání e-mailů není nastavené.');

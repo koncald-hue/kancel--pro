@@ -32,8 +32,14 @@ export async function discover(cfg: BankIdConfig, f: typeof fetch = fetch): Prom
     const j = await res.json() as Partial<Endpoints>;
     if (!j.authorization_endpoint || !j.token_endpoint || !j.userinfo_endpoint) throw new Error('Bank iD vrátil neúplné nastavení.');
     // Koncové body musí patřit pod stejnou doménu jako zadaná adresa Bank iD
-    const host = new URL(cfg.base).host;
-    for (const u of [j.authorization_endpoint, j.token_endpoint, j.userinfo_endpoint]) if (new URL(u).protocol !== 'https:' || !new URL(u).host.endsWith(host.split('.').slice(-2).join('.'))) throw new Error('Bank iD vrátil nedůvěryhodnou adresu.');
+    const host = new URL(cfg.base).hostname.toLowerCase();
+    const trustedDomain = host.split('.').slice(-2).join('.');
+    for (const u of [j.authorization_endpoint, j.token_endpoint, j.userinfo_endpoint]) {
+        const endpoint = new URL(u);
+        const endpointHost = endpoint.hostname.toLowerCase();
+        const trustedHost = endpointHost === trustedDomain || endpointHost.endsWith(`.${trustedDomain}`);
+        if (endpoint.protocol !== 'https:' || !trustedHost) throw new Error('Bank iD vrátil nedůvěryhodnou adresu.');
+    }
     return j as Endpoints;
 }
 

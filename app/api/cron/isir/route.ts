@@ -1,12 +1,16 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { serviceClient } from '@/lib/serverSupabase';
 import { checkWatch, type WatchRow } from '@/lib/isirCheck';
+
+// Porovnání v konstantním čase (délka i obsah se porovnávají přes otisk)
+const sameSecret = (a: string, b: string) => timingSafeEqual(createHash('sha256').update(a).digest(), createHash('sha256').update(b).digest());
 
 // Pravidelná kontrola hlídaných osob (volá plánovač hostingu jednou denně s hlavičkou Authorization: Bearer <CRON_SECRET>).
 // Zpracuje nejdéle nekontrolované položky a jen těm uživatelům, kteří mají aktivní příplatek.
 export async function GET(req: Request) {
     const secret = process.env.CRON_SECRET;
-    if (!secret || req.headers.get('authorization') !== `Bearer ${secret}`) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    if (!secret || !sameSecret(req.headers.get('authorization') ?? '', `Bearer ${secret}`)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     const db = serviceClient();
     if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
     // Uživatelé s aktivním příplatkem (vlastním i z kanceláře): klienti s IČO se jim doplní mezi hlídané

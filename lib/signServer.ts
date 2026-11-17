@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSiteOrigin } from './siteUrl';
 import type { LinkRow } from './serverSupabase';
 import type { SignStatus } from './signing';
 
@@ -18,23 +19,28 @@ export async function loadSignRequest(db: SupabaseClient, link: LinkRow, id: str
 }
 
 export function originOf(req: Request): string {
-    const env = process.env.NEXT_PUBLIC_SITE_URL;
-    if (env) return env.replace(/\/+$/, '');
-    const u = new URL(req.url); return `${u.protocol}//${u.host}`;
+    const configured = getSiteOrigin();
+    if (configured) return configured;
+    if (process.env.NODE_ENV === 'production') throw new Error('NEXT_PUBLIC_SITE_URL musí být v produkci nastavena na HTTPS adresu aplikace.');
+    return new URL(req.url).origin;
 }
 
 import { NextResponse } from 'next/server';
 import { clientIp, findActiveLink, rateLimited, serviceClient } from './serverSupabase';
+import { secondFactorBlock, type FactorLink } from './portalSession';
 
 // Společná kontrola tras klientského odkazu: limit, databáze, platný odkaz, ověřený a zaplacený advokát, klient vyplnil údaje
 export async function portalGuard(req: Request, token: string, bucket: string, limit: number, windowMs: number): Promise<{ db: SupabaseClient; link: LinkRow & { client_name?: string; client_phone?: string; onboarded_at?: string | null } } | NextResponse> {
-    if (rateLimited(`${bucket}:${clientIp(req)}`, limit, windowMs)) return NextResponse.json({ error: 'rate' }, { status: 429 });
+    if (await rateLimited(`${bucket}:${clientIp(req)}`, limit, windowMs)) return NextResponse.json({ error: 'rate' }, { status: 429 });
     const db = serviceClient();
     if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
     const link = await findActiveLink(db, token);
     if (!link) return NextResponse.json({ error: 'notfound' }, { status: 404 });
     if (!link.verified) return NextResponse.json({ error: 'unverified' }, { status: 403 });
     if (!link.subscribed) return NextResponse.json({ error: 'inactive' }, { status: 403 });
+    // Druhý faktor (kód z e-mailu), pokud ho advokát u odkazu zapnul
+    const block = await secondFactorBlock(db, link as FactorLink, req);
+    if (block) return block;
     if (!(link as { onboarded_at?: string | null }).onboarded_at) return NextResponse.json({ error: 'not-onboarded' }, { status: 403 });
     return { db, link: link as never };
 }

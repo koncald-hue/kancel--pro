@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CalendarPlus, Check, ExternalLink, Loader2, Radar, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { insertConfirmedDeadline } from '@/lib/caseFile';
 import { RADAR_INFO, suggestDeadline, type RadarKind } from '@/lib/radar';
 import { autoSyncRadar } from '@/lib/radarSync';
 import { computeAbsolute, czDate } from '@/lib/lhuty';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
+import { safeUrl } from '@/lib/safeUrl';
 
 export type RadarEvent = { id: string; user_id: string; case_id: string; contact_id: string | null; kind: RadarKind; title: string; detail: string; url: string; event_date: string | null; seen: boolean; resolved: boolean; created_at: string };
 const TONE = { bad: 'bg-rose-100 text-rose-900', warn: 'bg-amber-100 text-amber-900', info: 'bg-sky-100 text-sky-900' } as const;
@@ -30,8 +32,8 @@ function EventCard({ e, caseTitle, onChanged }: { e: RadarEvent; caseTitle?: str
             const { data: { session } } = await supabase.auth.getSession();
             const uid = session?.user.id; if (!uid) throw new Error('Nejste přihlášeni.');
             const basis = `Radar: ${e.title}. ${info.months ? `Lhůta ${info.months} měsíce od zveřejnění rozhodnutí o úpadku (${czDate(date)}), ověřeno advokátem v rozhodnutí.` : 'Konec lhůty zadal advokát.'}`;
-            const { data: d, error: de } = await supabase.from('case_deadlines').insert({ case_id: e.case_id, user_id: uid, title: plan.title, due_date: plan.end, basis: basis.slice(0, 1500), internal_date: plan.internal }).select('id').single();
-            if (de) throw new Error(de.message);
+            // konec lhůty advokát výslovně zadal / potvrdil v tomto formuláři
+            const d = await insertConfirmedDeadline<{ id: string }>({ case_id: e.case_id, user_id: uid, title: plan.title, due_date: plan.end, basis: basis.slice(0, 1500), internal_date: plan.internal });
             await supabase.from('case_entries').insert({ case_id: e.case_id, user_id: uid, kind: 'event', title: `Radar: přidána lhůta ${plan.title}`.slice(0, 200), body: `Konec lhůty ${czDate(plan.end)}${plan.shiftedFrom ? ` (posunuto z ${czDate(plan.shiftedFrom)})` : ''}. ${e.title}`, happened_on: new Date().toISOString().slice(0, 10) });
             await supabase.from('radar_events').update({ resolved: true, seen: true, deadline_id: (d as { id: string }).id }).eq('id', e.id);
             onChanged();
@@ -50,7 +52,7 @@ function EventCard({ e, caseTitle, onChanged }: { e: RadarEvent; caseTitle?: str
             {e.detail && <p className="mt-1 text-xs text-slate-600">{e.detail}</p>}
             <p className="mt-2 text-xs leading-relaxed text-slate-700">{info.action}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-                {e.url && <a href={e.url} target="_blank" rel="noreferrer noopener" className={ghostBtn}><ExternalLink size={14} /> Otevřít v rejstříku</a>}
+                {safeUrl(e.url) && <a href={safeUrl(e.url)} target="_blank" rel="noreferrer noopener" className={ghostBtn}><ExternalLink size={14} /> Otevřít v rejstříku</a>}
                 {info.deadlineTitle && <button type="button" onClick={() => setOpen((v) => !v)} className={ghostBtn}><CalendarPlus size={14} /> Navrhnout lhůtu</button>}
                 <button type="button" onClick={() => void resolve()} disabled={busy} className={ghostBtn}><Check size={14} /> Vyřízeno</button>
             </div>
