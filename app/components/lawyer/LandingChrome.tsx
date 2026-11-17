@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Scale } from 'lucide-react';
+import { ArrowRight, Menu, Scale, X } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 
 export const NAV = [['/funkce', 'Co umí'], ['/pro-klienty', 'Pro klienty'], ['/cenik', 'Ceník']] as const;
@@ -17,21 +18,34 @@ export function StartButton({ size = 'lg', light = false }: { size?: 'lg' | 'sm'
 
 export function SiteHeader({ current }: { current?: string }) {
     const { account, openLogin } = useAuth();
+    const [open, setOpen] = useState(false);
     return (
-        <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
-            <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-                <Link href="/" className="flex items-center gap-2.5 font-bold text-slate-900"><span className="rounded-lg bg-indigo-700 p-1.5 text-white"><Scale size={18} aria-hidden="true" /></span> Kancelář</Link>
-                <nav className="hidden items-center gap-7 text-sm font-medium md:flex" aria-label="Hlavní navigace">
-                    {NAV.map(([href, label]) => <Link key={href} href={href} aria-current={current === href ? 'page' : undefined} className={current === href ? 'text-indigo-700' : 'text-slate-600 hover:text-slate-900'}>{label}</Link>)}
+        <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur-md">
+            <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
+                <Link href="/" className="flex items-center gap-2.5 text-slate-900" aria-label="Kancelář, úvodní stránka">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-sm shadow-indigo-300/50"><Scale size={18} aria-hidden="true" /></span>
+                    <span className="text-lg font-bold tracking-tight">Kancelář</span>
+                </Link>
+                <nav className="mx-auto hidden items-center gap-1 rounded-full border border-slate-200 bg-slate-50/80 p-1 md:flex" aria-label="Hlavní navigace">
+                    {NAV.map(([href, label]) => <Link key={href} href={href} aria-current={current === href ? 'page' : undefined} className={`rounded-full px-5 py-1.5 text-sm font-medium transition ${current === href ? 'bg-white text-indigo-800 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900'}`}>{label}</Link>)}
                 </nav>
-                <div className="flex items-center gap-2">
-                    {!account && <button type="button" onClick={() => openLogin('login')} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer">Přihlásit se</button>}
+                <div className="ml-auto flex items-center gap-2 md:ml-0">
+                    {!account && <button type="button" onClick={() => openLogin('login')} className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:block cursor-pointer">Přihlásit se</button>}
                     <span className="hidden sm:block"><StartButton size="sm" /></span>
+                    <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label={open ? 'Zavřít menu' : 'Otevřít menu'} className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 md:hidden cursor-pointer">{open ? <X size={22} /> : <Menu size={22} />}</button>
                 </div>
             </div>
-            <nav className="flex justify-center gap-6 border-t border-slate-100 px-4 py-2 text-sm font-medium md:hidden" aria-label="Hlavní navigace (mobil)">
-                {NAV.map(([href, label]) => <Link key={href} href={href} className={current === href ? 'text-indigo-700' : 'text-slate-600'}>{label}</Link>)}
-            </nav>
+            {open && (
+                <nav className="border-t border-slate-100 bg-white px-4 pb-4 pt-2 md:hidden" aria-label="Hlavní navigace (mobil)">
+                    <ul className="space-y-1">
+                        {NAV.map(([href, label]) => <li key={href}><Link href={href} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-3 text-base font-medium ${current === href ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700 hover:bg-slate-50'}`}>{label}</Link></li>)}
+                    </ul>
+                    <div className="mt-3 flex flex-col gap-2">
+                        {!account && <button type="button" onClick={() => { setOpen(false); openLogin('login'); }} className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-800 cursor-pointer">Přihlásit se</button>}
+                        <StartButton />
+                    </div>
+                </nav>
+            )}
         </header>
     );
 }
