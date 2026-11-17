@@ -39,6 +39,8 @@ export default function LawyerMail() {
     const [cases, setCases] = useState<CaseOpt[]>([]);
     const [clients, setClients] = useState<ClientOpt[]>([]);
     const [saveCase, setSaveCase] = useState('');
+    const [pending, setPending] = useState<MsgSummary | null>(null);
+    const cache = useRef(new Map<string, FullMessage>());
 
     const account = accounts?.find((a) => a.id === accId) ?? accounts?.[0] ?? null;
     const reloadAccounts = useCallback(async () => {
@@ -74,17 +76,26 @@ export default function LawyerMail() {
 
     async function open(m: MsgSummary) {
         if (!creds) return;
-        setBusy('read'); setError(''); setInfo(''); setSaveCase('');
+        setError(''); setInfo(''); setSaveCase('');
+        const key = `${folder}:${m.uid}:${account?.id ?? ''}`;
+        const suggest = (full: FullMessage) => {
+            // Věc, ke které zpráva pravděpodobně patří (podle e-mailu klienta)
+            const who = (folder === 'SENT' ? full.to : full.fromEmail).toLowerCase();
+            const hit = cases.find((c) => c.client_email && who.includes(c.client_email.toLowerCase())) ?? cases.find((c) => clients.some((cl) => cl.id === c.client_id && cl.email && who.includes(cl.email.toLowerCase())));
+            if (hit) setSaveCase(hit.id);
+        };
+        setMessages((all) => all.map((x) => (x.uid === m.uid ? { ...x, seen: true } : x)));
+        const hit = cache.current.get(key);
+        if (hit) { setSel(hit); setPending(null); suggest(hit); return; }
+        // Hlavička se ukáže hned, obsah se dočte
+        setPending(m); setSel(null); setBusy('read');
         try {
             const path = folder === 'SENT' ? (creds.sentFolder || 'Sent') : 'INBOX';
             const full = await mailApi<FullMessage>('read', creds, { folder: path, uid: m.uid });
-            setSel(full); setMessages((all) => all.map((x) => (x.uid === m.uid ? { ...x, seen: true } : x)));
-            // Věc, ke které zpráva pravděpodobně patří (podle e-mailu klienta)
-            const who = (folder === 'SENT' ? full.to : full.fromEmail).toLowerCase();
-            const hit = cases.find((c) => who.includes((c.client_email ?? '').toLowerCase()) && c.client_email) ?? cases.find((c) => clients.some((cl) => cl.id === c.client_id && cl.email && who.includes(cl.email.toLowerCase())));
-            if (hit) setSaveCase(hit.id);
+            cache.current.set(key, full);
+            setSel(full); suggest(full);
         } catch (e) { setError(e instanceof Error ? e.message : 'Zprávu se nepodařilo otevřít.'); }
-        setBusy('');
+        setPending(null); setBusy('');
     }
 
     async function saveToCase() {
@@ -160,11 +171,11 @@ export default function LawyerMail() {
                             <span className={`block truncate ${m.seen ? 'text-slate-500' : 'font-semibold text-slate-800'}`}>{m.attachments && <Paperclip size={11} className="mr-1 inline" aria-label="Příloha" />}{m.subject}</span></button></li>
                     ))}
                     {messages.length === 0 && busy !== 'list' && <li className="px-4 py-6 text-slate-500">Žádné zprávy.</li>}
-                    {messages.length >= 30 && creds && <li><button type="button" onClick={() => void load(creds, folder, query, messages[messages.length - 1].uid)} className="w-full px-4 py-2.5 text-center text-xs font-semibold text-indigo-800 hover:bg-slate-50 cursor-pointer">Načíst starší</button></li>}
+                    {messages.length >= 30 && creds && <li><button type="button" onClick={() => void load(creds, folder, query, messages[messages.length - 1].seq)} className="w-full px-4 py-2.5 text-center text-xs font-semibold text-indigo-800 hover:bg-slate-50 cursor-pointer">Načíst starší</button></li>}
                 </ul>
 
                 <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5" aria-label="Zpráva">
-                    {busy === 'read' && <p className="text-sm text-slate-500" role="status">Načítám zprávu…</p>}
+                    {busy === 'read' && pending && <div role="status"><h2 className="text-lg font-bold text-slate-900">{pending.subject}</h2><p className="text-xs text-slate-500">Od: {pending.from} · {pending.date ? new Date(pending.date).toLocaleString('cs-CZ') : ''}</p><p className="mt-4 flex items-center gap-2 text-sm text-slate-500"><Loader2 size={14} className="animate-spin" aria-hidden="true" /> Načítám obsah…</p></div>}
                     {!sel && busy !== 'read' && <p className="flex items-center gap-2 text-sm text-slate-500"><Mail size={16} aria-hidden="true" /> Vyberte zprávu vlevo.</p>}
                     {sel && busy !== 'read' && (
                         <div className="space-y-3">

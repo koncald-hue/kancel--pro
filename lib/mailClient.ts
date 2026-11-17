@@ -3,7 +3,7 @@ import { decryptText } from './e2ee';
 import type { MailCreds } from './mailServer';
 
 export type MailAccountRow = { id: string; label: string; email: string; preset: string; imap_host: string; imap_port: number; smtp_host: string; smtp_port: number; sent_folder: string; skip_append: boolean; enc_password: string };
-export type MsgSummary = { uid: number; from: string; fromEmail: string; to: string; subject: string; date: string | null; seen: boolean; attachments: boolean };
+export type MsgSummary = { uid: number; seq: number; from: string; fromEmail: string; to: string; subject: string; date: string | null; seen: boolean; attachments: boolean };
 export type FullMessage = { uid: number; messageId: string; references: string[]; from: string; fromEmail: string; to: string; cc: string; subject: string; date: string | null; text: string; html: string; attachments: { index: number; filename: string; contentType: string; size: number }[] };
 
 export async function credsOf(master: CryptoKey, a: MailAccountRow): Promise<MailCreds> {
