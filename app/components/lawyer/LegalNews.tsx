@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, CalendarClock, FileText, Newspaper, RefreshCw, ScrollText } from 'lucide-react';
-import { KIND_LABEL, ago, daysFromToday, parseLawTitle, type NewsItem, type NewsKind } from '@/lib/news';
+import { KIND_LABEL, ago, daysFromToday, lawType, parseLawTitle, type NewsItem, type NewsKind } from '@/lib/news';
 
 type Tab = 'zmeny' | 'predpisy' | 'svet';
 const MONTHS = ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];
@@ -18,6 +18,7 @@ function DateTile({ iso, hot }: { iso: string; hot: boolean }) {
 
 function Law({ it }: { it: NewsItem }) {
     const law = parseLawTitle(it.title);
+    const type = lawType(law.name);
     const eff = it.effective; const left = eff ? daysFromToday(eff) : null;
     return (
         <li>
@@ -25,12 +26,12 @@ function Law({ it }: { it: NewsItem }) {
                 {eff ? <DateTile iso={eff} hot={left !== null && left >= 0 && left <= 14} /> : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><ScrollText size={22} aria-hidden="true" /></span>}
                 <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
-                        {law.number && <span className="rounded-md bg-slate-900 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-white">{law.number}</span>}
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${KIND_TONE[it.kind]}`}>{KIND_LABEL[it.kind]}</span>
+                        {type && <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${KIND_TONE[it.kind]}`}>{type}</span>}
+                        {law.number && <span className="font-mono text-xs font-semibold text-slate-500">{law.number}</span>}
                         {left !== null && <span className={`text-xs font-semibold ${left >= 0 && left <= 14 ? 'text-amber-700' : 'text-slate-500'}`}>{left > 0 ? `účinné za ${left} ${plural(left)}` : left === 0 ? 'účinné dnes' : 'už účinné'}</span>}
                     </span>
-                    <span className="mt-1 block text-[15px] font-semibold leading-snug text-slate-900 group-hover:text-indigo-800">{law.name || it.title}</span>
-                    {law.amendedBy && <span className="mt-0.5 block text-xs text-slate-500">Změněno předpisem {law.amendedBy}</span>}
+                    <span className="mt-1.5 block text-base font-semibold leading-snug text-slate-900 group-hover:text-indigo-800">{law.name || it.title}</span>
+                    {law.amendedBy && <span className="mt-1 block text-xs text-slate-500">Změněno předpisem {law.amendedBy}</span>}
                 </span>
                 <ArrowUpRight size={16} className="mt-1 shrink-0 text-slate-300 transition group-hover:text-indigo-600" aria-label="otevře se na webu zdroje" />
             </a>
@@ -66,7 +67,6 @@ export default function LegalNews() {
     const soon = (i: NewsItem) => (i.effective ? daysFromToday(i.effective) : -999);
     const sorted = (t: Tab) => [...pick(t)].sort((a, b) => (t === 'zmeny' ? (soon(a) >= 0 && soon(b) >= 0 ? soon(a) - soon(b) : soon(a) >= 0 ? -1 : soon(b) >= 0 ? 1 : soon(b) - soon(a)) : b.date.localeCompare(a.date)));
     const list = sorted(tab);
-    const upcoming = pick('zmeny').filter((i) => i.effective && soon(i) >= 0 && soon(i) <= 14).length;
     const TABS: [Tab, string, typeof FileText][] = [['zmeny', 'Změny zákonů', CalendarClock], ['predpisy', 'Nové předpisy', ScrollText], ['svet', 'Právní svět', Newspaper]];
     const shown = more ? list : list.slice(0, tab === 'svet' ? 4 : 6);
 
@@ -76,14 +76,14 @@ export default function LegalNews() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Newspaper size={18} className="text-indigo-700" aria-hidden="true" /> Právní novinky</h2>
-                        <p className="mt-0.5 text-sm text-slate-600">{upcoming > 0 ? <><strong className="text-amber-800">{upcoming} {upcoming === 1 ? 'změna' : upcoming < 5 ? 'změny' : 'změn'}</strong> začne platit v příštích dvou týdnech.</> : 'Co se mění v zákonech a co je nového ve světě práva.'}</p>
+                        <p className="mt-0.5 text-sm text-slate-600">Co se mění v zákonech a co je nového ve světě práva.</p>
                     </div>
                     <span className="flex items-center gap-1.5 text-[11px] text-slate-400">Automaticky z veřejných zdrojů{updated ? `, ${new Date(updated).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}` : ''}<button type="button" onClick={() => void load()} aria-label="Obnovit" className="rounded p-1 hover:bg-slate-100 cursor-pointer"><RefreshCw size={11} /></button></span>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Druh novinek">
                     {TABS.map(([id, label, Icon]) => (
                         <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => { setTab(id); setMore(false); }} className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition cursor-pointer ${tab === id ? 'border-indigo-700 bg-indigo-700 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}>
-                            <Icon size={14} aria-hidden="true" /> {label}<span className={`rounded-full px-1.5 text-[11px] ${tab === id ? 'bg-white/20' : 'bg-slate-100 text-slate-500'}`}>{pick(id).length}</span>
+                            <Icon size={14} aria-hidden="true" /> {label}
                         </button>
                     ))}
                 </div>
@@ -98,7 +98,7 @@ export default function LegalNews() {
                 ) : (
                     <ul className="divide-y divide-slate-100">{shown.map((it) => <Law key={it.id} it={it} />)}</ul>
                 )}
-                {list.length > shown.length || more ? <div className="mt-2 text-center"><button type="button" onClick={() => setMore((m) => !m)} className="rounded-full px-4 py-1.5 text-sm font-semibold text-indigo-800 hover:bg-indigo-50 cursor-pointer">{more ? 'Zobrazit méně' : `Zobrazit dalších ${list.length - shown.length}`}</button></div> : null}
+                {list.length > shown.length || more ? <div className="mt-2 text-center"><button type="button" onClick={() => setMore((m) => !m)} className="rounded-full px-4 py-1.5 text-sm font-semibold text-indigo-800 hover:bg-indigo-50 cursor-pointer">{more ? 'Zobrazit méně' : 'Zobrazit další'}</button></div> : null}
                 <p className="mt-3 px-1 text-[11px] leading-relaxed text-slate-400">Zdroje: Sbírka zákonů (zakonyprolidi.cz), epravo.cz, Advokátní deník. Přehled je jen upozornění a odkaz na zdroj, nikoli právní informace. Znění předpisů si před použitím ověřte ve Sbírce zákonů.</p>
             </div>
         </section>

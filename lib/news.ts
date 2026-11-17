@@ -53,7 +53,7 @@ export function parseFeed(xml: string, feed: { kind: NewsKind; source: string })
         let summary = stripHtml(tag(b, 'description') || tag(b, 'summary') || tag(b, 'content:encoded') || tag(b, 'content'));
         // Popis, který jen opakuje název, nic nepřidává
         if (summary.toLowerCase().startsWith(title.toLowerCase().slice(0, 40)) && summary.length < title.length + 60) summary = '';
-        out.push({ id: link, kind: feed.kind, source: feed.source, title: clip(title, 220), summary: clip(summary, 260), url: link, date, effective: feed.kind === 'zneni' || feed.kind === 'ucinne' ? effectiveFrom(title) : null });
+        out.push({ id: link, kind: feed.kind, source: feed.source, title: clip(title, 500), summary: clip(summary, 260), url: link, date, effective: feed.kind === 'zneni' || feed.kind === 'ucinne' ? effectiveFrom(title) : null });
     }
     return out;
 }
@@ -85,4 +85,42 @@ export function ago(iso: string, now = new Date()): string {
     if (d < 7) return `před ${d} ${d < 5 ? 'dny' : 'dny'}`;
     if (d < 31) { const w = Math.floor(d / 7); return `před ${w} ${w === 1 ? 'týdnem' : 'týdny'}`; }
     return new Date(iso).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+}
+
+// ---------- plné názvy předpisů ----------
+// Kanál zkracuje dlouhé názvy („…související s opatřeními přijatými v souvislos…“); úplný název je na stránce předpisu.
+export const isTruncated = (title: string) => /(…|\.\.\.)\s*$/.test(title.trim());
+export const isLawPageUrl = (url: string) => /^https:\/\/www\.zakonyprolidi\.cz\/cs\/\d{4}-\d+(\/zneni-\d{8})?$/.test(url);
+export const lawBaseUrl = (url: string) => url.replace(/\/zneni-\d{8}$/, '');
+export function extractFullName(html: string): string {
+    const m = html.match(/<span class="h1a">([\s\S]*?)<\/span>/i);
+    if (m) return stripHtml(m[1]);
+    const d = html.match(/<meta name="description" content="([^"]*)"/i);
+    return d ? stripHtml(d[1]).replace(/^.*? Sb\.\s*-\s*/, '') : '';
+}
+export function applyFullName(item: NewsItem, fullName: string): NewsItem {
+    if (!fullName) return item;
+    if (item.kind === 'predpis') { const law = parseLawTitle(item.title); return { ...item, title: `${law.number ? `č. ${law.number} - ` : ''}${fullName}` }; }
+    if (item.kind === 'zneni' || item.kind === 'ucinne') {
+        const date = item.title.match(/^\d{1,2}\.\d{1,2}\.\d{4}\s*-\s*/)?.[0] ?? '';
+        const law = parseLawTitle(item.title);
+        return { ...item, title: `${date}${law.number ? `č. ${law.number} - ` : ''}${fullName}${law.amendedBy && !isTruncated(law.amendedBy) ? ` - ve znění ${law.amendedBy}` : ''}` };
+    }
+    return item;
+}
+
+// Druh předpisu srozumitelně: co to je a oč jde
+export function lawType(name: string): string {
+    const n = name.trim();
+    if (/^(Zákon|Zákonné opatření|Ústavní zákon)[^,]*,\s*kter[ýáé]m? se mění|^Zákon .* o změně/i.test(n)) return 'Novela zákona';
+    if (/^Nařízení vlády,\s*kter[ýáé]m se mění/i.test(n)) return 'Novela nařízení vlády';
+    if (/^Vyhláška,\s*kterou se mění/i.test(n)) return 'Novela vyhlášky';
+    if (/^Ústavní zákon/i.test(n)) return 'Ústavní zákon';
+    if (/^Zákon/i.test(n)) return 'Zákon';
+    if (/^Nařízení vlády/i.test(n)) return 'Nařízení vlády';
+    if (/^Vyhláška/i.test(n)) return 'Vyhláška';
+    if (/^(Rámcová )?(smlouva|dohoda)|^Úmluva|^Protokol|^Mezinárodní/i.test(n)) return 'Mezinárodní smlouva';
+    if (/^Sdělení/i.test(n)) return 'Sdělení';
+    if (/^Nález/i.test(n)) return 'Nález Ústavního soudu';
+    return '';
 }

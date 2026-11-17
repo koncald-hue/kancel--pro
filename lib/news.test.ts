@@ -50,3 +50,22 @@ describe('law titles and relative dates', () => {
         expect(ago('2026-11-17T08:00:00Z', now)).toBe('dnes'); expect(ago('2026-11-16T08:00:00Z', now)).toBe('včera'); expect(ago('2026-11-13T08:00:00Z', now)).toBe('před 4 dny'); expect(ago('2026-11-03T08:00:00Z', now)).toBe('před 2 týdny');
     });
 });
+
+describe('full law names', () => {
+    it('detects truncation and pulls the full name from the law page', async () => {
+        const { isTruncated, extractFullName, applyFullName, lawType, isLawPageUrl } = await import('./news');
+        expect(isTruncated('Nařízení vlády, kterým se mění některá nařízení související s opatřeními přijatými v souvislos…')).toBe(true);
+        expect(isTruncated('Vyhláška o mapě')).toBe(false);
+        const html = '<h1>Nařízení vlády č. 216/2026 Sb.<span class="h1a">Nařízení vlády, kterým se mění některá nařízení &amp; spol.</span></h1>';
+        expect(extractFullName(html)).toBe('Nařízení vlády, kterým se mění některá nařízení & spol.');
+        expect(extractFullName('<meta name="description" content="Nařízení vlády č. 216/2026 Sb. - Plný název předpisu">')).toBe('Plný název předpisu');
+        const base = { id: 'x', source: 's', summary: '', url: 'u', date: '2026-11-09T00:00:00Z', effective: null };
+        expect(applyFullName({ ...base, kind: 'predpis', title: 'č. 216/2026 Sb. - Nařízení vlády, kterým se mění některá nařízení vlády související s opatřeními přijatými v souvislos…' }, 'Nařízení vlády, kterým se mění ... Ukrajiny').title).toBe('č. 216/2026 Sb. - Nařízení vlády, kterým se mění ... Ukrajiny');
+        expect(applyFullName({ ...base, kind: 'zneni', title: '18.11.2026 - č. 393/2020 Sb. - Vyhláška o digitální technické map… - ve znění 193/2026 Sb.' }, 'Vyhláška o digitální technické mapě kraje').title).toBe('18.11.2026 - č. 393/2020 Sb. - Vyhláška o digitální technické mapě kraje - ve znění 193/2026 Sb.');
+        expect(isLawPageUrl('https://www.zakonyprolidi.cz/cs/2026-216')).toBe(true); expect(isLawPageUrl('https://www.zakonyprolidi.cz/cs/2026-216/zneni-20261110')).toBe(true); expect(isLawPageUrl('https://evil.example/cs/2026-216')).toBe(false);
+        expect(lawType('Vyhláška, kterou se mění vyhláška č. 122/2015 Sb.')).toBe('Novela vyhlášky');
+        expect(lawType('Rámcová smlouva mezi Českou republikou a Slovenskou republikou')).toBe('Mezinárodní smlouva');
+        expect(lawType('Zákon, kterým se mění zákon č. 89/2012 Sb.')).toBe('Novela zákona');
+        expect(lawType('Nařízení vlády o mimořádném pracovním vízu')).toBe('Nařízení vlády');
+    });
+});
