@@ -36,7 +36,10 @@ export function validateCreds(c: Partial<MailCreds>): MailCreds {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !c.password || String(c.password).length > 300) throw new Error('Chybí e-mail nebo heslo.');
     const imapPort = Number(c.imapPort); const smtpPort = Number(c.smtpPort);
     if (!ALLOWED_PORTS.has(imapPort) || !ALLOWED_PORTS.has(smtpPort)) throw new Error('Nepovolený port.');
-    return { email, password: String(c.password), imapHost: String(c.imapHost ?? '').trim().toLowerCase(), imapPort, smtpHost: String(c.smtpHost ?? '').trim().toLowerCase(), smtpPort, sentFolder: c.sentFolder ? String(c.sentFolder).slice(0, 120) : undefined, skipAppend: !!c.skipAppend };
+    // Gmail zobrazuje heslo pro aplikace po čtveřicích oddělených mezerami; mezery se ignorují
+    const imapHost = String(c.imapHost ?? '').trim().toLowerCase();
+    const password = imapHost === 'imap.gmail.com' ? String(c.password).replace(/\s+/g, '') : String(c.password);
+    return { email, password, imapHost: String(c.imapHost ?? '').trim().toLowerCase(), imapPort, smtpHost: String(c.smtpHost ?? '').trim().toLowerCase(), smtpPort, sentFolder: c.sentFolder ? String(c.sentFolder).slice(0, 120) : undefined, skipAppend: !!c.skipAppend };
 }
 
 export async function withImap<T>(c: MailCreds, fn: (client: ImapFlow) => Promise<T>): Promise<T> {

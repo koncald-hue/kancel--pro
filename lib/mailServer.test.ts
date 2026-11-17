@@ -20,3 +20,11 @@ describe('mail bridge safety', () => {
         expect(() => validateCreds({ ...ok, password: '' })).toThrow();
     });
 });
+
+describe('gmail app password', () => {
+    it('ignores the spaces Google shows in app passwords', () => {
+        const c = validateCreds({ email: 'a@gmail.com', password: 'abcd efgh ijkl mnop', imapHost: 'imap.gmail.com', imapPort: 993, smtpHost: 'smtp.gmail.com', smtpPort: 465 });
+        expect(c.password).toBe('abcdefghijklmnop');
+        expect(validateCreds({ email: 'a@x.cz', password: 'a b', imapHost: 'imap.x.cz', imapPort: 993, smtpHost: 'smtp.x.cz', smtpPort: 465 }).password).toBe('a b');
+    });
+});

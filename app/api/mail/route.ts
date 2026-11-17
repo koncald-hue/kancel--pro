@@ -9,10 +9,15 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 export const maxDuration = 60;
 
 const err = (e: unknown) => {
-    const m = e instanceof Error ? e.message : '';
-    // Chybu přihlášení poznáme podle odpovědi serveru; ostatní zprávy se zjednodušují, aby nic neprozradily
-    if (/auth|credential|login|password|AUTHENTICATIONFAILED|535/i.test(m)) return NextResponse.json({ error: 'auth', message: 'Přihlášení do schránky se nepodařilo. Zkontrolujte e-mail a heslo (u Gmailu a Seznamu heslo pro aplikace).' }, { status: 401 });
+    const x = (e ?? {}) as { message?: string; code?: string; authenticationFailed?: boolean; responseText?: string; response?: string };
+    const m = x.message ?? '';
+    const detail = [m, x.code, x.responseText, x.response].filter(Boolean).join(' ');
+    // Pro ladění se zapíše jen druh chyby, nikdy přihlašovací údaje
+    console.warn(`[mail] ${x.code ?? ''} ${m} ${x.responseText ?? ''}`.trim());
+    // Chybu přihlášení poznáme podle příznaku knihovny nebo podle odpovědi serveru
+    if (x.authenticationFailed || /AUTHENTICATIONFAILED|EAUTH|Invalid credentials|Username and Password not accepted|Application-specific password|\b53[45]\b|credential|login failed/i.test(detail)) return NextResponse.json({ error: 'auth', message: 'Přihlášení do schránky se nepodařilo. U Gmailu a dalších služeb je potřeba „heslo pro aplikace“ (ne běžné heslo) a zapnuté dvoufázové ověření. Zkontrolujte také, že je ve schránce povolený přístup IMAP.' }, { status: 401 });
     if (/^(Tento server|Neplatn|Nepovolen|Chybí|Zpráva nebyla|Příloha)/.test(m)) return NextResponse.json({ error: 'bad_request', message: m }, { status: 400 });
+    if (/ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT|ECONNRESET|timeout/i.test(detail)) return NextResponse.json({ error: 'upstream', message: 'K poštovnímu serveru se nepodařilo připojit. Zkontrolujte název serveru a port, nebo to zkuste za chvíli znovu.' }, { status: 502 });
     return NextResponse.json({ error: 'upstream', message: 'Poštovní server neodpověděl správně. Zkuste to za chvíli znovu.' }, { status: 502 });
 };
 
