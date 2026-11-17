@@ -1,5 +1,6 @@
 'use client';
 
+import { assignActivity, logActivity } from '@/lib/activity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ArrowLeft, Check, Download, Inbox, KeyRound, Loader2, Lock, Mail, Paperclip, Plug, Plus, Search, Send, Smartphone, Trash2, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -294,6 +295,7 @@ function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Rec
         if (r.status === 409) { setConfirm(true); return; }
         if (!r.ok) { setError(errText(r)); return; }
         setJustDelivered(record.undelivered && !record.accepted); setMsg(r.json.message as Downloaded); onChanged();
+        logActivity('datovka_read', { caseId: caseId || null, label: record.annotation ?? '', ref: `isds:${record.id}` });
     }
     function save(f: Downloaded['files'][number]) { const file = fromBase64(f.base64, f.mime, f.name); const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = f.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
 
@@ -306,6 +308,7 @@ function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Rec
         try {
             const files = msg ? msg.files.map((f) => fromBase64(f.base64, f.mime, safeFileName(f.name))) : [];
             const r = await saveMessageToCase(userId, caseId, tab, record, files);
+            assignActivity(`isds:${record.id}`, caseId);
             const title = cases.find((c) => c.id === caseId)?.title ?? 'věci';
             setDone(`${r.recordNew ? 'Záznam o zprávě uložen' : 'Záznam o zprávě už ve věci byl'} (${title})${files.length ? `, přílohy: uloženo ${r.saved}${r.skipped ? `, přeskočeno ${r.skipped} (už tam jsou)` : ''}` : ''}.`);
             onChanged();

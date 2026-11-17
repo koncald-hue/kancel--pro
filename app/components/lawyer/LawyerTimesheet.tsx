@@ -1,5 +1,6 @@
 'use client';
 
+import WorkSuggestions from './WorkSuggestions';
 import { useEffect, useState } from 'react';
 import { Download, Pause, Play, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -95,6 +96,8 @@ export default function LawyerTimesheet() {
     return (
         <div className="space-y-5">
             {error && <p role="alert" className="flex items-start justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}<button type="button" onClick={() => setError('')} className="font-semibold underline cursor-pointer">Zavřít</button></p>}
+
+            <WorkSuggestions userId={userId} cases={cases} rateFor={rateFor} onAdded={(rows) => setEntries((list) => [...rows, ...list])} />
 
             <form onSubmit={(e) => { e.preventDefault(); void add(); }} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                 <div className="grid gap-2 sm:grid-cols-[1.4fr_auto_auto_auto]">

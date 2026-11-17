@@ -8,6 +8,7 @@ import { AUTO_FIELDS, autoValues, buildDocx, customLabel, fieldsIn, fillTemplate
 import { insertRow, uploadCaseFile } from '@/lib/caseFile';
 import { plainPreview } from '@/lib/docx';
 import { STARTER_TEMPLATES } from '@/lib/starterTemplates';
+import { logActivity } from '@/lib/activity';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
@@ -211,6 +212,7 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
 
     async function copy() { await navigator.clipboard?.writeText(text); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }
     async function download() {
+        logActivity('document_created', { caseId: chosen?.id ?? null, label: template.title, ref: `tpl:${template.id}:${chosen?.id ?? ''}:${new Date().toDateString()}` });
         const blob = await buildDocx(text);
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -222,6 +224,7 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
     async function saveToCase() {
         if (!chosen) return;
         setSaving(true); setSaveMsg('');
+        logActivity('document_created', { caseId: chosen.id, label: template.title, ref: `tpl:${template.id}:${chosen.id}:${new Date().toDateString()}` });
         try {
             const blob = await buildDocx(text);
             const name = `${template.title.replace(/[^\p{L}\p{N}]+/gu, '_')}.docx`;

@@ -10,6 +10,8 @@ import { PRESETS } from '@/lib/mailPresets';
 import { b64ToBytes, credsOf, fileToB64, mailApi, quoted, safeHtml, type FullMessage, type MailAccountRow, type MsgSummary } from '@/lib/mailClient';
 import type { MailCreds } from '@/lib/mailServer';
 import { useMasterKey } from '@/lib/useE2ee';
+import { assignActivity, logActivity } from '@/lib/activity';
+import { wordCount } from '@/lib/workLog';
 import E2eeBox from '../situation/E2eeBox';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
@@ -83,6 +85,7 @@ export default function LawyerMail() {
             const who = (folder === 'SENT' ? full.to : full.fromEmail).toLowerCase();
             const hit = cases.find((c) => c.client_email && who.includes(c.client_email.toLowerCase())) ?? cases.find((c) => clients.some((cl) => cl.id === c.client_id && cl.email && who.includes(cl.email.toLowerCase())));
             if (hit) setSaveCase(hit.id);
+            return hit?.id ?? null;
         };
         setMessages((all) => all.map((x) => (x.uid === m.uid ? { ...x, seen: true } : x)));
         const hit = cache.current.get(key);
@@ -93,7 +96,10 @@ export default function LawyerMail() {
             const path = folder === 'SENT' ? (creds.sentFolder || 'Sent') : 'INBOX';
             const full = await mailApi<FullMessage>('read', creds, { folder: path, uid: m.uid });
             cache.current.set(key, full);
-            setSel(full); suggest(full);
+            setSel(full);
+            const guess = suggest(full);
+            // Stopa práce: přečtený e-mail (k věci, pokud ji aplikace pozná podle klienta)
+            if (folder === 'INBOX') logActivity('email_read', { caseId: guess, label: full.subject, ref: `mail:${key}` });
         } catch (e) { setError(e instanceof Error ? e.message : 'Zprávu se nepodařilo otevřít.'); }
         setPending(null); setBusy('');
     }
@@ -109,6 +115,7 @@ export default function LawyerMail() {
                 await uploadCaseFile(userId, saveCase, null, new File([b64ToBytes(r.base64) as BlobPart], r.filename, { type: r.contentType })); n += 1;
             }
             await insertRow('case_entries', { case_id: saveCase, user_id: userId, kind: 'event', title: `E-mail: ${sel.subject}`.slice(0, 200), body: `Od: ${sel.from}\nKomu: ${sel.to}\nDatum: ${sel.date ? new Date(sel.date).toLocaleString('cs-CZ') : ''}${n ? `\nPřílohy uloženy do souborů věci: ${n}` : ''}\n\n${sel.text.slice(0, 6000)}`, happened_on: sel.date ? sel.date.slice(0, 10) : null });
+            assignActivity(`mail:${folder}:${sel.uid}:${account?.id ?? ''}`, saveCase);
             setInfo(`Uloženo do věci „${cases.find((c) => c.id === saveCase)?.title ?? ''}“: zápis v chronologii${n ? ` a ${n} příloh` : ''}.`);
         } catch (e) { setError(e instanceof Error ? e.message : 'Uložení se nepovedlo.'); }
         setBusy('');
@@ -133,6 +140,7 @@ export default function LawyerMail() {
         try {
             const attachments = await Promise.all(compose.files.map(async (f) => ({ filename: f.name, contentType: f.type || 'application/octet-stream', base64: await fileToB64(f) })));
             const r = await mailApi<{ saved: boolean }>('send', creds, { mail: { to: compose.to, cc: compose.cc, subject: compose.subject, text: compose.body, inReplyTo: compose.inReplyTo, references: compose.references, attachments } });
+            logActivity('email_sent', { caseId: compose.caseId || null, label: compose.subject, words: wordCount(compose.body.split('\n').filter((l) => !l.startsWith('>')).join(' ')) });
             if (compose.caseId) await insertRow('case_entries', { case_id: compose.caseId, user_id: userId, kind: 'event', title: `Odeslán e-mail: ${compose.subject}`.slice(0, 200), body: `Komu: ${compose.to}\n\n${compose.body.slice(0, 6000)}`, happened_on: new Date().toISOString().slice(0, 10) });
             setInfo(`E-mail je odeslaný${compose.caseId ? ' a zapsaný do věci' : ''}${r.saved ? '' : '. Kopii do složky Odeslané se uložit nepodařilo.'}`); setCompose(null);
         } catch (e) { setError(e instanceof Error ? e.message : 'E-mail se nepodařilo odeslat.'); }

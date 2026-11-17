@@ -8,6 +8,7 @@ import { useChannelKey, useDecryptedNames } from './useChannelKey';
 import { saveEncryptedFile } from '@/lib/e2eeFiles';
 import { limitsFor } from '@/lib/tiers';
 import UpgradeNote from './UpgradeNote';
+import { logActivity } from '@/lib/activity';
 
 const iconFor = (mime: string, name: string) => (mime.startsWith('image/') ? FileImage : /pdf|word|text|document/.test(mime) || /\.(pdf|docx?|txt)$/i.test(name) ? FileText : FileIcon);
 
@@ -24,6 +25,7 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
     const names = useDecryptedNames(bundle.files, channel.key);
     const shownName = (f: (typeof bundle.files)[number]) => (f.enc ? (names[f.id] ?? 'Šifrovaný soubor') : f.name);
     async function openFile(f: (typeof bundle.files)[number], download: boolean) {
+        logActivity('file_opened', { caseId: item.id, label: shownName(f), ref: `file:${f.id}` });
         if (!f.enc) { await openCaseFile(f.path, download).catch(fail); return; }
         if (!channel.key) { fail(new Error('Šifrovaný soubor. Nejdřív odemkněte šifrování v záložce Klient.')); return; }
         await saveEncryptedFile(f.path, channel.key, shownName(f)).catch(fail);
