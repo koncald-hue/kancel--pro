@@ -14,7 +14,7 @@ export async function mailApi<T = Record<string, unknown>>(action: string, creds
     const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch('/api/mail', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ action, creds, ...extra }) });
     const json = await res.json().catch(() => ({})) as T & { message?: string };
-    if (!res.ok) throw new Error(json.message ?? 'Pošta zatím neodpovídá. Zkuste to znovu.');
+    if (!res.ok) throw new Error(json.message ?? 'E-mail zatím neodpovídá. Zkuste to znovu.');
     return json;
 }
 

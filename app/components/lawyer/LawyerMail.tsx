@@ -21,7 +21,7 @@ type Compose = { to: string; cc: string; subject: string; body: string; files: F
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : '');
 const size = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} kB` : `${(n / 1024 / 1024).toFixed(1).replace('.', ',')} MB`);
 
-// Pošta v aplikaci: schránka se připojí přes IMAP/SMTP, zprávy se čtou živě a do věci se ukládá jen to, co advokát vybere
+// E-mail v aplikaci: schránka se připojí přes IMAP/SMTP, zprávy se čtou živě a do věci se ukládá jen to, co advokát vybere
 export default function LawyerMail() {
     const { userId, access } = useLawyer();
     const master = useMasterKey();
@@ -45,7 +45,7 @@ export default function LawyerMail() {
     const account = accounts?.find((a) => a.id === accId) ?? accounts?.[0] ?? null;
     const reloadAccounts = useCallback(async () => {
         const { data, error: e } = await supabase.from('mail_accounts').select('*').order('created_at');
-        if (e) { setAccounts(null); setError(/mail_accounts|schema cache|does not exist/i.test(e.message) ? 'Pošta zatím není v databázi zapnutá (chybí spuštění souboru posta.sql).' : e.message); return; }
+        if (e) { setAccounts(null); setError(/mail_accounts|schema cache|does not exist/i.test(e.message) ? 'E-mail zatím není v databázi zapnutý (chybí spuštění souboru posta.sql).' : e.message); return; }
         setAccounts((data ?? []) as MailAccountRow[]);
     }, []);
     useEffect(() => {
@@ -69,7 +69,7 @@ export default function LawyerMail() {
             const path = f === 'SENT' ? (c.sentFolder || 'Sent') : 'INBOX';
             const r = await mailApi<{ messages: MsgSummary[] }>('list', c, { folder: path, query: q || undefined, before });
             setMessages((m) => (before ? [...m, ...r.messages] : r.messages));
-        } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se načíst poštu.'); }
+        } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se načíst e-maily.'); }
         setBusy('');
     }, []);
     useEffect(() => { const t = window.setTimeout(() => { if (creds) void load(creds, folder, '', undefined); }, 0); return () => window.clearTimeout(t); }, [creds, folder, load]);
@@ -228,7 +228,7 @@ function Connect({ master, userId, onDone }: { master: CryptoKey; userId: string
             const creds: MailCreds = { email: f.email.trim(), password: f.password, imapHost: preset === 'jiny' ? f.imapHost : p.imapHost, imapPort: Number(preset === 'jiny' ? f.imapPort : p.imapPort), smtpHost: preset === 'jiny' ? f.smtpHost : p.smtpHost, smtpPort: Number(preset === 'jiny' ? f.smtpPort : p.smtpPort), skipAppend: p.skipAppend };
             const t = await mailApi<{ sentFolder: string }>('test', creds);
             const { error: err } = await supabase.from('mail_accounts').insert({ user_id: userId, label: creds.email, email: creds.email, preset: ['gmail', 'seznam', 'centrum'].includes(preset) ? preset : 'jiny', imap_host: creds.imapHost, imap_port: creds.imapPort, smtp_host: creds.smtpHost, smtp_port: creds.smtpPort, sent_folder: t.sentFolder, skip_append: !!creds.skipAppend, enc_password: await encryptText(master, creds.password) });
-            if (err) throw new Error(/mail_accounts|schema cache/i.test(err.message) ? 'Pošta zatím není v databázi zapnutá (chybí spuštění souboru posta.sql).' : err.message);
+            if (err) throw new Error(/mail_accounts|schema cache/i.test(err.message) ? 'E-mail zatím není v databázi zapnutý (chybí spuštění souboru posta.sql).' : err.message);
             await onDone();
         } catch (ex) { setError(ex instanceof Error ? ex.message : 'Připojení se nepovedlo.'); }
         setBusy(false);
@@ -236,7 +236,7 @@ function Connect({ master, userId, onDone }: { master: CryptoKey; userId: string
     return (
         <form onSubmit={save} className="max-w-2xl space-y-3 rounded-2xl border border-slate-200 bg-white p-5">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Mail size={18} className="text-indigo-700" aria-hidden="true" /> Připojit e-mailovou schránku</h2>
-            <p className="text-sm leading-relaxed text-slate-600">Poštu pak čtete a odpovídáte přímo v aplikaci, zprávy uložíte do věci jedním kliknutím a nemusíte přepínat do Gmailu. Heslo se uloží zašifrované vaším šifrovacím heslem, server ho nezná a použije ho jen při načtení pošty.</p>
+            <p className="text-sm leading-relaxed text-slate-600">E-maily pak čtete a odpovídáte na ně přímo v aplikaci, zprávy uložíte do věci jedním kliknutím a nemusíte přepínat do Gmailu. Heslo se uloží zašifrované vaším šifrovacím heslem, server ho nezná a použije ho jen při načtení pošty.</p>
             <label className="block text-xs font-semibold text-slate-600">Poskytovatel<select value={preset} onChange={(e) => setPreset(e.target.value)} className={`${inputCls} mt-1 font-normal`}>{Object.entries(PRESETS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></label>
             <p className="rounded-lg bg-indigo-50 p-3 text-xs leading-relaxed text-indigo-950">{p.help}</p>
             <div className="grid gap-3 sm:grid-cols-2">
