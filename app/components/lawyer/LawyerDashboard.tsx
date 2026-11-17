@@ -1,5 +1,6 @@
 'use client';
 
+import LegalNews from './LegalNews';
 import { WorkNudge } from './WorkSuggestions';
 import { RadarPanel } from './RadarEvents';
 import { useEffect, useState } from 'react';
@@ -121,6 +122,8 @@ export default function LawyerDashboard() {
                     </ul>
                 )}
             </section>
+
+            <LegalNews />
 
             {open.length === 0 && (
                 <p className="flex items-center gap-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-600"><FolderOpen size={16} className="text-indigo-800" /> Začněte založením první věci v záložce Věci. Ke každé věci patří soubory, lhůty, chronologie a export spisu.</p>
