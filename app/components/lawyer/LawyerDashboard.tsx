@@ -14,7 +14,9 @@ import { DUE_SOON_DAYS, loadReceivables, money, round2, type Receivable } from '
 import { deadlineText, deadlineTone } from '../situation/CaseDeadlinesTab';
 import { useLawyer } from './LawyerGate';
 import DayPanel from './DayPanel';
+import TodayBoard from './TodayBoard';
 import { scheduleGoogleSync } from '@/lib/googleSync';
+import { AGENDA_DAYS } from '@/lib/today';
 import { ghostBtn } from '../situation/caseUi';
 
 function Tile({ label, value, note, tone }: { label: string; value: string; note?: string; tone?: string }) {
@@ -71,12 +73,15 @@ export default function LawyerDashboard() {
         .flatMap((c) => collectDeadlines(c, data.customs.filter((d) => d.case_id === c.id)).filter((d) => !d.done && daysUntil(d.date) >= 0).map((d) => ({ c, d, left: daysUntil(d.date) })))
         .sort((a, b) => a.left - b.left);
     const week = upcoming.filter((u) => u.left <= 7);
+    const later = upcoming.filter((u) => u.left > AGENDA_DAYS);
     const minutes = data.entries.reduce((s, e) => s + e.minutes, 0);
     const amount = data.entries.reduce((s, e) => s + entryAmount(e), 0);
 
     return (
         <div className="space-y-6">
             <DayPanel deadlinesToday={upcoming.filter((u) => u.left === 0).length} />
+            {/* Pracovní plocha: co je nové, co hoří, na koho se čeká a co je nevyúčtované */}
+            <TodayBoard />
             <WorkNudge />
             <RadarPanel />
             {isirNew > 0 && <Link href="/kancelar/insolvence" className="flex items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-950 hover:bg-amber-100"><ShieldAlert size={18} aria-hidden="true" /> Hlídání insolvence: {isirNew} {isirNew === 1 ? 'nový nález' : isirNew < 5 ? 'nové nálezy' : 'nových nálezů'}. Zobrazit →</Link>}
@@ -110,12 +115,12 @@ export default function LawyerDashboard() {
             </div>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><CalendarClock size={18} className="text-indigo-800" /> Nejbližší lhůty</h2>
-                {upcoming.length === 0 ? <p className="mt-3 text-sm text-slate-500">Žádné nadcházející lhůty. Přidejte je ve věcech.</p> : (
+                <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><CalendarClock size={18} className="text-indigo-800" /> Další lhůty a termíny <span className="text-sm font-normal text-slate-500">(za více než 14 dní)</span></h2>
+                {later.length === 0 ? <p className="mt-3 text-sm text-slate-500">Žádné vzdálenější lhůty. Bližší najdete výše v Úkolech a lhůtách.</p> : (
                     <ul className="mt-3 divide-y divide-slate-100">
-                        {upcoming.slice(0, 8).map(({ c, d, left }) => (
+                        {later.slice(0, 8).map(({ c, d, left }) => (
                             <li key={`${c.id}-${d.key}`} className="flex flex-wrap items-baseline justify-between gap-2 py-2.5 text-sm">
-                                <Link href={`/kancelar/veci/${c.id}`} className="min-w-0 text-slate-800 hover:underline"><span className="font-semibold">{c.title}</span>{c.client_name && <span className="text-slate-500"> · {c.client_name}</span>}<span className="block text-xs text-slate-500">{d.title}</span></Link>
+                                <Link href={`/kancelar/veci/${c.id}?tab=lhuty&from=dnes`} className="min-w-0 text-slate-800 hover:underline"><span className="font-semibold">{c.title}</span>{c.client_name && <span className="text-slate-500"> · {c.client_name}</span>}<span className="block text-xs text-slate-500">{d.title}{d.source === 'law' ? ' · vypočteno orientačně' : d.kind === 'lhuta' && !d.confirmed ? ' · nepotvrzeno' : ''}</span></Link>
                                 <span className={`text-xs font-bold ${deadlineTone(left, false)}`}>{d.date.toLocaleDateString('cs-CZ')} · {deadlineText(left)}</span>
                             </li>
                         ))}

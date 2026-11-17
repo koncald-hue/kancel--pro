@@ -31,7 +31,8 @@ export default function LawyerInvoiceEditor() {
     const [entries, setEntries] = useState<TimeEntry[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [payForm, setPayForm] = useState({ amount: '', date: todayIso(), note: '' });
-    const [picker, setPicker] = useState(false);
+    // ?vykazy=1 (z přehledu Dnes): výběr nevyúčtovaných výkazů se otevře hned
+    const [picker, setPicker] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vykazy') === '1');
     const [selected, setSelected] = useState<string[]>([]);
     const [priceId, setPriceId] = useState('');
     const [error, setError] = useState('');

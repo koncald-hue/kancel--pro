@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
@@ -44,13 +44,30 @@ export default function LawyerInvoices() {
         return () => { cancelled = true; };
     }, [load]);
 
-    async function create() {
+    async function create(caseId?: string) {
         setBusy(true);
-        const { data, error: err } = await supabase.from('invoices').insert({ user_id: userId, issue_date: todayIso() }).select('id').single();
+        // Vyúčtování konkrétní věci (z přehledu Dnes): předvyplní věc a klienta a rovnou nabídne nevyúčtované výkazy
+        let link: { case_id?: string; client_id?: string | null } = {};
+        if (caseId) {
+            const { data: c } = await supabase.from('cases').select('id, client_id').eq('id', caseId).maybeSingle();
+            if (c) link = { case_id: (c as { id: string }).id, client_id: (c as { client_id?: string | null }).client_id ?? null };
+        }
+        const { data, error: err } = await supabase.from('invoices').insert({ user_id: userId, issue_date: todayIso(), ...link }).select('id').single();
         setBusy(false);
         if (err) { setError(err.message); return; }
-        router.push(`/kancelar/faktury/${(data as { id: string }).id}`);
+        router.push(`/kancelar/faktury/${(data as { id: string }).id}${link.case_id ? '?vykazy=1' : ''}`);
     }
+    const started = useRef(false);
+    useEffect(() => {
+        const q = new URLSearchParams(window.location.search);
+        const caseId = q.get('case');
+        if (q.get('nove') !== '1' || !caseId || !/^[0-9a-f-]{36}$/i.test(caseId) || started.current) return;
+        started.current = true;
+        window.history.replaceState(null, '', window.location.pathname);
+        const t = window.setTimeout(() => { void create(caseId); }, 0);
+        return () => window.clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Zaškrtnutí „zaplaceno“: zapíše platbu na zbývající částku; odškrtnutí platby smaže
     async function togglePaid(r: Receivable) {

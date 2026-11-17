@@ -10,6 +10,8 @@ import { collectDeadlines, insertRow, type CaseEntry } from '@/lib/caseFile';
 import { daysUntil } from '@/lib/cases';
 import { inputCls, ghostBtn, type TabProps } from './caseUi';
 import AresPicker from '../lawyer/AresPicker';
+import Link from 'next/link';
+import { isCourt, parseFileNumber } from '@/lib/infosoud';
 import { upsertAresClient } from '@/lib/aresClients';
 
 // Chytré rady podle toho, co ve spisu chybí
@@ -80,6 +82,7 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
                     ))}
                     <datalist id="clients">{clients.map((c) => <option key={c.id} value={c.name} />)}</datalist>
                 </div>
+                {parseFileNumber(item.reference ?? '') && isCourt(item.authority ?? '') && <Link href="/kancelar/infosoud" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><Gavel size={13} aria-hidden="true" /> Zjistit průběh řízení v InfoSoudu</Link>}
             </section>}
 
             {item.summary && (

@@ -10,7 +10,7 @@ import { ghostBtn, inputCls } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 import AresPicker from './AresPicker';
 
-type Detail = { company: AresCompany | null; form: string; founded: string; vr: RegisterVr | null; rzp: RegisterRzp | null };
+type Detail = { company: AresCompany | null; form: string; formName?: string; founded: string; vr: RegisterVr | null; rzp: RegisterRzp | null };
 const czk = (n: number) => `${Math.round(n).toLocaleString('cs-CZ')} Kč`;
 
 function Card({ title, icon: Icon, children, link }: { title: string; icon: typeof Scale; children: React.ReactNode; link?: { href: string; label: string } }) {
@@ -77,7 +77,7 @@ export default function LawyerRegisters() {
                         </div>
                         <dl className="mt-3 divide-y divide-slate-100/80">
                             <Row k="Sídlo" v={co?.address ?? pick.address} />
-                            <Row k="Právní forma" v={detail.form ? FORMS[detail.form] ?? `kód ${detail.form}` : ''} />
+                            <Row k="Právní forma" v={detail.formName || (detail.form ? FORMS[detail.form] ?? `kód ${detail.form}` : '')} />
                             <Row k="Vznik" v={dmy(detail.founded || vr?.founded || '')} />
                         </dl>
                         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -110,11 +110,12 @@ export default function LawyerRegisters() {
                         {!rzp ? <p className="text-sm text-slate-500">Subjekt nemá záznam v živnostenském rejstříku.</p> : (
                             <div className="space-y-4">
                                 <p className="text-sm text-slate-700"><strong>{rzp.active}</strong> platných živností{rzp.ended ? `, ${rzp.ended} zaniklých` : ''}{rzp.suspended ? `, ${rzp.suspended} pozastavených` : ''}{rzp.offices !== null ? ` · provozoven: ${rzp.offices}` : ''}</p>
+                                <p className="text-xs text-slate-500">Data přebíráme z ARES beze změny{rzp.updated ? `, záznam živnostenského rejstříku naposledy aktualizován ${dmy(rzp.updated)}` : ''}. Pokud datum nesedí, rozhoduje veřejná část Živnostenského rejstříku (rzp.gov.cz), kam vede odkaz Detail v ARES.</p>
                                 <ul className="space-y-2">
                                     {rzp.trades.filter((t) => !t.ended).map((t, i) => (
                                         <li key={`${t.name}-${i}`} className="rounded-xl border border-slate-200 p-3 text-sm">
                                             <p className="font-semibold text-slate-900">{t.name}</p>
-                                            <p className="mt-0.5 text-xs text-slate-500">{t.type ? `${t.type} živnost · ` : ''}vznik {dmy(t.since)}{t.reps.length ? ` · odpovědný zástupce: ${t.reps.join(', ')}` : ''}</p>
+                                            <p className="mt-0.5 text-xs text-slate-500">{t.type ? `${t.type} živnost · ` : ''}oprávnění od {dmy(t.since)}{t.reps.length ? ` · odpovědný zástupce: ${t.reps.join(', ')}` : ''}</p>
                                             {t.fields.length > 0 && <details className="mt-1.5"><summary className="cursor-pointer text-xs font-semibold text-indigo-800">Obory činnosti ({t.fields.length})</summary><ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-slate-600">{t.fields.map((f, k) => <li key={k}>{f}</li>)}</ul></details>}
                                         </li>
                                     ))}

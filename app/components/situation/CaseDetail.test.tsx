@@ -8,7 +8,10 @@ vi.mock('next/navigation', () => ({ usePathname: () => '/moje-pripady/c1', useRo
 vi.mock('../site/AuthContext', () => ({ useAuth: () => ({ account: { id: 'u1' }, authReady: true, isStaff: false, openLogin: vi.fn(), logout: vi.fn() }) }));
 vi.mock('../shop/RelatedDocuments', () => ({ default: () => null }));
 vi.mock('@/lib/lawyer', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/lib/lawyer')>()), useLawyerAccess: () => ({ loading: false, access: null, error: '' }) }));
-vi.mock('@/lib/supabase', () => ({ supabase: { from: () => { const c: Record<string, unknown> = new Proxy({}, { get: (_t, prop) => (prop === 'then' ? (r: (v: unknown) => unknown) => Promise.resolve({ count: 0, data: [], error: null }).then(r) : () => c) }); return c; } } }));
+vi.mock('@/lib/supabase', () => ({ supabase: {
+    auth: { getSession: async () => ({ data: { session: null } }) },
+    from: () => { const c: Record<string, unknown> = new Proxy({}, { get: (_t, prop) => (prop === 'then' ? (r: (v: unknown) => unknown) => Promise.resolve({ count: 0, data: [], error: null }).then(r) : () => c) }); return c; },
+} }));
 
 const today = new Date();
 const iso = (offset: number) => { const d = new Date(today); d.setDate(d.getDate() + offset); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };

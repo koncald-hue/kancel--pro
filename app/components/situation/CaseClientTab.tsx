@@ -10,8 +10,9 @@ import { useMasterKey } from '@/lib/useE2ee';
 import type { LawyerAccess } from '@/lib/lawyer';
 import E2eeBox from './E2eeBox';
 import { ghostBtn, inputCls, primaryBtn, shortDate, type TabProps } from './caseUi';
+import PortalAccessCard from './PortalAccessCard';
 
-type Link = { id: string; token: string; label: string; status_text: string; expires_at: string | null; revoked: boolean; opens: number; last_opened_at: string | null; client_name?: string; client_email?: string; client_phone?: string; client_address?: string; consent_at?: string | null; onboarded_at?: string | null; e2ee?: boolean; wrapped_key?: string | null; client_verified_at?: string | null };
+type Link = { second_factor?: 'none' | 'email'; code_email?: string; id: string; token: string; label: string; status_text: string; expires_at: string | null; revoked: boolean; opens: number; last_opened_at: string | null; client_name?: string; client_email?: string; client_phone?: string; client_address?: string; consent_at?: string | null; onboarded_at?: string | null; e2ee?: boolean; wrapped_key?: string | null; client_verified_at?: string | null };
 type Request = { id: string; title: string; done: boolean };
 type Message = { id: string; from_client: boolean; body: string; read: boolean; created_at: string };
 
@@ -257,6 +258,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
 
             {link && active && (
                 <>
+                    <PortalAccessCard linkId={link.id} factor={link.second_factor} codeEmail={link.code_email} suggestedEmail={item.client_email || link.client_email || ''} onChange={(c) => patchLink(c)} />
                     <section className="rounded-2xl border border-slate-200 bg-white p-5">
                         <h3 className="text-sm font-semibold text-slate-900">Aktuální stav pro klienta</h3>
                         <textarea value={status} onChange={(e) => setStatus(e.target.value)} onBlur={() => { if (status !== link.status_text) void patchLink({ status_text: status.trim().slice(0, 400) }); }} rows={2} maxLength={400} placeholder="Jednou větou: co se s věcí děje" className={`${inputCls} mt-2`} aria-label="Aktuální stav pro klienta" />

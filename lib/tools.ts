@@ -3,13 +3,14 @@
 export type Tool = { id: string; name: string; href: string; desc: string; words: string[] };
 
 export const TOOLS: Tool[] = [
-    { id: 'prehled', name: 'Přehled', href: '/kancelar', desc: 'Nejbližší lhůty, práce k zapsání, radar a právní novinky.', words: ['dashboard', 'dnes', 'novinky', 'zmeny zakonu', 'nastenka', 'uvod', 'lhuty dnes'] },
+    { id: 'prehled', name: 'Dnes (přehled)', href: '/kancelar', desc: 'Co je nové k vyřízení, úkoly a lhůty, na co se čeká u klienta, nevyúčtovaný čas, radar a právní novinky.', words: ['prehled', 'dashboard', 'dnes', 'ukoly', 'co mam delat', 'novinky', 'zmeny zakonu', 'nastenka', 'uvod', 'lhuty dnes', 'ceka na klienta', 'nevyuctovano'] },
     { id: 'veci', name: 'Věci', href: '/kancelar/veci', desc: 'Spisy: soubory, lhůty, chronologie, kontakty, klientská stránka.', words: ['spis', 'kauza', 'pripad', 'nova vec', 'zalozit vec', 'lhuty', 'chronologie'] },
     { id: 'klienti', name: 'Klienti', href: '/kancelar/klienti', desc: 'Adresář klientů, jejich věci, výkazy a insolvenční stav.', words: ['klient', 'zakaznik', 'adresar', 'kontakt', 'novy klient'] },
     { id: 'email', name: 'E-mail', href: '/kancelar/email', desc: 'Čtení a psaní e-mailů, ukládání zpráv a příloh do věcí.', words: ['mail', 'posta', 'gmail', 'seznam', 'odpovedet', 'priloha', 'schranka'] },
     { id: 'schranka', name: 'Datové schránky', href: '/kancelar/schranka', desc: 'Datové zprávy, odeslání podání, lhůty z rozhodnutí.', words: ['datovka', 'isds', 'datova zprava', 'podani', 'odeslat podani', 'soud', 'dorucene', 'mobilni klic'] },
     { id: 'katastr', name: 'Katastr nemovitostí', href: '/kancelar/katastr', desc: 'Parcely a stavby na mapě i podle čísla, údaje o nemovitosti.', words: ['nemovitost', 'pozemek', 'parcela', 'budova', 'list vlastnictvi', 'lv', 'vlastnik', 'cuzk', 'mapa', 'stavba'] },
     { id: 'rejstriky', name: 'Rejstříky (obchodní a živnostenský)', href: '/kancelar/rejstriky', desc: 'Kdo firmu zastupuje, společníci, kapitál, sídlo a živnosti z ARES.', words: ['firma', 'ico', 'jednatel', 'statutar', 'obchodni rejstrik', 'zivnostensky', 'zivnost', 'spolecnik', 'ares', 'sidlo', 'kapital', 'or', 'podnikatel'] },
+    { id: 'infosoud', name: 'Soudní řízení (InfoSoud)', href: '/kancelar/infosoud', desc: 'Spisové značky věcí připravené pro vyhledání průběhu řízení v InfoSoudu.', words: ['infosoud', 'info soud', 'soud', 'soudni rizeni', 'prubeh rizeni', 'jednani', 'spisova znacka', 'stav rizeni', 'odvolani'] },
     { id: 'insolvence', name: 'Insolvence', href: '/kancelar/insolvence', desc: 'Hlídání osob a firem v insolvenčním rejstříku.', words: ['upadek', 'dluznik', 'isir', 'konkurz', 'oddluzeni', 'prihlaska pohledavky', 'hlidani'] },
     { id: 'poptavky', name: 'Poptávky', href: '/kancelar/poptavky', desc: 'Dotazy nových klientů z formuláře kanceláře.', words: ['novy klient', 'dotaz', 'formular', 'prijmout', 'odmitnout'] },
     { id: 'knihovna', name: 'Knihovna vzorů', href: '/kancelar/knihovna', desc: 'Smlouvy, plné moci, výzvy a podání s vyplněnými poli, výstup do Wordu.', words: ['vzor', 'sablona', 'smlouva', 'plna moc', 'dokument', 'word', 'vyzva', 'predzalobni', 'formular'] },

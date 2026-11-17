@@ -88,7 +88,7 @@ export default function KatastrMap({ call, onParcel, busy, focus }: { call: Call
     }
 
     return (
-        <div className="space-y-3">
+        <div className="isolate space-y-3">
             <div className="relative flex gap-2">
                 <label className="sr-only" htmlFor="map-address">Adresa</label>
                 <input id="map-address" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void find(); } }} placeholder="Adresa, např. náměstí Míru 21, Hustopeče nad Bečvou" className={inputCls} />

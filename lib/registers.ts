@@ -24,7 +24,7 @@ export type Member = { name: string; role: string; since: string };
 export type Organ = { name: string; rules: string; members: Member[] };
 export type RegisterVr = { court: string; capital: { amount: number | null; paid: string } | null; organs: Organ[]; partners: { name: string; share: string }[]; shareholders: string[]; activities: string[]; state: string; founded: string; updated: string };
 export type Trade = { name: string; type: string; since: string; ended: string; fields: string[]; reps: string[] };
-export type RegisterRzp = { active: number; ended: number; suspended: number; trades: Trade[]; offices: number | null };
+export type RegisterRzp = { active: number; ended: number; suspended: number; trades: Trade[]; offices: number | null; updated?: string };
 
 function members(list: unknown): Member[] {
     return cur(list).map((m) => {
@@ -54,7 +54,7 @@ export function normalizeRzp(json: unknown): RegisterRzp | null {
         fields: arr(z.oboryCinnosti).map((o) => str(o.oborNazev)).filter(Boolean),
         reps: arr(z.odpovedniZastupci).filter((r) => !r.platnostDo).map((r) => [str(r.titulPredJmenem), nice(str(r.jmeno)), nice(str(r.prijmeni))].filter(Boolean).join(' ')).filter(Boolean),
     })).filter((t) => t.name);
-    return { active: Number(st.pocetAktivnich ?? trades.filter((t) => !t.ended).length), ended: Number(st.pocetZaniklych ?? trades.filter((t) => t.ended).length), suspended: Number(st.pocetPozastavenych ?? 0), trades, offices: pv.pocetAktivnich !== undefined ? Number(pv.pocetAktivnich) : null };
+    return { active: Number(st.pocetAktivnich ?? trades.filter((t) => !t.ended).length), ended: Number(st.pocetZaniklych ?? trades.filter((t) => t.ended).length), suspended: Number(st.pocetPozastavenych ?? 0), trades, offices: pv.pocetAktivnich !== undefined ? Number(pv.pocetAktivnich) : null, updated: str(rec.datumAktualizace) };
 }
 
 export const orUrl = (ico: string) => `https://or.justice.cz/ias/ui/rejstrik-$firma?ico=${encodeURIComponent(ico)}`;

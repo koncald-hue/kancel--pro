@@ -3,21 +3,25 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X } from 'lucide-react';
+import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
+import E2eeLockNotice from './E2eeLockNotice';
 import DataBoxLauncher from './DataBoxLauncher';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
 
-export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'nastaveni';
+export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
 
 // Nástroje jsou seskupené podle toho, k čemu slouží
 const GROUPS: { title: string; items: Item[] }[] = [
-    { title: '', items: [['prehled', '/kancelar', 'Přehled', LayoutDashboard]] },
-    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['email', '/kancelar/email', 'E-mail', Mail], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['knihovna', '/kancelar/knihovna', 'Knihovna', Library]] },
+    // „Dnes“ je pracovní plocha (adresa /kancelar zůstává)
+    { title: '', items: [['prehled', '/kancelar', 'Dnes', LayoutDashboard]] },
+    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['email', '/kancelar/email', 'E-mail', Mail]] },
+    // Odborné a méně časté nástroje
+    { title: 'Nástroje', items: [['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel]] },
     { title: 'Peníze', items: [['penize', '/kancelar/penize', 'Peníze', Wallet]] },
     { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound], ['import', '/kancelar/import', 'Import dat', FileUp]] },
 ];
@@ -132,6 +136,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900">{current?.[2]}</h1>
                         <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat v celé kanceláři" className="flex w-72 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-left text-sm text-slate-500 shadow-xs hover:border-indigo-300 cursor-pointer"><Search size={15} aria-hidden="true" /><span className="flex-1">Hledat…</span><kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-500">Ctrl/⌘ K</kbd></button>
                     </div>
+                    <E2eeLockNotice />
                     {locked && (
                         <div role="status" className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
                             <Lock size={18} className="shrink-0" aria-hidden="true" />

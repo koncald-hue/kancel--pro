@@ -22,7 +22,11 @@ export default function LawyerTimesheet() {
     const [error, setError] = useState('');
     const [services, setServices] = useState<PriceItem[]>([]);
     const [filter, setFilter] = useState<'open' | 'all'>('open');
-    const [form, setForm] = useState({ caseId: '', date: today(), duration: '', description: '', rate: '' });
+    // Z přehledu Dnes nebo z věci lze přijít s předvyplněnou věcí a popisem (?case=…&popis=…)
+    const [form, setForm] = useState(() => {
+        const q = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search);
+        return { caseId: q?.get('case')?.slice(0, 40) ?? '', date: today(), duration: '', description: q?.get('popis')?.slice(0, 500) ?? '', rate: '' };
+    });
     // Stopky se obnoví z úložiště prohlížeče (přežijí obnovení stránky)
     const [timer, setTimer] = useState<{ caseId: string; startedAt: number } | null>(() => { try { const saved = JSON.parse(localStorage.getItem(TIMER_KEY) ?? 'null'); return saved?.startedAt ? saved : null; } catch { return null; } });
     const [now, setNow] = useState(0);

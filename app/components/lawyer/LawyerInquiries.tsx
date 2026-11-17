@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, Check, Copy, Eye, FileText, Lock, Mail, MessageSquare, Paperclip, Phone, X } from 'lucide-react';
+import { AlertTriangle, Check, Clock3, Copy, Eye, FileText, Link2, ListTodo, Lock, Mail, MessageSquare, Paperclip, Phone, X } from 'lucide-react';
+import DeadlineDialog, { type DeadlineTarget } from '../situation/DeadlineDialog';
 import { supabase } from '@/lib/supabase';
 import { createCase, BLANK_CASE, loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient } from '@/lib/lawyer';
@@ -10,12 +11,28 @@ import { generateKey, wrapKey, linkWithKey, exportKey } from '@/lib/e2ee';
 import { generateToken, portalUrl } from '@/lib/portal';
 import { useMasterKey } from '@/lib/useE2ee';
 import { formatSize, insertRow, safeFileName } from '@/lib/caseFile';
+import { inputCls } from '../situation/caseUi';
 import { ghostBtn, primaryBtn, shortDate } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
 type Inquiry = { id: string; name: string; email: string; phone: string; message: string; status: 'new' | 'accepted' | 'declined'; created_at: string; case_id?: string | null };
 type InquiryFile = { id: string; inquiry_id: string; name: string; path: string; size: number; mime: string };
 type Invite = { caseId: string; url: string; secure: boolean };
+
+// Další kroky po přijetí poptávky: podklady od klienta, úkol, čas. Vede do existujících funkcí věci.
+function NextSteps({ caseId, onTask, taskCreated }: { caseId: string; onTask: () => void; taskCreated: boolean }) {
+    return (
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Další krok</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+                <Link href={`/kancelar/veci/${caseId}?tab=klient&from=dnes`} className={ghostBtn}><Link2 size={15} /> Požádat klienta o podklady</Link>
+                <button type="button" onClick={onTask} className={ghostBtn}><ListTodo size={15} /> {taskCreated ? 'Úkol vytvořen · další' : 'Vytvořit úkol nebo lhůtu'}</button>
+                <Link href={`/kancelar/vykazy?case=${caseId}&popis=${encodeURIComponent('Posouzení poptávky')}`} className={ghostBtn}><Clock3 size={15} /> Zapsat čas</Link>
+                <Link href={`/kancelar/veci/${caseId}?from=dnes`} className={ghostBtn}>Otevřít věc</Link>
+            </div>
+        </div>
+    );
+}
 
 export default function LawyerInquiries() {
     const { userId } = useLawyer();
@@ -25,7 +42,11 @@ export default function LawyerInquiries() {
     const [error, setError] = useState('');
     const [accepted, setAccepted] = useState<Record<string, Invite>>({});
     const [copied, setCopied] = useState('');
-    const [openId, setOpenId] = useState<string | null>(null);
+    // ?open=<id> (z přehledu Dnes) rovnou otevře poptávku
+    const [openId, setOpenId] = useState<string | null>(() => { const v = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('open'); return v && /^[0-9a-f-]{36}$/i.test(v) ? v : null; });
+    const [target, setTarget] = useState('');
+    const [task, setTask] = useState<DeadlineTarget | null>(null);
+    const [taskDone, setTaskDone] = useState<Record<string, boolean>>({});
     const [files, setFiles] = useState<InquiryFile[]>([]);
     const master = useMasterKey();
 
@@ -55,24 +76,7 @@ export default function LawyerInquiries() {
             if (stErr) throw new Error(stErr.message);
             await supabase.from('lawyer_inquiries').update({ case_id: created.id }).eq('id', q.id); // vyžaduje poptavky-propojeni.sql
             setItems((list) => list.map((x) => (x.id === q.id ? { ...x, status: 'accepted', case_id: created.id } : x)));
-            // Přílohy se do spisu přenesou až teď, po přijetí
-            const mine = files.filter((f) => f.inquiry_id === q.id);
-            const failed: string[] = [];
-            for (const f of mine) {
-                try {
-                    const { data: blob, error: dl } = await supabase.storage.from('inquiry-files').download(f.path);
-                    if (dl || !blob) throw new Error(dl?.message ?? 'download');
-                    const path = `${userId}/${created.id}/${crypto.randomUUID()}-${safeFileName(f.name)}`;
-                    const up = await supabase.storage.from('case-files').upload(path, blob, { contentType: f.mime || undefined });
-                    if (up.error) throw new Error(up.error.message);
-                    try { await insertRow('case_files', { case_id: created.id, user_id: userId, name: f.name, path, size: f.size, mime: f.mime, source: 'client', client_visible: false }); }
-                    catch (e) { await supabase.storage.from('case-files').remove([path]); throw e; }
-                    await supabase.from('inquiry_files').delete().eq('id', f.id);
-                    await supabase.storage.from('inquiry-files').remove([f.path]);
-                } catch { failed.push(f.name); }
-            }
-            setFiles((list) => list.filter((f) => f.inquiry_id !== q.id || failed.includes(f.name)));
-            if (failed.length) setError(`Do spisu se nepodařilo přenést: ${failed.join(', ')}. Zůstaly v poptávce, zkuste je stáhnout a nahrát ručně.`);
+            await moveFiles(q, created.id);
             const { data: fresh } = await supabase.from('lawyer_clients').select('*');
             if (fresh) setClients(fresh as LawyerClient[]);
 
@@ -86,6 +90,41 @@ export default function LawyerInquiries() {
             const url = k ? linkWithKey(base, await exportKey(k)) : base;
             setAccepted((a) => ({ ...a, [q.id]: { caseId: created.id, url, secure: !!k } }));
         } catch (err) { setError(err instanceof Error ? `Poptávku se nepodařilo přijmout: ${err.message}` : 'Poptávku se nepodařilo přijmout.'); }
+    }
+
+    // Přílohy poptávky se do spisu přenesou až po přijetí (nebo přiřazení k věci)
+    async function moveFiles(q: Inquiry, caseId: string) {
+        const mine = files.filter((f) => f.inquiry_id === q.id);
+        const failed: string[] = [];
+        for (const f of mine) {
+            try {
+                const { data: blob, error: dl } = await supabase.storage.from('inquiry-files').download(f.path);
+                if (dl || !blob) throw new Error(dl?.message ?? 'download');
+                const path = `${userId}/${caseId}/${crypto.randomUUID()}-${safeFileName(f.name)}`;
+                const up = await supabase.storage.from('case-files').upload(path, blob, { contentType: f.mime || undefined });
+                if (up.error) throw new Error(up.error.message);
+                try { await insertRow('case_files', { case_id: caseId, user_id: userId, name: f.name, path, size: f.size, mime: f.mime, source: 'client', client_visible: false }); }
+                catch (e) { await supabase.storage.from('case-files').remove([path]); throw e; }
+                await supabase.from('inquiry_files').delete().eq('id', f.id);
+                await supabase.storage.from('inquiry-files').remove([f.path]);
+            } catch { failed.push(f.name); }
+        }
+        setFiles((list) => list.filter((f) => f.inquiry_id !== q.id || failed.includes(f.name)));
+        if (failed.length) setError(`Do spisu se nepodařilo přenést: ${failed.join(', ')}. Zůstaly v poptávce, zkuste je stáhnout a nahrát ručně.`);
+    }
+
+    // Přiřazení k věci, kterou už v kanceláři vedete (např. další dotaz stávajícího klienta)
+    async function assign(q: Inquiry, caseId: string) {
+        setError('');
+        const c = cases.find((x) => x.id === caseId);
+        if (!c) return;
+        const { error: e1 } = await supabase.from('lawyer_inquiries').update({ status: 'accepted', case_id: caseId }).eq('id', q.id);
+        if (e1) { setError(`Poptávku se nepodařilo přiřadit: ${e1.message}`); return; }
+        setItems((list) => list.map((x) => (x.id === q.id ? { ...x, status: 'accepted', case_id: caseId } : x)));
+        // Text poptávky se uloží do chronologie věci, aby nezůstal jen v poptávkách
+        try { await insertRow('case_entries', { case_id: caseId, user_id: userId, kind: 'note', title: `Poptávka: ${q.name}`.slice(0, 200), body: [q.message, [q.email, q.phone].filter(Boolean).join(', ')].filter(Boolean).join('\n\n').slice(0, 5000), happened_on: q.created_at.slice(0, 10) }); } catch { /* chronologie není kritická */ }
+        await moveFiles(q, caseId);
+        setTarget('');
     }
 
     const inviteText = (q: Inquiry, url: string) => `Dobrý den, ${q.name},\n\nděkuji za vaši poptávku. Věc jsem převzal(a). Na tomto zabezpečeném odkazu mi můžete psát, posílat dokumenty a uvidíte stav věci:\n\n${url}\n\nOdkaz je osobní, nikomu ho prosím nepředávejte.`;
@@ -149,6 +188,7 @@ export default function LawyerInquiries() {
                             {q.email && <a href={`mailto:${q.email}?subject=${encodeURIComponent('Vaše věc – zabezpečený odkaz')}&body=${encodeURIComponent(inviteText(q, inv.url))}`} className={ghostBtn}><Mail size={15} /> Otevřít e-mail</a>}
                             <Link href={`/kancelar/veci/${inv.caseId}`} className={ghostBtn}>Otevřít věc</Link>
                         </div>
+                        <NextSteps caseId={inv.caseId} taskCreated={!!taskDone[id]} onTask={() => setTask({ caseId: inv.caseId, caseTitle: q.name, title: `Vyřídit: ${q.name}`, inquiryId: q.id, kind: 'ukol' })} />
                         <p className="mt-2 text-[11px] text-slate-500">Odkaz zůstává i ve věci v záložce Klient. Tady se ukazuje jen teď, protože klíč se po opuštění stránky už nezobrazí.</p>
                     </section>
                 );
@@ -161,6 +201,7 @@ export default function LawyerInquiries() {
                     </ul>
                 </div>
             )}
+            {task && <DeadlineDialog target={task} userId={userId} onClose={() => setTask(null)} onSaved={() => { if (task.inquiryId) setTaskDone((t) => ({ ...t, [task.inquiryId!]: true })); setTask(null); }} />}
             {opened && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-900/40 p-4 sm:items-center" onClick={() => setOpenId(null)}>
                     <div role="dialog" aria-modal="true" aria-label={`Poptávka: ${opened.name}`} onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
@@ -179,7 +220,18 @@ export default function LawyerInquiries() {
                         )}
                         {conflicts(opened).length > 0 && <p className="mt-4 flex items-start gap-2 rounded-lg bg-rose-50 p-2.5 text-xs font-semibold text-rose-900"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Možný střet zájmů nebo stávající klient: {conflicts(opened).join(', ')}.</p>}
                         {opened.status === 'new' && <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => { setOpenId(null); void accept(opened); }} className={primaryBtn}><Check size={16} /> Přijmout jako věc</button><button type="button" onClick={() => { setOpenId(null); void decline(opened); }} className={ghostBtn}><X size={15} /> Odmítnout</button></div>}
-                        {opened.status === 'accepted' && (opened.case_id ?? accepted[opened.id]?.caseId) && <div className="mt-5"><Link href={`/kancelar/veci/${opened.case_id ?? accepted[opened.id]?.caseId}`} className={ghostBtn}>Otevřít věc</Link></div>}
+                        {opened.status === 'accepted' && (opened.case_id ?? accepted[opened.id]?.caseId) && <NextSteps caseId={(opened.case_id ?? accepted[opened.id]?.caseId)!} taskCreated={!!taskDone[opened.id]} onTask={() => setTask({ caseId: (opened.case_id ?? accepted[opened.id]?.caseId)!, caseTitle: opened.name, title: `Vyřídit: ${opened.name}`, inquiryId: opened.id, kind: 'ukol' })} />}
+                        {(opened.status === 'new' || (opened.status === 'accepted' && !(opened.case_id ?? accepted[opened.id]?.caseId))) && cases.some((c) => c.status === 'open') && (
+                            <form onSubmit={(e) => { e.preventDefault(); if (target) { void assign(opened, target); } }} className="mt-4 flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <label className="min-w-0 flex-1 text-sm font-semibold text-slate-800">{opened.status === 'new' ? 'Nebo přiřadit k věci, kterou už vedete' : 'Přiřadit k věci'}
+                                    <select value={target} onChange={(e) => setTarget(e.target.value)} className={`${inputCls} mt-1`}>
+                                        <option value="">Vyberte věc…</option>
+                                        {cases.filter((c) => c.status === 'open').map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}
+                                    </select>
+                                </label>
+                                <button type="submit" disabled={!target} className={ghostBtn}>Přiřadit</button>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}

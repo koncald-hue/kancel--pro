@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CalendarClock, Check, FileSearch, Loader2, Plus, ShieldAlert, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { insertRow } from '@/lib/caseFile';
+import { insertConfirmedDeadline, insertRow } from '@/lib/caseFile';
 import type { LegalCase } from '@/lib/cases';
 import { saveMessageToCase } from '@/lib/dataMessages';
 import { scheduleGoogleSync } from '@/lib/googleSync';
@@ -85,7 +85,8 @@ export default function DeadlinesFromMessage({ record, msg, downloadedNow, cases
                 const deliveryNote = r.c.kind === 'absolutni' ? `Konec lhůty určuje rozhodnutí (${czDate(e.event)}).` : r.c.trigger === 'doruceni' && !r.event ? `${delivery.explanation}${changed ? ' Datum doručení bylo upraveno ručně.' : ''}` : `Počátek lhůty (${TRIGGER_LABELS[r.c.trigger]}) zadán ručně: ${czDate(e.event)}.`;
                 const basis = r.c.kind === 'absolutni' ? `${deliveryNote}${e.shiftedFrom ? ` Den ${czDate(e.raw)} je nepracovní (${e.reasons.join('; ')}), posledním dnem je ${czDate(e.end)}.` : ''} Doporučeno podat nejpozději ${czDate(e.internal)}.` : explain(e, n, r.unit, deliveryNote);
                 const title = `${r.title.trim() || 'Lhůta'}${r.c.kind === 'absolutni' ? '' : ` (${unitText(n, r.unit)})`} – datová zpráva`.slice(0, 120);
-                try { await insertRow('case_deadlines', { case_id: caseId, user_id: userId, title, due_date: e.end, basis: basis.slice(0, 1500), quote: r.c.quote.slice(0, 1500), source_dm: record.id, internal_date: e.internal }); saved += 1; }
+                // advokát data výslovně potvrdil zaškrtnutím níže
+                try { await insertConfirmedDeadline({ case_id: caseId, user_id: userId, title, due_date: e.end, basis: basis.slice(0, 1500), quote: r.c.quote.slice(0, 1500), source_dm: record.id, internal_date: e.internal }); saved += 1; }
                 catch (err) { if (err instanceof Error && /duplicate|unique|23505/i.test(err.message)) dup += 1; else throw err; }
             }
             if (saved) { try { await insertRow('case_entries', { case_id: caseId, user_id: userId, kind: 'event', title: `Lhůty z datové zprávy: ${record.annotation || 'bez věci'}`.slice(0, 200), body: computed.map(({ r, e }) => `${r.title}: ${e ? czDate(e.end) : ''}`).join('; ').slice(0, 900), happened_on: today }); } catch { /* chronologie není kritická */ } }

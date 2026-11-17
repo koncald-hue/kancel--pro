@@ -30,6 +30,7 @@ import { loadShare, ROLE_LABEL, type ShareRole, type ShareRow } from '@/lib/case
 import { ghostBtn, type TabProps } from './caseUi';
 
 type TabId = 'prehled' | 'katastr' | 'obrana' | 'klient' | 'soubory' | 'lhuty' | 'chronologie' | 'kontakty' | 'datovky' | 'resers' | 'finance' | 'podpisy' | 'identifikace';
+const TAB_IDS: TabId[] = ['prehled', 'katastr', 'obrana', 'klient', 'soubory', 'lhuty', 'chronologie', 'kontakty', 'datovky', 'resers', 'finance', 'podpisy', 'identifikace'];
 
 export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen' | 'office' }) {
     const isOffice = variant === 'office';
@@ -45,7 +46,12 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
     const isLawyer = isStaff || hasLawyerAccess(lawyer.access);
     const [item, setItem] = useState<LegalCase | null>(null);
     const [bundle, setBundleState] = useState<CaseBundle | null>(null);
-    const [tab, setTab] = useState<TabId>('prehled');
+    // Odkaz může otevřít rovnou konkrétní záložku (?tab=lhuty) a říct, odkud uživatel přišel (?from=dnes)
+    const [tab, setTab] = useState<TabId>(() => {
+        const t = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('tab');
+        return t && TAB_IDS.includes(t as TabId) ? (t as TabId) : 'prehled';
+    });
+    const [fromToday] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('from') === 'dnes');
     const [lastTab, setLastTab] = useState<Record<string, TabId>>({});
     const [error, setError] = useState('');
     const [missing, setMissing] = useState(false);
@@ -152,11 +158,13 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
         { id: 'penize', label: 'Peníze', icon: Wallet, items: [T.finance] },
     ] : [T.prehled, T.obrana, T.soubory, T.lhuty, T.chronologie, T.kontakty].map((t) => ({ id: t.id, label: t.label, icon: t.icon, items: [t], count: t.count }));
     const activeGroup = groups.find((g) => g.items.some((i) => i.id === tab)) ?? groups[0];
+    // Záložka, která uživateli nepatří (např. z odkazu), se nevykreslí; ukáže se první povolená
+    const shown: TabId = activeGroup.items.some((i) => i.id === tab) ? tab : activeGroup.items[0].id;
     const tabProps: TabProps = { item, bundle, userId: account.id, lawyer: isLawyer, patchItem, setBundle, fail };
 
     return (
         <div className={isOffice ? '' : 'max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12'}>
-            <Link href={listPath} className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-800 hover:underline"><ArrowLeft size={15} /> {isOffice ? 'Věci' : 'Moje případy'}</Link>
+            <Link href={isOffice && fromToday ? '/kancelar' : listPath} className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-800 hover:underline"><ArrowLeft size={15} /> {isOffice ? (fromToday ? 'Dnes' : 'Věci') : 'Moje případy'}</Link>
 
             <header className="mt-3 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -203,27 +211,27 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
             {activeGroup.items.length > 1 && (
                 <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label={activeGroup.label}>
                     {activeGroup.items.map(({ id, label, icon: Icon, count }) => (
-                        <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => { setTab(id); setLastTab((l) => ({ ...l, [activeGroup.id]: id })); }} className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold cursor-pointer ${tab === id ? 'border-indigo-800 bg-indigo-800 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
-                            <Icon size={14} aria-hidden="true" /> {label}{count ? <span className={`rounded-full px-1.5 text-[11px] ${tab === id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>{count}</span> : null}
+                        <button key={id} type="button" role="tab" aria-selected={shown === id} onClick={() => { setTab(id); setLastTab((l) => ({ ...l, [activeGroup.id]: id })); }} className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold cursor-pointer ${shown === id ? 'border-indigo-800 bg-indigo-800 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}>
+                            <Icon size={14} aria-hidden="true" /> {label}{count ? <span className={`rounded-full px-1.5 text-[11px] ${shown === id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>{count}</span> : null}
                         </button>
                     ))}
                 </div>
             )}
 
             <div className="mt-5" role="tabpanel">
-                {tab === 'prehled' && <CaseOverviewTab {...tabProps} />}
-                {tab === 'katastr' && <CaseKatastrTab {...tabProps} />}
-                {tab === 'datovky' && <CaseDataMessagesTab {...tabProps} />}
-                {tab === 'resers' && <CaseResearchTab {...tabProps} />}
-                {tab === 'finance' && <CaseFinanceTab {...tabProps} />}
-                {tab === 'podpisy' && <CaseSignTab {...tabProps} />}
-                {tab === 'identifikace' && <CaseIdentityTab {...tabProps} />}
-                {tab === 'obrana' && <CaseDefenseTab {...tabProps} />}
-                {tab === 'soubory' && <CaseFilesTab {...tabProps} />}
-                {tab === 'lhuty' && <CaseDeadlinesTab {...tabProps} />}
-                {tab === 'chronologie' && <CaseTimelineTab {...tabProps} />}
-                {tab === 'klient' && <CaseClientTab {...tabProps} verified={isStaff || lawyer.access?.verification_status === 'verified'} access={lawyer.access} refreshAccess={() => setLawyerVersion((v) => v + 1)} />}
-                {tab === 'kontakty' && <CaseContactsTab {...tabProps} />}
+                {shown === 'prehled' && <CaseOverviewTab {...tabProps} />}
+                {shown === 'katastr' && <CaseKatastrTab {...tabProps} />}
+                {shown === 'datovky' && <CaseDataMessagesTab {...tabProps} />}
+                {shown === 'resers' && <CaseResearchTab {...tabProps} />}
+                {shown === 'finance' && <CaseFinanceTab {...tabProps} />}
+                {shown === 'podpisy' && <CaseSignTab {...tabProps} />}
+                {shown === 'identifikace' && <CaseIdentityTab {...tabProps} />}
+                {shown === 'obrana' && <CaseDefenseTab {...tabProps} />}
+                {shown === 'soubory' && <CaseFilesTab {...tabProps} />}
+                {shown === 'lhuty' && <CaseDeadlinesTab {...tabProps} />}
+                {shown === 'chronologie' && <CaseTimelineTab {...tabProps} />}
+                {shown === 'klient' && <CaseClientTab {...tabProps} verified={isStaff || lawyer.access?.verification_status === 'verified'} access={lawyer.access} refreshAccess={() => setLawyerVersion((v) => v + 1)} />}
+                {shown === 'kontakty' && <CaseContactsTab {...tabProps} />}
             </div>
 
             <footer className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-5">
