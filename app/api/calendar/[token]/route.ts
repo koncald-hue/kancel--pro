@@ -18,8 +18,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
     if (!feed) return new NextResponse('Not found', { status: 404 });
     const uid = feed.user_id as string;
     // Funguje jen s platným přístupem advokáta
+    // (has_lawyer_access kontroluje provozovatele podle přihlášeného uživatele, který tu není, proto se staff čte zvlášť)
     const { data: ok } = await db.rpc('has_lawyer_access', { p_user: uid });
-    if (ok !== true) return new NextResponse('Not found', { status: 404 });
+    const { data: staff } = ok === true ? { data: null } : await db.from('staff').select('user_id').eq('user_id', uid).maybeSingle();
+    if (ok !== true && !staff) return new NextResponse('Not found', { status: 404 });
 
     const shared = await db.from('case_members').select('case_id').eq('user_id', uid);
     const sharedIds = shared.error ? [] : ((shared.data ?? []) as { case_id: string }[]).map((m) => m.case_id);
