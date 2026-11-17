@@ -1,109 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, BadgeCheck, Banknote, CalendarClock, Check, ChevronDown, FileSignature, FileText, FolderInput, Inbox, KeyRound, Landmark, Lock, Mail, MailCheck, Scale, ShieldCheck, Sparkles, Upload, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Check, ChevronDown, FileArchive, FileText, KeyRound, Landmark, Lock, Map as MapIcon, Scale, ShieldCheck, Upload, Users } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import LawyerPricing from './LawyerPricing';
 import { RETENTION_MONTHS } from '@/lib/company';
-import { CaseMock, ClientMock, DashboardMock, WorkMock } from './LandingMockups';
+import { ClientMock, WorkMock } from './LandingMockups';
+import { DatovkaMock, InvoiceMock, MailMock, ProductDemo, RadarMock, SignMock } from './LandingDemo';
 
-const serif = 'font-[family-name:var(--font-display)] font-normal tracking-[-0.01em]';
+const serif = 'font-[family-name:var(--font-display)]';
 
-// Co se v hlavičce střídá: jeden den, kdy Kancelář pracuje sama
-const FLOW: [typeof Inbox, string, string, string][] = [
-    [MailCheck, 'Datová zpráva', 'Okresní soud Plzeň-město · Rozsudek', 'text-sky-300'],
-    [CalendarClock, 'Lhůta nalezena', 'Odvolání do 15 dnů · pondělí 7. 12. (posunuto z neděle)', 'text-amber-300'],
-    [FolderInput, 'Založeno do věci', 'Novák proti Dvořákovi · příloha a chronologie', 'text-violet-300'],
-    [Sparkles, 'Návrh výkazu', 'Studium rozsudku, příprava odvolání · 1:15 h', 'text-indigo-300'],
-    [Banknote, 'Platba spárována', 'Faktura 2026-014 · 12 100 Kč podle variabilního symbolu', 'text-emerald-300'],
+// Hlavní funkce: text vlevo, skutečná ukázka rozhraní vpravo (střídavě)
+const FEATURES: { kicker: string; title: string; text: string; points: string[]; mock: React.ReactNode }[] = [
+    { kicker: 'Datové schránky a lhůty', title: 'Z rozhodnutí rovnou lhůta v kalendáři', text: 'Datové zprávy čtete přímo v Kanceláři. U rozhodnutí aplikace najde poučení o lhůtě, spočítá její konec a posune ho na pracovní den. Ukáže přesnou větu, ze které vycházela, a uloží až po vašem potvrzení.', points: ['Přihlášení heslem nebo Mobilním klíčem', 'Zpráva i příloha jedním kliknutím do věci', 'Svátky a víkendy podle zákona'], mock: <DatovkaMock /> },
+    { kicker: 'E-mail', title: 'Pošta tam, kde je spis', text: 'Připojíte Gmail, Seznam nebo vlastní doménu a e-maily čtete i píšete v aplikaci. Kancelář pozná klienta podle adresy a nabídne, do které věci zprávu i přílohy uložit.', points: ['Odpověď se zapíše do chronologie věci', 'Přílohy rovnou mezi soubory spisu', 'Heslo uložené jen zašifrované'], mock: <MailMock /> },
+    { kicker: 'Výkaz práce', title: 'Výkaz, který se napíše sám', text: 'Kancelář si všímá, na čem jste pracovali: přečtené datovky, odeslané e-maily, připravené dokumenty, zprávy klientům. Večer navrhne výkaz po věcech. Čas upravíte a jedním kliknutím potvrdíte.', points: ['Nic se nezapíše bez potvrzení', 'Zaokrouhlení podle vaší praxe', 'Rovnou do vyúčtování'], mock: <WorkMock /> },
+    { kicker: 'Klient', title: 'Klient si podklady nahraje sám', text: 'Každá věc může mít soukromou stránku pro klienta. Vidí stav, nahraje dokumenty z telefonu, napíše zprávu a podepíše smlouvu. Bez registrace a bez přeposílání e-mailů.', points: ['Komunikace šifrovaná end-to-end', 'Podpis s dokladem o podpisu', 'Identifikace klienta pro AML'], mock: <div className="grid items-center gap-6 xl:grid-cols-[auto_1fr]"><ClientMock /><SignMock /></div> },
+    { kicker: 'Peníze', title: 'Faktura, QR platba a kontrola úhrad', text: 'Z výkazu vystavíte fakturu s QR platbou. Platby z účtu se samy spárují podle variabilního symbolu, po splatnosti připraví upomínku a účetní dostane podklady včetně ISDOC.', points: ['Fio automaticky, ostatní banky výpisem', 'Upomínky s úrokem z prodlení', 'Rentabilita věcí a klientů'], mock: <InvoiceMock /> },
+    { kicker: 'Radar', title: 'Víte o protistraně dřív než ostatní', text: 'Kancelář hlídá firmy a osoby ve vašich věcech v insolvenčním rejstříku a v ARES. Když dlužník vstoupí do insolvence nebo firma do likvidace, upozorní vás a navrhne lhůtu.', points: ['Dlužníci, protistrany i klienti', 'Upozornění přímo ve věci', 'Lhůtu vždy potvrzujete vy'], mock: <RadarMock /> },
 ];
 
-function LiveFlow() {
-    const [step, setStep] = useState(0);
-    const [still, setStill] = useState(false);
-    useEffect(() => {
-        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduce) { const t = window.setTimeout(() => { setStill(true); setStep(FLOW.length - 1); }, 0); return () => window.clearTimeout(t); }
-        const id = window.setInterval(() => setStep((s) => (s + 1) % (FLOW.length + 2)), 1900);
-        return () => window.clearInterval(id);
-    }, []);
-    return (
-        <div className="relative mx-auto w-full max-w-md" aria-label="Ukázka: co Kancelář udělá sama během jednoho dne" role="img">
-            <div className="absolute -inset-10 rounded-[3rem] bg-indigo-500/20 blur-3xl" aria-hidden="true" />
-            <div className="relative rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-black/40 backdrop-blur-xl" aria-hidden="true">
-                <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">Dnes v Kanceláři</p>
-                    <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300"><span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" /></span> Běží</span>
-                </div>
-                <ol className="mt-4 space-y-2.5">
-                    {FLOW.map(([Icon, title, detail, tone], i) => {
-                        const shown = still || i <= step;
-                        return (
-                            <li key={title} className={`flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.06] p-3 transition-all duration-700 ${shown ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'} ${i === step && !still ? 'border-white/25 bg-white/[0.1]' : ''}`}>
-                                <span className={`mt-0.5 rounded-xl bg-white/10 p-2 ${tone}`}><Icon size={16} /></span>
-                                <span className="min-w-0"><span className="block text-sm font-semibold text-white">{title}</span><span className="block text-xs leading-relaxed text-white/60">{detail}</span></span>
-                                {shown && <Check size={14} className="ml-auto mt-1 shrink-0 text-emerald-300" />}
-                            </li>
-                        );
-                    })}
-                </ol>
-                <p className="mt-4 border-t border-white/10 pt-3 text-[11px] leading-relaxed text-white/45">Každý krok vidíte a potvrzujete. Kancelář připraví, rozhodnutí je vaše.</p>
-            </div>
-        </div>
-    );
-}
-
-// Jeden den v Kanceláři: časová osa s ukázkami
-const DAY: { time: string; title: string; text: string; points: string[]; mock: React.ReactNode }[] = [
-    { time: '8:30', title: 'Ráno víte, co hoří', text: 'Přehled ukáže lhůty, které se blíží, nové datové zprávy, neuhrazené faktury a čas, který jste včera nezapsali.', points: ['Lhůty seřazené podle naléhavosti', 'Svátky a jmeniny, ať nic nepřekvapí', 'Nevyfakturovaná práce v korunách'], mock: <DashboardMock /> },
-    { time: '10:15', title: 'Datovka přijde, lhůta se spočítá', text: 'Kancelář přečte rozhodnutí, najde poučení o lhůtě, spočítá konec podle zákona a posune ho na pracovní den. Vy jen potvrdíte.', points: ['Datové schránky přímo v aplikaci', 'Lhůta s citací z rozhodnutí', 'Zpráva i příloha rovnou ve spisu'], mock: <CaseMock /> },
-    { time: '14:00', title: 'Klient si vyřídí sám', text: 'Klient dostane soukromý odkaz. Nahraje podklady z mobilu, napíše zprávu a podepíše smlouvu, aniž by si cokoli instaloval.', points: ['End-to-end šifrovaná komunikace', 'Podpis dokumentu s dokladem', 'Žádné přeposílání e-mailů'], mock: <div className="py-4"><ClientMock /></div> },
-    { time: '18:00', title: 'Výkaz se napíše sám', text: 'Kancelář ví, na čem jste dnes pracovali: datovky, e-maily, dokumenty, zprávy klientům. Navrhne výkaz po věcech a vy ho jedním kliknutím potvrdíte.', points: ['Čas a popis úkonu navržené', 'Nic se nezapíše bez potvrzení', 'Rovnou do vyúčtování'], mock: <WorkMock /> },
-];
-
-function DayTour() {
-    const [i, setI] = useState(0);
-    const d = DAY[i];
-    return (
-        <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.1fr]">
-            <div>
-                <div className="flex gap-1.5 overflow-x-auto rounded-2xl bg-slate-100 p-1.5" role="tablist" aria-label="Části dne">
-                    {DAY.map((x, j) => (
-                        <button key={x.time} type="button" role="tab" aria-selected={i === j} onClick={() => setI(j)} className={`flex-1 shrink-0 rounded-xl px-3 py-2.5 text-center transition cursor-pointer ${i === j ? 'bg-white shadow-sm' : 'hover:bg-white/60'}`}>
-                            <span className={`block font-mono text-sm font-semibold ${i === j ? 'text-indigo-700' : 'text-slate-500'}`}>{x.time}</span>
-                        </button>
-                    ))}
-                </div>
-                <div key={d.time} className="mt-8 motion-safe:animate-[fadeUp_.5s_ease-out]" role="tabpanel">
-                    <h3 className={`${serif} text-4xl leading-tight text-slate-900 sm:text-5xl`}>{d.title}</h3>
-                    <p className="mt-4 text-lg leading-relaxed text-slate-600">{d.text}</p>
-                    <ul className="mt-6 space-y-2.5">
-                        {d.points.map((p) => <li key={p} className="flex items-center gap-3 text-slate-700"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 text-indigo-700"><Check size={14} aria-hidden="true" /></span>{p}</li>)}
-                    </ul>
-                    <div className="mt-8 flex gap-2">
-                        <button type="button" onClick={() => setI((i + DAY.length - 1) % DAY.length)} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Předchozí</button>
-                        <button type="button" onClick={() => setI((i + 1) % DAY.length)} className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 cursor-pointer">Další část dne <ArrowRight size={14} aria-hidden="true" /></button>
-                    </div>
-                </div>
-            </div>
-            <div key={`m-${d.time}`} className="min-w-0 motion-safe:animate-[fadeUp_.5s_ease-out]">{d.mock}</div>
-        </div>
-    );
-}
-
-// Funkce v mřížce různých velikostí
-const BENTO: { icon: typeof Inbox; title: string; text: string; wide?: boolean; dark?: boolean }[] = [
-    { icon: MailCheck, title: 'Datové schránky uvnitř', text: 'Přijaté i odeslané zprávy, přihlášení jménem a heslem nebo Mobilním klíčem. Zprávu i přílohu jedním kliknutím do věci.', wide: true, dark: true },
-    { icon: CalendarClock, title: 'Lhůty z rozhodnutí', text: 'Najde poučení, spočítá konec, posune na pracovní den a ukáže citaci.' },
-    { icon: Mail, title: 'E-mail ve spisu', text: 'Gmail, Seznam a další. Čtete, odpovídáte a ukládáte do věci bez přepínání.' },
-    { icon: Sparkles, title: 'Výkaz, který se píše sám', text: 'Z toho, na čem jste pracovali, navrhne čas a popis úkonu. Vy potvrdíte.', wide: true },
-    { icon: FileSignature, title: 'Podpis na dálku', text: 'Klient podepíše v portálu, vy dostanete PDF s dokladem o podpisu.' },
-    { icon: Banknote, title: 'Peníze pod kontrolou', text: 'QR platba na faktuře, párování plateb z banky, upomínky a export pro účetní (ISDOC).' },
-    { icon: FileText, title: 'Vzory s Wordem', text: 'Smlouvy, plné moci, výzvy. Pole se vyplní z věci a klienta, výstup je hotový dokument.' },
-    { icon: Landmark, title: 'Rejstříky po ruce', text: 'ARES, insolvenční rejstřík a katastr přímo u klienta i věci.' },
-    { icon: Users, title: 'Kancelář jako tým', text: 'Šifrovaný chat, sdílené věci s kolegy a role. Každý vidí jen to, co má.' },
-    { icon: Upload, title: 'Přechod za odpoledne', text: 'Import klientů, věcí, lhůt a času z Excelu, CSV i jiných programů. Jde vrátit.' },
+const MORE: [typeof Scale, string, string][] = [
+    [FileText, 'Vzory dokumentů', 'Smlouvy, plné moci, výzvy. Vyplní se z věci a klienta, výstup je upravený Word.'],
+    [MapIcon, 'Katastr nemovitostí', 'Parcely a stavby na mapě i podle čísla, přímo u věci.'],
+    [Users, 'Práce v týmu', 'Sdílené věci s kolegy, role a šifrovaný chat kanceláře.'],
+    [Upload, 'Přechod za odpoledne', 'Import klientů, věcí, lhůt a času z Excelu nebo jiného programu.'],
+    [FileArchive, 'Předání spisu', 'Souhrn věci s očíslovanými přílohami pro soud, úřad nebo kolegu.'],
+    [Landmark, 'ARES a insolvence', 'Údaje o firmě jedním kliknutím, hlídání klientů v insolvenčním rejstříku.'],
 ];
 
 function Calculator() {
@@ -112,22 +36,22 @@ function Calculator() {
     const month = Math.round((rate * lost) / 60 * 20 / 100) * 100;
     const fmt = (n: number) => new Intl.NumberFormat('cs-CZ').format(n);
     return (
-        <div className="grid gap-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-10 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+        <div className="grid gap-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
             <div className="space-y-7">
                 <label className="block">
-                    <span className="flex items-baseline justify-between text-sm font-semibold text-slate-700">Vaše hodinová sazba <span className="font-mono text-lg text-slate-900">{fmt(rate)} Kč</span></span>
+                    <span className="flex items-baseline justify-between text-sm font-medium text-slate-700">Vaše hodinová sazba <span className="text-base font-semibold text-slate-900 tabular-nums">{fmt(rate)} Kč</span></span>
                     <input type="range" min={800} max={6000} step={100} value={rate} onChange={(e) => setRate(Number(e.target.value))} className="mt-3 w-full accent-indigo-700" />
                 </label>
                 <label className="block">
-                    <span className="flex items-baseline justify-between text-sm font-semibold text-slate-700">Kolik minut denně nezapíšete <span className="font-mono text-lg text-slate-900">{lost} min</span></span>
+                    <span className="flex items-baseline justify-between text-sm font-medium text-slate-700">Kolik minut denně nezapíšete <span className="text-base font-semibold text-slate-900 tabular-nums">{lost} min</span></span>
                     <input type="range" min={5} max={90} step={5} value={lost} onChange={(e) => setLost(Number(e.target.value))} className="mt-3 w-full accent-indigo-700" />
-                    <span className="mt-2 block text-xs text-slate-500">Krátké e-maily, telefonáty, přečtené datovky a drobné úpravy dokumentů.</span>
+                    <span className="mt-2 block text-xs text-slate-500">Krátké e-maily, telefonáty, přečtené datovky, drobné úpravy dokumentů.</span>
                 </label>
             </div>
-            <div className="rounded-3xl bg-slate-950 p-7 text-center text-white">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Měsíčně nevyfakturováno</p>
-                <p className={`${serif} mt-3 text-6xl text-white`} aria-live="polite">{fmt(month)} Kč</p>
-                <p className="mt-3 text-sm leading-relaxed text-white/60">při 20 pracovních dnech. Tohle je práce, kterou Kancelář pomáhá najít a zapsat.</p>
+            <div className="rounded-xl bg-indigo-50 p-7 text-center">
+                <p className="text-sm font-medium text-indigo-900/70">Za měsíc nevyfakturováno</p>
+                <p className={`${serif} mt-2 text-5xl font-semibold text-indigo-950 tabular-nums`} aria-live="polite">{fmt(month)} Kč</p>
+                <p className="mt-3 text-sm text-indigo-900/70">při 20 pracovních dnech</p>
             </div>
             <p className="text-xs text-slate-400 lg:col-span-2">Orientační výpočet z čísel, která sami zadáte. Skutečný přínos závisí na vaší praxi.</p>
         </div>
@@ -144,136 +68,128 @@ const FAQ: [string, string][] = [
 
 export default function LawyerLanding() {
     const { account, openLogin } = useAuth();
-    const [scrolled, setScrolled] = useState(false);
-    useEffect(() => { const on = () => setScrolled(window.scrollY > 24); on(); window.addEventListener('scroll', on, { passive: true }); return () => window.removeEventListener('scroll', on); }, []);
-
-    const cta = (light = false) => account
-        ? <Link href="/kancelar" className={`group inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition ${light ? 'bg-white text-slate-950 hover:bg-indigo-50' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}>Otevřít Kancelář <ArrowRight size={16} className="transition group-hover:translate-x-0.5" aria-hidden="true" /></Link>
-        : <button type="button" onClick={() => openLogin('register')} className={`group inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition cursor-pointer ${light ? 'bg-white text-slate-950 hover:bg-indigo-50' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}>Vyzkoušet 14 dní zdarma <ArrowRight size={16} className="transition group-hover:translate-x-0.5" aria-hidden="true" /></button>;
+    const cta = (big = true) => account
+        ? <Link href="/kancelar" className={`inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-700 font-semibold text-white hover:bg-indigo-800 ${big ? 'px-6 py-3 text-[15px]' : 'px-4 py-2 text-sm'}`}>Otevřít Kancelář <ArrowRight size={16} aria-hidden="true" /></Link>
+        : <button type="button" onClick={() => openLogin('register')} className={`inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-700 font-semibold text-white hover:bg-indigo-800 cursor-pointer ${big ? 'px-6 py-3 text-[15px]' : 'px-4 py-2 text-sm'}`}>Vyzkoušet 14 dní zdarma <ArrowRight size={16} aria-hidden="true" /></button>;
 
     return (
-        <div className="bg-[#fbfaf7] text-slate-800">
-            <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}`}</style>
+        <div className="bg-[#faf9f6] text-slate-800">
+            <style>{`@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
 
-            <header className={`fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${scrolled ? 'border-b border-white/10 bg-slate-950/80 backdrop-blur-xl' : 'bg-transparent'}`}>
-                <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-                    <Link href="/" className="flex items-center gap-2.5 text-white"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-slate-950"><Scale size={17} aria-hidden="true" /></span><span className={`${serif} text-2xl`}>Kancelář</span></Link>
-                    <nav className="hidden items-center gap-7 text-sm text-white/70 md:flex" aria-label="Sekce stránky">
-                        <a href="#den" className="hover:text-white">Jak to funguje</a>
-                        <a href="#funkce" className="hover:text-white">Funkce</a>
-                        <a href="#bezpecnost" className="hover:text-white">Bezpečnost</a>
-                        <a href="#cenik" className="hover:text-white">Ceník</a>
+            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-[#faf9f6]/90 backdrop-blur">
+                <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+                    <Link href="/" className="flex items-center gap-2 text-slate-900"><span className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-700 text-white"><Scale size={16} aria-hidden="true" /></span><span className={`${serif} text-xl font-semibold`}>Kancelář</span></Link>
+                    <nav className="hidden items-center gap-7 text-sm text-slate-600 md:flex" aria-label="Sekce stránky">
+                        <a href="#funkce" className="hover:text-slate-900">Funkce</a>
+                        <a href="#bezpecnost" className="hover:text-slate-900">Bezpečnost</a>
+                        <a href="#cenik" className="hover:text-slate-900">Ceník</a>
+                        <a href="#otazky" className="hover:text-slate-900">Otázky</a>
                     </nav>
                     <div className="flex items-center gap-2">
-                        {account ? <Link href="/kancelar" className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-indigo-50">Otevřít Kancelář</Link> : <>
-                            <button type="button" onClick={() => openLogin('login')} className="rounded-full px-4 py-2 text-sm font-semibold text-white/80 hover:text-white cursor-pointer">Přihlásit se</button>
-                            <button type="button" onClick={() => openLogin('register')} className="hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-indigo-50 sm:block cursor-pointer">Zkusit zdarma</button>
-                        </>}
+                        {!account && <button type="button" onClick={() => openLogin('login')} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 cursor-pointer">Přihlásit se</button>}
+                        <span className="hidden sm:block">{cta(false)}</span>
                     </div>
                 </div>
             </header>
 
-            {/* Úvod */}
-            <section className="relative overflow-hidden bg-slate-950 text-white">
-                <div className="pointer-events-none absolute inset-0 opacity-[0.15] [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" aria-hidden="true" />
-                <div className="pointer-events-none absolute -top-40 left-1/2 h-[36rem] w-[60rem] -translate-x-1/2 rounded-full bg-indigo-600/25 blur-[120px]" aria-hidden="true" />
-                <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pb-24 pt-32 sm:px-6 sm:pt-40 lg:grid-cols-[1.15fr_1fr] lg:pb-32">
-                    <div>
-                        <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-white/70"><span className="h-1.5 w-1.5 rounded-full bg-amber-300" /> Software pro advokáty a advokátní kanceláře</p>
-                        <h1 className={`${serif} mt-7 text-[3.4rem] leading-[0.98] sm:text-7xl lg:text-[5.4rem]`}>Kancelář, která <em className="italic text-amber-200">myslí</em> dopředu.</h1>
-                        <p className="mt-7 max-w-xl text-lg leading-relaxed text-white/65">Datové schránky, lhůty, e-maily, klienti a fakturace na jednom místě. Kancelář čte, počítá a připravuje. Vy rozhodujete.</p>
-                        <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-                            {cta()}
-                            <a href="#den" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-7 py-3.5 text-sm font-semibold text-white hover:bg-white/5">Projít jeden den v Kanceláři</a>
-                        </div>
-                        <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/55">
-                            {['14 dní zdarma, bez karty', 'Šifrovaná komunikace s klientem', 'Pro české právo, česky'].map((t) => <li key={t} className="flex items-center gap-2"><Check size={14} className="text-amber-200" aria-hidden="true" />{t}</li>)}
-                        </ul>
+            {/* Úvod s klikatelnou ukázkou aplikace */}
+            <section className="px-4 pb-20 pt-16 sm:px-6 sm:pt-24">
+                <div className="mx-auto max-w-3xl text-center">
+                    <p className="text-sm font-medium text-indigo-700">Software pro advokáty a advokátní kanceláře</p>
+                    <h1 className={`${serif} mt-4 text-[2.6rem] font-semibold leading-[1.08] text-slate-900 sm:text-6xl`}>Spisy, lhůty, datovky a fakturace v jednom okně</h1>
+                    <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-600">Kancelář přečte rozhodnutí a navrhne lhůtu, uloží e-mail do správné věci, sepíše výkaz za den a pohlídá, kdo zaplatil. Vy jen kontrolujete a rozhodujete.</p>
+                    <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                        {cta()}
+                        <a href="#funkce" className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-[15px] font-semibold text-slate-800 hover:bg-slate-50">Co všechno umí</a>
                     </div>
-                    <LiveFlow />
+                    <p className="mt-4 text-sm text-slate-500">14 dní zdarma · bez platební karty · bez závazku</p>
                 </div>
-                <div className="relative border-t border-white/10">
-                    <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-px px-4 py-6 text-center text-xs font-medium uppercase tracking-[0.14em] text-white/45 sm:px-6 md:grid-cols-5">
-                        {['Datové schránky', 'Insolvenční rejstřík', 'ARES', 'Katastr nemovitostí', 'ISDOC a QR platby'].map((t) => <li key={t} className="py-1">{t}</li>)}
-                    </ul>
+                <div className="mx-auto mt-14 max-w-5xl">
+                    <ProductDemo />
+                    <p className="mt-3 text-center text-sm text-slate-500">Klikněte v levém menu a projděte si aplikaci. Údaje jsou smyšlené.</p>
                 </div>
             </section>
 
-            {/* Jeden den */}
-            <section id="den" className="scroll-mt-20 py-24 sm:py-32" aria-labelledby="den-title">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">Jak to funguje</p>
-                    <h2 id="den-title" className={`${serif} mt-3 max-w-3xl text-5xl leading-[1.05] text-slate-900 sm:text-6xl`}>Jeden běžný den. O hodinu kratší.</h2>
-                    <div className="mt-14"><DayTour /></div>
+            <section className="border-y border-slate-200 bg-white">
+                <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-y-2 px-4 py-6 text-center text-sm text-slate-500 sm:px-6 md:grid-cols-5">
+                    {['Datové schránky', 'Insolvenční rejstřík', 'ARES', 'Katastr nemovitostí', 'ISDOC a QR platby'].map((t) => <li key={t} className="flex items-center justify-center gap-1.5"><Check size={14} className="text-indigo-600" aria-hidden="true" />{t}</li>)}
+                </ul>
+            </section>
+
+            {/* Funkce střídavě s ukázkami */}
+            <section id="funkce" className="scroll-mt-20 px-4 py-20 sm:px-6 sm:py-28" aria-labelledby="funkce-title">
+                <div className="mx-auto max-w-6xl">
+                    <h2 id="funkce-title" className={`${serif} mx-auto max-w-2xl text-center text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl`}>Co za vás Kancelář udělá</h2>
+                    <div className="mt-16 space-y-24 sm:space-y-32">
+                        {FEATURES.map((f, i) => (
+                            <div key={f.title} className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+                                <div className={i % 2 ? 'lg:order-2' : ''}>
+                                    <p className="text-sm font-semibold text-indigo-700">{f.kicker}</p>
+                                    <h3 className={`${serif} mt-3 text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl`}>{f.title}</h3>
+                                    <p className="mt-4 text-[17px] leading-relaxed text-slate-600">{f.text}</p>
+                                    <ul className="mt-6 space-y-2.5">
+                                        {f.points.map((p) => <li key={p} className="flex items-start gap-2.5 text-slate-700"><Check size={18} className="mt-0.5 shrink-0 text-indigo-600" aria-hidden="true" />{p}</li>)}
+                                    </ul>
+                                </div>
+                                <div className={`min-w-0 ${i % 2 ? 'lg:order-1' : ''}`}>{f.mock}</div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </section>
 
-            {/* Funkce */}
-            <section id="funkce" className="scroll-mt-20 border-y border-slate-200/70 bg-white py-24 sm:py-32" aria-labelledby="funkce-title">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6">
-                    <div className="flex flex-wrap items-end justify-between gap-6">
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">Funkce</p>
-                            <h2 id="funkce-title" className={`${serif} mt-3 max-w-2xl text-5xl leading-[1.05] text-slate-900 sm:text-6xl`}>Všechno, co advokát dělá. Na jednom místě.</h2>
-                        </div>
-                        <p className="max-w-sm text-slate-600">Žádné přepínání mezi datovkou, e-mailem, Excelem a bankou. Věc drží pohromadě všechno, co k ní patří.</p>
-                    </div>
-                    <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        {BENTO.map(({ icon: Icon, title, text, wide, dark }) => (
-                            <li key={title} className={`group rounded-3xl border p-6 transition duration-300 hover:-translate-y-0.5 ${wide ? 'lg:col-span-2' : ''} ${dark ? 'border-slate-900 bg-slate-950 text-white' : 'border-slate-200 bg-[#fbfaf7] hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/60'}`}>
-                                <span className={`inline-flex rounded-2xl p-3 ${dark ? 'bg-white/10 text-amber-200' : 'bg-white text-indigo-700 shadow-sm'}`}><Icon size={20} aria-hidden="true" /></span>
-                                <h3 className={`mt-5 text-lg font-semibold ${dark ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
-                                <p className={`mt-2 text-sm leading-relaxed ${dark ? 'text-white/65' : 'text-slate-600'}`}>{text}</p>
-                            </li>
+            {/* Další funkce */}
+            <section className="border-t border-slate-200 bg-white px-4 py-20 sm:px-6" aria-labelledby="dalsi-title">
+                <div className="mx-auto max-w-6xl">
+                    <h2 id="dalsi-title" className={`${serif} text-3xl font-semibold text-slate-900 sm:text-4xl`}>A k tomu</h2>
+                    <ul className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+                        {MORE.map(([Icon, t, d]) => (
+                            <li key={t} className="flex gap-4"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-indigo-700"><Icon size={18} aria-hidden="true" /></span><span><span className="block font-semibold text-slate-900">{t}</span><span className="mt-1 block text-sm leading-relaxed text-slate-600">{d}</span></span></li>
                         ))}
                     </ul>
                 </div>
             </section>
 
             {/* Kalkulačka */}
-            <section className="py-24 sm:py-32" aria-labelledby="kalk-title">
-                <div className="mx-auto max-w-5xl px-4 sm:px-6">
-                    <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">Spočítejte si to</p>
-                    <h2 id="kalk-title" className={`${serif} mx-auto mt-3 max-w-3xl text-center text-5xl leading-[1.05] text-slate-900 sm:text-6xl`}>Kolik práce vám každý měsíc uteče?</h2>
-                    <div className="mt-14"><Calculator /></div>
+            <section className="px-4 py-20 sm:px-6 sm:py-28" aria-labelledby="kalk-title">
+                <div className="mx-auto max-w-5xl">
+                    <h2 id="kalk-title" className={`${serif} mx-auto max-w-2xl text-center text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl`}>Kolik práce vám každý měsíc uteče?</h2>
+                    <p className="mx-auto mt-4 max-w-xl text-center text-slate-600">Drobné úkony se zapomínají zapsat nejčastěji. Výkaz, který se píše sám, je najde.</p>
+                    <div className="mt-12"><Calculator /></div>
                 </div>
             </section>
 
             {/* Bezpečnost */}
-            <section id="bezpecnost" className="scroll-mt-20 bg-slate-950 py-24 text-white sm:py-32" aria-labelledby="bezp-title">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6">
-                    <div className="grid gap-12 lg:grid-cols-[1fr_1.3fr] lg:items-center">
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/80">Bezpečnost</p>
-                            <h2 id="bezp-title" className={`${serif} mt-3 text-5xl leading-[1.05] sm:text-6xl`}>Mlčenlivost není funkce. Je to základ.</h2>
-                            <p className="mt-6 text-lg leading-relaxed text-white/60">Kancelář je postavená tak, aby k nejcitlivějším údajům neměl přístup nikdo jiný než vy a váš klient. Ani my.</p>
-                        </div>
-                        <ul className="grid gap-4 sm:grid-cols-2">
-                            {([[Lock, 'End-to-end šifrování', 'Zprávy a soubory s klientem se šifrují ve vašem prohlížeči. Klíč nemáme.'], [KeyRound, 'Hesla jen u vás', 'Přístupy k datovce, bance a e-mailu jsou uložené zašifrované vaším heslem.'], [ShieldCheck, 'Doklady a stopy', 'Podpisy mají zapečetěný doklad, importy jdou vrátit, nic se neděje bez vašeho potvrzení.'], [BadgeCheck, 'Data zůstávají vaše', `Po skončení předplatného je máte ${RETENTION_MONTHS} měsíců k nahlížení a stažení.`]] as const).map(([Icon, t, d]) => (
-                                <li key={t} className="rounded-3xl border border-white/10 bg-white/[0.04] p-6"><Icon size={20} className="text-amber-200" aria-hidden="true" /><h3 className="mt-4 font-semibold text-white">{t}</h3><p className="mt-2 text-sm leading-relaxed text-white/60">{d}</p></li>
-                            ))}
-                        </ul>
+            <section id="bezpecnost" className="scroll-mt-20 border-y border-slate-200 bg-white px-4 py-20 sm:px-6 sm:py-28" aria-labelledby="bezp-title">
+                <div className="mx-auto max-w-6xl">
+                    <div className="max-w-2xl">
+                        <h2 id="bezp-title" className={`${serif} text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl`}>Postavené na mlčenlivosti</h2>
+                        <p className="mt-4 text-lg leading-relaxed text-slate-600">K nejcitlivějším údajům nemá přístup nikdo jiný než vy a váš klient. Ani provozovatel.</p>
                     </div>
+                    <ul className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                        {([[Lock, 'End-to-end šifrování', 'Zprávy a soubory s klientem se šifrují ve vašem prohlížeči. Klíč nemáme.'], [KeyRound, 'Hesla jen u vás', 'Přístupy k datovce, bance a e-mailu jsou uložené zašifrované vaším heslem.'], [ShieldCheck, 'Nic bez potvrzení', 'Lhůty, výkazy i párování plateb aplikace navrhne. Rozhodnutí je vždy vaše.'], [BadgeCheck, 'Data zůstávají vaše', `Po skončení předplatného je máte ${RETENTION_MONTHS} měsíců k nahlížení a stažení.`]] as const).map(([Icon, t, d]) => (
+                            <li key={t} className="border-t-2 border-indigo-700 pt-5"><Icon size={20} className="text-indigo-700" aria-hidden="true" /><h3 className="mt-3 font-semibold text-slate-900">{t}</h3><p className="mt-2 text-sm leading-relaxed text-slate-600">{d}</p></li>
+                        ))}
+                    </ul>
                 </div>
             </section>
 
             {/* Ceník */}
-            <section id="cenik" className="scroll-mt-20 py-24 sm:py-32" aria-label="Ceník">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6">
-                    <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">Ceník</p>
-                    <h2 className={`${serif} mx-auto mt-3 max-w-3xl text-center text-5xl leading-[1.05] text-slate-900 sm:text-6xl`}>Jedna cena. Všechno v ní.</h2>
-                    <div className="mt-10"><LawyerPricing bare /></div>
+            <section id="cenik" className="scroll-mt-20 px-4 py-20 sm:px-6 sm:py-28" aria-labelledby="cenik-title">
+                <div className="mx-auto max-w-6xl">
+                    <h2 id="cenik-title" className={`${serif} mx-auto max-w-2xl text-center text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl`}>Jednoduchý ceník</h2>
+                    <div className="mt-8"><LawyerPricing bare /></div>
                 </div>
             </section>
 
             {/* Otázky */}
-            <section className="border-t border-slate-200/70 bg-white py-24 sm:py-32" aria-labelledby="faq-title">
-                <div className="mx-auto max-w-3xl px-4 sm:px-6">
-                    <h2 id="faq-title" className={`${serif} text-center text-5xl leading-[1.05] text-slate-900`}>Časté otázky</h2>
-                    <div className="mt-12 divide-y divide-slate-200 border-y border-slate-200">
+            <section id="otazky" className="scroll-mt-20 border-t border-slate-200 bg-white px-4 py-20 sm:px-6 sm:py-28" aria-labelledby="faq-title">
+                <div className="mx-auto max-w-3xl">
+                    <h2 id="faq-title" className={`${serif} text-center text-4xl font-semibold text-slate-900`}>Časté otázky</h2>
+                    <div className="mt-10 divide-y divide-slate-200 border-y border-slate-200">
                         {FAQ.map(([q, a]) => (
                             <details key={q} className="group py-5">
-                                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold text-slate-900">{q}<ChevronDown size={18} className="shrink-0 text-slate-400 transition group-open:rotate-180" aria-hidden="true" /></summary>
+                                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-semibold text-slate-900">{q}<ChevronDown size={18} className="shrink-0 text-slate-400 transition group-open:rotate-180" aria-hidden="true" /></summary>
                                 <p className="mt-3 leading-relaxed text-slate-600">{a}</p>
                             </details>
                         ))}
@@ -282,19 +198,18 @@ export default function LawyerLanding() {
             </section>
 
             {/* Závěr */}
-            <section className="px-4 py-24 sm:px-6">
-                <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2.5rem] bg-slate-950 px-6 py-16 text-center text-white sm:px-16 sm:py-20">
-                    <div className="pointer-events-none absolute -bottom-40 left-1/2 h-80 w-[40rem] -translate-x-1/2 rounded-full bg-indigo-600/30 blur-[100px]" aria-hidden="true" />
-                    <h2 className={`${serif} relative text-5xl leading-[1.05] sm:text-6xl`}>Zkuste si zítřek <em className="italic text-amber-200">už dnes</em>.</h2>
-                    <p className="relative mx-auto mt-5 max-w-xl text-white/60">14 dní zdarma, bez karty a bez závazku. Data si během zkoušky převedete importem a nic nepřijde nazmar.</p>
-                    <div className="relative mt-9 flex justify-center">{cta(true)}</div>
+            <section className="px-4 py-20 sm:px-6 sm:py-24">
+                <div className="mx-auto max-w-4xl rounded-2xl border border-indigo-200 bg-indigo-50 px-6 py-14 text-center sm:px-12">
+                    <h2 className={`${serif} text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl`}>Vyzkoušejte to na své vlastní věci</h2>
+                    <p className="mx-auto mt-4 max-w-xl text-slate-600">14 dní zdarma, bez karty a bez závazku. Data si během zkoušky převedete importem a nic nepřijde nazmar.</p>
+                    <div className="mt-8 flex justify-center">{cta()}</div>
                 </div>
             </section>
 
-            <footer className="border-t border-slate-200/70 px-4 py-10 sm:px-6">
-                <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-slate-500 md:flex-row">
-                    <p className="flex items-center gap-2 text-slate-700"><Scale size={14} aria-hidden="true" /><span className={`${serif} text-lg`}>Kancelář</span></p>
-                    <p className="flex flex-wrap justify-center gap-x-5 gap-y-1 font-medium"><Link href="/obchodni-podminky" className="hover:text-slate-800">Obchodní podmínky</Link><Link href="/zpracovani-osobnich-udaju" className="hover:text-slate-800">Zpracování osobních údajů</Link><Link href="/ochrana-osobnich-udaju" className="hover:text-slate-800">Ochrana soukromí</Link></p>
+            <footer className="border-t border-slate-200 bg-white px-4 py-10 sm:px-6">
+                <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-slate-500 md:flex-row">
+                    <p className="flex items-center gap-2 text-slate-800"><Scale size={15} className="text-indigo-700" aria-hidden="true" /><span className={`${serif} text-lg font-semibold`}>Kancelář</span></p>
+                    <p className="flex flex-wrap justify-center gap-x-5 gap-y-1"><Link href="/obchodni-podminky" className="hover:text-slate-800">Obchodní podmínky</Link><Link href="/zpracovani-osobnich-udaju" className="hover:text-slate-800">Zpracování osobních údajů</Link><Link href="/ochrana-osobnich-udaju" className="hover:text-slate-800">Ochrana soukromí</Link></p>
                 </div>
                 <p className="mx-auto mt-6 max-w-3xl text-center text-xs leading-relaxed text-slate-400">Kancelář slouží k organizaci práce a nenahrazuje právní poradenství ani úsudek advokáta. Lhůty a výpočty jsou pomůckou ke kontrole. Ukázky rozhraní obsahují smyšlená jména a údaje.</p>
             </footer>
