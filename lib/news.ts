@@ -66,3 +66,23 @@ export function mergeNews(lists: NewsItem[][], limit = 60): NewsItem[] {
 }
 
 export const daysFromToday = (iso: string, today = new Date()) => Math.round((new Date(`${iso}T12:00:00`).getTime() - new Date(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}T12:00:00`).getTime()) / 86_400_000);
+
+// „04.12.2026 - č. 419/2012 Sb. - Vyhláška o ochraně pokusných zvířat - ve znění 31/2026 Sb.“ → číslo, název, kým je měněn
+export function parseLawTitle(title: string): { number: string; name: string; amendedBy: string } {
+    let t = title.replace(/^\d{1,2}\.\d{1,2}\.\d{4}\s*-\s*/, '');
+    const num = t.match(/^č\.\s*(\d+\/\d{4}\s*Sb\.(?:\s*m\.\s*s\.)?)\s*-\s*/i);
+    const number = num ? num[1].replace(/\s+/g, ' ') : '';
+    if (num) t = t.slice(num[0].length);
+    const am = t.match(/\s+-\s+ve znění\s+(.+)$/i);
+    const amendedBy = am ? am[1].trim() : '';
+    if (am) t = t.slice(0, am.index);
+    return { number, name: t.trim(), amendedBy };
+}
+
+export function ago(iso: string, now = new Date()): string {
+    const d = Math.floor((now.getTime() - new Date(iso).getTime()) / 86_400_000);
+    if (d <= 0) return 'dnes'; if (d === 1) return 'včera';
+    if (d < 7) return `před ${d} ${d < 5 ? 'dny' : 'dny'}`;
+    if (d < 31) { const w = Math.floor(d / 7); return `před ${w} ${w === 1 ? 'týdnem' : 'týdny'}`; }
+    return new Date(iso).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+}

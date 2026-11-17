@@ -39,3 +39,14 @@ describe('legal news', () => {
         expect(daysFromToday('2026-11-20', new Date('2026-11-17T09:00:00'))).toBe(3);
     });
 });
+
+describe('law titles and relative dates', () => {
+    it('splits number, name and amending act', async () => {
+        const { parseLawTitle, ago } = await import('./news');
+        expect(parseLawTitle('04.12.2026 - č. 419/2012 Sb. - Vyhláška o ochraně pokusných zvířat - ve znění 31/2026 Sb.')).toEqual({ number: '419/2012 Sb.', name: 'Vyhláška o ochraně pokusných zvířat', amendedBy: '31/2026 Sb.' });
+        expect(parseLawTitle('č. 216/2026 Sb. - Nařízení vlády')).toEqual({ number: '216/2026 Sb.', name: 'Nařízení vlády', amendedBy: '' });
+        expect(parseLawTitle('Jen obyčejný titulek')).toEqual({ number: '', name: 'Jen obyčejný titulek', amendedBy: '' });
+        const now = new Date('2026-11-17T12:00:00Z');
+        expect(ago('2026-11-17T08:00:00Z', now)).toBe('dnes'); expect(ago('2026-11-16T08:00:00Z', now)).toBe('včera'); expect(ago('2026-11-13T08:00:00Z', now)).toBe('před 4 dny'); expect(ago('2026-11-03T08:00:00Z', now)).toBe('před 2 týdny');
+    });
+});
