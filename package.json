@@ -43,9 +43,18 @@
     "eslint": "^9",
     "eslint-config-next": "^16.4.6",
     "jsdom": "^26.1.0",
+    "picomatch": "file:vendor/picomatch-4.0.8-pravo.0.tgz",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite": "^6.4.6",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "postcss-selector-parser": "^6.1.5",
+    "picomatch@^4.0.0": "$picomatch",
+    "micromatch": {
+      "picomatch": "file:../../vendor/picomatch-2.3.2-pravo.0.tgz"
+    }
   }
 }
