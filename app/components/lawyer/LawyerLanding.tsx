@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowRight, CalendarClock, Check, FolderOpen, Lock, Receipt, Scale, Smartphone, Users } from 'lucide-react';
+import PricingTeaser from './PricingTeaser';
 import { FinalCta, SiteFooter, SiteHeader, StartButton } from './LandingChrome';
 import { CaseMock, ClientMock } from './LandingMockups';
 
@@ -76,14 +77,8 @@ export default function LawyerLanding() {
                 </div>
             </section>
 
-            {/* 4. Ceník: samostatná stránka */}
-            <section className="bg-slate-50 px-4 py-20 sm:px-6 sm:py-24" aria-labelledby="cenik-title">
-                <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 text-center">
-                    <h2 id="cenik-title" className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Jedna cena. Všechny funkce v ní.</h2>
-                    <p className="max-w-xl text-lg text-slate-600">Měsíční, půlroční nebo roční předplatné, žádné automatické strhávání. Prvních 14 dní zdarma.</p>
-                    <Link href="/cenik" className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-6 py-3 text-[15px] font-semibold text-slate-800 hover:bg-slate-100">Zobrazit ceník <ArrowRight size={16} aria-hidden="true" /></Link>
-                </div>
-            </section>
+            {/* 4. Stručný ceník, podrobnosti na samostatné stránce */}
+            <PricingTeaser />
 
             <FinalCta />
             <SiteFooter />
