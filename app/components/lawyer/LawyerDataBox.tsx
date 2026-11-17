@@ -1,5 +1,6 @@
 'use client';
 
+import { hasBlocker, hasWarning, pdfSigned, preflight, type Check as PreCheck } from '@/lib/preflight';
 import { assignActivity, logActivity } from '@/lib/activity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ArrowLeft, Check, Download, Inbox, KeyRound, Loader2, Lock, Mail, Paperclip, Plug, Plus, Search, Send, Smartphone, Trash2, X } from 'lucide-react';
@@ -371,6 +372,8 @@ function Compose({ account, call, userId, onClose, onSent }: { account: Account;
     const [confirm, setConfirm] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [checks, setChecks] = useState<PreCheck[]>([]);
+    const [ack, setAck] = useState(false);
     useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => undefined); return () => { alive = false; }; }, []);
 
     async function find() {
@@ -395,6 +398,23 @@ function Compose({ account, call, userId, onClose, onSent }: { account: Account;
 
     const recipient = (to?.id ?? boxId).trim().toLowerCase();
     const valid = /^[a-z0-9]{7}$/.test(recipient) && annotation.trim().length > 0 && files.length > 0;
+
+    // Kontrola před odesláním: adresát, spisová značka, přílohy a lhůty ve věci
+    async function runCheck() {
+        setBusy(true); setError(''); setAck(false);
+        try {
+            const c = cases.find((x) => x.id === caseId);
+            let deadlines: { title: string; due: string; done: boolean }[] = [];
+            if (c) {
+                const { data } = await supabase.from('case_deadlines').select('title, due_date, done').eq('case_id', c.id);
+                deadlines = ((data ?? []) as { title: string; due_date: string; done: boolean }[]).map((d) => ({ title: d.title, due: d.due_date, done: d.done }));
+            }
+            const filesInfo = await Promise.all(files.map(async (f) => ({ name: f.name, size: f.size, type: f.type, signed: /\.pdf$/i.test(f.name) ? await pdfSigned(f) : null })));
+            setChecks(preflight({ recipientId: recipient, recipientName: to?.name ?? null, annotation, files: filesInfo, caseRef: c ? { title: c.title, reference: c.reference, authority: c.authority } : null, deadlines, prod: account.env !== 'test' }));
+            setConfirm(true);
+        } catch { setChecks([]); setConfirm(true); }
+        setBusy(false);
+    }
 
     async function send() {
         setBusy(true); setError('');
@@ -430,11 +450,18 @@ function Compose({ account, call, userId, onClose, onSent }: { account: Account;
                 </div>
                 <label className={label}>Uložit odeslanou zprávu a přílohy do věci (nepovinné)<select value={caseId} onChange={(e) => setCaseId(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">Neukládat</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
                 {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
-                {!confirm ? <button type="button" disabled={!valid || busy} onClick={() => setConfirm(true)} className={primaryBtn}><Send size={15} /> Zkontrolovat a odeslat</button> : (
+                {!confirm ? <button type="button" disabled={!valid || busy} onClick={() => void runCheck()} className={primaryBtn}><Send size={15} /> Zkontrolovat a odeslat</button> : (
                     <div className="rounded-xl border border-rose-300 bg-rose-50 p-4">
+                        {checks.length > 0 && (
+                            <ul className="mb-3 space-y-1.5 rounded-lg bg-white p-3" aria-label="Kontrola před odesláním">
+                                {checks.map((c, i) => <li key={i} className={`flex items-start gap-2 text-sm ${c.level === 'error' ? 'font-semibold text-rose-800' : c.level === 'warn' ? 'text-amber-900' : c.level === 'ok' ? 'text-emerald-800' : 'text-slate-600'}`}><span className="mt-0.5 shrink-0" aria-hidden="true">{c.level === 'error' ? <X size={15} /> : c.level === 'warn' ? <AlertTriangle size={15} /> : c.level === 'ok' ? <Check size={15} /> : <Search size={15} />}</span>{c.text}</li>)}
+                            </ul>
+                        )}
+                        {hasWarning(checks) && !hasBlocker(checks) && <label className="mb-3 flex items-start gap-2 text-sm font-semibold text-rose-950"><input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="mt-0.5 h-4 w-4 accent-rose-700" /> Upozornění jsem si přečetl a chci zprávu přesto odeslat.</label>}
+                        {hasBlocker(checks) && <p role="alert" className="mb-3 text-sm font-bold text-rose-900">Nejdřív opravte chyby výše. Zprávu zatím nelze odeslat.</p>}
                         <p className="text-sm font-bold text-rose-950">Odeslání datové zprávy má právní účinky a nejde vzít zpět.</p>
                         <p className="mt-1 text-sm text-rose-950">Adresát: <strong>{to?.name || `schránka ${recipient}`}</strong> · {files.length} příloh · věc: „{annotation.trim()}“. Z prostředí: {account.env === 'test' ? 'testovací' : 'OSTRÝ PROVOZ'}.</p>
-                        <div className="mt-3 flex gap-2"><button type="button" onClick={() => void send()} disabled={busy} className="inline-flex items-center gap-2 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800 disabled:opacity-60 cursor-pointer">{busy && <Loader2 size={15} className="animate-spin" />} Odeslat</button><button type="button" onClick={() => setConfirm(false)} className={ghostBtn}>Zpět</button></div>
+                        <div className="mt-3 flex gap-2"><button type="button" onClick={() => void send()} disabled={busy || hasBlocker(checks) || (hasWarning(checks) && !ack)} className="inline-flex items-center gap-2 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800 disabled:opacity-60 cursor-pointer">{busy && <Loader2 size={15} className="animate-spin" />} Odeslat</button><button type="button" onClick={() => setConfirm(false)} className={ghostBtn}>Zpět</button></div>
                     </div>
                 )}
             </div>
