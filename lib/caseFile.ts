@@ -5,7 +5,7 @@ export type CaseFolder = { id: string; case_id: string; name: string };
 export type CaseFile = { id: string; case_id: string; folder_id: string | null; name: string; path: string; size: number; mime: string; note: string; created_at: string; source?: string; client_visible?: boolean; request_id?: string | null; enc?: boolean };
 export type CaseEntry = { id: string; case_id: string; kind: 'event' | 'note'; title: string; body: string; happened_on: string | null; pinned: boolean; created_at: string; client_visible?: boolean };
 export type CaseDeadline = { id: string; case_id: string; title: string; due_date: string; done: boolean; client_visible?: boolean; basis?: string; quote?: string; source_dm?: string | null; internal_date?: string | null };
-export type CaseContact = { id: string; case_id: string; role: string; name: string; email: string; phone: string; note: string };
+export type CaseContact = { id: string; case_id: string; role: string; name: string; email: string; phone: string; note: string; ico?: string; birth?: string | null; watch?: boolean };
 
 export type CaseBundle = { folders: CaseFolder[]; files: CaseFile[]; entries: CaseEntry[]; deadlines: CaseDeadline[]; contacts: CaseContact[] };
 

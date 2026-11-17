@@ -17,6 +17,7 @@ import CaseFinanceTab from './CaseFinanceTab';
 import CaseSignTab from './CaseSignTab';
 import CaseIdentityTab from './CaseIdentityTab';
 import ClientInsolvencyBanner from './ClientInsolvencyBanner';
+import { CaseRadarBanner } from '../lawyer/RadarEvents';
 import CaseFilesTab from './CaseFilesTab';
 import CaseDeadlinesTab, { deadlineText, deadlineTone } from './CaseDeadlinesTab';
 import CaseTimelineTab from './CaseTimelineTab';
@@ -191,6 +192,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
             {error && <p role="alert" className="mt-4 flex items-start justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}<button type="button" onClick={() => setError('')} className="font-semibold underline cursor-pointer">Zavřít</button></p>}
 
             {isLawyer && item.client_id && <ClientInsolvencyBanner clientId={item.client_id} />}
+            {isLawyer && <CaseRadarBanner caseId={item.id} />}
             <nav className="mt-5 flex gap-1 overflow-x-auto border-b border-slate-200" role="tablist" aria-label="Části spisu">
                 {groups.map((g) => (
                     <button key={g.id} type="button" role="tab" aria-selected={activeGroup.id === g.id} onClick={() => setTab(lastTab[g.id] && g.items.some((i) => i.id === lastTab[g.id]) ? lastTab[g.id] : g.items[0].id)} className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-semibold cursor-pointer ${activeGroup.id === g.id ? 'border-indigo-800 text-indigo-900' : 'border-transparent text-slate-600 hover:text-slate-900'}`}>

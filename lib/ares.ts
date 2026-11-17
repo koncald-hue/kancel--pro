@@ -1,7 +1,7 @@
 // ARES (Administrativní registr ekonomických subjektů): veřejný registr firem a podnikatelů. Bez klíče, jen veřejné údaje.
 export const ARES_BASE = 'https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty';
 
-export type AresCompany = { ico: string; name: string; dic: string; address: string };
+export type AresCompany = { ico: string; name: string; dic: string; address: string; ended?: string | null };
 
 // IČO má 8 číslic a poslední je kontrolní (modulo 11)
 export function isValidIco(input: string): boolean {
@@ -24,7 +24,8 @@ export function normalizeCompany(raw: unknown): AresCompany | null {
     const name = str(r.obchodniJmeno);
     if (!/^\d{8}$/.test(ico) || !name) return null;
     const sidlo = (r.sidlo && typeof r.sidlo === 'object' ? r.sidlo : {}) as Record<string, unknown>;
-    return { ico, name, dic: str(r.dic), address: str(sidlo.textovaAdresa) };
+    const ended = str(r.datumZaniku).slice(0, 10);
+    return { ico, name, dic: str(r.dic), address: str(sidlo.textovaAdresa), ended: /^\d{4}-\d{2}-\d{2}$/.test(ended) ? ended : null };
 }
 
 // Hledání podle názvu je pomalejší a méně přesné než podle IČO; stačí pár znaků

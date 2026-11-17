@@ -32,6 +32,8 @@ declare v_kind text; v_label text := ''; v_words int := 0; v_case uuid;
 begin
   if auth.uid() is null then return new; end if;
   if tg_table_name = 'case_entries' then
+    -- Automatické zápisy (např. upozornění radaru) nejsou práce advokáta
+    if new.title like 'Radar:%' then return new; end if;
     v_kind := 'entry_added'; v_case := new.case_id; v_label := left(new.title, 200);
     v_words := coalesce(array_length(regexp_split_to_array(btrim(new.title || ' ' || coalesce(new.body, '')), '\s+'), 1), 0);
   elsif tg_table_name = 'case_deadlines' then

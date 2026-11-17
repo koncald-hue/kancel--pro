@@ -11,7 +11,7 @@ describe('ARES helpers', () => {
     });
     it('normalizes a company and rejects incomplete records', () => {
         expect(normalizeCompany({ ico: '27082440', obchodniJmeno: 'Alza.cz a.s.', dic: 'CZ27082440', sidlo: { textovaAdresa: 'Jankovcova 1522/53, Holešovice, 17000 Praha 7' } }))
-            .toEqual({ ico: '27082440', name: 'Alza.cz a.s.', dic: 'CZ27082440', address: 'Jankovcova 1522/53, Holešovice, 17000 Praha 7' });
+            .toEqual({ ico: '27082440', name: 'Alza.cz a.s.', dic: 'CZ27082440', address: 'Jankovcova 1522/53, Holešovice, 17000 Praha 7', ended: null });
         expect(normalizeCompany({ ico: '27082440' })).toBeNull();
         expect(normalizeCompany({ ico: 'x', obchodniJmeno: 'A' })).toBeNull();
         expect(normalizeCompany(null)).toBeNull();
