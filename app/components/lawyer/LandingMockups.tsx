@@ -113,3 +113,19 @@ export function TimesheetMock() {
         </Window>
     );
 }
+
+// Návrh výkazu na konci dne
+export function WorkMock() {
+    const rows: [string, string, string][] = [['Novák proti Dvořákovi', 'Studium datové zprávy, příprava dokumentu: Odvolání', '1:15'], ['Stavební družstvo Jih', 'Korespondence e-mailem (3×), evidence lhůty', '0:30'], ['Svobodová, dědictví', 'Komunikace s klientem, záznam do spisu', '0:15']];
+    return (
+        <Window title="Výkazy · Návrh výkazu">
+            <div className="p-4">
+                <div className="flex items-center justify-between"><p className="text-sm font-bold text-slate-900">Dnes jste pracovali na 3 věcech</p><span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-800">2:00 h</span></div>
+                <ul className="mt-3 space-y-2 text-sm">
+                    {rows.map(([c, d, h]) => <li key={c} className="flex items-start gap-3 rounded-xl border border-slate-100 p-3"><span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-indigo-700 text-white"><Check size={11} /></span><span className="min-w-0 flex-1"><span className="block truncate font-semibold text-slate-800">{c}</span><span className="block truncate text-xs text-slate-500">{d}</span></span><span className="shrink-0 font-bold text-slate-900">{h}</span></li>)}
+                </ul>
+                <p className="mt-3 rounded-lg bg-indigo-700 px-3 py-2 text-center text-xs font-bold text-white">Zapsat vybrané (2:00 h)</p>
+            </div>
+        </Window>
+    );
+}

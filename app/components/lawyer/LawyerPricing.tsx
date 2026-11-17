@@ -17,7 +17,7 @@ const INCLUDED = [
 ];
 
 // Tři plány předplatného. Ceny se načítají z nastavení; dokud nejsou zadané, ukáže se jen „brzy".
-export default function LawyerPricing() {
+export default function LawyerPricing({ bare = false }: { bare?: boolean } = {}) {
     const { account, openLogin } = useAuth();
     const [prices, setPrices] = useState<Prices>(EMPTY_PRICES);
     const [firmPrices, setFirmPrices] = useState<FirmPrices>(EMPTY_FIRM_PRICES);
@@ -30,10 +30,10 @@ export default function LawyerPricing() {
     }, []);
 
     return (
-        <section id="cenik" className="scroll-mt-20" aria-labelledby="plans-title">
+        <section id={bare ? undefined : 'cenik'} className="scroll-mt-20" aria-labelledby={bare ? undefined : 'plans-title'} aria-label={bare ? 'Plány předplatného' : undefined}>
             <div className="text-center">
-                <p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Ceník</p>
-                <h2 id="plans-title" className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Jeden produkt, tři délky předplatného</h2>
+                {!bare && <><p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Ceník</p>
+                <h2 id="plans-title" className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Jeden produkt, tři délky předplatného</h2></>}
                 <p className="mx-auto mt-3 max-w-2xl text-slate-600">Všechny plány mají úplně stejné funkce. Liší se jen délkou a cenou. Začnete <strong className="text-slate-900">14 dny zdarma</strong>, bez zadávání karty a bez závazku.</p>
                 <div className="mx-auto mt-6 inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1" role="group" aria-label="Pro koho">
                     {([['solo', 'Jednotlivý advokát'], ['firm', 'Advokátní kancelář']] as const).map(([id, label]) => <button key={id} type="button" aria-pressed={mode === id} onClick={() => setMode(id)} className={`rounded-lg px-4 py-2 text-sm font-semibold ${mode === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>{label}</button>)}
