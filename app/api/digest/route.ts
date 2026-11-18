@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const db = serviceClient();
     if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
     const today = new Date().toISOString().slice(0, 10);
-    const d = await digestFor(db, u.user.id, today, details);
+    const d = await digestFor(db, u.user.id, today, details, new URL(req.url).origin);
     if (!send) return NextResponse.json({ subject: d.mail.subject, text: d.mail.text, worth: d.worth }, { headers: { 'Cache-Control': 'no-store' } });
     if (!mailConfigured()) return NextResponse.json({ error: 'mail_off' }, { status: 503 });
     const to = u.user.email ?? '';

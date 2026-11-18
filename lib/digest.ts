@@ -37,7 +37,7 @@ export function buildDigest(d: DigestInput): { subject: string; text: string } {
     if (d.newInquiries) L.push(`Nové poptávky: ${d.newInquiries}`);
     if (d.deliveriesPending) L.push(`Odeslaná pošta bez potvrzeného doručení: ${d.deliveriesPending}`);
     if (d.archiveExpired) L.push(`Spisy s uplynulou lhůtou uložení: ${d.archiveExpired}`);
-    L.push('', `Podrobnosti v Kanceláři: ${d.appUrl}/kancelar`, '', 'Souhrn vypnete v Nastavení → Týdenní souhrn.', 'Termíny jsou pomůcka, rozhoduje ověření ve spisu.');
+    L.push('', ...(d.appUrl ? [`Podrobnosti v Kanceláři: ${d.appUrl}/kancelar`, ''] : []), 'Souhrn vypnete v Nastavení → Týdenní souhrn.', 'Termíny jsou pomůcka, rozhoduje ověření ve spisu.');
     return { subject, text: L.join('\n') };
 }
 

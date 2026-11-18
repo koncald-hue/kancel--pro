@@ -25,7 +25,8 @@ const T = 'DENIK-TEST';
     r = await A.from('mail_log').insert({ user_id: UA, direction: 'out', channel: 'datovka', event_on: today, subject: `${T} 2` }).select('id, seq').single(); ok('další zápis má číslo o jedna vyšší', !r.error && r.data.seq === m1.seq + 1, `${m1?.seq} → ${r.data?.seq}`); created.mail.push(r.data?.id);
     r = await A.from('mail_log').insert({ user_id: UA, direction: 'in', channel: 'email', event_on: today, subject: `${T} dup`, source_ref: `${T}:1` }); ok('stejná zpráva se do deníku nezapíše dvakrát', r.error?.code === '23505', r.error?.message);
     r = await A.from('mail_log').insert({ user_id: UA, direction: 'in', channel: 'listinna', event_on: today, subject: `${T} vlastní číslo`, seq: 99999, year: 1999 }).select('year, seq').single(); ok('vlastní číslo jednací si nelze zvolit', !r.error && r.data.seq !== 99999 && r.data.year !== 1999); created.mail.push(r.data && (await A.from('mail_log').select('id').eq('subject', `${T} vlastní číslo`).single()).data?.id);
-    r = await A.from('mail_log').update({ seq: 1 }).eq('id', m1.id); ok('číslo jednací nejde změnit', !!r.error, r.error?.message);
+    r = await A.from('mail_log').update({ seq: m1.seq + 500 }).eq('id', m1.id).select('seq'); ok('číslo jednací nejde změnit', !!r.error || !(r.data || []).length, r.error?.message);
+    r = await A.from('mail_log').update({ event_on: '2020-01-01' }).eq('id', m1.id).select('id'); ok('datum zápisu nejde změnit', !!r.error || !(r.data || []).length, r.error?.message);
     r = await A.from('mail_log').update({ delivered_on: today, delivery_note: 'doručenka' }).eq('id', created.mail[1]).select('delivered_on'); ok('doručení jde doplnit', !r.error && r.data?.[0]?.delivered_on === today, r.error?.message);
     r = await A.from('mail_log').delete().eq('id', m1.id).select('id'); ok('zápis z deníku nejde smazat', !(r.data || []).length);
 
@@ -69,7 +70,7 @@ const T = 'DENIK-TEST';
     r = await A.from('cases').select('archived_on, archive_until, disposal, disposed_on').eq('id', c.id).single(); ok('věc má stav vydáno', r.data?.disposal === 'vydano' && r.data?.disposed_on === today, JSON.stringify(r.data));
     r = await A.from('case_archive_log').select('id, action').eq('case_id', c.id).order('created_at'); ok('protokol má 3 zápisy', (r.data || []).map((x) => x.action).join(',') === 'archivace,prodlouzeni,vydani', (r.data || []).map((x) => x.action).join(','));
     const logId = r.data?.[0]?.id;
-    r = await A.from('case_archive_log').update({ note: 'změna' }).eq('id', logId); ok('protokol nejde měnit', !!r.error, r.error?.message);
+    r = await A.from('case_archive_log').update({ note: 'změna' }).eq('id', logId).select('id'); const still = (await svc.from('case_archive_log').select('note').eq('id', logId).single()).data; ok('protokol nejde měnit', (!!r.error || !(r.data || []).length) && still?.note === T, still?.note);
     r = await A.from('case_archive_log').delete().eq('id', logId).select('id'); ok('protokol nejde smazat', !(r.data || []).length);
     r = await A.rpc('archive_case', { p_case: bCase.id, p_action: 'archivace', p_on: today, p_until: day(10), p_place: '', p_note: '' }); ok('cizí věc nejde archivovat', !!r.error);
 

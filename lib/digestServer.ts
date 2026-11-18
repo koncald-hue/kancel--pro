@@ -5,7 +5,7 @@ import { getSiteOrigin } from './siteUrl';
 // Data pro týdenní souhrn jednoho advokáta (server, služební klíč): jen jeho vlastní věci a věci, kde ho právě někdo zastupuje.
 const addDays = (iso: string, n: number) => new Date(Date.parse(`${iso}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
 
-export async function collectDigest(db: SupabaseClient, userId: string, today: string, details: boolean): Promise<DigestInput> {
+export async function collectDigest(db: SupabaseClient, userId: string, today: string, details: boolean, appUrl?: string): Promise<DigestInput> {
     const week = addDays(today, 7); const since = `${addDays(today, -7)}T00:00:00Z`;
     const [la, cases] = await Promise.all([
         db.from('lawyer_access').select('display_name').eq('user_id', userId).maybeSingle(),
@@ -37,7 +37,7 @@ export async function collectDigest(db: SupabaseClient, userId: string, today: s
         substituting.push({ name: String(p.data?.display_name || p.data?.email || 'kolega'), to_on: s.to_on, deadlines: n });
     }
     return {
-        name: String(la.data?.display_name ?? ''), today, details, appUrl: getSiteOrigin() ?? '',
+        name: String(la.data?.display_name ?? ''), today, details, appUrl: appUrl ?? getSiteOrigin() ?? '',
         overdue: deadlines.filter((d) => d.due_date < today), upcoming: deadlines.filter((d) => d.due_date >= today),
         caseEvents: [...counts.entries()].map(([id, count]) => ({ case_title: title.get(id) ?? '', count })).sort((a, b) => b.count - a.count),
         unbilledMinutes: entries.reduce((s, e) => s + e.minutes, 0), unbilledAmount: entries.reduce((s, e) => s + (e.minutes * Number(e.rate)) / 60, 0),
@@ -47,8 +47,8 @@ export async function collectDigest(db: SupabaseClient, userId: string, today: s
     };
 }
 
-export async function digestFor(db: SupabaseClient, userId: string, today: string, details: boolean) {
-    const input = await collectDigest(db, userId, today, details);
+export async function digestFor(db: SupabaseClient, userId: string, today: string, details: boolean, appUrl?: string) {
+    const input = await collectDigest(db, userId, today, details, appUrl);
     return { input, mail: buildDigest(input), worth: hasAnything(input) };
 }
 
