@@ -1,5 +1,6 @@
 'use client';
 
+import Substitutions from './Substitutions';
 import { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, CreditCard, Loader2, Mail, Trash2, UserPlus, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -170,6 +171,7 @@ export default function LawyerTeam() {
                     </section>
                 </>
             )}
+            {f && <Substitutions colleagues={colleagues.map((c) => ({ user_id: c.user_id, name: c.name || c.email }))} />}
         </div>
     );
 }

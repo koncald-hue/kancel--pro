@@ -234,6 +234,8 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
             const map: Record<string, string[]> = {};
             for (const row of (data ?? []) as unknown as { dm_id: string; cases: { title: string } | { title: string }[] | null }[]) { const t = Array.isArray(row.cases) ? row.cases[0]?.title : row.cases?.title; if (t) (map[row.dm_id] ??= []).push(t); }
             setInCases(map);
+            // Odeslané zprávy: když je zpráva doručená (dodejka), doplní se datum doručení v podacím deníku
+            if (t === 'sent') for (const x of list.filter((y) => y.accepted)) void supabase.from('mail_log').update({ delivered_on: x.accepted.slice(0, 10), delivery_note: 'dodejka datové schránky' }).eq('source_ref', `isds:${x.id}`).is('delivered_on', null);
             const { data: chk } = await supabase.from('data_message_checks').select('dm_id').in('dm_id', list.map((x) => x.id));
             setChecked(new Set(((chk ?? []) as { dm_id: string }[]).map((c) => c.dm_id)));
         }

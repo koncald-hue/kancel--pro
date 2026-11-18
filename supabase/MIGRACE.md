@@ -44,6 +44,7 @@ Potřebuje v `.env.local` hodnoty `NEXT_PUBLIC_SUPABASE_URL` a `SUPABASE_SERVICE
 | `20261118_16_udaje-kancelare-pro-cleny.sql` | Společné údaje kanceláře (název, IČO, DIČ, DPH, splatnost, poznámka) se předávají členům od vedoucího a při jeho změně se přepíšou; číslo účtu a sazbu má každý advokát vlastní. |
 | `20261118_17_stret-zajmu-sklonovani.sql` | Střet zájmů v kanceláři najde jméno i ve skloňovaném tvaru („proti Dvořákovi“ → Petr Dvořák). |
 | `20261118_18_stret-zajmu-kratka-jmena.sql` | Skloňování i u pětipísmenných jmen („Petru Dvořákovi“ → Petr Dvořák). |
+| `20261118_19_denik-archiv-ucetnictvi-zastupovani.sql` | Podací deník (čísla jednací, doručení), archiv a skartace spisů s protokolem, zálohové faktury (řada Z…), opakovaná fakturace, týdenní souhrn, zastupování v týmu (přístup zástupce k věcem po dobu nepřítomnosti). |
 
 ## Starší skripty (před zavedením složky migrations)
 

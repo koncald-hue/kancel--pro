@@ -1,5 +1,6 @@
 'use client';
 
+import RecurringInvoices from './RecurringInvoices';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -137,6 +138,7 @@ export default function LawyerInvoices() {
                 <Tile label={`Splatnost do ${DUE_SOON_DAYS} dní`} value={money(sum(soon, (r) => r.outstanding))} tone={soon.length ? 'text-amber-700' : ''} note={`${soon.length} vyúčtování`} />
                 <Tile label="Zaplaceno celkem" value={money(sum(live, (r) => r.paid))} />
             </div>
+            <RecurringInvoices onCreated={load} />
             <div className="flex flex-wrap items-center gap-2">
                 <button type="button" onClick={() => void create()} disabled={busy} className={primaryBtn}><Plus size={16} /> Nové vyúčtování</button>
                 <div className="ml-auto inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1" role="group" aria-label="Zobrazení">

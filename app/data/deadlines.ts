@@ -1138,7 +1138,7 @@ export const LEGAL_DEADLINES: LegalDeadline[] = [
         id: 'stiznost-usneseni-trestni',
         title: 'Stížnost proti usnesení v trestním řízení (např. vazba / zahájení stíhání)',
         category: 'trestni-pravo',
-        law: '§ 137 odst. 2 trestního řádu',
+        law: '§ 143 odst. 1 trestního řádu',
         durationDays: 3,
         type: 'days',
         description: 'Stížnost se podává u orgánu, proti jehož usnesení směřuje, do 3 dnů od oznámení usnesení.',

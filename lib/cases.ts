@@ -28,6 +28,12 @@ export type LegalCase = {
     client_id?: string | null;
     client_email?: string;
     client_phone?: string;
+    // Archiv (migrace 20261118_19); mění je jen funkce archive_case
+    archived_on?: string | null;
+    archive_until?: string | null;
+    archive_place?: string;
+    disposed_on?: string | null;
+    disposal?: string | null;
     created_at: string;
 };
 

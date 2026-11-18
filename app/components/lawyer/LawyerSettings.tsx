@@ -1,5 +1,6 @@
 'use client';
 
+import DigestSettings from './DigestSettings';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Check, Copy, CreditCard } from 'lucide-react';
@@ -149,6 +150,7 @@ export default function LawyerSettings() {
                 {payMsg && <p role="status" className="mt-3 text-sm text-slate-700">{payMsg}</p>}
                 {orders.length > 0 && <ul className="mt-3 divide-y divide-slate-100 text-xs text-slate-600">{orders.map((o) => <li key={o.id} className="flex justify-between py-1.5"><span>{planName(o.plan)} · {czk(o.price_czk)}</span><span>{o.status === 'paid' ? `zaplaceno${o.period_end ? `, platí do ${new Date(`${o.period_end}T12:00:00`).toLocaleDateString('cs-CZ')}` : ''}` : o.status === 'pending' ? 'čeká na platbu' : o.status === 'refund_due' ? 'bude vráceno' : 'zrušeno'}</span></li>)}</ul>}
             </section>
+            <DigestSettings />
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="text-lg font-bold text-slate-900">Poptávkový odkaz</h2>
                 <p className="mt-1 text-sm text-slate-600">Veřejný formulář, přes který vám zájemce popíše věc. Odkaz vložte na web nebo do podpisu e-mailu. Poptávky najdete v záložce Poptávky.</p>

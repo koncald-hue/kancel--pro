@@ -1,11 +1,12 @@
 import type { Unit } from './lhuty';
 import { isIsoDate } from './lhuty';
+import { remedyProposal } from './remedyDefaults';
 
 // Vyhledání lhůt v textu soudního nebo úředního rozhodnutí (typicky v poučení). Pracuje výhradně pravidly bez umělé inteligence:
 // každý nález má doslovný citát z dokumentu a může být neúplný. Nenalezení lhůty NEZNAMENÁ, že žádná neběží.
 export type Trigger = 'doruceni' | 'pravni_moc' | 'vyhlaseni' | 'zverejneni' | 'neuveden';
 export type Confidence = 'vysoka' | 'stredni' | 'nizka';
-export type Candidate = { id: string; label: string; kind: 'relativni' | 'absolutni'; n?: number; unit?: Unit; date?: string; trigger: Trigger; quote: string; confidence: Confidence; warnings: string[]; source: string };
+export type Candidate = { id: string; label: string; kind: 'relativni' | 'absolutni'; n?: number; unit?: Unit; date?: string; trigger: Trigger; quote: string; confidence: Confidence; warnings: string[]; source: string; lawKey?: string; statutory?: boolean };
 export type Analysis = { docType: string; candidates: Candidate[]; poucení: string[]; notes: string[] };
 
 export const TRIGGER_LABELS: Record<Trigger, string> = { doruceni: 'od doručení', pravni_moc: 'od právní moci', vyhlaseni: 'od vyhlášení', zverejneni: 'od zveřejnění', neuveden: 'začátek neuveden' };
@@ -123,6 +124,11 @@ export function analyzeText(raw: string, source: string): Analysis {
         poucení.push(text.slice(idx, idx + 1100).trim() + (text.length > idx + 1100 ? ' …' : ''));
     }
     if (/není\s+(odvolání\s+)?(přípustné|přípustný)|nepřípustn|odvolání\s+se\s+nepřipouští|nelze\s+(se\s+)?(odvolat|podat\s+odvolání)|opravný\s+prostředek\s+není\s+přípustný/i.test(text)) notes.push('Dokument obsahuje větu o tom, že opravný prostředek není přípustný. Přečtěte poučení.');
+    // Poučení lhůtu k opravnému prostředku neuvádí (nebo ji pravidla nenašla): návrh podle obecné úpravy a druhu rozhodnutí
+    const prop = remedyProposal(text);
+    if (prop && !candidates.some((c) => c.label.split(' ')[0] === prop.label.split(' ')[0])) {
+        candidates.push({ id: `${source}#${++idn}`, label: prop.label, kind: 'relativni', n: prop.n, unit: prop.unit, trigger: 'doruceni', quote: `Podle obecné úpravy: ${prop.law} (${prop.why}). Poučení v dokumentu tuto lhůtu neuvádí, nebo ji nástroj nenašel.`, confidence: 'stredni', warnings: ['Navrženo podle druhu rozhodnutí, ne z textu poučení. Ověřte poučení, přípustnost opravného prostředku a případný zvláštní předpis.', ...(prop.lawKey === 'dovolani-obcanske-rizeni' ? ['Dovolání je přípustné jen v zákonem stanovených případech.'] : [])], source, lawKey: prop.lawKey, statutory: true });
+    }
     if (candidates.length === 0) notes.push('Žádná lhůta nebyla nalezena. To neznamená, že žádná neběží (může být v příloze, ve zvláštním dokumentu nebo vyplývat ze zákona). Přečtěte dokument.');
     return { docType: docTypeOf(text), candidates, poucení, notes };
 }

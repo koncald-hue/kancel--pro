@@ -5,7 +5,7 @@ export type PriceItem = { id: string; name: string; description: string; kind: P
 export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'cancelled';
 export type Invoice = {
     id: string; client_id: string | null; case_id: string | null; number: string | null; title: string; issue_date: string; due_date: string | null;
-    status: InvoiceStatus; paid_at: string | null; note: string; currency: 'CZK' | 'EUR'; supplier_snapshot: Party; client_snapshot: Party; created_at: string;
+    status: InvoiceStatus; paid_at: string | null; note: string; currency: 'CZK' | 'EUR'; supplier_snapshot: Party; client_snapshot: Party; created_at: string; kind?: 'faktura' | 'zaloha';
 };
 export type Party = { name?: string; firm?: string; address?: string; ico?: string; dic?: string; vat_payer?: boolean; bank_account?: string; email?: string; phone?: string; web?: string; note?: string; bar_number?: string };
 export type InvoiceLine = { id: string; invoice_id: string; position: number; description: string; qty: number; unit: string; unit_price: number; vat_rate: number; price_item_id: string | null; time_entry_id: string | null };
@@ -58,21 +58,24 @@ function partyHtml(title: string, p: Party): string {
     return `<div class="party"><h3>${title}</h3><p>${rows.join('<br>')}</p></div>`;
 }
 
+// Nadpis dokladu: faktura, zálohová faktura nebo koncept
+export const docTitle = (inv: Pick<Invoice, 'number' | 'kind'>) => (inv.kind === 'zaloha' ? (inv.number ? `Zálohová faktura č. ${inv.number}` : 'Zálohová faktura (koncept)') : inv.number ? `Faktura č. ${inv.number}` : 'Vyúčtování (koncept)');
+
 // Tisknutelný doklad (otevře se v novém okně a vytiskne / uloží jako PDF)
 export function buildInvoiceHtml(inv: Invoice, lines: DraftLine[], totals: Totals, vatPayer: boolean, qr?: { svg: string; amount: number }): string {
     const supplier = inv.supplier_snapshot;
     const vs = (inv.number ?? '').replace(/\D/g, '');
     const rows = lines.map((l) => `<tr><td>${esc(l.description)}</td><td class="r">${qtyText(l.qty)} ${esc(l.unit)}</td><td class="r">${money(l.unit_price, inv.currency)}</td>${vatPayer ? `<td class="r">${l.vat_rate} %</td>` : ''}<td class="r">${money(lineBase(l), inv.currency)}</td></tr>`).join('');
     const groups = vatPayer ? totals.groups.map((g) => `<tr><td colspan="2">Základ ${g.rate} %: ${money(g.base, inv.currency)}</td><td colspan="2" class="r">DPH ${g.rate} %: ${money(g.vat, inv.currency)}</td></tr>`).join('') : '';
-    return `<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>${esc(inv.number ? `Faktura ${inv.number}` : 'Vyúčtování (koncept)')}</title><style>
+    return `<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>${esc(docTitle(inv))}</title><style>
 body{font:13px/1.5 system-ui,sans-serif;color:#0f172a;margin:32px}h1{font-size:22px;margin:0}h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0 0 4px}
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}.parties{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:24px 0}.party p{margin:0}
 table{width:100%;border-collapse:collapse;margin-top:8px}th{text-align:left;font-size:11px;text-transform:uppercase;color:#64748b;border-bottom:2px solid #0f172a;padding:6px 4px}td{padding:6px 4px;border-bottom:1px solid #e2e8f0;vertical-align:top}.r{text-align:right;white-space:nowrap}
 .total{margin-top:16px;text-align:right;font-size:18px;font-weight:700}.meta{margin-top:16px;color:#334155}small{color:#64748b}@media print{body{margin:12mm}}</style></head><body>
-<div class="top"><div><h1>${inv.number ? `Faktura č. ${esc(inv.number)}` : 'Vyúčtování (koncept)'}</h1>${inv.title ? `<p>${esc(inv.title)}</p>` : ''}</div><div class="r"><div>Vystaveno: <b>${dateCz(inv.issue_date)}</b></div><div>Splatnost: <b>${dateCz(inv.due_date) || '–'}</b></div></div></div>
+<div class="top"><div><h1>${esc(docTitle(inv))}</h1>${inv.kind === 'zaloha' ? '<p><b>Výzva k platbě zálohy. Nejde o daňový doklad.</b></p>' : ''}${inv.title ? `<p>${esc(inv.title)}</p>` : ''}</div><div class="r"><div>Vystaveno: <b>${dateCz(inv.issue_date)}</b></div><div>Splatnost: <b>${dateCz(inv.due_date) || '–'}</b></div></div></div>
 <div class="parties">${partyHtml('Dodavatel', supplier)}${partyHtml('Odběratel', inv.client_snapshot)}</div>
 <table><thead><tr><th>Popis</th><th class="r">Množství</th><th class="r">Cena za jednotku</th>${vatPayer ? '<th class="r">DPH</th>' : ''}<th class="r">Základ</th></tr></thead><tbody>${rows}${groups}</tbody></table>
-<p class="total">K úhradě: ${money(totals.total, inv.currency)}</p>
+<p class="total">${inv.kind === 'zaloha' ? 'Záloha k úhradě' : 'K úhradě'}: ${money(totals.total, inv.currency)}</p>
 ${qr ? `<div style="display:flex;align-items:center;gap:14px;margin-top:12px"><div style="width:112px;height:112px">${qr.svg}</div><div><b>QR platba</b><br><small>Naskenujte v aplikaci své banky. Částka ${money(qr.amount, inv.currency)}, variabilní symbol ${vs}.</small></div></div>` : ''}
 <div class="meta">${supplier.bank_account ? `Číslo účtu: <b>${esc(supplier.bank_account)}</b>${vs ? ` · variabilní symbol: <b>${vs}</b>` : ''}<br>` : ''}${vatPayer ? '' : '<small>Dodavatel není plátcem DPH.</small><br>'}${inv.note ? `${esc(inv.note)}<br>` : ''}${supplier.note ? esc(supplier.note) : ''}</div>
 <p><small>Doklad vyhotoven v aplikaci Kancelář. Za správnost údajů a splnění náležitostí účetního a daňového dokladu odpovídá vystavovatel.</small></p></body></html>`;

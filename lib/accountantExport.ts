@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { computeTotals, round2, type InvoiceLine, type Payment, type Receivable } from './billing';
 import { buildIsdoc } from './isdoc';
 import { buildPohodaXml } from './pohoda';
+import { buildMoneyS3Xml } from './moneyS3';
 
 // Podklady pro účetní: přehled vydaných faktur, plateb, souhrn DPH po sazbách, pohledávky a faktury ve formátu ISDOC.
 export type FullInvoice = Receivable & { lines: InvoiceLine[] };
@@ -19,7 +20,7 @@ const inPeriod = (d: string, from: string, to: string) => d >= from && d <= to;
 const RATES = [21, 12, 0];
 const STATUS: Record<string, string> = { issued: 'vystaveno', paid: 'zaplaceno', cancelled: 'storno' };
 
-export function buildExport(inp: ExportInput, opt: { isdoc: boolean; pohoda?: boolean }): { files: ExportFile[]; summary: ExportSummary; warnings: string[] } {
+export function buildExport(inp: ExportInput, opt: { isdoc: boolean; pohoda?: boolean; money?: boolean }): { files: ExportFile[]; summary: ExportSummary; warnings: string[] } {
     const warnings: string[] = [];
     const inv = inp.invoices.filter((i) => i.status !== 'draft' && i.number && inPeriod(i.issue_date, inp.from, inp.to)).sort((a, b) => a.issue_date.localeCompare(b.issue_date) || (a.number ?? '').localeCompare(b.number ?? ''));
     const live = inv.filter((i) => i.status !== 'cancelled');
@@ -62,13 +63,18 @@ export function buildExport(inp: ExportInput, opt: { isdoc: boolean; pohoda?: bo
         if (!ico) warnings.push('Pohoda: u vystavených faktur chybí IČO dodavatele, soubor pro Pohodu nebyl vytvořen.');
         else { const r = buildPohodaXml(live, { ico, id: `KAN-${inp.from}`, note: `Vydané faktury ${inp.from} až ${inp.to}` }); warnings.push(...r.warnings); files.push({ name: 'pohoda-faktury.xml', content: r.xml }); }
     }
+    if (opt.money) {
+        const ico = live.map((i) => i.supplier_snapshot.ico).find((x) => !!x) ?? '';
+        if (!ico) warnings.push('Money S3: u vystavených faktur chybí IČO dodavatele, soubor pro Money S3 nebyl vytvořen.');
+        else { const r = buildMoneyS3Xml(live, { ico }); warnings.push(...r.warnings.map((w) => `Money S3: ${w}`)); files.push({ name: 'money-s3-faktury.xml', content: r.xml }); }
+    }
     const drafts = inp.invoices.filter((i) => i.status === 'draft' && inPeriod(i.issue_date, inp.from, inp.to)).length;
     if (drafts) warnings.push(`${drafts} konceptů vyúčtování v období není vystavených, do exportu nepatří.`);
     const noVat = live.filter((i) => i.supplier_snapshot.vat_payer !== true).length;
     if (noVat && noVat !== live.length) warnings.push('Část vyúčtování byla vystavena jako od neplátce DPH, část jako od plátce. Zkontrolujte, zda stav plátcovství odpovídá období.');
 
     const summary: ExportSummary = { invoices: live.length, cancelled: inv.length - live.length, base: round2(byRate.reduce((s, g) => s + g.base, 0)), vat: round2(byRate.reduce((s, g) => s + g.vat, 0)), total: round2(byRate.reduce((s, g) => s + g.base + g.vat, 0)), paid: round2(pays.reduce((s, p) => s + p.amount, 0)), payments: pays.length, receivables: round2(open.reduce((s, x) => s + x.left, 0)), byRate };
-    const readme = [`Podklady pro účetní, vydané ${dmy(inp.today)}`, `Období (podle data vystavení): ${dmy(inp.from)} až ${dmy(inp.to)}`, '', 'Soubory:', '- pohoda-faktury.xml (jen když jste zvolili): vydané faktury pro import do Pohody (Soubor, Datová komunikace, XML import). Struktura odpovídá schématu STORMWARE, před ostrým importem ji zkuste na kopii účetnictví.', '- vydane-faktury.csv: všechny vystavené faktury v období (storno s nulovými částkami)', '- dph-souhrn.csv: základ a DPH po sazbách, bez storna, jen koruny', '- platby.csv: platby přijaté v období (datum úhrady)', `- pohledavky.csv: neuhrazené faktury ke dni ${dmy(inp.to)}`, opt.isdoc ? `- isdoc/: ${isdocCount} faktur ve formátu ISDOC 6.0.2 (import do Pohody, Money, Helios a dalších)` : '', '', 'Poznámky:', '- Datum uskutečnění zdanitelného plnění (DUZP) se bere z data vystavení, aplikace jej neeviduje zvlášť. Zkontrolujte, zda to u vašich služeb platí.', '- Částky v CSV mají desetinnou čárku a jsou určené pro Excel v českém prostředí.', `- Kontrolní součty: ${summary.invoices} faktur, základ ${summary.base}, DPH ${summary.vat}, celkem ${summary.total}; přijaté platby ${summary.paid}.`, ...(warnings.length ? ['', 'Upozornění:', ...warnings.map((w) => `- ${w}`)] : [])].filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\r\n');
+    const readme = [`Podklady pro účetní, vydané ${dmy(inp.today)}`, `Období (podle data vystavení): ${dmy(inp.from)} až ${dmy(inp.to)}`, '', 'Soubory:', '- money-s3-faktury.xml (jen když jste zvolili): vydané faktury pro Money S3 (XML přenosy → Import z XML, vydané faktury). Zálohové faktury mají druh F.', '- pohoda-faktury.xml (jen když jste zvolili): vydané faktury pro import do Pohody (Soubor, Datová komunikace, XML import). Struktura odpovídá schématu STORMWARE, před ostrým importem ji zkuste na kopii účetnictví.', '- vydane-faktury.csv: všechny vystavené faktury v období (storno s nulovými částkami)', '- dph-souhrn.csv: základ a DPH po sazbách, bez storna, jen koruny', '- platby.csv: platby přijaté v období (datum úhrady)', `- pohledavky.csv: neuhrazené faktury ke dni ${dmy(inp.to)}`, opt.isdoc ? `- isdoc/: ${isdocCount} faktur ve formátu ISDOC 6.0.2 (import do Pohody, Money, Helios a dalších)` : '', '', 'Poznámky:', '- Datum uskutečnění zdanitelného plnění (DUZP) se bere z data vystavení, aplikace jej neeviduje zvlášť. Zkontrolujte, zda to u vašich služeb platí.', '- Částky v CSV mají desetinnou čárku a jsou určené pro Excel v českém prostředí.', `- Kontrolní součty: ${summary.invoices} faktur, základ ${summary.base}, DPH ${summary.vat}, celkem ${summary.total}; přijaté platby ${summary.paid}.`, ...(warnings.length ? ['', 'Upozornění:', ...warnings.map((w) => `- ${w}`)] : [])].filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\r\n');
     files.push({ name: 'README.txt', content: `﻿${readme}` });
     return { files, summary, warnings };
 }

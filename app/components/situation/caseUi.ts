@@ -14,6 +14,7 @@ export type TabProps = {
     // Advokátský režim: odemyká klienty, údaje o věci, ZIP a vyšší limity
     lawyer: boolean;
     patchItem: (change: Partial<LegalCase>) => void;
+    patchLocal?: (change: Partial<LegalCase>) => void;
     setBundle: (update: (b: CaseBundle) => CaseBundle) => void;
     fail: (err: unknown) => void;
 };

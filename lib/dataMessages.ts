@@ -1,3 +1,4 @@
+import { findTheirRef, logMail } from './mailLog';
 import { supabase } from './supabase';
 import { insertRow, updateRow, uploadCaseFile } from './caseFile';
 import type { LegalCase } from './cases';
@@ -31,6 +32,10 @@ export async function saveMessageToCase(userId: string, caseId: string, directio
         const row = await insertRow<{ id: string }>('case_data_messages', { case_id: caseId, user_id: userId, dm_id: m.id, direction, sender: m.sender, recipient: m.recipient, annotation: m.annotation, delivered_at: when, status: m.status });
         rowId = row.id;
         try { await insertRow('case_entries', { case_id: caseId, user_id: userId, kind: 'event', title: `${direction === 'received' ? 'Přijatá' : 'Odeslaná'} datová zpráva: ${m.annotation || 'bez věci'}`.slice(0, 200), body: `${direction === 'received' ? `Odesílatel: ${m.sender}` : `Adresát: ${m.recipient}`}. ID zprávy ${m.id}.`, happened_on: when.slice(0, 10) }); } catch { /* chronologie není kritická */ }
+    }
+    // Podací deník: zpráva uložená do věci se zapíše jednou (podle ID datové zprávy); u odeslané se doručení doplní později
+    if (recordNew) {
+        await logMail({ user_id: userId, case_id: caseId, direction: direction === 'received' ? 'in' : 'out', channel: 'datovka', event_on: when.slice(0, 10), counterparty: (direction === 'received' ? m.sender : m.recipient) || '', subject: m.annotation || 'Datová zpráva', their_ref: findTheirRef(m.annotation || ''), attachments: files.length, source_ref: m.id ? `isds:${m.id}` : null, delivered_on: direction === 'sent' && m.accepted ? m.accepted.slice(0, 10) : null }).catch(() => 'skip');
     }
     let saved = 0; let skipped = 0;
     if (files.length) {

@@ -7,7 +7,7 @@ import { ArrowLeft, Check, Clock3, Copy, Plus, Printer, Save, Send, Trash2 } fro
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient, TimeEntry } from '@/lib/lawyer';
-import { STATUS_LABELS, VAT_RATES, round2, todayIso, type Payment, buildInvoiceHtml, computeTotals, lineBase, lineFromPriceItem, lineFromTimeEntry, loadPriceItems, money, openPrint, parseAmount, qtyText, type DraftLine, type Invoice, type InvoiceLine, type Party, type PriceItem } from '@/lib/billing';
+import { STATUS_LABELS, VAT_RATES, docTitle, round2, todayIso, type Payment, buildInvoiceHtml, computeTotals, lineBase, lineFromPriceItem, lineFromTimeEntry, loadPriceItems, money, openPrint, parseAmount, qtyText, type DraftLine, type Invoice, type InvoiceLine, type Party, type PriceItem } from '@/lib/billing';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import AresPicker from './AresPicker';
 import { qrSvg, spayd } from '@/lib/qrPayment';
@@ -83,7 +83,7 @@ export default function LawyerInvoiceEditor() {
         const bad = parsed.find((l) => !l.description.trim() || l.qty === 0);
         if (bad) { setError('Každá položka musí mít popis a nenulové množství.'); return false; }
         setBusy(true); setError(''); setMsg('');
-        const head = await supabase.from('invoices').update({ client_id: inv.client_id, case_id: inv.case_id, title: inv.title.slice(0, 200), issue_date: inv.issue_date, due_date: inv.due_date || null, note: inv.note.slice(0, 1000), currency: inv.currency, client_snapshot: inv.client_id ? {} : inv.client_snapshot }).eq('id', inv.id);
+        const head = await supabase.from('invoices').update({ ...(inv.kind ? { kind: inv.kind } : {}), client_id: inv.client_id, case_id: inv.case_id, title: inv.title.slice(0, 200), issue_date: inv.issue_date, due_date: inv.due_date || null, note: inv.note.slice(0, 1000), currency: inv.currency, client_snapshot: inv.client_id ? {} : inv.client_snapshot }).eq('id', inv.id);
         if (head.error) { setBusy(false); setError(head.error.message); return false; }
         const del = await supabase.from('invoice_lines').delete().eq('invoice_id', inv.id);
         if (del.error) { setBusy(false); setError(del.error.message); return false; }
@@ -97,7 +97,7 @@ export default function LawyerInvoiceEditor() {
 
     async function issue() {
         if (!inv) return;
-        if (!window.confirm('Vystavit vyúčtování? Po vystavení už nepůjde upravit a použité výkazy se označí jako vyfakturované.')) return;
+        if (!window.confirm(inv.kind === 'zaloha' ? 'Vystavit zálohovou fakturu? Dostane číslo z řady záloh a nepůjde upravit. Výkazy se neoznačí jako vyfakturované.' : 'Vystavit vyúčtování? Po vystavení už nepůjde upravit a použité výkazy se označí jako vyfakturované.')) return;
         if (!(await save())) return;
         setBusy(true);
         const { data, error: err } = await supabase.rpc('issue_invoice', { p_id: inv.id });
@@ -204,7 +204,7 @@ export default function LawyerInvoiceEditor() {
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-xl font-bold text-slate-900">{inv.number ? `Faktura č. ${inv.number}` : 'Nové vyúčtování'}</h1>
+                    <h1 className="text-xl font-bold text-slate-900">{inv.number ? docTitle(inv) : inv.kind === 'zaloha' ? 'Nová zálohová faktura' : 'Nové vyúčtování'}</h1>
                     <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-700">{STATUS_LABELS[inv.status]}</span>
                     {!vatPayer && <span className="text-xs text-slate-500">Neplátce DPH</span>}
                 </div>
@@ -226,6 +226,7 @@ export default function LawyerInvoiceEditor() {
                         <label key={k} className="block text-xs font-semibold text-slate-600">{{ name: 'Jméno / firma', address: 'Adresa', ico: 'IČO', dic: 'DIČ' }[k]}<input value={inv.client_snapshot[k] ?? ''} onChange={(e) => patch({ client_snapshot: { ...inv.client_snapshot, [k]: e.target.value } })} maxLength={200} className={`${inputCls} mt-1 font-normal`} /></label>
                     ))}
                     {client && <p className="text-xs text-slate-500 sm:col-span-3">{[client.address, client.ico && `IČO ${client.ico}`, client.dic && `DIČ ${client.dic}`].filter(Boolean).join(' · ') || 'Klient nemá vyplněnou adresu a IČO. Doplníte je v záložce Klienti.'}</p>}
+                    {draft && <label className="flex items-start gap-2 text-sm text-slate-800 sm:col-span-3"><input type="checkbox" checked={inv.kind === 'zaloha'} onChange={(e) => patch({ kind: e.target.checked ? 'zaloha' : 'faktura' })} className="mt-0.5" /> <span><strong>Zálohová faktura</strong> (výzva k platbě zálohy, není daňový doklad, vlastní číselná řada Z{inv.issue_date.slice(0, 4)}-…). Po zaplacení ji odečtete v konečném vyúčtování.</span></label>}
                     <label className="block text-xs font-semibold text-slate-600 sm:col-span-3">Název / předmět (nepovinné)<input value={inv.title} onChange={(e) => patch({ title: e.target.value })} maxLength={200} className={`${inputCls} mt-1 font-normal`} placeholder="např. Zastupování ve věci Novák proti Dvořákovi" /></label>
                     <label className="block text-xs font-semibold text-slate-600">Datum vystavení<input type="date" value={inv.issue_date} onChange={(e) => patch({ issue_date: e.target.value })} className={`${inputCls} mt-1 font-normal`} /></label>
                     <label className="block text-xs font-semibold text-slate-600">Splatnost<input type="date" value={inv.due_date ?? ''} onChange={(e) => patch({ due_date: e.target.value || null })} className={`${inputCls} mt-1 font-normal`} /><span className="font-normal text-slate-400">prázdné = {access.due_days ?? 14} dní od vystavení</span></label>
@@ -245,6 +246,7 @@ export default function LawyerInvoiceEditor() {
                         <button type="button" disabled={!priceId} onClick={() => { const p = prices.find((x) => x.id === priceId); if (p) { setLines((ls) => [...ls, mkLine(lineFromPriceItem(p), { price_item_id: p.id })]); setPriceId(''); } }} className={ghostBtn}><Plus size={15} /> Přidat z ceníku</button>
                         <button type="button" onClick={() => setLines((ls) => [...ls, mkLine({ description: '', qty: 1, unit: 'ks', unit_price: 0, vat_rate: defaultVat })])} className={ghostBtn}><Plus size={15} /> Vlastní položka</button>
                         <button type="button" onClick={() => { setPicker((v) => !v); setSelected([]); }} className={ghostBtn}><Clock3 size={15} /> Z výkazů práce ({unbilled.length})</button>
+                        {inv.kind !== 'zaloha' && inv.client_id && <AdvancePicker clientId={inv.client_id} currency={inv.currency} vatPayer={vatPayer} used={parsed.map((l) => l.description)} onAdd={(desc, amount) => setLines((ls) => [...ls, mkLine({ description: desc, qty: 1, unit: 'ks', unit_price: -amount, vat_rate: 0 })])} />}
                     </div>
                 )}
                 {picker && draft && (
@@ -313,5 +315,33 @@ export default function LawyerInvoiceEditor() {
                 </section>
             )}
         </div>
+    );
+}
+
+// Odečet zaplacené zálohy (zálohové faktury téhož klienta). U plátce DPH je k přijaté záloze potřeba daňový doklad,
+// proto se tam odečet nenabízí automaticky a aplikace odkáže na účetní.
+function AdvancePicker({ clientId, currency, vatPayer, used, onAdd }: { clientId: string; currency: 'CZK' | 'EUR'; vatPayer: boolean; used: string[]; onAdd: (desc: string, amount: number) => void }) {
+    const [list, setList] = useState<{ number: string; paid: number; last: string }[] | null>(null);
+    const [open, setOpen] = useState(false);
+    async function load() {
+        setOpen((v) => !v);
+        if (list) return;
+        const inv = await supabase.from('invoices').select('id, number').eq('client_id', clientId).eq('kind', 'zaloha').in('status', ['issued', 'paid']).eq('currency', currency);
+        const rows = (inv.data ?? []) as { id: string; number: string }[];
+        const pay = rows.length ? await supabase.from('invoice_payments').select('invoice_id, amount, paid_on').in('invoice_id', rows.map((r) => r.id)) : { data: [] };
+        setList(rows.map((r) => { const ps = ((pay.data ?? []) as { invoice_id: string; amount: number; paid_on: string }[]).filter((p) => p.invoice_id === r.id); return { number: r.number, paid: round2(ps.reduce((s, p) => s + Number(p.amount), 0)), last: ps.map((p) => p.paid_on).sort().pop() ?? '' }; }).filter((x) => x.paid > 0));
+    }
+    return (
+        <span className="relative">
+            <button type="button" onClick={() => void load()} className={ghostBtn}>Odečíst zaplacenou zálohu</button>
+            {open && (
+                <span className="absolute left-0 top-full z-20 mt-1 block w-80 rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-xl">
+                    {vatPayer ? <span className="block text-xs text-amber-950">Jste plátce DPH: k přijaté záloze se vystavuje daňový doklad a odečet se pak řeší podle něj. Zadejte ho ručně podle pokynů účetní.</span>
+                        : list === null ? <span className="text-xs text-slate-500">Načítám zálohy…</span>
+                        : list.length === 0 ? <span className="text-xs text-slate-500">Klient nemá žádnou zaplacenou zálohovou fakturu.</span>
+                        : list.map((a) => { const desc = `Odečet zaplacené zálohy č. ${a.number}${a.last ? ` (uhrazeno ${new Date(`${a.last}T12:00:00`).toLocaleDateString('cs-CZ')})` : ''}`; const done = used.some((u) => u.includes(`zálohy č. ${a.number}`)); return <button key={a.number} type="button" disabled={done} onClick={() => { onAdd(desc, a.paid); setOpen(false); }} className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-indigo-50 disabled:opacity-50 cursor-pointer"><span>{a.number}{done ? ' (už odečteno)' : ''}</span><strong>{money(a.paid, currency)}</strong></button>; })}
+                </span>
+            )}
+        </span>
     );
 }

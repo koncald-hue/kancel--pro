@@ -53,7 +53,7 @@ export default function DocActions({ caseId, caseTitle, reference, userId, signa
             }
             for (const c of chosenDl) {
                 const e = endOf(c);
-                await insertConfirmedDeadline({ case_id: caseId, user_id: userId, title: `${c.label} (${unitText(c.n as number, c.unit!)}) – ${kind}`.slice(0, 120), due_date: e.end, basis: `Počítáno od ${czDate(eventIso)} (datum ${kind === 'e-mail' ? 'e-mailu' : 'zprávy'}). ${kind === 'e-mail' ? 'E-mail není doručením podle procesních předpisů, rozhodné datum doručení ověřte.' : ''}`.slice(0, 1500), quote: c.quote.slice(0, 1500) });
+                await insertConfirmedDeadline({ ...(c.lawKey ? { law_key: c.lawKey } : {}), case_id: caseId, user_id: userId, title: `${c.label} (${unitText(c.n as number, c.unit!)}) – ${kind}`.slice(0, 120), due_date: e.end, basis: `Počítáno od ${czDate(eventIso)} (datum ${kind === 'e-mail' ? 'e-mailu' : 'zprávy'}). ${kind === 'e-mail' ? 'E-mail není doručením podle procesních předpisů, rozhodné datum doručení ověřte.' : ''}`.slice(0, 1500), quote: c.quote.slice(0, 1500) });
                 done.push(`lhůta do ${czDate(e.end)}`);
             }
             if (chosenDl.length) scheduleGoogleSync();

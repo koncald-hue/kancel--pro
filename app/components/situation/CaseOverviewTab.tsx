@@ -12,6 +12,7 @@ import { inputCls, ghostBtn, type TabProps } from './caseUi';
 import AresPicker from '../lawyer/AresPicker';
 import Link from 'next/link';
 import { caseCheck } from '@/lib/caseCheck';
+import ArchiveCard from '../lawyer/ArchiveCard';
 import { isCourt, parseFileNumber } from '@/lib/infosoud';
 import { upsertAresClient } from '@/lib/aresClients';
 
@@ -31,7 +32,7 @@ export function caseHints(item: TabProps['item'], bundle: TabProps['bundle']): {
     return hints;
 }
 
-export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchItem, setBundle, fail }: TabProps) {
+export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchItem, patchLocal, setBundle, fail }: TabProps) {
     const [clients, setClients] = useState<{ id: string; name: string; email: string; phone: string }[]>([]);
     useEffect(() => {
         if (!lawyer) return;
@@ -87,6 +88,7 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
                 {parseFileNumber(item.reference ?? '') && isCourt(item.authority ?? '') && <Link href="/kancelar/infosoud" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><Gavel size={13} aria-hidden="true" /> Zjistit průběh řízení v InfoSoudu</Link>}
             </section>}
 
+            {lawyer && item.status === 'done' && (!item.user_id || item.user_id === userId) && <ArchiveCard item={item} onChanged={async () => { const { data } = await supabase.from('cases').select('archived_on, archive_until, archive_place, disposed_on, disposal').eq('id', item.id).maybeSingle(); if (data) patchLocal?.(data as Partial<typeof item>); }} />}
             {lawyer && (() => {
                 const checks = caseCheck({ item, files: bundle.files, deadlines: bundle.deadlines, contacts: bundle.contacts, today: new Date().toISOString().slice(0, 10) });
                 const todo = checks.filter((c) => c.level !== 'ok');

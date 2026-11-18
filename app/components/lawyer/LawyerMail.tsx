@@ -8,6 +8,7 @@ import { encryptText } from '@/lib/e2ee';
 import { insertRow, uploadCaseFile } from '@/lib/caseFile';
 import { PRESETS } from '@/lib/mailPresets';
 import { matchCases, type Match } from '@/lib/mailMatch';
+import { findTheirRef, logMail } from '@/lib/mailLog';
 import AiRouteSuggest from './AiRouteSuggest';
 import DocActions from './DocActions';
 import { b64ToBytes, credsOf, fileToB64, mailApi, quoted, safeHtml, type FullMessage, type MailAccountRow, type MsgSummary } from '@/lib/mailClient';
@@ -129,6 +130,8 @@ export default function LawyerMail() {
             }
             await insertRow('case_entries', { case_id: saveCase, user_id: userId, kind: 'event', title: `E-mail: ${sel.subject}`.slice(0, 200), body: `Od: ${sel.from}\nKomu: ${sel.to}\nDatum: ${sel.date ? new Date(sel.date).toLocaleString('cs-CZ') : ''}${n ? `\nPřílohy uloženy do souborů věci: ${n}` : ''}\n\n${sel.text.slice(0, 6000)}`, happened_on: sel.date ? sel.date.slice(0, 10) : null });
             assignActivity(`mail:${folder}:${sel.uid}:${account?.id ?? ''}`, saveCase);
+            // Pošta uložená do věci se zapíše i do podacího deníku (stejná zpráva jen jednou)
+            await logMail({ user_id: userId, case_id: saveCase, direction: folder === 'SENT' ? 'out' : 'in', channel: 'email', event_on: (sel.date ?? new Date().toISOString()).slice(0, 10), counterparty: folder === 'SENT' ? sel.to : sel.from, subject: sel.subject, their_ref: findTheirRef(`${sel.subject}\n${sel.text.slice(0, 3000)}`), attachments: n, source_ref: sel.messageId ? `mail:${sel.messageId}` : `mail:${account?.id ?? ''}:${folder}:${sel.uid}` });
             setInfo(`Uloženo do věci „${cases.find((c) => c.id === saveCase)?.title ?? ''}“: zápis v chronologii${n ? ` a ${n} příloh` : ''}.`);
         } catch (e) { setError(e instanceof Error ? e.message : 'Uložení se nepovedlo.'); }
         setBusy('');
@@ -157,6 +160,7 @@ export default function LawyerMail() {
             const attachments = await Promise.all(compose.files.map(async (f) => ({ filename: f.name, contentType: f.type || 'application/octet-stream', base64: await fileToB64(f) })));
             const r = await mailApi<{ saved: boolean }>('send', creds, { mail: { to: compose.to, cc: compose.cc, subject: compose.subject, text: compose.body, inReplyTo: compose.inReplyTo, references: compose.references, attachments } });
             logActivity('email_sent', { caseId: compose.caseId || null, label: compose.subject, words: wordCount(compose.body.split('\n').filter((l) => !l.startsWith('>')).join(' ')) });
+            if (compose.caseId) await logMail({ user_id: userId, case_id: compose.caseId, direction: 'out', channel: 'email', event_on: new Date().toISOString().slice(0, 10), counterparty: compose.to, subject: compose.subject, their_ref: findTheirRef(compose.subject), attachments: compose.files.length });
             if (compose.caseId) await insertRow('case_entries', { case_id: compose.caseId, user_id: userId, kind: 'event', title: `Odeslán e-mail: ${compose.subject}`.slice(0, 200), body: `Komu: ${compose.to}\n\n${compose.body.slice(0, 6000)}`, happened_on: new Date().toISOString().slice(0, 10) });
             setInfo(`E-mail je odeslaný${compose.caseId ? ' a zapsaný do věci' : ''}${r.saved ? '' : '. Kopii do složky Odeslané se uložit nepodařilo.'}`); setCompose(null);
         } catch (e) { setError(e instanceof Error ? e.message : 'E-mail se nepodařilo odeslat.'); }

@@ -108,6 +108,8 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
         setItem((current) => (current ? { ...current, ...change } : current));
         updateCase(item.id, change).catch(fail);
     };
+    // Jen místní změna (údaje už uložila databáze jinou cestou, např. archiv)
+    const patchLocal = (change: Partial<LegalCase>) => setItem((current) => (current ? { ...current, ...change } : current));
     const setBundle: TabProps['setBundle'] = (update) => setBundleState((b) => (b ? update(b) : b));
 
     const deadlines = collectDeadlines(item, bundle.deadlines);
@@ -166,7 +168,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
     const activeGroup = groups.find((g) => g.items.some((i) => i.id === tab)) ?? groups[0];
     // Záložka, která uživateli nepatří (např. z odkazu), se nevykreslí; ukáže se první povolená
     const shown: TabId = activeGroup.items.some((i) => i.id === tab) ? tab : activeGroup.items[0].id;
-    const tabProps: TabProps = { item, bundle, userId: account.id, lawyer: isLawyer, patchItem, setBundle, fail };
+    const tabProps: TabProps = { item, bundle, userId: account.id, lawyer: isLawyer, patchItem, patchLocal, setBundle, fail };
 
     return (
         <div className={isOffice ? '' : 'max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12'}>
