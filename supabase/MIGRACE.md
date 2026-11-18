@@ -41,6 +41,7 @@ Potřebuje v `.env.local` hodnoty `NEXT_PUBLIC_SUPABASE_URL` a `SUPABASE_SERVICE
 | `20261118_13_stret-zajmu-v-kancelari.sql` | Kontrola střetu zájmů napříč kanceláří (`conflict_firm_check`): vrací jen existenci shody a roli, nikdy jméno kolegy ani věc. |
 | `20261118_14_evidence-uschov.sql` | Evidence úschov a klientských peněz (`escrows`, `escrow_moves`): pohyby jen přibývají, výdej nad zůstatek a zápis do uzavřené úschovy databáze odmítne. |
 | `20261118_15_oprava-pojistek-uschov.sql` | Oprava pojistek úschov: běží jako security definer, aby šla smazat úschova bez pohybů i celý účet. |
+| `20261118_16_udaje-kancelare-pro-cleny.sql` | Společné údaje kanceláře (název, IČO, DIČ, DPH, splatnost, poznámka) se předávají členům od vedoucího a při jeho změně se přepíšou; číslo účtu a sazbu má každý advokát vlastní. |
 
 ## Starší skripty (před zavedením složky migrations)
 
