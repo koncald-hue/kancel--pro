@@ -23,6 +23,12 @@ export async function unlockMemberKey(master: CryptoKey, wrappedPrivate: string)
     return subtle().importKey('pkcs8', toBuf(pkcs8), { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['decrypt']);
 }
 
+// Klíče zabalené starým hlavním klíčem (po novém nastavení šifrování) se přebalí aktuálním, když uživatel zná starý záchranný kód
+export async function rewrapMemberKey(oldMaster: CryptoKey, newMaster: CryptoKey, wrappedPrivate: string): Promise<string> {
+    const pkcs8 = await decryptBytes(oldMaster, fromB64u(wrappedPrivate)); // nesprávný starý klíč = chyba ověření
+    return toB64u(await encryptBytes(newMaster, pkcs8));
+}
+
 // Otisk veřejného klíče k ověření po telefonu (např. „A1B2 C3D4 …“)
 export async function fingerprint(publicKeyJwk: string): Promise<string> {
     const jwk = JSON.parse(publicKeyJwk) as { n?: string; e?: string };

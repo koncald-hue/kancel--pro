@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useMasterKey } from '@/lib/useE2ee';
-import { createMemberKeys, fingerprint, unlockMemberKey } from '@/lib/e2eeShare';
+import { createMemberKeys, fingerprint, rewrapMemberKey, unlockMemberKey } from '@/lib/e2eeShare';
+import { masterFromRecovery } from '@/lib/e2ee';
 import { useLawyer } from './LawyerGate';
 
 export type Colleague = { user_id: string; name: string; email: string; role?: string; avatar?: string; has_keys: boolean };
@@ -67,6 +68,21 @@ export function useSharingKeys() {
         } catch (e) { setError(e instanceof Error ? e.message : 'Klíče se nepodařilo vytvořit.'); } finally { setBusy(false); }
     }, [master, userId, reload]);
 
+    // Starý záchranný kód: odemkne klíče z doby před novým nastavením šifrování a přebalí je aktuálním klíčem.
+    // Staré šifrovací heslo samo nepomůže, protože se s novým nastavením přepsala i jeho sůl.
+    const recover = useCallback(async (code: string): Promise<boolean> => {
+        if (!master || !myRow) return false;
+        setBusy(true); setError('');
+        try {
+            const old = await masterFromRecovery(code);
+            const wrapped = await rewrapMemberKey(old, master, myRow.wrapped_private);
+            const { error: err } = await supabase.from('member_keys').update({ wrapped_private: wrapped }).eq('user_id', userId);
+            if (err) throw new Error(err.message);
+            await reload();
+            return true;
+        } catch (e) { setError(e instanceof Error && /tvar/.test(e.message) ? e.message : 'Tento záchranný kód k uloženým klíčům nepatří.'); return false; } finally { setBusy(false); }
+    }, [master, myRow, userId, reload]);
+
     // Jakmile je šifrování odemčené a klíče pro chat ještě nejsou, vytvoří se samy (bez dalšího klikání)
     const autoTried = useRef(false);
     useEffect(() => {
@@ -75,5 +91,5 @@ export function useSharingKeys() {
         void enable().then(() => supabase.rpc('dismiss_nudges'));
     }, [master, keysLoaded, colleagues, myRow, enable]);
 
-    return { userId, master, colleagues, keys, prints, privateKey, keyProblem, myRow, error, busy, enable, reload };
+    return { userId, master, colleagues, keys, prints, privateKey, keyProblem, myRow, error, busy, enable, reload, recover };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { generateKey } from './e2ee';
-import { createMemberKeys, decryptAttachment, decryptShareFile, encryptMessage, encryptShare, fingerprint, openMessage, openShareMeta, unlockMemberKey } from './e2eeShare';
+import { createMemberKeys, decryptAttachment, decryptShareFile, encryptMessage, encryptShare, fingerprint, openMessage, openShareMeta, rewrapMemberKey, unlockMemberKey } from './e2eeShare';
 
 describe('e2ee sharing between members', () => {
     it('shares a file so that only the recipient and the sender can open it', async () => {
@@ -33,6 +33,14 @@ describe('e2ee sharing between members', () => {
         await expect(unlockMemberKey(masterA, b.wrappedPrivate)).rejects.toBeTruthy();
     }, 60_000);
 
+    it('re-wraps member keys from an old master to the new one, and rejects a wrong old key', async () => {
+        const oldMaster = await generateKey(); const newMaster = await generateKey();
+        const created = await createMemberKeys(oldMaster);
+        await expect(unlockMemberKey(newMaster, created.wrappedPrivate)).rejects.toThrow();
+        const rewrapped = await rewrapMemberKey(oldMaster, newMaster, created.wrappedPrivate);
+        await expect(unlockMemberKey(newMaster, rewrapped)).resolves.toBeTruthy();
+        await expect(rewrapMemberKey(await generateKey(), newMaster, created.wrappedPrivate)).rejects.toThrow();
+    });
     it('computes a stable fingerprint for a public key', async () => {
         const keys = await createMemberKeys(await generateKey());
         const fp = await fingerprint(keys.publicKey);

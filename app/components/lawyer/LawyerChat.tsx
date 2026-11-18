@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Bell, Briefcase, Building2, Check, Download, FileText, Landmark, Loader2, Lock, MessageSquare, Paperclip, Send, Trash2, User } from 'lucide-react';
+import { ArrowLeft, Bell, Briefcase, Building2, Check, Download, FileText, KeyRound, Landmark, Loader2, Lock, MessageSquare, Paperclip, Send, Trash2, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { formatSize } from '@/lib/caseFile';
@@ -223,7 +223,7 @@ export default function LawyerChat() {
             {keys.error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{keys.error}</p>}
             {!master ? <div className="mt-4"><E2eeBox access={access} onChanged={() => window.location.reload()} /></div>
                 : !myRow ? <button type="button" onClick={() => void keys.enable()} disabled={keys.busy} className={`${primaryBtn} mt-4`}>{keys.busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />} Zapnout šifrovaný chat</button>
-                : keys.keyProblem ? <div className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-950"><p><strong>Klíče nejdou odemknout</strong> aktuálním šifrováním (po změně hesla nebo záchranného kódu). Nové klíče vytvoříte tady, ale dříve přijaté zprávy pak nepůjde otevřít.</p><button type="button" onClick={() => { if (window.confirm('Vytvořit nové klíče? Dříve přijaté zprávy pak nepůjde otevřít.')) void keys.enable(true); }} className={`${ghostBtn} mt-3`}>Vytvořit nové klíče</button></div>
+                : keys.keyProblem ? <KeyRecovery busy={keys.busy} onRecover={keys.recover} onNew={() => { if (window.confirm('Vytvořit nové klíče? Dříve přijaté zprávy pak nepůjde otevřít.')) void keys.enable(true); }} />
                 : <p className="mt-4 text-sm text-slate-500" role="status">Odemykám…</p>}
         </section>
     );
@@ -380,6 +380,24 @@ function Bubble({ m, payload, k, mine, fromName, userId, cases, loadCases, onDow
                     {state.msg && <p className="w-full text-xs">{state.msg}</p>}
                 </div>
             ))}
+        </div>
+    );
+}
+
+// Klíče chatu zabalené dřívějším šifrováním: nejdřív nabídnout obnovu starým záchranným kódem, až pak nové klíče
+function KeyRecovery({ busy, onRecover, onNew }: { busy: boolean; onRecover: (code: string) => Promise<boolean>; onNew: () => void }) {
+    const [code, setCode] = useState('');
+    const [done, setDone] = useState(false);
+    return (
+        <div className="mt-4 space-y-3 rounded-xl bg-amber-50 p-4 text-sm text-amber-950">
+            <p><strong>Klíče chatu jsou zamčené dřívějším šifrováním.</strong> Stává se to, když se šifrovací heslo nastavilo znovu. Zprávy nejsou ztracené: stačí záchranný kód z doby, kdy jste šifrování nastavili poprvé. Klíče se jím odemknou a přebalí na vaše současné heslo.</p>
+            <form onSubmit={(e) => { e.preventDefault(); void onRecover(code).then((ok) => { if (ok) { setDone(true); setCode(''); } }); }} className="flex flex-wrap items-center gap-2">
+                <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Starý záchranný kód (např. 1a2b3c4d-…)" aria-label="Starý záchranný kód" autoComplete="off" spellCheck={false} className={`${inputCls} max-w-md flex-1 font-mono`} />
+                <button type="submit" disabled={busy || code.replace(/[^0-9a-fA-F]/g, '').length !== 64} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <KeyRound size={15} />} Obnovit klíče</button>
+            </form>
+            {done && <p role="status" className="font-semibold text-emerald-800">Klíče jsou obnovené.</p>}
+            <p className="text-xs">Staré šifrovací heslo tady nepomůže: novým nastavením se přepsalo i to, z čeho se z hesla klíč počítal. Pokud kód nemáte, můžete vytvořit nové klíče, ale dříve přijaté zprávy pak nepůjde otevřít.</p>
+            <button type="button" onClick={onNew} className={ghostBtn}>Vytvořit nové klíče</button>
         </div>
     );
 }

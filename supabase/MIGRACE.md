@@ -43,6 +43,7 @@ Potřebuje v `.env.local` hodnoty `NEXT_PUBLIC_SUPABASE_URL` a `SUPABASE_SERVICE
 | `20261118_15_oprava-pojistek-uschov.sql` | Oprava pojistek úschov: běží jako security definer, aby šla smazat úschova bez pohybů i celý účet. |
 | `20261118_16_udaje-kancelare-pro-cleny.sql` | Společné údaje kanceláře (název, IČO, DIČ, DPH, splatnost, poznámka) se předávají členům od vedoucího a při jeho změně se přepíšou; číslo účtu a sazbu má každý advokát vlastní. |
 | `20261118_17_stret-zajmu-sklonovani.sql` | Střet zájmů v kanceláři najde jméno i ve skloňovaném tvaru („proti Dvořákovi“ → Petr Dvořák). |
+| `20261118_18_stret-zajmu-kratka-jmena.sql` | Skloňování i u pětipísmenných jmen („Petru Dvořákovi“ → Petr Dvořák). |
 
 ## Starší skripty (před zavedením složky migrations)
 
