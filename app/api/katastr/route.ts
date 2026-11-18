@@ -192,6 +192,8 @@ export async function GET(req: Request) {
         }
 
         if (op === 'rizeni') {
+            // Hlídání řízení (zavolá ho aplikace sama): společný denní rozpočet, aby hlídání nespotřebovalo limit klíče ČÚZK určený pro ruční hledání
+            if (url.searchParams.get('watch') === '1' && await rateLimited('cuzk-watch-day', 300, 24 * 60 * 60_000)) return NextResponse.json({ error: 'budget' }, { status: 429 });
             const typ = url.searchParams.get('typ') ?? '';
             const cislo = int(url.searchParams.get('cislo'), 1, 99999999);
             const rok = int(url.searchParams.get('rok'), 1990, 2100);

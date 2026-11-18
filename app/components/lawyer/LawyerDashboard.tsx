@@ -1,7 +1,7 @@
 'use client';
 
 import LegalNews from './LegalNews';
-import { WorkNudge } from './WorkSuggestions';
+import EveningSummary from './EveningSummary';
 import { RadarPanel } from './RadarEvents';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -82,7 +82,7 @@ export default function LawyerDashboard() {
             <DayPanel deadlinesToday={upcoming.filter((u) => u.left === 0).length} />
             {/* Pracovní plocha: co je nové, co hoří, na koho se čeká a co je nevyúčtované */}
             <TodayBoard />
-            <WorkNudge />
+            <EveningSummary />
             <RadarPanel />
             {isirNew > 0 && <Link href="/kancelar/insolvence" className="flex items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-950 hover:bg-amber-100"><ShieldAlert size={18} aria-hidden="true" /> Hlídání insolvence: {isirNew} {isirNew === 1 ? 'nový nález' : isirNew < 5 ? 'nové nálezy' : 'nových nálezů'}. Zobrazit →</Link>}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

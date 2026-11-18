@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { parseDuration, type TimeEntry } from '@/lib/lawyer';
 import type { LegalCase } from '@/lib/cases';
 import { fmtMinutes, pragueDay, suggest, type Activity, type Suggestion } from '@/lib/workLog';
+import { confirmSuggestions } from '@/lib/workConfirm';
 import { inputCls, primaryBtn } from '../situation/caseUi';
 
 const UNIT_KEY = 'kancelar-vykaz-jednotka';
@@ -42,16 +43,8 @@ export default function WorkSuggestions({ userId, cases, rateFor, onAdded }: { u
 
     async function confirm() {
         setBusy(true); setMsg('');
-        const rows: TimeEntry[] = []; let total = 0;
         try {
-            for (const s of list) {
-                const v = val(s); if (!v.on) continue;
-                const minutes = parseDuration(v.minutes); if (!minutes) continue;
-                const { data: row, error } = await supabase.from('time_entries').insert({ user_id: userId, case_id: v.caseId || null, entry_date: s.day, minutes, description: v.description.trim().slice(0, 500), rate: rateFor(v.caseId) }).select('*').single();
-                if (error) throw new Error(error.message);
-                await supabase.from('work_activity').update({ time_entry_id: (row as TimeEntry).id }).in('id', s.activityIds);
-                rows.push(row as TimeEntry); total += minutes;
-            }
+            const { rows, total } = await confirmSuggestions(userId, list, Object.fromEntries(list.map((s) => [s.key, edit[s.key] ?? {}])), rateFor);
             onAdded(rows); setEdit({}); await reload();
             setMsg(rows.length ? `Zapsáno ${rows.length} položek, celkem ${fmtMinutes(total)} h.` : 'Nic nebylo vybráno.');
         } catch (e) { setMsg(e instanceof Error ? e.message : 'Zápis se nepovedl.'); }

@@ -1,6 +1,6 @@
 // Automatický návrh výkazu práce: z toho, co advokát v aplikaci udělal (přečetl datovku, napsal e-mail, připravil dokument…),
 // složí pro každou věc a den návrh času a popisu. Nic se nezapisuje samo, advokát návrh potvrdí nebo upraví.
-export type ActivityKind = 'email_read' | 'email_sent' | 'datovka_read' | 'document_created' | 'file_opened' | 'file_added' | 'entry_added' | 'deadline_added' | 'client_message' | 'signature_request';
+export type ActivityKind = 'email_read' | 'email_sent' | 'datovka_read' | 'document_created' | 'file_opened' | 'file_added' | 'entry_added' | 'deadline_added' | 'deadline_done' | 'client_message' | 'signature_request';
 export type Activity = { id: string; case_id: string | null; kind: ActivityKind; label: string; words: number; at: string; time_entry_id: string | null; dismissed: boolean };
 
 // Odhad času jednoho úkonu v minutách a jeho popis ve výkazu
@@ -13,6 +13,7 @@ export const KIND: Record<ActivityKind, { label: string; base: number; perWords?
     file_added: { label: 'založení dokumentu do spisu', base: 2, cap: 5 },
     entry_added: { label: 'záznam do spisu', base: 3, perWords: 40, cap: 20 },
     deadline_added: { label: 'evidence lhůty', base: 3, cap: 5 },
+    deadline_done: { label: 'vyřízení úkolu', base: 5, cap: 15 },
     client_message: { label: 'komunikace s klientem', base: 4, perWords: 50, cap: 25 },
     signature_request: { label: 'příprava dokumentu k podpisu', base: 8, cap: 15 },
 };

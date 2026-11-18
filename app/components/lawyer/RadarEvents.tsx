@@ -6,7 +6,7 @@ import { CalendarPlus, Check, ExternalLink, Loader2, Radar, RefreshCw } from 'lu
 import { supabase } from '@/lib/supabase';
 import { insertConfirmedDeadline } from '@/lib/caseFile';
 import { RADAR_INFO, suggestDeadline, type RadarKind } from '@/lib/radar';
-import { autoSyncRadar } from '@/lib/radarSync';
+import { syncHlidac } from '@/lib/hlidacSync';
 import { computeAbsolute, czDate } from '@/lib/lhuty';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { safeUrl } from '@/lib/safeUrl';
@@ -15,7 +15,7 @@ export type RadarEvent = { id: string; user_id: string; case_id: string; contact
 const TONE = { bad: 'bg-rose-100 text-rose-900', warn: 'bg-amber-100 text-amber-900', info: 'bg-sky-100 text-sky-900' } as const;
 
 // Jedna událost radaru: co se stalo, co doporučujeme a případně návrh lhůty, kterou advokát potvrdí
-function EventCard({ e, caseTitle, onChanged }: { e: RadarEvent; caseTitle?: string; onChanged: () => void }) {
+export function EventCard({ e, caseTitle, onChanged }: { e: RadarEvent; caseTitle?: string; onChanged: () => void }) {
     const info = RADAR_INFO[e.kind];
     const [open, setOpen] = useState(false);
     const [date, setDate] = useState('');
@@ -69,14 +69,14 @@ function EventCard({ e, caseTitle, onChanged }: { e: RadarEvent; caseTitle?: str
     );
 }
 
-async function loadEvents(caseId?: string): Promise<RadarEvent[] | null> {
+export async function loadEvents(caseId?: string): Promise<RadarEvent[] | null> {
     let q = supabase.from('radar_events').select('*').eq('resolved', false).order('created_at', { ascending: false }).limit(30);
     if (caseId) q = q.eq('case_id', caseId);
     const { data, error } = await q;
     if (error) return null;
     return (data ?? []) as RadarEvent[];
 }
-const markSeen = (list: RadarEvent[]) => { const ids = list.filter((e) => !e.seen).map((e) => e.id); if (ids.length) void supabase.from('radar_events').update({ seen: true }).in('id', ids).then(() => undefined, () => undefined); };
+export const markSeen = (list: RadarEvent[]) => { const ids = list.filter((e) => !e.seen).map((e) => e.id); if (ids.length) void supabase.from('radar_events').update({ seen: true }).in('id', ids).then(() => undefined, () => undefined); };
 
 // Panel na nástěnce: nevyřízené události ze všech věcí; při otevření se sám zkontroluje ARES (nejvýše jednou za 12 hodin)
 export function RadarPanel() {
@@ -92,10 +92,11 @@ export function RadarPanel() {
             setTitles(Object.fromEntries(((data ?? []) as { id: string; title: string }[]).map((c) => [c.id, c.title])));
         }
         const { count } = await supabase.from('case_contacts').select('id', { count: 'exact', head: true }).eq('watch', true);
-        setWatched(count ?? 0);
+        const props = await supabase.from('case_properties').select('id', { count: 'exact', head: true }).eq('watch', true);
+        setWatched((count ?? 0) + (props.error ? 0 : props.count ?? 0));
     }, []);
     useEffect(() => {
-        const t = window.setTimeout(() => { void reload().then(() => autoSyncRadar()).then((n) => { if (n) void reload(); }); }, 0);
+        const t = window.setTimeout(() => { void reload().then(() => syncHlidac()).then((n) => { if (n) void reload(); }); }, 0);
         const on = () => void reload();
         window.addEventListener('radar-sync', on);
         return () => { window.clearTimeout(t); window.removeEventListener('radar-sync', on); };
@@ -105,12 +106,12 @@ export function RadarPanel() {
     if (events === undefined || events === null) return null;
     if (events.length === 0 && watched === 0) return null;
     return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Radar protistrany">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Hlídač">
             <div className="flex flex-wrap items-center gap-3">
-                <h2 className="flex flex-1 items-center gap-2 text-lg font-bold text-slate-900"><Radar size={18} className="text-indigo-700" aria-hidden="true" /> Radar protistrany</h2>
-                <button type="button" onClick={() => { setBusy(true); void autoSyncRadar(true).then(() => reload()).finally(() => setBusy(false)); }} disabled={busy} className={ghostBtn}>{busy ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Zkontrolovat teď</button>
+                <h2 className="flex flex-1 items-center gap-2 text-lg font-bold text-slate-900"><Radar size={18} className="text-indigo-700" aria-hidden="true" /> Hlídač</h2>
+                <button type="button" onClick={() => { setBusy(true); void syncHlidac(true).then(() => reload()).finally(() => setBusy(false)); }} disabled={busy} className={ghostBtn}>{busy ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Zkontrolovat teď</button>
             </div>
-            {events.length === 0 ? <p className="mt-2 text-sm text-slate-500">Hlídáno {watched} kontaktů ve věcech. Nic nového.</p> : <ul className="mt-3 space-y-2">{events.map((e) => <EventCard key={e.id} e={e} caseTitle={titles[e.case_id]} onChanged={() => void reload()} />)}</ul>}
+            {events.length === 0 ? <p className="mt-2 text-sm text-slate-500">Hlídáno {watched} položek (kontakty a řízení v katastru). Nic nového.</p> : <ul className="mt-3 space-y-2">{events.map((e) => <EventCard key={e.id} e={e} caseTitle={titles[e.case_id]} onChanged={() => void reload()} />)}</ul>}
         </section>
     );
 }
