@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isCourt, parseFileNumber } from './infosoud';
+import { districtCourtCode, infosoudDirectLink, isCourt, parseFileNumber } from './infosoud';
 
 describe('parseFileNumber', () => {
     it('reads common Czech court file numbers', () => {
@@ -16,5 +16,23 @@ describe('parseFileNumber', () => {
     it('recognises courts', () => {
         expect(isCourt('Okresní soud Plzeň-město')).toBe(true);
         expect(isCourt('Městský úřad Plzeň')).toBe(false);
+    });
+});
+
+describe('direct link', () => {
+    it('maps court names to InfoSoud codes', () => {
+        expect(districtCourtCode('Okresní soud Plzeň-město')).toBe('OSZPCPM');
+        expect(districtCourtCode('OS Plzeň-město')).toBe('OSZPCPM');
+        expect(districtCourtCode('Obvodní soud Praha 1')).toBe('OSPHA01');
+        expect(districtCourtCode('Okresní soud pro Prahu 1')).toBeNull();
+        expect(districtCourtCode('Krajský soud v Plzni')).toBeNull();
+        expect(districtCourtCode('')).toBeNull();
+    });
+    it('builds the verified deep link for district courts only', () => {
+        const fn = parseFileNumber('10 C 123/2024')!;
+        expect(infosoudDirectLink(fn, 'Obvodní soud Praha 1')).toBe('https://infosoud.gov.cz/InfoSoud/detail-rizeni?typOrganizace=VSECHNY_KRAJE&okresniSoud=OSPHA01&cisloSenatu=10&druhVeci=C&bcVec=123&rocnik=2024');
+        expect(infosoudDirectLink(fn, 'Krajský soud v Plzni')).toBeNull();
+        expect(infosoudDirectLink(parseFileNumber('Nc 5/2025')!, 'Okresní soud Plzeň-město')).toBeNull();
+        expect(infosoudDirectLink(parseFileNumber('10 C 12/2005')!, 'Okresní soud Plzeň-město')).toBeNull();
     });
 });

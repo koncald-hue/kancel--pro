@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Check, Copy, ExternalLink, Gavel, Info } from 'lucide-react';
 import { loadCases, type LegalCase } from '@/lib/cases';
-import { INFOSOUD_URL, isCourt, parseFileNumber, type FileNumber } from '@/lib/infosoud';
+import { INFOSOUD_URL, infosoudDirectLink, isCourt, parseFileNumber, type FileNumber } from '@/lib/infosoud';
 import { inputCls } from '../situation/caseUi';
 
 type Row = { c: LegalCase; fn: FileNumber | null };
@@ -52,7 +52,7 @@ export default function LawyerInfosoud() {
         <div className="space-y-5">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Gavel size={18} className="text-indigo-700" aria-hidden="true" /> Průběh soudních řízení v InfoSoudu</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">InfoSoud ukazuje, v jakém stavu je řízení u soudu (jednání, rozhodnutí, odvolání). Kancelář z vašich věcí připraví údaje ze spisové značky. Klepnutím je zkopírujete a ve formuláři InfoSoudu vyplníte.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">InfoSoud ukazuje, v jakém stavu je řízení u soudu (jednání, rozhodnutí, odvolání). Kancelář z vašich věcí připraví údaje ze spisové značky. U okresních soudů otevře tlačítko přímo řízení, u ostatních údaje klepnutím zkopírujete a ve formuláři InfoSoudu vyplníte.</p>
                 <p className="mt-2 flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600"><Info size={14} className="mt-0.5 shrink-0 text-slate-400" aria-hidden="true" /> InfoSoud nemá veřejné rozhraní pro jiné aplikace, proto ho Kancelář sama nečte ani nehlídá. Vyhledání proběhne na stránce ministerstva ve vašem prohlížeči a do Kanceláře se nic neukládá.</p>
                 <form onSubmit={(e) => e.preventDefault()} className="mt-4">
                     <label className="block text-sm font-semibold text-slate-800">Rozložit jinou spisovou značku
@@ -79,6 +79,7 @@ export default function LawyerInfosoud() {
                                         <Link href={`/kancelar/veci/${c.id}`} className="font-semibold text-slate-900 hover:underline">{c.title}{c.client_name ? <span className="font-normal text-slate-500"> · {c.client_name}</span> : null}</Link>
                                         <span className="font-mono text-sm text-slate-700">{fn!.text}{c.authority ? <span className="font-sans text-slate-500"> · {c.authority}</span> : null}</span>
                                     </div>
+                                    {(() => { const link = infosoudDirectLink(fn!, c.authority ?? ''); return link ? <a href={link} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-indigo-800 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-900"><ExternalLink size={13} aria-hidden="true" /> Otevřít řízení v InfoSoudu</a> : null; })()}
                                     <Parts fn={fn!} court={c.authority ?? ''} />
                                 </li>
                             ))}
