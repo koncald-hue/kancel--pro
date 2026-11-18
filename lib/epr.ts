@@ -28,7 +28,7 @@ export function mapColumns(headers: string[]): Record<Field, number> {
     const f = headers.map(fold); const out = {} as Record<Field, number>; const used = new Set<number>();
     for (const def of EPR_FIELDS) {
         let idx = f.findIndex((h, i) => !used.has(i) && def.synonyms.includes(h));
-        if (idx < 0) idx = f.findIndex((h, i) => !used.has(i) && def.synonyms.some((s) => s.length > 3 && h.includes(s)));
+        if (idx < 0) idx = f.findIndex((h, i) => !used.has(i) && def.synonyms.some((s) => (s.length > 3 ? h.includes(s) : h.split(' ').includes(s))));
         out[def.key] = idx; if (idx >= 0) used.add(idx);
     }
     return out;

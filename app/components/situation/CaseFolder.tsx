@@ -112,6 +112,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                 {isOffice && templates.length > 0 && <select value={tplId} onChange={(e) => setTplId(e.target.value)} aria-label="Šablona úkolů" className={`${inputCls} sm:max-w-56`}><option value="">Bez šablony úkolů</option>{templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>}
                 <button type="submit" disabled={!title.trim() || creating || (cases?.length ?? 0) >= limits.cases} className={`${primaryBtn} justify-center whitespace-nowrap`}><FolderPlus size={16} /> {isOffice ? 'Založit věc' : 'Založit spis'}</button>
             </form>
+            {isOffice && templates.length === 0 && <p className="mt-2 text-xs text-slate-500">Tip: <Link href="/kancelar/sablony" className="font-semibold text-indigo-900 underline">Šablony úkolů</Link> vám při založení věci rovnou vytvoří úkoly s termíny (podpis plné moci, podklady od klienta, příprava jednání).</p>}
             {!isOffice && <p className="mt-2 text-xs text-slate-500">Nevíte, jak začít? <Link href="/situace" className="font-semibold text-indigo-900 underline">Popište situaci a spis se předvyplní</Link> kroky, lhůtami i vzory dokumentů.</p>}
 
             {!lawyer && (cases?.length ?? 0) >= limits.cases && <div className="mt-3"><UpgradeNote>Bezplatný účet má {limits.cases} případy. Smažte vyřešený případ, nebo využijte neomezené spisy v</UpgradeNote></div>}

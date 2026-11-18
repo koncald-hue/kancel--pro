@@ -51,13 +51,14 @@ export default function LawyerTemplates() {
                     <label className="block text-sm font-semibold text-slate-800">Název šablony
                         <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} maxLength={120} className={`${inputCls} mt-1 max-w-md`} />
                     </label>
-                    <ul className="mt-4 space-y-2">
+                    <p className="mt-4 hidden gap-2 px-3 text-xs font-semibold text-slate-500 sm:grid sm:grid-cols-[1fr_90px_150px_auto_auto]"><span>Úkol</span><span>Za kolik dní</span><span>Od čeho</span><span>Dny</span><span className="w-4" /></p>
+                    <ul className="mt-1 space-y-2">
                         {editing.items.map((it, i) => (
                             <li key={i} className="grid gap-2 rounded-xl bg-white p-3 sm:grid-cols-[1fr_90px_150px_auto_auto] sm:items-center">
                                 <input value={it.title} onChange={(e) => patch(i, { title: e.target.value })} placeholder="Úkol, např. Poslat klientovi shrnutí" maxLength={120} aria-label="Název úkolu" className={inputCls} />
                                 <input type="number" value={it.offset} onChange={(e) => patch(i, { offset: Math.trunc(Number(e.target.value)) || 0 })} aria-label="Posun ve dnech (záporný je před)" className={inputCls} />
-                                <select value={it.base} onChange={(e) => patch(i, { base: e.target.value === 'event' ? 'event' : 'start' })} aria-label="Od čeho se počítá" className={inputCls}><option value="start">dní od založení</option><option value="event">dní od data události</option></select>
-                                <label className="flex items-center gap-1.5 text-xs text-slate-700"><input type="checkbox" checked={it.workdays} onChange={(e) => patch(i, { workdays: e.target.checked })} /> pracovní dny</label>
+                                <select value={it.base} onChange={(e) => patch(i, { base: e.target.value === 'event' ? 'event' : 'start' })} aria-label="Od čeho se počítá" className={inputCls}><option value="start">od založení věci</option><option value="event">od data události</option></select>
+                                <label className="flex items-center gap-1.5 text-xs text-slate-700"><input type="checkbox" checked={it.workdays} onChange={(e) => patch(i, { workdays: e.target.checked })} /> jen pracovní</label>
                                 <button type="button" onClick={() => setEditing({ ...editing, items: editing.items.filter((_, k) => k !== i) })} aria-label="Odebrat úkol" className="cursor-pointer text-slate-400 hover:text-rose-700"><Trash2 size={16} /></button>
                             </li>
                         ))}

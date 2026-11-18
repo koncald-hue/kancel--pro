@@ -9,6 +9,7 @@ describe('EPR: příprava', () => {
         expect(eprFee(50_000)).toBe(2000); expect(eprFee(20_001)).toBe(801); expect(ordinaryFee(20_000)).toBe(1000); expect(ordinaryFee(100_000)).toBe(5000);
     });
     it('přiřazení sloupců podle názvů', () => { const m = mapColumns(['Odběratel', 'Bydliště', 'RČ', 'Dlužná částka', 'Datum splatnosti', 'VS']); expect(m).toEqual({ debtor: 0, address: 1, ident: 2, amount: 3, due: 4, invoice: 5, note: -1 }); });
+    it('hlavička z ukázkové tabulky se rozpozná celá', () => { expect(mapColumns(['Dlužník', 'Adresa', 'IČO nebo RČ', 'Jistina', 'Splatnost', 'Číslo faktury'])).toEqual({ debtor: 0, address: 1, ident: 2, amount: 3, due: 4, invoice: 5, note: -1 }); });
     it('kontroly: chybějící údaje, splatnost v budoucnosti, promlčení, duplicita', () => {
         const c = buildClaims(table([
             ['Novák Jan', 'Praha 1', '800101/1234', '12 000,50', '1. 3. 2026', 'F1'],
