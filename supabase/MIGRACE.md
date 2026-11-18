@@ -36,6 +36,7 @@ Potřebuje v `.env.local` hodnoty `NEXT_PUBLIC_SUPABASE_URL` a `SUPABASE_SERVICE
 | `20261118_08_ai-souhlas.sql` | Souhlas advokáta s asistentem AI (čas souhlasu, odvolání). |
 | `20261118_09_verze-a-obsah-souboru.sql` | Verze souborů a vyhledávání v textu nešifrovaných souborů (txt, csv, md, html, docx). |
 | `20261118_10_hlidac-a-vykazy.sql` | Hlídání řízení v katastru (sloupce `watch*` u uložených nemovitostí, nový druh události radaru), úkon „splnění úkolu“ pro návrh výkazu. |
+| `20261118_11_prehled-a-sablony.sql` | Dobrovolné sdílení hodin vedoucímu kanceláře (`time_sharing`, funkce `team_hours`) a šablony úkolů pro nové věci (`case_templates`). |
 
 ## Starší skripty (před zavedením složky migrations)
 

@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Zálohy obsahují data klientů: nikdy do repozitáře
 /backups/
+
+# OCR (generuje scripts/copy-ocr-assets.mjs)
+/public/ocr/

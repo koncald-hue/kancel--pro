@@ -9,7 +9,7 @@ const supabase = (() => { try { return new URL(process.env.NEXT_PUBLIC_SUPABASE_
 const supabaseWs = supabase.replace(/^https:/, 'wss:');
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   // mapové podklady (OpenStreetMap, katastrální mapa ČÚZK), fotky jako data:, náhledy z blob:
   `img-src 'self' data: blob: https://tile.openstreetmap.org https://services.cuzk.gov.cz${supabase ? ` ${supabase}` : ''}`,

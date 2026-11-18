@@ -11,6 +11,8 @@ import { deadlineText, deadlineTone } from './CaseDeadlinesTab';
 import { inputCls, primaryBtn } from './caseUi';
 import { limitsFor, useLawyerTier } from '@/lib/tiers';
 import UpgradeNote from './UpgradeNote';
+import { applyTemplate, loadTemplates } from '@/lib/templateApply';
+import type { CaseTemplate } from '@/lib/taskTemplates';
 
 // Přehled všech případů (spisů) přihlášeného uživatele
 export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen' | 'office' }) {
@@ -29,6 +31,9 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState<'open' | 'done'>('open');
     const [creating, setCreating] = useState(false);
+    const [templates, setTemplates] = useState<CaseTemplate[]>([]);
+    const [tplId, setTplId] = useState('');
+    useEffect(() => { if (isOffice) loadTemplates().then(setTemplates).catch(() => undefined); }, [isOffice]);
     // Přehled pro advokáty: tabulka s klientem, značkou a úřadem místo karet
     const [officeSaved, setOffice] = useState(() => { try { return localStorage.getItem('casesOfficeView') === '1'; } catch { return false; } });
     const office = isOffice || (lawyer && officeSaved);
@@ -54,6 +59,8 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
         setCreating(true);
         try {
             const created = await createCase(account.id, { ...BLANK_CASE, title: title.trim().slice(0, 100) });
+            const tpl = templates.find((t) => t.id === tplId);
+            if (tpl) await applyTemplate(tpl, created.id, account.id, null).catch(() => undefined);
             router.push(casePath(created.id));
         } catch (err) { setError(describeCaseError(err)); setCreating(false); }
     }
@@ -102,6 +109,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
 
             <form onSubmit={(e) => { e.preventDefault(); void create(); }} className="mt-6 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row">
                 <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={isOffice ? 'Název nové věci (např. Novák proti Dvořákovi)' : 'Název nového spisu (např. Pokuta za rychlost, Spor s e-shopem)'} maxLength={100} className={inputCls} aria-label="Název nového spisu" />
+                {isOffice && templates.length > 0 && <select value={tplId} onChange={(e) => setTplId(e.target.value)} aria-label="Šablona úkolů" className={`${inputCls} sm:max-w-56`}><option value="">Bez šablony úkolů</option>{templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>}
                 <button type="submit" disabled={!title.trim() || creating || (cases?.length ?? 0) >= limits.cases} className={`${primaryBtn} justify-center whitespace-nowrap`}><FolderPlus size={16} /> {isOffice ? 'Založit věc' : 'Založit spis'}</button>
             </form>
             {!isOffice && <p className="mt-2 text-xs text-slate-500">Nevíte, jak začít? <Link href="/situace" className="font-semibold text-indigo-900 underline">Popište situaci a spis se předvyplní</Link> kroky, lhůtami i vzory dokumentů.</p>}

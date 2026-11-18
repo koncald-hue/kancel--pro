@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel, Eye } from 'lucide-react';
+import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel, Eye, ListChecks, FileSpreadsheet } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
 import E2eeLockNotice from './E2eeLockNotice';
@@ -12,7 +12,7 @@ import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
 
-export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'nastaveni';
+export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'sablony' | 'epr' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
 
 // Nástroje jsou seskupené podle toho, k čemu slouží
@@ -21,9 +21,9 @@ const GROUPS: { title: string; items: Item[] }[] = [
     { title: '', items: [['prehled', '/kancelar', 'Dnes', LayoutDashboard]] },
     { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['email', '/kancelar/email', 'E-mail', Mail]] },
     // Odborné a méně časté nástroje
-    { title: 'Nástroje', items: [['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel]] },
+    { title: 'Nástroje', items: [['epr', '/kancelar/epr', 'Platební rozkazy', FileSpreadsheet], ['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel]] },
     { title: 'Peníze', items: [['penize', '/kancelar/penize', 'Peníze', Wallet]] },
-    { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound], ['import', '/kancelar/import', 'Import dat', FileUp]] },
+    { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound], ['sablony', '/kancelar/sablony', 'Šablony úkolů', ListChecks], ['import', '/kancelar/import', 'Import dat', FileUp]] },
 ];
 const SETTINGS: Item = ['nastaveni', '/kancelar/nastaveni', 'Nastavení', Settings];
 const ALL: Item[] = [...GROUPS.flatMap((g) => g.items), SETTINGS];

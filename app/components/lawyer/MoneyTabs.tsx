@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { Calculator, Clock3, FileArchive, Landmark, LayoutDashboard, Receipt, Tags } from 'lucide-react';
+import { Calculator, Clock3, FileArchive, Landmark, LayoutDashboard, Receipt, Tags, TrendingUp } from 'lucide-react';
 
-export type MoneySection = 'penize' | 'vykazy' | 'faktury' | 'platby' | 'export' | 'cenik' | 'kalkulacky';
+export type MoneySection = 'penize' | 'vedeni' | 'vykazy' | 'faktury' | 'platby' | 'export' | 'cenik' | 'kalkulacky';
 const TABS = [
     ['penize', '/kancelar/penize', 'Přehled', LayoutDashboard],
+    ['vedeni', '/kancelar/vedeni', 'Pro vedení', TrendingUp],
     ['vykazy', '/kancelar/vykazy', 'Výkazy práce', Clock3],
     ['faktury', '/kancelar/faktury', 'Fakturace', Receipt],
     ['platby', '/kancelar/platby', 'Platby', Landmark],

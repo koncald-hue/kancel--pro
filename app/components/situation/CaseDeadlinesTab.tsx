@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BadgeCheck, Calculator, CalendarPlus, Check, Pencil, Plus, Trash2 } from 'lucide-react';
 import { buildIcs, collectDeadlines, deleteRow, downloadTextFile, insertRow, updateRow, type CaseDeadline } from '@/lib/caseFile';
 import { daysUntil } from '@/lib/cases';
 import DeadlineAxis from './DeadlineAxis';
 import DeadlineDialog, { type DeadlineTarget } from './DeadlineDialog';
 import { scheduleGoogleSync } from '@/lib/googleSync';
+import { applyTemplate, loadTemplates } from '@/lib/templateApply';
+import type { CaseTemplate } from '@/lib/taskTemplates';
+import { loadAllDeadlines } from '@/lib/caseFile';
 import { daysWord, ghostBtn, inputCls, primaryBtn, type TabProps } from './caseUi';
 
 export function deadlineTone(left: number, done: boolean) {
@@ -23,6 +26,17 @@ export default function CaseDeadlinesTab({ item, bundle, userId, patchItem, setB
     const [title, setTitle] = useState('');
     const [date, setDate] = useState('');
     const [dialog, setDialog] = useState<DeadlineTarget | null>(null);
+    const [templates, setTemplates] = useState<CaseTemplate[]>([]);
+    const [tplNote, setTplNote] = useState('');
+    useEffect(() => { loadTemplates().then(setTemplates).catch(() => undefined); }, []);
+    async function runTemplate(id: string) {
+        const tpl = templates.find((t) => t.id === id); if (!tpl) return;
+        try {
+            const r = await applyTemplate(tpl, item.id, userId, item.event_date);
+            const all = await loadAllDeadlines(); setBundle((b) => ({ ...b, deadlines: all.filter((d) => d.case_id === item.id) }));
+            setTplNote(`Přidáno úkolů: ${r.created}.${r.skipped.length ? ` Přeskočeno (chybí datum události): ${r.skipped.join(', ')}.` : ''}`);
+        } catch (err) { fail(err); }
+    }
     const list = collectDeadlines(item, bundle.deadlines);
     const hasLaw = item.deadline_ids.length > 0;
 
@@ -72,10 +86,12 @@ export default function CaseDeadlinesTab({ item, bundle, userId, patchItem, setB
                 <p className="text-sm font-semibold text-slate-900">Všechny lhůty, úkoly a termíny</p>
                 <span className="flex flex-wrap gap-2">
                     <button type="button" onClick={() => setDialog({ caseId: item.id, caseTitle: item.title })} className={primaryBtn}><Plus size={15} /> Přidat úkol nebo lhůtu</button>
+                    {templates.length > 0 && <select value="" onChange={(e) => void runTemplate(e.target.value)} aria-label="Použít šablonu úkolů" className={`${inputCls} w-auto`}><option value="">Použít šablonu…</option>{templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>}
                     <button type="button" onClick={exportIcs} className={ghostBtn}><CalendarPlus size={15} /> Přidat do kalendáře (.ics)</button>
                 </span>
             </div>
 
+            {tplNote && <p role="status" className="rounded-xl bg-indigo-50 p-3 text-sm text-indigo-950">{tplNote}</p>}
             {list.some((d) => !d.done) && <DeadlineAxis deadlines={list} />}
 
             {list.length === 0 ? (

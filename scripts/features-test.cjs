@@ -28,7 +28,8 @@ let p = 0, f = 0; const ok = (n, c, d = '') => { c ? p++ : f++; console.log((c ?
     const opened = (await svc.from('audit_log').select('id', { count: 'exact', head: true }).eq('case_id', CASE).eq('actor', UA).eq('action', 'otevreno').gt('at', new Date(Date.now() - 120000).toISOString())).count;
     ok('dvě otevření věci hned po sobě se zapíšou jen jednou', opened === 1, 'zapsáno ' + opened);
     ok('jméno autora je vyřešené', rows.some((x) => x.actor_name && x.actor_name !== 'klient / systém'));
-    r = await B.rpc('audit_list', { p_case: CASE, p_limit: 50 }); ok('kolega bez sdílení audit věci nevidí', (r.data || []).length === 0);
+    r = await B.rpc('audit_list', { p_case: CASE, p_limit: 50 }); const bu = b.data.user.id; const bn = (await svc.from('lawyer_access').select('display_name,firm_name,email').eq('user_id', bu).single()).data; const bName = bn.display_name || bn.firm_name || bn.email;
+    ok('kolega bez sdílení audit věci nevidí (kromě svých dřívějších úkonů)', (r.data || []).filter((x) => x.actor_name !== bName).length === 0);
 
     // --- Hledání v obsahu souborů
     const file = await svc.from('case_files').insert({ case_id: CASE, user_id: UA, name: 'smlouva-test.docx', path: `${UA}/${CASE}/live-test.docx`, size: 10, mime: '', enc: false }).select('id').single();

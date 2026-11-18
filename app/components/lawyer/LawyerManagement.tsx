@@ -1,0 +1,141 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { Eye, EyeOff, TrendingDown, TrendingUp } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { loadCases, type LegalCase } from '@/lib/cases';
+import { czk, formatMinutes } from '@/lib/lawyer';
+import { byCase, byWeek, changePct, forecast, inMonth, monthEnd, monthOf, monthStart, shiftMonth, sumEntries, type Entry } from '@/lib/mgmt';
+
+type Member = { user_id: string; name: string; shared: boolean; minutes: number | null; amount: number | null; billed_minutes: number | null };
+const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const monthName = (ym: string) => new Date(`${ym}-15T12:00:00`).toLocaleDateString('cs-CZ', { month: 'long', year: 'numeric' });
+const hours = (m: number) => `${(m / 60).toFixed(1).replace('.', ',')} h`;
+
+function Change({ cur, prev }: { cur: number; prev: number }) {
+    const p = changePct(cur, prev);
+    if (p === null) return <span className="text-xs text-slate-500">minulý měsíc bez záznamů</span>;
+    const up = p >= 0; const Icon = up ? TrendingUp : TrendingDown;
+    return <span className={`inline-flex items-center gap-1 text-xs font-semibold ${up ? 'text-emerald-700' : 'text-rose-700'}`}><Icon size={13} aria-hidden="true" /> {up ? '+' : ''}{p} % proti minulému měsíci</span>;
+}
+
+function Bars({ rows }: { rows: { key: string; label: string; value: number; note: string }[] }) {
+    const max = Math.max(1, ...rows.map((r) => r.value));
+    return (
+        <ul className="space-y-2">
+            {rows.map((r) => (
+                <li key={r.key} className="text-sm">
+                    <div className="flex justify-between gap-3"><span className="truncate text-slate-800">{r.label}</span><span className="shrink-0 text-slate-600">{r.note}</span></div>
+                    <div className="mt-1 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-indigo-700" style={{ width: `${Math.max(2, (r.value / max) * 100)}%` }} /></div>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+// Přehled pro vedení: můj měsíc proti minulému, prognóza, týdny, věci a (dobrovolně sdílené) hodiny kolegů
+export default function LawyerManagement() {
+    const [entries, setEntries] = useState<Entry[] | null>(null);
+    const [cases, setCases] = useState<LegalCase[]>([]);
+    const [error, setError] = useState('');
+    const [role, setRole] = useState<'owner' | 'member' | null>(null);
+    const [members, setMembers] = useState<Member[] | null>(null);
+    const [share, setShare] = useState<boolean | null>(null);
+    const today = todayIso(); const ym = monthOf(today); const prev = shiftMonth(ym, -1);
+
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            const [e, c, f] = await Promise.all([
+                supabase.from('time_entries').select('case_id, entry_date, minutes, rate, billed').gte('entry_date', monthStart(prev)).lte('entry_date', monthEnd(ym)),
+                loadCases().catch(() => [] as LegalCase[]),
+                supabase.rpc('firm_overview'),
+            ]);
+            if (!alive) return;
+            if (e.error) { setError('Výkazy se nepodařilo načíst.'); return; }
+            setEntries((e.data ?? []) as Entry[]); setCases(c);
+            const r = (f.data as { firm?: { role: 'owner' | 'member' } } | null)?.firm?.role ?? null; setRole(r);
+            if (r === 'owner') {
+                const t = await supabase.rpc('team_hours', { p_from: monthStart(ym), p_to: monthEnd(ym) });
+                if (alive) setMembers(t.error ? [] : ((t.data ?? []) as Member[]));
+            } else if (r === 'member') {
+                const own = await supabase.from('time_sharing').select('share').maybeSingle();
+                if (alive) setShare(own.error ? null : (own.data?.share ?? false));
+            }
+        })().catch(() => { if (alive) setError('Přehled se nepodařilo načíst.'); });
+        return () => { alive = false; };
+    }, [ym, prev]);
+
+    async function toggleShare(on: boolean) {
+        const { data: u } = await supabase.auth.getUser(); if (!u.user) return;
+        const { error: err } = await supabase.from('time_sharing').upsert({ user_id: u.user.id, share: on, updated_at: new Date().toISOString() });
+        if (err) setError('Nastavení se nepodařilo uložit. Zkontrolujte, že je spuštěná migrace 20261118_11.'); else setShare(on);
+    }
+
+    const view = useMemo(() => {
+        if (!entries) return null;
+        const cur = sumEntries(inMonth(entries, ym)); const old = sumEntries(inMonth(entries, prev));
+        const titles = new Map(cases.map((c) => [c.id, c.title]));
+        return {
+            cur, old, fc: forecast(entries, today),
+            weeks: byWeek(inMonth(entries, ym)),
+            cases: byCase(inMonth(entries, ym)).slice(0, 8).map((r) => ({ ...r, title: r.caseId ? (titles.get(r.caseId) ?? 'Věc') : 'Bez věci' })),
+        };
+    }, [entries, cases, ym, prev, today]);
+
+    if (error) return <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>;
+    if (!view) return <p className="text-sm text-slate-500" role="status">Načítám přehled…</p>;
+    const { cur, old, fc } = view;
+    const card = 'rounded-2xl border border-slate-200 bg-white p-5';
+
+    return (
+        <div className="space-y-5">
+            <section className="grid gap-4 md:grid-cols-3">
+                <div className={card}><p className="text-sm text-slate-500">Hodiny, {monthName(ym)}</p><p className="mt-1 text-3xl font-extrabold text-slate-900">{formatMinutes(cur.minutes)}</p><p className="mt-1"><Change cur={cur.minutes} prev={old.minutes} /></p><p className="mt-1 text-xs text-slate-500">Minulý měsíc: {formatMinutes(old.minutes)}</p></div>
+                <div className={card}><p className="text-sm text-slate-500">Hodnota práce</p><p className="mt-1 text-3xl font-extrabold text-slate-900">{czk(cur.amount)}</p><p className="mt-1"><Change cur={cur.amount} prev={old.amount} /></p><p className="mt-1 text-xs text-slate-500">Z toho vyfakturováno {czk(cur.billedAmount)}, k vyfakturování {czk(cur.amount - cur.billedAmount)}</p></div>
+                <div className={card}>
+                    <p className="text-sm text-slate-500">Prognóza do konce měsíce</p><p className="mt-1 text-3xl font-extrabold text-slate-900">{czk(fc.amount)}</p>
+                    <p className="mt-1 text-xs text-slate-600">{hours(fc.minutes)} při dosavadním tempu ({fc.elapsed} z {fc.total} pracovních dnů).</p>
+                    {!fc.reliable && <p className="mt-1 text-xs text-amber-800">Začátek měsíce, odhad je zatím hrubý.</p>}
+                </div>
+            </section>
+
+            <section className="grid gap-4 md:grid-cols-2">
+                <div className={card}>
+                    <h2 className="text-base font-bold text-slate-900">Hodiny po týdnech</h2>
+                    {view.weeks.length === 0 ? <p className="mt-3 text-sm text-slate-500">Tento měsíc zatím nejsou žádné výkazy.</p> :
+                        <div className="mt-3"><Bars rows={view.weeks.map((w) => ({ key: w.week, label: `týden od ${new Date(`${w.week}T12:00:00`).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' })}`, value: w.minutes, note: `${hours(w.minutes)} · ${czk(w.amount)}` }))} /></div>}
+                </div>
+                <div className={card}>
+                    <h2 className="text-base font-bold text-slate-900">Nejvíc práce podle věcí</h2>
+                    {view.cases.length === 0 ? <p className="mt-3 text-sm text-slate-500">Tento měsíc zatím nejsou žádné výkazy.</p> :
+                        <div className="mt-3"><Bars rows={view.cases.map((c) => ({ key: c.caseId ?? 'none', label: c.title, value: c.amount, note: `${hours(c.minutes)} · ${czk(c.amount)}` }))} /></div>}
+                </div>
+            </section>
+
+            {role === 'owner' && members && (
+                <section className={card} aria-labelledby="mg-team">
+                    <h2 id="mg-team" className="text-base font-bold text-slate-900">Hodiny podle lidí ({monthName(ym)})</h2>
+                    <p className="mt-1 text-sm text-slate-600">Hodiny kolegy uvidíte jen tehdy, když je sám zapne ve svém Přehledu. Ostatní se tu zobrazí bez čísel. Sdílí se jen součty za měsíc, nikdy popisy ani věci.</p>
+                    <ul className="mt-3 divide-y divide-slate-100">
+                        {members.map((m) => (
+                            <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+                                <span className="font-semibold text-slate-900">{m.name}</span>
+                                {m.shared ? <span className="text-slate-700">{formatMinutes(m.minutes ?? 0)} · {czk(Number(m.amount ?? 0))} <span className="text-slate-500">(vyfakturováno {formatMinutes(m.billed_minutes ?? 0)})</span></span> : <span className="inline-flex items-center gap-1.5 text-slate-500"><EyeOff size={14} aria-hidden="true" /> nesdílí</span>}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
+            {role === 'member' && share !== null && (
+                <section className={card}>
+                    <h2 className="flex items-center gap-2 text-base font-bold text-slate-900"><Eye size={16} className="text-indigo-700" aria-hidden="true" /> Sdílení hodin s vedoucím kanceláře</h2>
+                    <p className="mt-1 text-sm text-slate-600">Ve výchozím stavu vedoucí vaše hodiny nevidí. Když sdílení zapnete, uvidí součet hodin a částek za měsíc, nikdy popisy ani věci. Vypnout ho můžete kdykoli.</p>
+                    <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><input type="checkbox" checked={share} onChange={(e) => void toggleShare(e.target.checked)} /> Sdílet měsíční součty hodin</label>
+                </section>
+            )}
+            <p className="text-xs text-slate-500">Přehled vychází z vašich výkazů práce. <Link href="/kancelar/vykazy" className="underline">Otevřít výkazy</Link>. Prognóza je jen lineární odhad z dosavadního tempa a svátků, ne příslib.</p>
+        </div>
+    );
+}

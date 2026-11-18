@@ -12,6 +12,7 @@ import { logActivity } from '@/lib/activity';
 import { supabase } from '@/lib/supabase';
 import { findSameName, groupVersions, nextVersionInfo } from '@/lib/fileVersions';
 import { INDEXABLE, extractText } from '@/lib/fileText';
+import { IMAGE_RE, PDF_RE, extractPdf, ocrImages } from '@/lib/pdfText';
 
 const iconFor = (mime: string, name: string) => (mime.startsWith('image/') ? FileImage : /pdf|word|text|document/.test(mime) || /\.(pdf|docx?|txt)$/i.test(name) ? FileText : FileIcon);
 
@@ -33,15 +34,43 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
         supabase.from('case_file_text').select('file_id').eq('case_id', item.id).then(({ data, error }) => { if (a) setIndexed(error ? null : new Set(((data ?? []) as { file_id: string }[]).map((x) => x.file_id))); });
         return () => { a = false; };
     }, [item.id]);
-    async function indexText(fileId: string, name: string, bytes: ArrayBuffer) {
-        const text = await extractText(name, bytes); if (!text) return;
+    async function saveText(fileId: string, text: string) {
         const { error } = await supabase.from('case_file_text').upsert({ file_id: fileId, case_id: item.id, user_id: userId, body: text });
         if (!error) setIndexed((s) => new Set([...(s ?? []), fileId]));
     }
-    const toIndex = indexed ? bundle.files.filter((f) => !f.enc && INDEXABLE.test(f.name) && !indexed.has(f.id)) : [];
+    async function indexText(fileId: string, name: string, bytes: ArrayBuffer) {
+        if (PDF_RE.test(name)) { const r = await extractPdf(bytes, { ocr: false }); if (r.ok) await saveText(fileId, r.text); else if (r.reason === 'needs_ocr') setScans((s) => new Set([...s, fileId])); return; }
+        const text = await extractText(name, bytes); if (!text) return;
+        await saveText(fileId, text);
+    }
+    // Soubory, které nejde přečíst bez rozpoznání textu (skeny a obrázky); OCR běží až na pokyn, je pomalé
+    const [scans, setScans] = useState<Set<string>>(new Set());
+    const [ocrNote, setOcrNote] = useState('');
+    const canIndex = (f: { enc?: boolean; name: string }) => !f.enc && (INDEXABLE.test(f.name) || PDF_RE.test(f.name));
+    const toIndex = indexed ? bundle.files.filter((f) => canIndex(f) && !indexed.has(f.id) && !scans.has(f.id)) : [];
+    const toOcr = indexed ? bundle.files.filter((f) => !f.enc && !indexed.has(f.id) && (scans.has(f.id) || IMAGE_RE.test(f.name))) : [];
     async function indexAll() {
         setIndexing(true);
         for (const f of toIndex) { try { const { data } = await supabase.storage.from('case-files').download(f.path); if (data) await indexText(f.id, f.name, await data.arrayBuffer()); } catch { /* další soubor */ } }
+        setIndexing(false);
+    }
+    async function ocrAll() {
+        setIndexing(true); let done = 0;
+        try {
+            const imgs: { id: string; bytes: ArrayBuffer; name: string }[] = [];
+            for (const f of toOcr) {
+                const { data } = await supabase.storage.from('case-files').download(f.path); if (!data) continue;
+                const bytes = await data.arrayBuffer();
+                if (PDF_RE.test(f.name)) {
+                    const r = await extractPdf(bytes, { ocr: true, onProgress: (p) => setOcrNote(`${f.name}: ${p.phase === 'ocr' ? 'rozpoznávám text' : 'čtu'} stranu ${p.page} z ${p.pages}…`) });
+                    if (r.ok) { await saveText(f.id, r.text); done++; }
+                } else imgs.push({ id: f.id, bytes, name: f.name });
+            }
+            const got = await ocrImages(imgs, (n, t) => setOcrNote(`Rozpoznávám obrázky: ${n} z ${t}…`));
+            for (const [id, text] of got) { await saveText(id, text); done++; }
+            setScans((s) => new Set([...s].filter((id) => !(indexed ?? new Set()).has(id))));
+            setOcrNote(`Hotovo, text rozpoznán u ${done} z ${toOcr.length} souborů. Rozpoznání je strojové a může obsahovat chyby.`);
+        } catch { setOcrNote('Rozpoznání textu se nepodařilo dokončit. Zkuste to znovu, případně s menším počtem souborů.'); }
         setIndexing(false);
     }
     const channel = useChannelKey(item.id);
@@ -71,7 +100,7 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
                 const asVersion = !!same && window.confirm(`Soubor „${file.name}“ už ve spisu je. Nahrát jako novou verzi (starší verze zůstane k dispozici)?\n\nOK = nová verze, Zrušit = samostatný soubor.`);
                 const saved = await uploadCaseFile(userId, item.id, target, file, asVersion && same ? nextVersionInfo(bundle.files, same) : {});
                 setBundle((b) => ({ ...b, files: [saved, ...b.files] }));
-                if (INDEXABLE.test(file.name) && indexed) void file.arrayBuffer().then((buf) => indexText(saved.id, file.name, buf));
+                if (canIndex({ name: file.name }) && indexed) void file.arrayBuffer().then((buf) => indexText(saved.id, file.name, buf));
             } catch (err) { fail(err); }
         }
         setBusy(false);
@@ -154,7 +183,9 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
 
             {!lawyer && bundle.files.length >= limits.filesPerCase - 2 && <UpgradeNote>Bezplatný účet má limit souborů a velikosti na případ. Bez limitů a se ZIP exportem přes</UpgradeNote>}
 
-            {toIndex.length > 0 && <p className="flex flex-wrap items-center gap-3 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-950">Obsah {toIndex.length} {toIndex.length === 1 ? 'souboru' : 'souborů'} (txt, csv, md, html, docx) zatím nejde hledat. <button type="button" onClick={() => void indexAll()} disabled={indexing} className={ghostBtn}>{indexing ? 'Zpracovávám…' : 'Zpřístupnit pro hledání'}</button><span className="text-xs text-indigo-900">PDF a skeny se zatím nevyhledávají. Šifrované soubory se nikdy neindexují.</span></p>}
+            {toIndex.length > 0 && <p className="flex flex-wrap items-center gap-3 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-950">Obsah {toIndex.length} {toIndex.length === 1 ? 'souboru' : 'souborů'} (txt, csv, md, html, docx, PDF s textem) zatím nejde hledat. <button type="button" onClick={() => void indexAll()} disabled={indexing} className={ghostBtn}>{indexing ? 'Zpracovávám…' : 'Zpřístupnit pro hledání'}</button><span className="text-xs text-indigo-900">Čte se ve vašem prohlížeči. Šifrované soubory se nikdy neindexují.</span></p>}
+            {toOcr.length > 0 && <p className="flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{toOcr.length} {toOcr.length === 1 ? 'soubor je sken nebo obrázek' : 'souborů jsou skeny nebo obrázky'} bez textu. <button type="button" onClick={() => void ocrAll()} disabled={indexing} className={ghostBtn}>{indexing ? 'Rozpoznávám…' : 'Rozpoznat text (OCR)'}</button><span className="text-xs text-amber-900">Běží ve vašem prohlížeči, soubor se nikam neposílá. Trvá řádově několik sekund na stranu a výsledek může obsahovat chyby.</span></p>}
+            {ocrNote && <p role="status" className="rounded-xl bg-slate-50 p-3 text-xs text-slate-700">{ocrNote}</p>}
 
             {bundle.files.length > 4 && <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Hledat v názvech souborů…" className={inputCls} aria-label="Hledat v souborech" />}
 
