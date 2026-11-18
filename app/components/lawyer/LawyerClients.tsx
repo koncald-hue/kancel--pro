@@ -3,7 +3,8 @@
 import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import ConflictPanel from './ConflictPanel';
-import { Check, Mail, Pencil, ShieldAlert, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, Mail, Pencil, ShieldAlert, Trash2 } from 'lucide-react';
+import ContactActions from './ContactActions';
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient } from '@/lib/lawyer';
@@ -26,6 +27,8 @@ export default function LawyerClients() {
     const [error, setError] = useState('');
     const [query, setQuery] = useState('');
     const [editing, setEditing] = useState<string | null>(null);
+    // Rozbalený detail klienta (jeho věci, čas, pohledávky); úprava údajů je zvlášť tužkou
+    const [detail, setDetail] = useState<string | null>(null);
     const [edit, setEdit] = useState(EMPTY);
     // Automatické hlídání insolvence klientů (jen s aktivním příplatkem)
     const [ins, setIns] = useState<Record<string, ClientIns> | null>(null);
@@ -142,12 +145,19 @@ export default function LawyerClients() {
                                 return (
                                     <Fragment key={c.id}>
                                     <tr>
-                                        <td className="px-4 py-2.5 font-semibold text-slate-900">{c.name}{ins && (() => { const v = insView(ins[c.id], /^\d{8}$/.test(c.ico ?? '') || !!c.birth); return <span className="mt-1 flex flex-wrap items-center gap-1.5"><span title={v.detail} className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${INS_TONE[v.tone]}`}>Insolvence: {v.text}</span>{v.tone === 'bad' && ins[c.id]?.url && <a href={ins[c.id].url ?? '#'} target="_blank" rel="noreferrer noopener" className="text-[11px] font-semibold text-rose-800 underline">rejstřík</a>}{v.detail && v.tone !== 'ok' && v.tone !== 'wait' && <span className="text-[11px] font-normal text-slate-500">{v.detail}</span>}</span>; })()}{c.note && <span className="block text-xs font-normal text-slate-500">{c.note}</span>}{(c.address || c.ico || c.birth) && <span className="block text-xs font-normal text-slate-500">{[c.address, c.ico && `IČO ${c.ico}`, c.dic && `DIČ ${c.dic}`, c.birth && `nar. ${fmtBirth(c.birth)}`].filter(Boolean).join(' · ')}</span>}</td>
-                                        <td className="px-3 py-2.5 text-slate-700">{[c.email, c.phone].filter(Boolean).join(' · ') || '–'}</td>
-                                        <td className="px-3 py-2.5 text-slate-700">{mine.length ? `${mine.filter((m) => m.status === 'open').length} otevřených z ${mine.length}` : '–'}</td>
+                                        <td className="px-4 py-2.5 font-semibold text-slate-900"><button type="button" onClick={() => setDetail(detail === c.id ? null : c.id)} aria-expanded={detail === c.id} className="inline-flex items-center gap-1 text-left text-slate-900 hover:text-indigo-800 cursor-pointer">{c.name}<ChevronDown size={14} aria-hidden="true" className={`text-slate-400 transition ${detail === c.id ? 'rotate-180' : ''}`} /></button>{ins && (() => { const v = insView(ins[c.id], /^\d{8}$/.test(c.ico ?? '') || !!c.birth); return <span className="mt-1 flex flex-wrap items-center gap-1.5"><span title={v.detail} className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${INS_TONE[v.tone]}`}>Insolvence: {v.text}</span>{v.tone === 'bad' && ins[c.id]?.url && <a href={ins[c.id].url ?? '#'} target="_blank" rel="noreferrer noopener" className="text-[11px] font-semibold text-rose-800 underline">rejstřík</a>}{v.detail && v.tone !== 'ok' && v.tone !== 'wait' && <span className="text-[11px] font-normal text-slate-500">{v.detail}</span>}</span>; })()}{c.note && <span className="block text-xs font-normal text-slate-500">{c.note}</span>}{(c.address || c.ico || c.birth) && <span className="block text-xs font-normal text-slate-500">{[c.address, c.ico && `IČO ${c.ico}`, c.dic && `DIČ ${c.dic}`, c.birth && `nar. ${fmtBirth(c.birth)}`].filter(Boolean).join(' · ')}</span>}</td>
+                                        <td className="px-3 py-2.5 text-slate-700"><ContactActions email={c.email} phone={c.phone} /></td>
+                                        <td className="px-3 py-2.5 text-slate-700">{mine.length ? (() => { const o = mine.filter((m) => m.status === 'open').length; return <button type="button" onClick={() => setDetail(detail === c.id ? null : c.id)} className="text-left text-indigo-800 hover:underline cursor-pointer">{o === 1 ? '1 otevřená' : o >= 2 && o <= 4 ? `${o} otevřené` : `${o} otevřených`} z {mine.length}</button>; })() : '–'}</td>
                                         <td className="px-3 py-2.5"><input defaultValue={c.hourly_rate ?? ''} key={`${c.id}-${c.hourly_rate}`} onBlur={(e) => void saveRate(c, e.target.value)} inputMode="decimal" aria-label={`Sazba ${c.name}`} className="w-24 rounded-lg border border-slate-300 px-2 py-1 text-sm" /></td>
                                         <td className="px-2 py-2.5 text-right whitespace-nowrap"><button type="button" onClick={() => startEdit(c)} aria-label={`Upravit ${c.name}`} className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 cursor-pointer"><Pencil size={15} /></button><button type="button" onClick={() => void remove(c)} aria-label={`Smazat ${c.name}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={15} /></button></td>
                                     </tr>
+                                    {detail === c.id && editing !== c.id && (
+                                        <tr className="bg-indigo-50/30"><td colSpan={5} className="px-4 py-3">
+                                            <ClientSummary client={c} />
+                                            {(c.address || c.ico || c.note) && <p className="text-xs text-slate-600">{[c.address, c.ico && `IČO ${c.ico}`, c.dic && `DIČ ${c.dic}`, c.note].filter(Boolean).join(' · ')}</p>}
+                                            <div className="mt-2 flex flex-wrap gap-2"><button type="button" onClick={() => startEdit(c)} className={ghostBtn}><Pencil size={14} /> Upravit údaje</button></div>
+                                        </td></tr>
+                                    )}
                                     {editing === c.id && (
                                         <tr className="bg-slate-50/60"><td colSpan={5} className="px-4 py-3">
                                             <ClientSummary client={c} />

@@ -41,7 +41,12 @@ export default function LawyerMail() {
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     const [info, setInfo] = useState('');
-    const [compose, setCompose] = useState<Compose | null>(null);
+    // Odkaz /kancelar/email?to=…&subject=… (např. z karty klienta) rovnou otevře nový e-mail
+    const [compose, setCompose] = useState<Compose | null>(() => {
+        if (typeof window === 'undefined') return null;
+        const q = new URLSearchParams(window.location.search); const to = q.get('to');
+        return to ? { to: to.slice(0, 300), cc: '', subject: (q.get('subject') ?? '').slice(0, 200), body: '', files: [], caseId: '' } : null;
+    });
     const [cases, setCases] = useState<CaseOpt[]>([]);
     const [clients, setClients] = useState<ClientOpt[]>([]);
     const [saveCase, setSaveCase] = useState('');
@@ -138,6 +143,9 @@ export default function LawyerMail() {
         setBusy('');
     }
     const signature = [access.display_name, access.firm_name, access.phone].filter(Boolean).join('\n');
+    // Nový e-mail z odkazu dostane podpis jednou, jakmile jsou údaje profilu načtené
+    const signed = useRef(false);
+    useEffect(() => { if (signed.current || !compose || compose.body || !signature) return; const t = window.setTimeout(() => { signed.current = true; setCompose((c) => (c && !c.body ? { ...c, body: `\n\n${signature}` } : c)); }, 0); return () => window.clearTimeout(t); }, [compose, signature]);
     function reply() {
         if (!sel) return;
         setCompose({ to: sel.fromEmail, cc: '', subject: /^re:/i.test(sel.subject) ? sel.subject : `Re: ${sel.subject}`, body: `\n\n${signature}${quoted(sel)}`, files: [], caseId: saveCase, inReplyTo: sel.messageId, references: [...sel.references, sel.messageId].filter(Boolean) });

@@ -26,7 +26,8 @@ export default function ClientSummary({ client }: { client: LawyerClient }) {
         let alive = true;
         (async () => {
             const all = await loadCases();
-            const cases = all.filter((c) => c.client_id === client.id);
+            const nm = client.name.trim().toLowerCase();
+            const cases = all.filter((c) => c.client_id === client.id || (!c.client_id && (c.client_name ?? '').trim().toLowerCase() === nm));
             const ids = cases.map((c) => c.id);
             const [e, inv, q, w] = await Promise.all([
                 ids.length ? supabase.from('time_entries').select('*').in('case_id', ids) : Promise.resolve({ data: [] }),
@@ -65,7 +66,17 @@ export default function ClientSummary({ client }: { client: LawyerClient }) {
                 {stat(Wallet, 'Čeká na zaplacení', money(outstanding), overdue.length ? 'text-rose-700' : undefined)}
                 {stat(Inbox, 'Poptávek', String(data.inquiries))}
             </div>
-            {data.cases.length > 0 && <p className="flex flex-wrap items-center gap-1.5 text-xs text-slate-600">Věci: {data.cases.map((c) => <Link key={c.id} href={`/kancelar/veci/${c.id}`} className="rounded-md bg-indigo-50 px-2 py-0.5 font-semibold text-indigo-900 hover:bg-indigo-100">{c.title}</Link>)}</p>}
+            {data.cases.length > 0 && (
+                <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+                    {[...data.cases].sort((a, b) => Number(a.status === 'done') - Number(b.status === 'done')).map((c) => (
+                        <li key={c.id}><Link href={`/kancelar/veci/${c.id}`} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm hover:bg-indigo-50">
+                            <Briefcase size={14} className="shrink-0 text-indigo-700" aria-hidden="true" />
+                            <span className="min-w-0 flex-1 font-semibold text-slate-900">{c.title}{c.reference ? <span className="ml-2 font-mono text-xs font-normal text-slate-500">{c.reference}</span> : null}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${c.status === 'open' ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-500'}`}>{c.status === 'open' ? 'otevřená' : 'uzavřená'}</span>
+                        </Link></li>
+                    ))}
+                </ul>
+            )}
             <div className="flex flex-wrap items-center gap-2">
                 <button type="button" onClick={() => void invoiceAll()} disabled={open.length === 0 || busy} className={ghostBtn}><FilePlus2 size={14} /> Vyfakturovat čas klienta</button>
                 {overdue[0]?.due_date && <Link href={`/kancelar/kalkulacky?tab=urok&jistina=${overdue[0].outstanding}&splatnost=${overdue[0].due_date}`} className={ghostBtn}><Calculator size={14} /> Úrok z prodlení ({overdue.length} po splatnosti)</Link>}
