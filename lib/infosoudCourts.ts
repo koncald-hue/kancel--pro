@@ -1,6 +1,5 @@
 // Okresní a obvodní soudy se zkratkami, které používá InfoSoud (veřejný seznam z formuláře infosoud.gov.cz, stav 18. 11. 2026).
-// Slouží jen k sestavení odkazu, který otevře vyhledání v prohlížeči uživatele. Krajské a vrchní soudy zde nejsou:
-// jejich seznam jsem nemohl získat a tvar odkazu pro ně není ověřený.
+// Slouží jen k sestavení odkazu, který otevře vyhledání v prohlížeči uživatele.
 export const DISTRICT_COURTS: [string, string][] = [
     ['Městský soud Brno', 'OSJIMBM'],
     ['Obvodní soud Praha 1', 'OSPHA01'],
@@ -88,4 +87,19 @@ export const DISTRICT_COURTS: [string, string][] = [
     ['Okresní soud Zlín', 'OSJIMZL'],
     ['Okresní soud Znojmo', 'OSJIMZN'],
     ['Okresní soud Žďár nad Sázavou', 'OSJIMZR'],
+];
+
+// Krajské, městský a vrchní soudy: kód a názvy, jak je lidé píšou (včetně 6. pádu „v Plzni“). Tvar odkazu (parametr druhOrganizace)
+// je ověřený v prohlížeči u Krajského soudu Brno, Městského soudu Praha a Vrchního soudu Praha.
+export const HIGHER_COURTS: { code: string; names: string[] }[] = [
+    { code: 'KSJIMBM', names: ['Krajský soud Brno', 'Krajský soud v Brně'] },
+    { code: 'KSJICCB', names: ['Krajský soud České Budějovice', 'Krajský soud v Českých Budějovicích'] },
+    { code: 'KSVYCHK', names: ['Krajský soud Hradec Králové', 'Krajský soud v Hradci Králové'] },
+    { code: 'KSSEMOS', names: ['Krajský soud Ostrava', 'Krajský soud v Ostravě'] },
+    { code: 'KSZPCPM', names: ['Krajský soud Plzeň', 'Krajský soud v Plzni'] },
+    { code: 'KSSTCAB', names: ['Krajský soud Praha', 'Krajský soud v Praze'] },
+    { code: 'KSSCEUL', names: ['Krajský soud Ústí nad Labem', 'Krajský soud v Ústí nad Labem'] },
+    { code: 'MSPHAAB', names: ['Městský soud Praha', 'Městský soud v Praze'] },
+    { code: 'VSSEMOL', names: ['Vrchní soud Olomouc', 'Vrchní soud v Olomouci'] },
+    { code: 'VSPHAAB', names: ['Vrchní soud Praha', 'Vrchní soud v Praze'] },
 ];

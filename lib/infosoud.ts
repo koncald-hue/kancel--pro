@@ -1,7 +1,7 @@
 // InfoSoud (infosoud.gov.cz): veřejná služba Ministerstva spravedlnosti o průběhu soudních řízení.
 // Nemá zveřejněné API ani podmínky pro strojový přístup, proto ji Kancelář sama nečte. Jen připraví údaje
 // ze spisové značky pro formulář InfoSoudu a otevře ho v prohlížeči advokáta.
-import { DISTRICT_COURTS } from './infosoudCourts';
+import { DISTRICT_COURTS, HIGHER_COURTS } from './infosoudCourts';
 export const INFOSOUD_URL = 'https://infosoud.gov.cz/InfoSoud';
 
 export type FileNumber = { senat: number | null; druh: string; cislo: number; rocnik: number; text: string };
@@ -31,20 +31,26 @@ export const isCourt = (authority: string) => /soud/i.test(authority ?? '');
 
 const foldName = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
-// Přiřadí text „Okresní soud Plzeň-město“, „OS Plzeň-město“ nebo „Obvodní soud pro Prahu 1“ ke kódu okresního soudu. Jinak null.
-export function districtCourtCode(authority: string): string | null {
-    const a = foldName(authority ?? ''); if (!a) return null;
-    const exact = DISTRICT_COURTS.find(([n]) => foldName(n) === a); if (exact) return exact[1];
-    const m = a.replace(/^(okresni soud|obvodni soud|mestsky soud|os)( pro)? /, '');
-    const hits = DISTRICT_COURTS.filter(([n]) => foldName(n).replace(/^(okresni soud|obvodni soud|mestsky soud) /, '') === m);
-    return hits.length === 1 ? hits[0][1] : null;
-}
+// Zkratky ze spisových značek a z textu v poli „Soud“: „OS Plzeň-město“, „KS Plzeň“, „MS Praha“, „VS Olomouc“
+const expand = (a: string) => a.replace(/^os /, 'okresni soud ').replace(/^ks /, 'krajsky soud ').replace(/^ms /, 'mestsky soud ').replace(/^vs /, 'vrchni soud ');
 
-// Přímý odkaz, který v InfoSoudu rovnou vyhledá řízení. Jen pro okresní soudy se senátem a ročníkem od 2007
-// (jiné InfoSoud nezobrazuje). Odkaz otevře uživatel sám, vyhledání proběhne v jeho prohlížeči.
+export type CourtRef = { kind: 'okresni' | 'vyssi'; code: string };
+// Přiřadí text „Okresní soud Plzeň-město“, „KS Plzeň“ nebo „Krajský soud v Plzni“ ke kódu soudu v InfoSoudu. Jinak null.
+export function courtRef(authority: string): CourtRef | null {
+    const a = expand(foldName(authority ?? '')); if (!a) return null;
+    const higher = HIGHER_COURTS.find((c) => c.names.some((n) => foldName(n) === a)); if (higher) return { kind: 'vyssi', code: higher.code };
+    const exact = DISTRICT_COURTS.find(([n]) => foldName(n) === a); if (exact) return { kind: 'okresni', code: exact[1] };
+    const m = a.replace(/^(okresni soud|obvodni soud|mestsky soud)( pro)? /, '');
+    const hits = DISTRICT_COURTS.filter(([n]) => foldName(n).replace(/^(okresni soud|obvodni soud|mestsky soud) /, '') === m);
+    return hits.length === 1 ? { kind: 'okresni', code: hits[0][1] } : null;
+}
+export const districtCourtCode = (authority: string): string | null => { const r = courtRef(authority); return r?.kind === 'okresni' ? r.code : null; };
+
+// Přímý odkaz, který v InfoSoudu rovnou vyhledá řízení. Okresní soudy: ročník od 2007, krajské a vyšší: od 2008 (jiné InfoSoud
+// nezobrazuje). Vyžaduje senát. Odkaz otevře uživatel sám, vyhledání proběhne v jeho prohlížeči.
 export function infosoudDirectLink(fn: FileNumber, authority: string): string | null {
-    const code = districtCourtCode(authority);
-    if (!code || fn.senat === null || fn.rocnik < 2007) return null;
-    const q = new URLSearchParams({ typOrganizace: 'VSECHNY_KRAJE', okresniSoud: code, cisloSenatu: String(fn.senat), druhVeci: fn.druh.toUpperCase(), bcVec: String(fn.cislo), rocnik: String(fn.rocnik) });
+    const ref = courtRef(authority);
+    if (!ref || fn.senat === null || fn.rocnik < (ref.kind === 'okresni' ? 2007 : 2008)) return null;
+    const q = new URLSearchParams({ typOrganizace: 'VSECHNY_KRAJE', [ref.kind === 'okresni' ? 'okresniSoud' : 'druhOrganizace']: ref.code, cisloSenatu: String(fn.senat), druhVeci: fn.druh.toUpperCase(), bcVec: String(fn.cislo), rocnik: String(fn.rocnik) });
     return `${INFOSOUD_URL}/detail-rizeni?${q.toString()}`;
 }

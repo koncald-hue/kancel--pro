@@ -52,7 +52,7 @@ export default function LawyerInfosoud() {
         <div className="space-y-5">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Gavel size={18} className="text-indigo-700" aria-hidden="true" /> Průběh soudních řízení v InfoSoudu</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">InfoSoud ukazuje, v jakém stavu je řízení u soudu (jednání, rozhodnutí, odvolání). Kancelář z vašich věcí připraví údaje ze spisové značky. U okresních soudů otevře tlačítko přímo řízení, u ostatních údaje klepnutím zkopírujete a ve formuláři InfoSoudu vyplníte.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">InfoSoud ukazuje, v jakém stavu je řízení u soudu (jednání, rozhodnutí, odvolání). Kancelář z vašich věcí připraví údaje ze spisové značky. U okresních, krajských, městského a vrchních soudů otevře tlačítko přímo řízení, jinde údaje klepnutím zkopírujete a ve formuláři InfoSoudu vyplníte.</p>
                 <p className="mt-2 flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600"><Info size={14} className="mt-0.5 shrink-0 text-slate-400" aria-hidden="true" /> InfoSoud nemá veřejné rozhraní pro jiné aplikace, proto ho Kancelář sama nečte ani nehlídá. Vyhledání proběhne na stránce ministerstva ve vašem prohlížeči a do Kanceláře se nic neukládá.</p>
                 <form onSubmit={(e) => e.preventDefault()} className="mt-4">
                     <label className="block text-sm font-semibold text-slate-800">Rozložit jinou spisovou značku
