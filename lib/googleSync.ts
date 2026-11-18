@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { decryptText, encryptText, getMaster, toB64u } from './e2ee';
 import { loadAllDeadlines } from './caseFile';
+import { pragueParts, pragueToIso } from './agenda';
 import { loadCases } from './cases';
 import { pragueDate } from './lhuty';
 import { CALENDAR_NAME, GOOGLE_CALLBACK_PATH, desiredEvents, eventBody, googleAuthorizeUrl, hashOf, planSync, type Desired, type Detail, type GoogleTokens, type Mapped } from './googleCal';
@@ -83,7 +84,22 @@ async function doSync(master: CryptoKey, userId: string): Promise<SyncResult> {
     if (!loaded || loaded === 'broken') throw new Error(loaded === 'broken' ? 'Přihlášení ke Googlu nejde dešifrovat. Připojte se znovu.' : 'Google Kalendář není připojený.');
     const [cases, customs, mappedRes] = await Promise.all([loadCases(), loadAllDeadlines(), supabase.from('google_calendar_sync').select('key, kind, event_id, hash')]);
     const mapped = (mappedRes.data ?? []) as Mapped[];
-    const desired = desiredEvents(cases, customs, { detail: loaded.row.detail, internal: loaded.row.internal }, pragueDate(new Date().toISOString()), window.location.origin);
+    const desired: Desired[] = desiredEvents(cases, customs, { detail: loaded.row.detail, internal: loaded.row.internal }, pragueDate(new Date().toISOString()), window.location.origin);
+    // Úkoly pro mě a události (vlastní i s pozváním); bez migrace 20261118_21 se tiše vynechají
+    const today = pragueDate(new Date().toISOString());
+    const [tt, ce] = await Promise.all([
+        supabase.from('team_tasks').select('id, title, due_date, due_time, case_title').eq('assignee_id', userId).eq('status', 'open').gte('due_date', today),
+        supabase.from('calendar_events').select('id, title, starts_at, ends_at, all_day, place, case_title').gte('ends_at', new Date().toISOString()),
+    ]);
+    const showCase = loaded.row.detail !== 'minimal';
+    for (const t of (tt.error ? [] : tt.data ?? []) as { id: string; title: string; due_date: string; due_time: string | null; case_title: string }[]) {
+        const start = t.due_time ? pragueToIso(t.due_date, t.due_time.slice(0, 5)) : undefined;
+        desired.push({ key: `task:${t.id}`, kind: 'main', date: t.due_date, summary: `Úkol: ${t.title}${showCase && t.case_title ? ` – ${t.case_title}` : ''}`.slice(0, 200), description: `Detail: ${window.location.origin}/kancelar/ukoly`, lowKey: true, ...(start ? { startAt: start, endAt: new Date(Date.parse(start) + 30 * 60_000).toISOString() } : {}) });
+    }
+    for (const e of (ce.error ? [] : ce.data ?? []) as { id: string; title: string; starts_at: string; ends_at: string; all_day: boolean; place: string; case_title: string }[]) {
+        const s = pragueParts(e.starts_at).date;
+        desired.push({ key: `event:${e.id}`, kind: 'main', date: s, summary: `${e.title}${showCase && e.case_title ? ` – ${e.case_title}` : ''}`.slice(0, 200), description: `Detail: ${window.location.origin}/kancelar/kalendar?udalost=${e.id}`, location: e.place || undefined, lowKey: true, ...(e.all_day ? {} : { startAt: new Date(e.starts_at).toISOString(), endAt: new Date(e.ends_at).toISOString() }) });
+    }
     const plan = planSync(desired, mapped);
     const calendarId = loaded.row.calendar_id;
     const res: SyncResult = { inserted: 0, patched: 0, removed: 0, same: plan.same, failed: 0, message: '' };

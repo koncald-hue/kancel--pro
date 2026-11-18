@@ -13,6 +13,7 @@ import { shiftDays } from '@/lib/taskTemplates';
 import { inputCls, primaryBtn } from '../situation/caseUi';
 import ConflictPanel from './ConflictPanel';
 import { useLawyer } from './LawyerGate';
+import { createTask, loadColleagues, type Colleague } from '@/lib/teamTasks';
 
 type Tab = 'cas' | 'ukol' | 'poznamka' | 'vec';
 const TABS: [Tab, string, typeof Clock][] = [['cas', 'Čas', Clock], ['ukol', 'Úkol', ListTodo], ['poznamka', 'Poznámka', StickyNote], ['vec', 'Nová věc', FolderPlus]];
@@ -29,6 +30,10 @@ export default function QuickAdd({ open, onClose, initial = 'cas' }: { open: boo
     const [minutes, setMinutes] = useState(15); const [desc, setDesc] = useState(''); const [date, setDate] = useState(todayIso());
     const [title, setTitle] = useState(''); const [due, setDue] = useState(shiftDays(todayIso(), 1, true));
     const [note, setNote] = useState('');
+    // Komu je úkol (prázdné = já, úkol do věci); kolegové z kanceláře
+    const [assignee, setAssignee] = useState('');
+    const [colleagues, setColleagues] = useState<Colleague[]>([]);
+    useEffect(() => { if (!open) return; let a = true; loadColleagues().then((c) => { if (a) setColleagues(c.filter((x) => x.user_id !== userId)); }); return () => { a = false; }; }, [open, userId]);
     const [busy, setBusy] = useState(false); const [done, setDone] = useState(''); const [err, setErr] = useState('');
     const first = useRef<HTMLSelectElement | HTMLInputElement | null>(null);
 
@@ -73,8 +78,14 @@ export default function QuickAdd({ open, onClose, initial = 'cas' }: { open: boo
         return `Zapsáno ${minutes} min${rate ? '' : ' (sazbu doplňte ve výkazech)'}.`;
     });
     const saveTask = () => run(async () => {
-        if (!caseId) throw new Error('Vyberte věc.');
         if (!title.trim()) throw new Error('Napište, co je potřeba udělat.');
+        // Úkol pro kolegu: jde do jeho Úkolů a kalendáře; věc je nepovinná
+        if (assignee && assignee !== userId) {
+            await createTask({ created_by: userId, assignee_id: assignee, title, due_date: due, case_id: caseId || null });
+            if (caseId) remember(caseId); setTitle('');
+            return `Úkol zadán: ${colleagues.find((c) => c.user_id === assignee)?.name ?? 'kolega'} ho uvidí ve svých úkolech a kalendáři.`;
+        }
+        if (!caseId) throw new Error('Vyberte věc.');
         await insertRow('case_deadlines', { case_id: caseId, user_id: userId, title: title.trim().slice(0, 200), due_date: due, kind: 'ukol' });
         remember(caseId); setTitle('');
         return `Úkol přidán na ${new Date(`${due}T12:00:00`).toLocaleDateString('cs-CZ')}.`;
@@ -132,6 +143,7 @@ export default function QuickAdd({ open, onClose, initial = 'cas' }: { open: boo
                     )}
                     {tab === 'ukol' && (
                         <>
+                            {colleagues.length > 0 && <label className="block text-xs font-semibold text-slate-600">Pro koho<select value={assignee} onChange={(e) => setAssignee(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">Pro mě (úkol ve věci)</option>{colleagues.map((c) => <option key={c.user_id} value={c.user_id}>Pro kolegu: {c.name}</option>)}</select></label>}
                             <label className="block text-xs font-semibold text-slate-600">Co udělat<input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} placeholder="např. Zavolat klientovi kvůli podkladům" className={`${inputCls} mt-1 font-normal`} /></label>
                             <div><p className="mb-1 text-xs font-semibold text-slate-600">Do kdy</p>{chips([[shiftDays(today, 1, true), 'Další pracovní den'], [shiftDays(today, 3, true), 'Za 3 prac. dny'], [shiftDays(today, 7, false), 'Za týden'], [shiftDays(today, 14, false), 'Za 14 dní']], due, setDue)}
                                 <input type="date" value={due} min={today} onChange={(e) => setDue(e.target.value)} aria-label="Termín" className={`${inputCls} mt-2 w-auto`} /></div>

@@ -5,6 +5,7 @@ import EveningSummary from './EveningSummary';
 import MonthGlance from './MonthGlance';
 import FirstSteps from './FirstSteps';
 import SubstituteBanner from './SubstituteBanner';
+import TeamTasksCard from './TeamTasksCard';
 import { RadarPanel } from './RadarEvents';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -84,6 +85,7 @@ export default function LawyerDashboard() {
         <div className="space-y-6">
             <FirstSteps />
             <SubstituteBanner />
+            <TeamTasksCard />
             <DayPanel deadlinesToday={upcoming.filter((u) => u.left === 0).length} />
             {/* Pracovní plocha: co je nové, co hoří, na koho se čeká a co je nevyúčtované */}
             <TodayBoard />

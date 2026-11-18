@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { clientIp, rateLimited, serviceClient } from '@/lib/serverSupabase';
 import { buildFeed, type FeedEvent } from '@/lib/calendarFeed';
+import { pragueParts, pragueToIso } from '@/lib/agenda';
 import { collectDeadlines, type CaseDeadline } from '@/lib/caseFile';
 import type { LegalCase } from '@/lib/cases';
 
@@ -40,6 +41,19 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
             if (d.done || d.date < from || d.date > to) continue;
             events.push({ uid: `${c.id}-${d.key}`, iso: iso(d.date), title: d.title, caseId: c.id, caseTitle: c.title });
         }
+    }
+    // Úkoly pro mě (od kolegů i vlastní) a události, které pořádám nebo na které jsem pozván (migrace 20261118_21)
+    const [tt, ce] = await Promise.all([
+        db.from('team_tasks').select('id, title, due_date, due_time, case_title').eq('assignee_id', uid).eq('status', 'open').gte('due_date', iso(from)).lte('due_date', iso(to)),
+        db.from('calendar_events').select('id, title, starts_at, ends_at, all_day, place, case_title, user_id, attendees').or(`user_id.eq.${uid},attendees.cs.{${uid}}`).gte('ends_at', from.toISOString()).lte('starts_at', to.toISOString()),
+    ]);
+    for (const t of (tt.error ? [] : tt.data ?? []) as { id: string; title: string; due_date: string; due_time: string | null; case_title: string }[]) {
+        const start = t.due_time ? pragueToIso(t.due_date, t.due_time.slice(0, 5)) : undefined;
+        events.push({ uid: `task-${t.id}`, iso: t.due_date, title: t.title, caseId: null, caseTitle: t.case_title, type: 'ukol', ...(start ? { startUtc: start, endUtc: new Date(Date.parse(start) + 30 * 60_000).toISOString() } : {}) });
+    }
+    for (const e of (ce.error ? [] : ce.data ?? []) as { id: string; title: string; starts_at: string; ends_at: string; all_day: boolean; place: string; case_title: string }[]) {
+        const s = pragueParts(e.starts_at).date;
+        events.push({ uid: `ev-${e.id}`, iso: s, title: e.title, caseId: null, caseTitle: e.case_title, type: 'udalost', place: e.place, ...(e.all_day ? {} : { startUtc: new Date(e.starts_at).toISOString(), endUtc: new Date(e.ends_at).toISOString() }) });
     }
     const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, '') || new URL(req.url).origin;
     const body = buildFeed(events.sort((a, b) => a.iso.localeCompare(b.iso)), { includeTitles: feed.include_titles === true, origin });

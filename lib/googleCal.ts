@@ -19,7 +19,8 @@ export type GoogleTokens = { access_token: string; refresh_token?: string; expir
 export const googleAuthorizeUrl = (p: { clientId: string; redirectUri: string; challenge: string; state: string }) =>
     `${GOOGLE_AUTH}?${new URLSearchParams({ client_id: p.clientId, redirect_uri: p.redirectUri, response_type: 'code', scope: GOOGLE_SCOPE, access_type: 'offline', prompt: 'consent', code_challenge: p.challenge, code_challenge_method: 'S256', state: p.state })}`;
 
-export type Desired = { key: string; kind: 'main' | 'internal'; date: string; summary: string; description: string };
+// startAt/endAt (UTC) = událost v daný čas (úkol s časem, jednání); bez nich celodenní
+export type Desired = { key: string; kind: 'main' | 'internal'; date: string; summary: string; description: string; startAt?: string; endAt?: string; location?: string; lowKey?: boolean };
 
 const addDay = (iso: string) => new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10) + 1)).toISOString().slice(0, 10);
 const prev = (iso: string) => computeAbsolute(iso).internal;
@@ -50,6 +51,16 @@ export function desiredEvents(cases: LegalCase[], customs: CaseDeadline[], opt: 
 const REM = (nDays: number) => nDays * 1440 - 540; // připomínka v 9:00, n dnů před celodenní událostí
 export function eventBody(d: Desired, key: string) {
     const main = d.kind === 'main';
+    if (d.lowKey) {
+        // Úkoly a události: v daný čas s připomínkou 30 minut předem, jinak celodenní s připomínkou ráno
+        return {
+            summary: d.summary, description: d.description, ...(d.location ? { location: d.location } : {}),
+            start: d.startAt ? { dateTime: d.startAt, timeZone: 'Europe/Prague' } : { date: d.date }, end: d.endAt ? { dateTime: d.endAt, timeZone: 'Europe/Prague' } : { date: addDay(d.date) },
+            transparency: d.startAt ? 'opaque' : 'transparent', colorId: d.key.startsWith('event:') ? '9' : '5',
+            reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: d.startAt ? 30 : 480 /* celodenní: v 16:00 den předem */ }] },
+            extendedProperties: { private: { kancelar: '1', key: key.slice(0, 120), kind: d.kind } },
+        };
+    }
     return {
         summary: d.summary, description: d.description, start: { date: d.date }, end: { date: addDay(d.date) }, transparency: 'transparent', colorId: main ? '11' : '6',
         reminders: { useDefault: false, overrides: main ? [{ method: 'popup', minutes: REM(7) }, { method: 'popup', minutes: REM(3) }, { method: 'popup', minutes: REM(1) }, { method: 'email', minutes: REM(1) }] : [{ method: 'popup', minutes: REM(1) }] },
@@ -59,7 +70,8 @@ export function eventBody(d: Desired, key: string) {
 
 // Jednoduchý otisk události, aby se neměnily události, které se nezměnily
 export function hashOf(d: Desired): string {
-    const s = `${d.kind}|${d.date}|${d.summary}|${d.description}`;
+    // Časové údaje se přidají jen u úkolů a událostí, aby se otisky dřívějších lhůt nezměnily
+    const s = `${d.kind}|${d.date}|${d.summary}|${d.description}${d.lowKey ? `|${d.startAt ?? ''}|${d.endAt ?? ''}|${d.location ?? ''}` : ''}`;
     let h = 5381;
     for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
     return `${h >>> 0}`;

@@ -21,4 +21,13 @@ describe('calendar feed', () => {
         for (const l of folded.split('\r\n')) expect(new TextEncoder().encode(l).length).toBeLessThanOrEqual(75);
         expect(folded.replace(/\r\n /g, '')).toBe(long);
     });
+    it('úkol v daný čas a událost od–do s místem', () => {
+        const ics = buildFeed([
+            { uid: 'task-1', iso: '2026-11-20', title: 'Zavolat klientovi', caseId: null, caseTitle: 'Novák', type: 'ukol' },
+            { uid: 'ev-1', iso: '2026-11-20', title: 'Jednání', caseId: null, caseTitle: '', type: 'udalost', startUtc: '2026-11-20T08:30:00.000Z', endUtc: '2026-11-20T10:00:00.000Z', place: 'OS Plzeň, síň 12' },
+        ], { includeTitles: false, origin: 'https://app.example', stamp: new Date('2026-11-17T10:00:00Z') }).replace(/\r\n /g, '');
+        expect(ics).toContain('SUMMARY:Úkol: Zavolat klientovi'); expect(ics).not.toContain('Novák');
+        expect(ics).toContain('DTSTART:20261120T083000Z'); expect(ics).toContain('DTEND:20261120T100000Z');
+        expect(ics).toContain('LOCATION:OS Plzeň\\, síň 12'); expect(ics).toContain('TRIGGER:-PT30M');
+    });
 });

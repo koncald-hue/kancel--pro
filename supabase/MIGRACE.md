@@ -46,6 +46,7 @@ Potřebuje v `.env.local` hodnoty `NEXT_PUBLIC_SUPABASE_URL` a `SUPABASE_SERVICE
 | `20261118_18_stret-zajmu-kratka-jmena.sql` | Skloňování i u pětipísmenných jmen („Petru Dvořákovi“ → Petr Dvořák). |
 | `20261118_19_denik-archiv-ucetnictvi-zastupovani.sql` | Podací deník (čísla jednací, doručení), archiv a skartace spisů s protokolem, zálohové faktury (řada Z…), opakovaná fakturace, týdenní souhrn, zastupování v týmu (přístup zástupce k věcem po dobu nepřítomnosti). |
 | `20261118_20_ucetnictvi-provozovatele.sql` | Účetnictví provozovatele: automatická faktura při zaplacení objednávky, ruční faktura, dobropis, výdaje, poznámky týmu k uživatelům a záznam úkonů správce. |
+| `20261118_21_ukoly-tymu-a-kalendar.sql` | Úkoly mezi kolegy (zadání, splnění, odmítnutí s důvodem) a události kalendáře s pozvanými kolegy. |
 
 ## Starší skripty (před zavedením složky migrations)
 

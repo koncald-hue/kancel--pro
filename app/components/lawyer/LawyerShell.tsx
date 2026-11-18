@@ -3,17 +3,18 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel, Eye, ListChecks, FileSpreadsheet, ChevronDown, Puzzle, Plus, BookOpen, Archive } from 'lucide-react';
+import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel, Eye, ListChecks, FileSpreadsheet, ChevronDown, Puzzle, Plus, BookOpen, Archive, CalendarDays, ListTodo } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
 import QuickAdd from './QuickAdd';
+import { unseenCount } from '@/lib/teamTasks';
 import E2eeLockNotice from './E2eeLockNotice';
 import DataBoxLauncher from './DataBoxLauncher';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
 
-export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'sablony' | 'epr' | 'stret' | 'uschovy' | 'doplnky' | 'denik' | 'archiv' | 'nastaveni';
+export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'sablony' | 'epr' | 'stret' | 'uschovy' | 'doplnky' | 'denik' | 'archiv' | 'kalendar' | 'ukoly' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
 
 // Menu: nahoře to, co advokát potřebuje každý den; odborné nástroje a nastavení jsou ve sbalitelných skupinách
@@ -21,7 +22,7 @@ type Group = { title: string; items: Item[]; fold?: string };
 const GROUPS: Group[] = [
     // „Dnes“ je pracovní plocha (adresa /kancelar zůstává)
     { title: '', items: [['prehled', '/kancelar', 'Dnes', LayoutDashboard]] },
-    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['email', '/kancelar/email', 'E-mail', Mail], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['denik', '/kancelar/podaci-denik', 'Podací deník', BookOpen], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library]] },
+    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['kalendar', '/kancelar/kalendar', 'Kalendář', CalendarDays], ['ukoly', '/kancelar/ukoly', 'Úkoly', ListTodo], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['email', '/kancelar/email', 'E-mail', Mail], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['denik', '/kancelar/podaci-denik', 'Podací deník', BookOpen], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library]] },
     { title: 'Peníze', items: [['penize', '/kancelar/penize', 'Peníze', Wallet]] },
     { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound]] },
     // Odborné a méně časté nástroje
@@ -63,17 +64,22 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
     const toggleFold = (id: string) => setUnfolded((list) => { const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id]; try { localStorage.setItem(FOLD_KEY, JSON.stringify(next)); } catch { /* nic */ } return next; });
     // Počet nepřečtených zpráv v chatu kanceláře (když chat ještě není zapnutý, odznak se nezobrazí)
     const [unread, setUnread] = useState(0);
+    // Nové úkoly od kolegů (ještě neotevřené)
+    const [newTasks, setNewTasks] = useState(0);
+    const me = account?.id;
     useEffect(() => {
         let cancelled = false;
         const load = async () => {
-            const [sum, nud] = await Promise.all([supabase.rpc('chat_summary'), supabase.rpc('my_nudges')]);
-            if (cancelled || sum.error) return;
+            const [sum, nud, tasks] = await Promise.all([supabase.rpc('chat_summary'), supabase.rpc('my_nudges'), me ? unseenCount(me) : Promise.resolve(0)]);
+            if (cancelled) return;
+            setNewTasks(tasks);
+            if (sum.error) return;
             setUnread(((sum.data ?? []) as { unread: number }[]).reduce((s, r) => s + Number(r.unread), 0) + (nud.error ? 0 : ((nud.data ?? []) as unknown[]).length));
         };
         void load();
         const id = window.setInterval(() => void load(), 30_000);
         return () => { cancelled = true; window.clearInterval(id); };
-    }, []);
+    }, [me, active]);
 
     // Výkazy, fakturace, ceník a kalkulačky patří pod jednu položku „Peníze“
     const navActive: LawyerSection = ['vykazy', 'faktury', 'cenik', 'platby', 'export', 'kalkulacky', 'penize'].includes(active) ? 'penize' : active;
@@ -87,6 +93,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${navActive === id ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
             <Icon size={17} aria-hidden="true" className={navActive === id ? 'text-indigo-700' : 'text-slate-400'} />
             <span className="flex-1">{label}</span>
+            {id === 'ukoly' && newTasks > 0 && <span className="rounded-full bg-violet-600 px-1.5 py-0.5 text-[10px] font-bold text-white" aria-label={`${newTasks} nových úkolů`}>{newTasks}</span>}
             {id === 'chat' && unread > 0 && <span className="rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white" aria-label={`${unread} nepřečtených`}>{unread}</span>}
         </Link>
     );
