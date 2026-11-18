@@ -194,7 +194,7 @@ function Editor({ template, userId, onDone, onCancel }: { template: LawyerTempla
 function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; access: ReturnType<typeof useLawyer>['access']; userId: string; onBack: () => void }) {
     const [cases, setCases] = useState<LegalCase[]>([]);
     const [clients, setClients] = useState<{ id: string; address?: string; ico?: string; dic?: string; birth?: string | null }[]>([]);
-    const [caseId, setCaseId] = useState('');
+    const [caseId, setCaseId] = useState(() => (typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('case') ?? ''));
     const [custom, setCustom] = useState<Record<string, string>>({});
     const [override, setOverride] = useState<Record<string, string>>({});
     const [copied, setCopied] = useState(false);

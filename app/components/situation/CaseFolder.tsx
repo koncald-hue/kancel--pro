@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import ConflictPanel from '../lawyer/ConflictPanel';
+import { partiesFromTitle } from '@/lib/conflicts';
 import { useRouter } from 'next/navigation';
 import { CalendarClock, CalendarPlus, FolderPlus, LayoutList, Pin, Rows3, Search, Sparkles } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
@@ -11,7 +13,7 @@ import { deadlineText, deadlineTone } from './CaseDeadlinesTab';
 import { inputCls, primaryBtn } from './caseUi';
 import { limitsFor, useLawyerTier } from '@/lib/tiers';
 import UpgradeNote from './UpgradeNote';
-import { applyTemplate, loadTemplates } from '@/lib/templateApply';
+import { addStarterTemplates, applyTemplate, defaultTemplate, loadTemplates } from '@/lib/templateApply';
 import type { CaseTemplate } from '@/lib/taskTemplates';
 
 // Přehled všech případů (spisů) přihlášeného uživatele
@@ -33,7 +35,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
     const [creating, setCreating] = useState(false);
     const [templates, setTemplates] = useState<CaseTemplate[]>([]);
     const [tplId, setTplId] = useState('');
-    useEffect(() => { if (isOffice) loadTemplates().then(setTemplates).catch(() => undefined); }, [isOffice]);
+    useEffect(() => { if (isOffice) loadTemplates().then((l) => { setTemplates(l); setTplId(defaultTemplate(l)?.id ?? ''); }).catch(() => undefined); }, [isOffice]);
     // Přehled pro advokáty: tabulka s klientem, značkou a úřadem místo karet
     const [officeSaved, setOffice] = useState(() => { try { return localStorage.getItem('casesOfficeView') === '1'; } catch { return false; } });
     const office = isOffice || (lawyer && officeSaved);
@@ -112,7 +114,9 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                 {isOffice && templates.length > 0 && <select value={tplId} onChange={(e) => setTplId(e.target.value)} aria-label="Šablona úkolů" className={`${inputCls} sm:max-w-56`}><option value="">Bez šablony úkolů</option>{templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>}
                 <button type="submit" disabled={!title.trim() || creating || (cases?.length ?? 0) >= limits.cases} className={`${primaryBtn} justify-center whitespace-nowrap`}><FolderPlus size={16} /> {isOffice ? 'Založit věc' : 'Založit spis'}</button>
             </form>
-            {isOffice && templates.length === 0 && <p className="mt-2 text-xs text-slate-500">Tip: <Link href="/kancelar/sablony" className="font-semibold text-indigo-900 underline">Šablony úkolů</Link> vám při založení věci rovnou vytvoří úkoly s termíny (podpis plné moci, podklady od klienta, příprava jednání).</p>}
+            {isOffice && (() => { const sides = partiesFromTitle(title); return sides.length === 2 ? <div className="mt-2 space-y-2"><ConflictPanel parties={[{ name: sides[1] }]} role="protistrana" compact /><ConflictPanel parties={[{ name: sides[0] }]} role="klient" compact /></div> : null; })()}
+            {isOffice && templates.length === 0 && <p className="mt-2 text-xs text-slate-500">Tip: <button type="button" onClick={() => account && void addStarterTemplates(account.id).then((l) => { setTemplates(l); setTplId(defaultTemplate(l)?.id ?? ''); }).catch(() => undefined)} className="cursor-pointer font-semibold text-indigo-900 underline">Přidat vzorové šablony úkolů</button> a nová věc dostane úkoly s termíny sama (plná moc, podklady od klienta, příprava jednání). <Link href="/kancelar/sablony" className="underline">Upravit šablony</Link></p>}
+            {isOffice && templates.length > 0 && tplId && <p className="mt-2 text-xs text-slate-500">K nové věci se automaticky přidají úkoly ze šablony „{templates.find((t) => t.id === tplId)?.name}“. Jinou nebo žádnou vyberete v seznamu u názvu.</p>}
             {!isOffice && <p className="mt-2 text-xs text-slate-500">Nevíte, jak začít? <Link href="/situace" className="font-semibold text-indigo-900 underline">Popište situaci a spis se předvyplní</Link> kroky, lhůtami i vzory dokumentů.</p>}
 
             {!lawyer && (cases?.length ?? 0) >= limits.cases && <div className="mt-3"><UpgradeNote>Bezplatný účet má {limits.cases} případy. Smažte vyřešený případ, nebo využijte neomezené spisy v</UpgradeNote></div>}

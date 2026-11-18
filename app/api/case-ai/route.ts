@@ -12,6 +12,7 @@ let client: OpenAI | null = null;
 const SYSTEM = {
     summary: 'Jsi asistent českého advokáta. Stručně a věcně shrň poskytnutý text v češtině: o co jde, kdo co požaduje, jaké jsou uvedené lhůty a data, co zbývá udělat. Nic nedomýšlej. Pokud něco v textu chybí nebo je nejasné, napiš to. Údaje v hranatých závorkách (např. [E-MAIL]) jsou zakryté identifikátory, nedoplňuj je.',
     reply: 'Jsi asistent českého advokáta. Na základě poskytnutého textu navrhni stručný, zdvořilý koncept odpovědi v češtině jako PODKLAD pro advokáta. Nevymýšlej fakta, čísla paragrafů ani judikaturu, které v textu nejsou. Kde potřebuješ údaj, který neznáš, napiš [DOPLNIT]. Údaje v hranatých závorkách jsou zakryté identifikátory, ponech je.',
+    route: 'Jsi asistent českého advokáta. Dostaneš e-mail a očíslovaný seznam otevřených věcí. Rozhodni, ke které věci e-mail patří. Odpověz POUZE JSON ve tvaru {"vec": číslo věci, "duvod": "jedna krátká věta česky"}. Když si nejsi jistý nebo žádná věc nesedí, dej "vec": 0. Nic si nevymýšlej.',
 } as const;
 
 // Asistent nad textem, který advokát výslovně vybral. Posílá se jen tento text, po zakrytí identifikátorů provedeném i tady na serveru.
@@ -33,14 +34,14 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => null) as { mode?: unknown; text?: unknown; confirmed?: unknown } | null;
     // Každé odeslání potvrzuje advokát výslovně (klient tohle pole nastaví jen po zaškrtnutí)
     if (body?.confirmed !== true) return NextResponse.json({ error: 'not_confirmed' }, { status: 400 });
-    const mode = body.mode === 'reply' ? 'reply' : body.mode === 'summary' ? 'summary' : null;
+    const mode = body.mode === 'reply' ? 'reply' : body.mode === 'summary' ? 'summary' : body.mode === 'route' ? 'route' : null;
     const raw = typeof body.text === 'string' ? body.text : '';
     if (!mode || raw.trim().length < 20) return NextResponse.json({ error: 'invalid', message: 'Zadejte aspoň krátký text.' }, { status: 400 });
     if (raw.length > AI_MAX_CHARS) return NextResponse.json({ error: 'too_long', message: `Text je delší než ${AI_MAX_CHARS} znaků.` }, { status: 400 });
     const { text, count } = redact(raw);
     try {
         client ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-        const res = await client.chat.completions.create({ model: 'gpt-4o-mini', temperature: 0.2, max_tokens: 900, messages: [{ role: 'system', content: SYSTEM[mode] }, { role: 'user', content: text }] }, { signal: AbortSignal.timeout(40_000) });
+        const res = await client.chat.completions.create({ model: 'gpt-4o-mini', temperature: mode === 'route' ? 0 : 0.2, max_tokens: mode === 'route' ? 150 : 900, messages: [{ role: 'system', content: SYSTEM[mode] }, { role: 'user', content: text }] }, { signal: AbortSignal.timeout(40_000) });
         return NextResponse.json({ answer: (res.choices[0]?.message?.content ?? '').trim(), redacted: count }, { headers: { 'Cache-Control': 'no-store' } });
     } catch { return NextResponse.json({ error: 'upstream' }, { status: 502 }); }
 }

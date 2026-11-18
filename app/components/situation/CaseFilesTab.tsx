@@ -46,6 +46,16 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
     // Soubory, které nejde přečíst bez rozpoznání textu (skeny a obrázky); OCR běží až na pokyn, je pomalé
     const [scans, setScans] = useState<Set<string>>(new Set());
     const [ocrNote, setOcrNote] = useState('');
+    const ocrChain = useRef<Promise<void>>(Promise.resolve());
+    function autoOcr(fileId: string, name: string, bytes: ArrayBuffer) {
+        if (!IMAGE_RE.test(name) && !PDF_RE.test(name)) return;
+        ocrChain.current = ocrChain.current.then(async () => {
+            try {
+                if (IMAGE_RE.test(name)) { setOcrNote(`Rozpoznávám text v souboru ${name}…`); const m = await ocrImages([{ id: fileId, bytes, name }]); const t = m.get(fileId); if (t) { await saveText(fileId, t); setOcrNote(`Text v souboru ${name} je rozpoznán a jde v něm hledat.`); } else setOcrNote(`V souboru ${name} se nenašel čitelný text.`); }
+                else { const r = await extractPdf(bytes, { ocr: false }); if (r.ok) return; if (r.reason !== 'needs_ocr') return; setOcrNote(`Rozpoznávám text ve skenu ${name}…`); const o = await extractPdf(bytes, { ocr: true, onProgress: (p) => setOcrNote(`${name}: strana ${p.page} z ${p.pages}…`) }); if (o.ok) { await saveText(fileId, o.text); setOcrNote(`Text ve skenu ${name} je rozpoznán a jde v něm hledat.`); } }
+            } catch { setOcrNote(`Rozpoznání textu v souboru ${name} se nepodařilo, zkuste tlačítko Rozpoznat text.`); }
+        });
+    }
     const canIndex = (f: { enc?: boolean; name: string }) => !f.enc && (INDEXABLE.test(f.name) || PDF_RE.test(f.name));
     const toIndex = indexed ? bundle.files.filter((f) => canIndex(f) && !indexed.has(f.id) && !scans.has(f.id)) : [];
     const toOcr = indexed ? bundle.files.filter((f) => !f.enc && !indexed.has(f.id) && (scans.has(f.id) || IMAGE_RE.test(f.name))) : [];
@@ -100,7 +110,8 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
                 const asVersion = !!same && window.confirm(`Soubor „${file.name}“ už ve spisu je. Nahrát jako novou verzi (starší verze zůstane k dispozici)?\n\nOK = nová verze, Zrušit = samostatný soubor.`);
                 const saved = await uploadCaseFile(userId, item.id, target, file, asVersion && same ? nextVersionInfo(bundle.files, same) : {});
                 setBundle((b) => ({ ...b, files: [saved, ...b.files] }));
-                if (canIndex({ name: file.name }) && indexed) void file.arrayBuffer().then((buf) => indexText(saved.id, file.name, buf));
+                // Text se zpřístupní hned po nahrání; u skenů a obrázků běží rozpoznání samo na pozadí (jeden soubor po druhém)
+                if (indexed && !saved.enc) void file.arrayBuffer().then(async (buf) => { if (canIndex({ name: file.name })) await indexText(saved.id, file.name, buf); autoOcr(saved.id, file.name, buf); });
             } catch (err) { fail(err); }
         }
         setBusy(false);

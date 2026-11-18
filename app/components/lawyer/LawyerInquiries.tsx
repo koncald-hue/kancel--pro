@@ -6,6 +6,7 @@ import { AlertTriangle, Check, Clock3, Copy, Eye, FileText, Link2, ListTodo, Loc
 import DeadlineDialog, { type DeadlineTarget } from '../situation/DeadlineDialog';
 import { supabase } from '@/lib/supabase';
 import { createCase, BLANK_CASE, loadCases, type LegalCase } from '@/lib/cases';
+import { applyDefaultTo } from '@/lib/templateApply';
 import type { LawyerClient } from '@/lib/lawyer';
 import { generateKey, wrapKey, linkWithKey, exportKey } from '@/lib/e2ee';
 import { generateToken, portalUrl } from '@/lib/portal';
@@ -72,6 +73,7 @@ export default function LawyerInquiries() {
             const created = await createCase(userId, { ...BLANK_CASE, title: `Věc: ${q.name}`, situation: q.message });
             const { error: caseErr } = await supabase.from('cases').update({ client_name: q.name, client_email: q.email, client_phone: q.phone }).eq('id', created.id);
             if (caseErr) throw new Error(caseErr.message);
+            void applyDefaultTo(created.id, userId); // výchozí šablona úkolů, pokud ji advokát má
             const { error: stErr } = await supabase.from('lawyer_inquiries').update({ status: 'accepted' }).eq('id', q.id);
             if (stErr) throw new Error(stErr.message);
             await supabase.from('lawyer_inquiries').update({ case_id: created.id }).eq('id', q.id); // vyžaduje poptavky-propojeni.sql

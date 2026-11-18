@@ -2,6 +2,7 @@
 
 import LegalNews from './LegalNews';
 import EveningSummary from './EveningSummary';
+import MonthGlance from './MonthGlance';
 import { RadarPanel } from './RadarEvents';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -91,6 +92,8 @@ export default function LawyerDashboard() {
                 <Tile label="Nevyfakturováno" value={formatMinutes(minutes)} note="hodin práce" />
                 <Tile label="K fakturaci" value={czk(amount)} />
             </div>
+
+            <MonthGlance />
 
             {receivables.some((r) => ['open', 'partial', 'due_soon', 'overdue'].includes(r.state)) && (
                 <Link href="/kancelar/faktury" className="grid grid-cols-3 gap-3 rounded-2xl border border-slate-200 bg-white p-4 hover:border-indigo-300 sm:p-5" aria-label="Pohledávky, otevřít fakturaci">

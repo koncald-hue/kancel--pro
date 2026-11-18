@@ -1,13 +1,14 @@
 import Link from 'next/link';
-import { Calculator, Clock3, FileArchive, Landmark, LayoutDashboard, Receipt, Tags, TrendingUp } from 'lucide-react';
+import { Calculator, Clock3, FileArchive, Landmark, LayoutDashboard, Receipt, Tags, TrendingUp, Vault } from 'lucide-react';
 
-export type MoneySection = 'penize' | 'vedeni' | 'vykazy' | 'faktury' | 'platby' | 'export' | 'cenik' | 'kalkulacky';
+export type MoneySection = 'penize' | 'vedeni' | 'vykazy' | 'faktury' | 'platby' | 'export' | 'cenik' | 'kalkulacky' | 'uschovy';
 const TABS = [
     ['penize', '/kancelar/penize', 'Přehled', LayoutDashboard],
     ['vedeni', '/kancelar/vedeni', 'Pro vedení', TrendingUp],
     ['vykazy', '/kancelar/vykazy', 'Výkazy práce', Clock3],
     ['faktury', '/kancelar/faktury', 'Fakturace', Receipt],
     ['platby', '/kancelar/platby', 'Platby', Landmark],
+    ['uschovy', '/kancelar/uschovy', 'Úschovy', Vault],
     ['export', '/kancelar/export', 'Export pro účetní', FileArchive],
     ['cenik', '/kancelar/cenik', 'Ceník', Tags],
     ['kalkulacky', '/kancelar/kalkulacky', 'Kalkulačky', Calculator],

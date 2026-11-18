@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff, TrendingDown, TrendingUp } from 'lucide-react';
+import ProfitSection from './ProfitSection';
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { czk, formatMinutes } from '@/lib/lawyer';
@@ -135,6 +136,7 @@ export default function LawyerManagement() {
                     <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><input type="checkbox" checked={share} onChange={(e) => void toggleShare(e.target.checked)} /> Sdílet měsíční součty hodin</label>
                 </section>
             )}
+            <ProfitSection />
             <p className="text-xs text-slate-500">Přehled vychází z vašich výkazů práce. <Link href="/kancelar/vykazy" className="underline">Otevřít výkazy</Link>. Prognóza je jen lineární odhad z dosavadního tempa a svátků, ne příslib.</p>
         </div>
     );

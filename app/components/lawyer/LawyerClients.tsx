@@ -1,7 +1,9 @@
 'use client';
 
 import { Fragment, useEffect, useState } from 'react';
-import { Check, Pencil, ShieldAlert, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import ConflictPanel from './ConflictPanel';
+import { Check, Mail, Pencil, ShieldAlert, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import type { LawyerClient } from '@/lib/lawyer';
@@ -107,6 +109,7 @@ export default function LawyerClients() {
 
     return (
         <div className="space-y-5">
+            <div className="flex justify-end"><Link href="/kancelar/hromadny-email" className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-800 hover:underline"><Mail size={14} aria-hidden="true" /> Napsat více klientům najednou</Link></div>
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
             <form onSubmit={(e) => { e.preventDefault(); void add(); }} className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-6">
                 <div className="sm:col-span-6"><AresPicker onPick={(c) => setForm((f) => ({ ...f, name: c.name, ico: c.ico, dic: c.dic, address: c.address }))} label="Najít firmu v ARES a vyplnit údaje" /></div>
@@ -120,6 +123,7 @@ export default function LawyerClients() {
                 <input value={form.birth} onChange={set('birth')} placeholder="Nar. 5. 3. 1980" inputMode="numeric" maxLength={12} className={inputCls} aria-label="Datum narození (fyzická osoba, pro hlídání insolvence)" title="Nepovinné: u fyzické osoby bez IČO se podle něj hlídá insolvence" />
                 <input value={form.note} onChange={set('note')} placeholder="Poznámka" className={`${inputCls} sm:col-span-5`} aria-label="Poznámka" />
                 <button type="submit" disabled={!form.name.trim()} className={`${primaryBtn} justify-center`}>Přidat klienta</button>
+                <div className="sm:col-span-6"><ConflictPanel parties={[{ name: form.name, ico: form.ico, email: form.email }]} role="klient" compact /></div>
             </form>
             {ins && (() => {
                 const list = Object.values(ins);

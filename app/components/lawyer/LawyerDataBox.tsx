@@ -14,6 +14,7 @@ import { dropSession, getSession, putSession, touchSession } from '@/lib/isdsSes
 import { isdsApi, type ApiRes } from '@/lib/isdsClient';
 import { setReceived } from '@/lib/dataBoxState';
 import DeadlinesFromMessage from './DeadlinesFromMessage';
+import DocActions from './DocActions';
 import { STATUS_LABELS, isDeleted, statusTone, type BoxHit, type Downloaded, type IsdsEnv, type Record_ } from '@/lib/isds';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
@@ -279,6 +280,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
 }
 
 function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Record_; tab: Tab; call: Caller; userId: string; onClose: () => void; onChanged: () => void }) {
+    const { access } = useLawyer();
     const [msg, setMsg] = useState<Downloaded | null>(null);
     const [confirm, setConfirm] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -352,6 +354,7 @@ function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Rec
                     <p className="mt-1.5 text-xs text-slate-500">{tab === 'received' && !msg && !isDeleted(record.status) ? 'Záznam o zprávě jde uložit hned. Přílohy se uloží, až zprávu stáhnete (stažení nedoručené zprávy ji doručí). ' : ''}Zapíše se i do chronologie věci. {caseId && cases.find((c) => c.id === caseId)?.reference && suggestCase(cases, record.annotation) === caseId ? 'Věc jsem navrhl podle spisové značky.' : ''}</p>
                 </div>
                 {tab === 'received' && msg && <DeadlinesFromMessage key={record.id} record={record} msg={msg} downloadedNow={justDelivered} cases={cases} userId={userId} caseId={caseId} onSaved={onChanged} />}
+                {tab === 'received' && caseId && <div className="mt-4"><DocActions key={`${record.id}-${caseId}`} caseId={caseId} caseTitle={cases.find((c) => c.id === caseId)?.title ?? ''} reference={cases.find((c) => c.id === caseId)?.reference ?? ''} userId={userId} signature={access.display_name || access.firm_name || ''} subject={record.annotation || 'Datová zpráva'} text="" sender={record.sender ?? ''} dateIso={record.delivered ?? null} kind="datová zpráva" /></div>}
                 {done && <p role="status" className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">{done}</p>}
                 {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
                 <button type="button" onClick={onClose} className={`${ghostBtn} mt-4`}><ArrowLeft size={14} /> Zavřít</button>

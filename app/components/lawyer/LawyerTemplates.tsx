@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { ListChecks, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { loadTemplates } from '@/lib/templateApply';
-import { MAX_ITEMS, STARTER_TEMPLATES, cleanItems, type CaseTemplate, type TemplateItem } from '@/lib/taskTemplates';
+import { addStarterTemplates, loadTemplates } from '@/lib/templateApply';
+import { MAX_ITEMS, cleanItems, type CaseTemplate, type TemplateItem } from '@/lib/taskTemplates';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
@@ -15,7 +15,7 @@ export default function LawyerTemplates() {
     const { userId } = useLawyer();
     const [list, setList] = useState<CaseTemplate[] | null>(null);
     const [error, setError] = useState('');
-    const [editing, setEditing] = useState<{ id: string | null; name: string; items: TemplateItem[] } | null>(null);
+    const [editing, setEditing] = useState<{ id: string | null; name: string; items: TemplateItem[]; isDefault: boolean } | null>(null);
     const reload = () => loadTemplates().then(setList).catch(() => setError('Šablony se nepodařilo načíst. Zkontrolujte, že je spuštěná migrace 20261118_11.'));
     useEffect(() => { void reload(); }, []);
 
@@ -23,14 +23,18 @@ export default function LawyerTemplates() {
         if (!editing) return; setError('');
         const items = cleanItems(editing.items); const name = editing.name.trim().slice(0, 120);
         if (!name || !items.length) { setError('Doplňte název šablony a alespoň jeden úkol s názvem.'); return; }
-        const { error: err } = editing.id ? await supabase.from('case_templates').update({ name, items }).eq('id', editing.id) : await supabase.from('case_templates').insert({ user_id: userId, name, items });
+        // Výchozí je nejvýš jedna: nejdřív se zruší u ostatních
+        if (editing.isDefault) await supabase.from('case_templates').update({ is_default: false }).eq('user_id', userId).eq('is_default', true).neq('id', editing.id ?? '00000000-0000-0000-0000-000000000000');
+        const base = { name, items, is_default: editing.isDefault };
+        let res = editing.id ? await supabase.from('case_templates').update(base).eq('id', editing.id) : await supabase.from('case_templates').insert({ user_id: userId, ...base });
+        if (res.error) res = editing.id ? await supabase.from('case_templates').update({ name, items }).eq('id', editing.id) : await supabase.from('case_templates').insert({ user_id: userId, name, items }); // bez migrace 12
+        const err = res.error;
         if (err) { setError('Šablonu se nepodařilo uložit.'); return; }
         setEditing(null); await reload();
     }
     async function remove(id: string) { await supabase.from('case_templates').delete().eq('id', id); await reload(); }
     async function addStarters() {
-        const { error: err } = await supabase.from('case_templates').insert(STARTER_TEMPLATES.map((t) => ({ user_id: userId, name: t.name, items: t.items })));
-        if (err) setError('Vzorové šablony se nepodařilo přidat.'); else await reload();
+        try { setList(await addStarterTemplates(userId)); } catch { setError('Vzorové šablony se nepodařilo přidat.'); }
     }
     const patch = (i: number, p: Partial<TemplateItem>) => setEditing((e) => e && { ...e, items: e.items.map((it, k) => (k === i ? { ...it, ...p } : it)) });
 
@@ -40,7 +44,7 @@ export default function LawyerTemplates() {
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><ListChecks size={18} className="text-indigo-700" aria-hidden="true" /> Šablony úkolů</h2>
                 <p className="mt-1 text-sm leading-relaxed text-slate-600">Šablonu vyberete při založení věci nebo ji použijete v kartě Lhůty existující věci. Úkoly dostanou termín podle posunu ode dne založení nebo od data události (např. jednání), případně jen v pracovních dnech. Jde o interní úkoly, ne o zákonné lhůty: ty zadávejte zvlášť a potvrzujte.</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => setEditing({ id: null, name: '', items: [blank()] })} className={primaryBtn}><Plus size={15} /> Nová šablona</button>
+                    <button type="button" onClick={() => setEditing({ id: null, name: '', items: [blank()], isDefault: !list?.some((t) => t.isDefault) })} className={primaryBtn}><Plus size={15} /> Nová šablona</button>
                     {list?.length === 0 && <button type="button" onClick={() => void addStarters()} className={ghostBtn}>Přidat dvě vzorové šablony</button>}
                 </div>
             </section>
@@ -52,6 +56,7 @@ export default function LawyerTemplates() {
                         <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} maxLength={120} className={`${inputCls} mt-1 max-w-md`} />
                     </label>
                     <p className="mt-4 hidden gap-2 px-3 text-xs font-semibold text-slate-500 sm:grid sm:grid-cols-[1fr_90px_150px_auto_auto]"><span>Úkol</span><span>Za kolik dní</span><span>Od čeho</span><span>Dny</span><span className="w-4" /></p>
+                    <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><input type="checkbox" checked={editing.isDefault} onChange={(e) => setEditing({ ...editing, isDefault: e.target.checked })} /> Použít automaticky u každé nové věci</label>
                     <ul className="mt-1 space-y-2">
                         {editing.items.map((it, i) => (
                             <li key={i} className="grid gap-2 rounded-xl bg-white p-3 sm:grid-cols-[1fr_90px_150px_auto_auto] sm:items-center">
@@ -76,8 +81,8 @@ export default function LawyerTemplates() {
             {list?.map((t) => (
                 <section key={t.id} className="rounded-2xl border border-slate-200 bg-white p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="font-bold text-slate-900">{t.name} <span className="text-sm font-normal text-slate-500">({t.items.length} úkolů)</span></h3>
-                        <span className="flex gap-2"><button type="button" onClick={() => setEditing({ id: t.id, name: t.name, items: t.items })} className={ghostBtn}>Upravit</button><button type="button" onClick={() => void remove(t.id)} className={ghostBtn}>Smazat</button></span>
+                        <h3 className="font-bold text-slate-900">{t.name} <span className="text-sm font-normal text-slate-500">({t.items.length} úkolů)</span>{t.isDefault && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-900">výchozí</span>}</h3>
+                        <span className="flex gap-2"><button type="button" onClick={() => setEditing({ id: t.id, name: t.name, items: t.items, isDefault: !!t.isDefault })} className={ghostBtn}>Upravit</button><button type="button" onClick={() => void remove(t.id)} className={ghostBtn}>Smazat</button></span>
                     </div>
                     <ul className="mt-2 space-y-1 text-sm text-slate-600">{t.items.map((it, i) => <li key={i}>{it.title} <span className="text-slate-400">· {it.offset > 0 ? '+' : ''}{it.offset} {it.workdays ? 'pracovních dnů' : 'dní'} {it.base === 'event' ? 'od události' : 'od založení'}</span></li>)}</ul>
                 </section>

@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { Check, Copy, ExternalLink, Gavel, Info } from 'lucide-react';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { INFOSOUD_URL, infosoudDirectLink, isCourt, parseFileNumber, type FileNumber } from '@/lib/infosoud';
-import { inputCls } from '../situation/caseUi';
+import { inputCls, ghostBtn } from '../situation/caseUi';
+import { insertRow } from '@/lib/caseFile';
+import { todayIso } from '@/lib/billing';
+import { shiftDays } from '@/lib/taskTemplates';
+import { useLawyer } from './LawyerGate';
 
 type Row = { c: LegalCase; fn: FileNumber | null };
 
@@ -32,6 +36,27 @@ function Parts({ fn, court }: { fn: FileNumber; court: string }) {
 }
 
 // Soudní řízení: spisové značky věcí připravené pro vyhledání v InfoSoudu (služba Ministerstva spravedlnosti)
+function Checked({ c }: { c: LegalCase }) {
+    const { userId } = useLawyer();
+    const [note, setNote] = useState(''); const [busy, setBusy] = useState(false); const [msg, setMsg] = useState('');
+    async function mark() {
+        setBusy(true); setMsg('');
+        try {
+            const next = shiftDays(todayIso(), 14, true);
+            await insertRow('case_entries', { case_id: c.id, user_id: userId, kind: 'event', title: 'Průběh řízení zkontrolován v InfoSoudu', body: note.trim().slice(0, 1000), happened_on: todayIso() });
+            await insertRow('case_deadlines', { case_id: c.id, user_id: userId, title: 'Zkontrolovat průběh řízení v InfoSoudu', due_date: next, kind: 'ukol' });
+            setNote(''); setMsg(`Zapsáno. Další kontrola je v úkolech na ${new Date(`${next}T12:00:00`).toLocaleDateString('cs-CZ')}.`);
+        } catch (e) { setMsg(e instanceof Error ? e.message : 'Nepodařilo se.'); } finally { setBusy(false); }
+    }
+    return (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Co jste zjistili (nepovinné)" aria-label="Poznámka ke kontrole" maxLength={300} className={`${inputCls} max-w-xs py-1 text-xs`} />
+            <button type="button" onClick={() => void mark()} disabled={busy} className={ghostBtn}><Check size={13} /> Zkontrolováno, připomenout za 14 dní</button>
+            {msg && <span role="status" className="text-xs text-slate-600">{msg}</span>}
+        </div>
+    );
+}
+
 export default function LawyerInfosoud() {
     const [cases, setCases] = useState<LegalCase[] | null>(null);
     const [error, setError] = useState('');
@@ -53,7 +78,7 @@ export default function LawyerInfosoud() {
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Gavel size={18} className="text-indigo-700" aria-hidden="true" /> Průběh soudních řízení v InfoSoudu</h2>
                 <p className="mt-1 text-sm leading-relaxed text-slate-600">InfoSoud ukazuje, v jakém stavu je řízení u soudu (jednání, rozhodnutí, odvolání). Kancelář z vašich věcí připraví údaje ze spisové značky. U okresních, krajských, městského a vrchních soudů otevře tlačítko přímo řízení, jinde údaje klepnutím zkopírujete a ve formuláři InfoSoudu vyplníte.</p>
-                <p className="mt-2 flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600"><Info size={14} className="mt-0.5 shrink-0 text-slate-400" aria-hidden="true" /> InfoSoud nemá veřejné rozhraní pro jiné aplikace, proto ho Kancelář sama nečte ani nehlídá. Vyhledání proběhne na stránce ministerstva ve vašem prohlížeči a do Kanceláře se nic neukládá.</p>
+                <p className="mt-2 flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600"><Info size={14} className="mt-0.5 shrink-0 text-slate-400" aria-hidden="true" /> InfoSoud nemá veřejné rozhraní pro jiné aplikace, proto ho Kancelář sama nečte ani nehlídá. Místo toho vám po každé kontrole zapíše poznámku do chronologie a založí úkol na další kontrolu za 14 dní. Vyhledání proběhne na stránce ministerstva ve vašem prohlížeči a do Kanceláře se nic neukládá.</p>
                 <form onSubmit={(e) => e.preventDefault()} className="mt-4">
                     <label className="block text-sm font-semibold text-slate-800">Rozložit jinou spisovou značku
                         <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="např. 10 C 123/2024" maxLength={60} className={`${inputCls} mt-1 max-w-sm`} />
@@ -81,6 +106,7 @@ export default function LawyerInfosoud() {
                                     </div>
                                     {(() => { const link = infosoudDirectLink(fn!, c.authority ?? ''); return link ? <a href={link} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-indigo-800 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-900"><ExternalLink size={13} aria-hidden="true" /> Otevřít řízení v InfoSoudu</a> : null; })()}
                                     <Parts fn={fn!} court={c.authority ?? ''} />
+                                    <Checked c={c} />
                                 </li>
                             ))}
                         </ul>

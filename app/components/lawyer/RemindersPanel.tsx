@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BellRing, Check, Copy, Download, FileText, Mail, Printer, X } from 'lucide-react';
+import { BellRing, Check, Copy, Download, FileText, Loader2, Mail, Printer, Send, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { money, todayIso, type Receivable } from '@/lib/billing';
 import { buildDocx } from '@/lib/templates';
@@ -10,6 +10,12 @@ import { LEVELS, mailtoLink, nextReminder, reminderText, type Draft, type Level,
 import { qrSvg, spayd } from '@/lib/qrPayment';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
+import { MAILER_HINT, useMailer } from '@/lib/useMailer';
+
+const draftFor = (inv: Receivable, level: Level, history: Sent[], signature: string, account: string): Draft => {
+    const last = [...history].sort((a, b) => b.sent_on.localeCompare(a.sent_on))[0];
+    return reminderText({ level, number: inv.number ?? '', issue: inv.issue_date, due: inv.due_date ?? inv.issue_date, outstanding: inv.outstanding, currency: inv.currency === 'EUR' ? 'EUR' : 'CZK', account, vs: (inv.number ?? '').replace(/\D/g, ''), signature, today: todayIso(), lastSentOn: last?.sent_on });
+};
 
 const dateCz = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString('cs-CZ');
 
@@ -19,6 +25,8 @@ export default function RemindersPanel({ invoices, userId, onChanged }: { invoic
     const [sent, setSent] = useState<Record<string, Sent[]>>({});
     const [open, setOpen] = useState<{ inv: Receivable; level: Level } | null>(null);
     const today = todayIso();
+    const mailer = useMailer();
+    const [batch, setBatch] = useState<{ confirm: boolean; running: boolean; done: { label: string; ok: boolean; err?: string }[] }>({ confirm: false, running: false, done: [] });
 
     const load = useCallback(async () => {
         const { data } = await supabase.from('invoice_reminders').select('invoice_id, level, sent_on');
@@ -31,10 +39,45 @@ export default function RemindersPanel({ invoices, userId, onChanged }: { invoic
     const overdue = invoices.filter((i) => i.state === 'overdue').map((inv) => ({ inv, next: nextReminder(inv.due_date, sent[inv.id] ?? [], today), history: sent[inv.id] ?? [] }));
     if (overdue.length === 0) return null;
     const ready = overdue.filter((x) => x.next?.ready);
+    const signature = access.display_name || access.firm_name || access.email;
+    const account = access.bank_account ?? '';
+    const batchList = ready.filter((x) => (x.inv.client_snapshot.email ?? '').includes('@'));
+
+    async function sendBatch() {
+        let done: { label: string; ok: boolean; err?: string }[] = [];
+        setBatch((b) => ({ ...b, running: true, done: [] }));
+        for (const x of batchList) {
+            const label = `${x.inv.number} · ${x.inv.client_snapshot.name}`;
+            try {
+                const d = draftFor(x.inv, x.next!.level, x.history, signature, account);
+                await mailer.send({ to: x.inv.client_snapshot.email as string, subject: d.subject, text: d.body });
+                await supabase.from('invoice_reminders').insert({ user_id: userId, invoice_id: x.inv.id, level: x.next!.level, sent_on: todayIso(), channel: 'e-mail' });
+                done = [...done, { label, ok: true }];
+            } catch (e) { done = [...done, { label, ok: false, err: e instanceof Error ? e.message : 'Neodesláno' }]; }
+            const snap = done; setBatch((b) => ({ ...b, done: snap }));
+            await new Promise((r) => window.setTimeout(r, 1200));
+        }
+        setBatch({ confirm: false, running: false, done }); await load(); await onChanged();
+    }
 
     return (
         <section aria-label="Upomínky">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><BellRing size={18} className="text-rose-600" /> Po splatnosti ({overdue.length}){ready.length > 0 && <span className="rounded-full bg-rose-600 px-2 py-0.5 text-xs font-bold text-white">{ready.length} k upomenutí</span>}</h2>
+            {batchList.length > 0 && (
+                <div className="mt-3 rounded-2xl border-2 border-rose-200 bg-rose-50/50 p-4">
+                    <p className="text-sm font-bold text-slate-900">Připraveno {batchList.length} {batchList.length === 1 ? 'upomínka' : 'upomínek'} k odeslání</p>
+                    <p className="mt-0.5 text-xs text-slate-600">Každou odešlete klientovi z vaší schránky se standardním textem příslušného stupně (včetně účtu a případného úroku). Nic se neodešle bez vašeho potvrzení. Text konkrétní upomínky můžete předtím upravit tlačítkem u faktury.</p>
+                    {mailer.status !== 'ready' && mailer.status !== 'loading' && <p role="alert" className="mt-2 text-xs text-amber-950">{MAILER_HINT[mailer.status]}</p>}
+                    {mailer.status === 'ready' && (
+                        <>
+                            <ul className="mt-2 space-y-0.5 text-xs text-slate-700">{batchList.map((x) => <li key={x.inv.id}>{x.inv.number} · {x.inv.client_snapshot.name} → {x.inv.client_snapshot.email} · {LEVELS[x.next!.level].name.toLowerCase()}, {money(x.inv.outstanding, x.inv.currency)}</li>)}</ul>
+                            <label className="mt-3 flex items-start gap-2 text-sm font-semibold text-slate-900"><input type="checkbox" className="mt-0.5" checked={batch.confirm} onChange={(e) => setBatch((b) => ({ ...b, confirm: e.target.checked }))} /> Souhlasím s odesláním {batchList.length} upomínek z adresy {mailer.email}.</label>
+                            <button type="button" disabled={!batch.confirm || batch.running} onClick={() => void sendBatch()} className={`${primaryBtn} mt-2`}>{batch.running ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} Schválit a odeslat vše</button>
+                        </>
+                    )}
+                    {batch.done.length > 0 && <ul role="status" className="mt-2 space-y-0.5 text-xs">{batch.done.map((d, i) => <li key={i} className={d.ok ? 'text-emerald-800' : 'font-semibold text-rose-800'}>{d.ok ? '✓' : '✗'} {d.label}{d.err ? `: ${d.err}` : ''}</li>)}</ul>}
+                </div>
+            )}
             <ul className="mt-3 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
                 {overdue.map(({ inv, next, history }) => (
                     <li key={inv.id} className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
@@ -47,7 +90,7 @@ export default function RemindersPanel({ invoices, userId, onChanged }: { invoic
                     </li>
                 ))}
             </ul>
-            <p className="mt-1.5 text-xs text-slate-500">Upomínka se připraví jako hotový text. Odešlete ji e-mailem, vytiskněte nebo stáhněte do Wordu a pak ji označte jako odeslanou. E-maily z aplikace se budou odesílat samy, až bude nastavené SMTP.</p>
+            <p className="mt-1.5 text-xs text-slate-500">Upomínka se připraví jako hotový text. Odešlete ji e-mailem, vytiskněte nebo stáhněte do Wordu a pak ji označte jako odeslanou. Máte-li připojenou schránku, jde upomínku odeslat i přímo z aplikace.</p>
             {open && <Compose inv={open.inv} level={open.level} history={sent[open.inv.id] ?? []} userId={userId} signature={access.display_name || access.firm_name || access.email} account={access.bank_account ?? ''} onClose={() => setOpen(null)} onSent={async () => { setOpen(null); await load(); await onChanged(); }} />}
         </section>
     );

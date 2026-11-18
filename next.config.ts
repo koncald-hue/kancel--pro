@@ -26,6 +26,13 @@ const csp = [
   ...(isDev ? [] : ['upgrade-insecure-requests']),
 ].join('; ');
 
+// Doplňky pro Word a Outlook běží v podokně Office, tedy v rámci stránky Microsoftu. Jen pro cesty /doplnek smí skripty z Office.js
+// a vložení do rámce z domén Microsoftu; zbytek aplikace zůstává nevložitelný.
+const officeHosts = 'https://*.office.com https://*.office365.com https://*.officeapps.live.com https://*.microsoft.com https://outlook.live.com https://*.outlook.com https://*.sharepoint.com';
+const addinCsp = csp
+  .replace("script-src 'self'", "script-src 'self' https://appsforoffice.microsoft.com")
+  .replace("frame-ancestors 'none'", `frame-ancestors ${officeHosts}`);
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   cacheComponents: true,
@@ -34,7 +41,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['imapflow', 'mailparser', 'nodemailer'],
   async headers() {
     return [
-      { source: '/:path*', headers: [
+      { source: '/((?!doplnek).*)', headers: [
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'X-Frame-Options', value: 'DENY' },
         { key: 'Referrer-Policy', value: 'no-referrer' },
@@ -44,6 +51,12 @@ const nextConfig: NextConfig = {
         { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
         { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
         { key: 'X-DNS-Prefetch-Control', value: 'off' },
+      ] },
+      { source: '/doplnek/:path*', headers: [
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'Referrer-Policy', value: 'no-referrer' },
+        { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+        { key: 'Content-Security-Policy', value: addinCsp },
       ] },
       // Data aplikace (API) se nesmějí ukládat do sdílených mezipamětí
       { source: '/api/:path((?!news$).*)', headers: [

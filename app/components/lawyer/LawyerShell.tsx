@@ -12,7 +12,7 @@ import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
 
-export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'sablony' | 'epr' | 'nastaveni';
+export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'sablony' | 'epr' | 'stret' | 'uschovy' | 'doplnky' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
 
 // Nástroje jsou seskupené podle toho, k čemu slouží
@@ -21,9 +21,9 @@ const GROUPS: { title: string; items: Item[] }[] = [
     { title: '', items: [['prehled', '/kancelar', 'Dnes', LayoutDashboard]] },
     { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['email', '/kancelar/email', 'E-mail', Mail]] },
     // Odborné a méně časté nástroje
-    { title: 'Nástroje', items: [['epr', '/kancelar/epr', 'Platební rozkazy', FileSpreadsheet], ['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel]] },
+    { title: 'Nástroje', items: [['epr', '/kancelar/epr', 'Platební rozkazy', FileSpreadsheet], ['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['stret', '/kancelar/stret-zajmu', 'Střet zájmů', Scale], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel]] },
     { title: 'Peníze', items: [['penize', '/kancelar/penize', 'Peníze', Wallet]] },
-    { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound], ['sablony', '/kancelar/sablony', 'Šablony úkolů', ListChecks], ['import', '/kancelar/import', 'Import dat', FileUp]] },
+    { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound], ['sablony', '/kancelar/sablony', 'Šablony úkolů', ListChecks], ['import', '/kancelar/import', 'Import dat', FileUp], ['doplnky', '/kancelar/doplnky', 'Word a Outlook', Mail]] },
 ];
 const SETTINGS: Item = ['nastaveni', '/kancelar/nastaveni', 'Nastavení', Settings];
 const ALL: Item[] = [...GROUPS.flatMap((g) => g.items), SETTINGS];

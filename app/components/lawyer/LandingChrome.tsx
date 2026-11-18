@@ -95,7 +95,7 @@ export function SiteFooter() {
     return (
         <footer className="border-t border-slate-100 px-4 py-8 text-center text-xs leading-relaxed text-slate-500 sm:px-6">
             <p>Kancelář slouží k organizaci práce a nenahrazuje právní poradenství ani úsudek advokáta. Lhůty a výpočty jsou pomůckou ke kontrole. Ukázky rozhraní obsahují smyšlená jména a údaje.</p>
-            <p className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 font-semibold"><Link href="/funkce" className="hover:text-slate-800">Funkce</Link><Link href="/pro-klienty" className="hover:text-slate-800">Pro klienty</Link><Link href="/cenik" className="hover:text-slate-800">Ceník</Link><Link href="/obchodni-podminky" className="hover:text-slate-800">Obchodní podmínky</Link><Link href="/zpracovani-osobnich-udaju" className="hover:text-slate-800">Zpracování osobních údajů</Link><Link href="/ochrana-osobnich-udaju" className="hover:text-slate-800">Ochrana soukromí</Link></p>
+            <p className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 font-semibold"><Link href="/funkce" className="hover:text-slate-800">Funkce</Link><Link href="/pro-klienty" className="hover:text-slate-800">Pro klienty</Link><Link href="/cenik" className="hover:text-slate-800">Ceník</Link><Link href="/zabezpeceni" className="hover:text-slate-800">Zabezpečení</Link><Link href="/obchodni-podminky" className="hover:text-slate-800">Obchodní podmínky</Link><Link href="/zpracovani-osobnich-udaju" className="hover:text-slate-800">Zpracování osobních údajů</Link><Link href="/ochrana-osobnich-udaju" className="hover:text-slate-800">Ochrana soukromí</Link></p>
         </footer>
     );
 }

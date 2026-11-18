@@ -2,8 +2,8 @@ import { round2 } from './billing';
 
 // Rentabilita věci a klienta. Počítá se z toho, co v aplikaci je: odpracovaný čas (výkazy), vyúčtování a platby.
 // Částky bez DPH (DPH není příjem advokáta). Vyúčtování koncepty a storno se nepočítají.
-export type Entry = { case_id: string | null; minutes: number; rate: number; billed: boolean };
-export type Inv = { case_id: string | null; status: string; state: string; base: number; total: number; paid: number; currency: string };
+export type Entry = { case_id: string | null; minutes: number; rate: number; billed: boolean; entry_date?: string };
+export type Inv = { case_id: string | null; status: string; state: string; base: number; total: number; paid: number; currency: string; issue_date?: string };
 export type Profit = { hours: number; workValue: number; unbilledValue: number; billed: number; paid: number; outstanding: number; effectiveRate: number | null; realization: number | null; collection: number | null; cost: number | null; margin: number | null };
 
 export function profitOf(entries: Entry[], invoices: Inv[], costPerHour: number | null = null): Profit {

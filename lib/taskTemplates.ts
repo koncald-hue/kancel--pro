@@ -2,7 +2,7 @@ import { isWeekendOrHoliday } from './workdays';
 
 // Šablony úkolů pro nové věci. Úkol je interní (ne zákonná lhůta), proto se zakládá jako „úkol“ a datum se dá změnit.
 export type TemplateItem = { title: string; offset: number; base: 'start' | 'event'; workdays: boolean };
-export type CaseTemplate = { id: string; name: string; items: TemplateItem[] };
+export type CaseTemplate = { id: string; name: string; items: TemplateItem[]; isDefault?: boolean };
 
 export const MAX_ITEMS = 40;
 export const MAX_OFFSET = 3650;

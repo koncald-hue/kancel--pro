@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Gavel, Lightbulb, Plus, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, FileText, Gavel, Lightbulb, Plus, X } from 'lucide-react';
 import { OFFENSES_DATABASE } from '@/app/data/offenses';
 import { getOffenseUrl } from '@/lib/slug';
 import { PUBLIC_SITE } from '@/lib/publicSite';
@@ -82,6 +82,7 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
                     ))}
                     <datalist id="clients">{clients.map((c) => <option key={c.id} value={c.name} />)}</datalist>
                 </div>
+                {lawyer && <Link href={`/kancelar/knihovna?case=${item.id}`} className="mt-3 mr-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><FileText size={13} aria-hidden="true" /> Vyplnit vzor dokumentu z údajů věci</Link>}
                 {parseFileNumber(item.reference ?? '') && isCourt(item.authority ?? '') && <Link href="/kancelar/infosoud" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><Gavel size={13} aria-hidden="true" /> Zjistit průběh řízení v InfoSoudu</Link>}
             </section>}
 

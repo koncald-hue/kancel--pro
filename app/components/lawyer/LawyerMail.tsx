@@ -7,6 +7,9 @@ import { supabase } from '@/lib/supabase';
 import { encryptText } from '@/lib/e2ee';
 import { insertRow, uploadCaseFile } from '@/lib/caseFile';
 import { PRESETS } from '@/lib/mailPresets';
+import { matchCases, type Match } from '@/lib/mailMatch';
+import AiRouteSuggest from './AiRouteSuggest';
+import DocActions from './DocActions';
 import { b64ToBytes, credsOf, fileToB64, mailApi, quoted, safeHtml, type FullMessage, type MailAccountRow, type MsgSummary } from '@/lib/mailClient';
 import type { MailCreds } from '@/lib/mailServer';
 import { useMasterKey } from '@/lib/useE2ee';
@@ -17,8 +20,9 @@ import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
 type Folder = 'INBOX' | 'SENT';
-type CaseOpt = { id: string; title: string; client_id: string | null; client_email: string | null; client_name: string | null };
+type CaseOpt = { id: string; title: string; client_id: string | null; client_email: string | null; client_name: string | null; reference?: string | null; status?: string };
 type ClientOpt = { id: string; email: string };
+const DEFAULT_FOLDER = 'Korespondence';
 type Compose = { to: string; cc: string; subject: string; body: string; files: File[]; caseId: string; inReplyTo?: string; references?: string[] };
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : '');
 const size = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} kB` : `${(n / 1024 / 1024).toFixed(1).replace('.', ',')} MB`);
@@ -42,6 +46,7 @@ export default function LawyerMail() {
     const [clients, setClients] = useState<ClientOpt[]>([]);
     const [saveCase, setSaveCase] = useState('');
     const [pending, setPending] = useState<MsgSummary | null>(null);
+    const [matches, setMatches] = useState<Match[]>([]);
     const cache = useRef(new Map<string, FullMessage>());
 
     const account = accounts?.find((a) => a.id === accId) ?? accounts?.[0] ?? null;
@@ -53,7 +58,7 @@ export default function LawyerMail() {
     useEffect(() => {
         const t = window.setTimeout(() => {
             void reloadAccounts();
-            supabase.from('cases').select('id, title, client_id, client_email, client_name').then(({ data }) => setCases((data ?? []) as CaseOpt[]));
+            supabase.from('cases').select('id, title, client_id, client_email, client_name, reference, status').then(({ data }) => setCases((data ?? []) as CaseOpt[]));
             supabase.from('lawyer_clients').select('id, email').then(({ data }) => setClients((data ?? []) as ClientOpt[]));
         }, 0);
         return () => window.clearTimeout(t);
@@ -78,14 +83,14 @@ export default function LawyerMail() {
 
     async function open(m: MsgSummary) {
         if (!creds) return;
-        setError(''); setInfo(''); setSaveCase('');
+        setError(''); setInfo(''); setSaveCase(''); setMatches([]);
         const key = `${folder}:${m.uid}:${account?.id ?? ''}`;
         const suggest = (full: FullMessage) => {
-            // Věc, ke které zpráva pravděpodobně patří (podle e-mailu klienta)
-            const who = (folder === 'SENT' ? full.to : full.fromEmail).toLowerCase();
-            const hit = cases.find((c) => c.client_email && who.includes(c.client_email.toLowerCase())) ?? cases.find((c) => clients.some((cl) => cl.id === c.client_id && cl.email && who.includes(cl.email.toLowerCase())));
-            if (hit) setSaveCase(hit.id);
-            return hit?.id ?? null;
+            // Věc, ke které zpráva pravděpodobně patří (adresa klienta, spisová značka, název)
+            const found = matchCases({ counterparty: folder === 'SENT' ? full.to : full.fromEmail, subject: full.subject, text: full.text }, cases, clients);
+            setMatches(found);
+            if (found[0] && found[0].score >= 70) setSaveCase(found[0].caseId);
+            return found[0]?.caseId ?? null;
         };
         setMessages((all) => all.map((x) => (x.uid === m.uid ? { ...x, seen: true } : x)));
         const hit = cache.current.get(key);
@@ -110,9 +115,12 @@ export default function LawyerMail() {
         try {
             const path = folder === 'SENT' ? (creds.sentFolder || 'Sent') : 'INBOX';
             let n = 0;
+            // Přílohy do složky „Korespondence“ (existuje-li, jinak do kořene věci)
+            const fo = await supabase.from('case_folders').select('id, name').eq('case_id', saveCase);
+            const folderId = ((fo.data ?? []) as { id: string; name: string }[]).find((f) => f.name.toLowerCase() === DEFAULT_FOLDER.toLowerCase())?.id ?? null;
             for (const a of sel.attachments.filter((x) => x.size <= 15 * 1024 * 1024)) {
                 const r = await mailApi<{ filename: string; contentType: string; base64: string }>('attachment', creds, { folder: path, uid: sel.uid, index: a.index });
-                await uploadCaseFile(userId, saveCase, null, new File([b64ToBytes(r.base64) as BlobPart], r.filename, { type: r.contentType })); n += 1;
+                await uploadCaseFile(userId, saveCase, folderId, new File([b64ToBytes(r.base64) as BlobPart], r.filename, { type: r.contentType })); n += 1;
             }
             await insertRow('case_entries', { case_id: saveCase, user_id: userId, kind: 'event', title: `E-mail: ${sel.subject}`.slice(0, 200), body: `Od: ${sel.from}\nKomu: ${sel.to}\nDatum: ${sel.date ? new Date(sel.date).toLocaleString('cs-CZ') : ''}${n ? `\nPřílohy uloženy do souborů věci: ${n}` : ''}\n\n${sel.text.slice(0, 6000)}`, happened_on: sel.date ? sel.date.slice(0, 10) : null });
             assignActivity(`mail:${folder}:${sel.uid}:${account?.id ?? ''}`, saveCase);
@@ -191,9 +199,16 @@ export default function LawyerMail() {
                             <div className="flex flex-wrap items-center gap-2">
                                 <button type="button" onClick={reply} className={primaryBtn}><Reply size={15} /> Odpovědět</button>
                                 <select value={saveCase} onChange={(e) => setSaveCase(e.target.value)} className={`${inputCls} w-auto max-w-64`} aria-label="Věc"><option value="">Uložit do věci…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}</select>
-                                <button type="button" onClick={() => void saveToCase()} disabled={!saveCase || busy === 'save'} className={ghostBtn}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" /> : <FolderInput size={14} />} Uložit</button>
+                                <button type="button" onClick={() => void saveToCase()} disabled={!saveCase || busy === 'save'} className={ghostBtn}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" /> : <FolderInput size={14} />} {saveCase ? 'Uložit e-mail a přílohy do věci' : 'Uložit'}</button>
                             </div>
+                            {matches.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-2 text-xs"><span className="font-semibold text-slate-600">Patří k:</span>
+                                    {matches.map((m) => <button key={m.caseId} type="button" onClick={() => setSaveCase(m.caseId)} className={`cursor-pointer rounded-full border px-3 py-1 font-semibold ${saveCase === m.caseId ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-400'}`}>{caseTitle.get(m.caseId) ?? 'Věc'} <span className={saveCase === m.caseId ? 'text-indigo-100' : 'font-normal text-slate-500'}>· {m.reason}</span></button>)}
+                                </div>
+                            )}
+                            {!saveCase && <AiRouteSuggest key={sel.uid} mail={{ subject: sel.subject, text: sel.text }} cases={cases.filter((c) => c.status !== 'done').map((c) => ({ id: c.id, title: c.title }))} onPick={setSaveCase} />}
                             {saveCase && <p className="text-xs text-slate-500">Uloží se zápis do chronologie věci „{caseTitle.get(saveCase)}“ a všechny přílohy do jejích souborů.</p>}
+                            {saveCase && <DocActions key={`${sel.uid}-${saveCase}`} caseId={saveCase} caseTitle={caseTitle.get(saveCase) ?? ''} reference={cases.find((c) => c.id === saveCase)?.reference ?? ''} userId={userId} signature={signature} subject={sel.subject} text={sel.text} sender={sel.from} dateIso={sel.date} kind="e-mail" onReply={(body) => setCompose({ to: sel.fromEmail, cc: '', subject: /^re:/i.test(sel.subject) ? sel.subject : `Re: ${sel.subject}`, body: `${body}${quoted(sel)}`, files: [], caseId: saveCase, inReplyTo: sel.messageId, references: [...sel.references, sel.messageId].filter(Boolean) })} />}
                             {sel.attachments.length > 0 && <ul className="flex flex-wrap gap-2">{sel.attachments.map((a) => <li key={a.index}><button type="button" onClick={() => void download(a.index)} disabled={busy === `att-${a.index}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"><Download size={12} /> {a.filename} ({size(a.size)})</button></li>)}</ul>}
                             {sel.html ? <iframe title="Obsah zprávy" sandbox="allow-popups allow-popups-to-escape-sandbox" srcDoc={safeHtml(sel.html)} className="h-[28rem] w-full rounded-xl border border-slate-200" /> : <pre className="max-h-[28rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-50 p-4 text-sm text-slate-800">{sel.text}</pre>}
                             {sel.html && <p className="text-xs text-slate-400">Obrázky z internetu a skripty ve zprávě jsou ze soukromí a bezpečnosti zablokované.</p>}

@@ -37,6 +37,10 @@ Potřebuje v `.env.local` hodnoty `NEXT_PUBLIC_SUPABASE_URL` a `SUPABASE_SERVICE
 | `20261118_09_verze-a-obsah-souboru.sql` | Verze souborů a vyhledávání v textu nešifrovaných souborů (txt, csv, md, html, docx). |
 | `20261118_10_hlidac-a-vykazy.sql` | Hlídání řízení v katastru (sloupce `watch*` u uložených nemovitostí, nový druh události radaru), úkon „splnění úkolu“ pro návrh výkazu. |
 | `20261118_11_prehled-a-sablony.sql` | Dobrovolné sdílení hodin vedoucímu kanceláře (`time_sharing`, funkce `team_hours`) a šablony úkolů pro nové věci (`case_templates`). |
+| `20261118_12_vychozi-sablona.sql` | Výchozí šablona úkolů, která se použije automaticky u každé nové věci (`case_templates.is_default`). |
+| `20261118_13_stret-zajmu-v-kancelari.sql` | Kontrola střetu zájmů napříč kanceláří (`conflict_firm_check`): vrací jen existenci shody a roli, nikdy jméno kolegy ani věc. |
+| `20261118_14_evidence-uschov.sql` | Evidence úschov a klientských peněz (`escrows`, `escrow_moves`): pohyby jen přibývají, výdej nad zůstatek a zápis do uzavřené úschovy databáze odmítne. |
+| `20261118_15_oprava-pojistek-uschov.sql` | Oprava pojistek úschov: běží jako security definer, aby šla smazat úschova bez pohybů i celý účet. |
 
 ## Starší skripty (před zavedením složky migrations)
 
