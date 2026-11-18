@@ -67,7 +67,7 @@ export default function LawyerClients() {
         const rate = form.rate.trim() ? Number(form.rate.replace(',', '.')) : null;
         const birth = form.birth.trim() ? parseCzDate(form.birth) : null;
         if (form.birth.trim() && !birth) { setError(BIRTH_HINT); return; }
-        const { data, error: err } = await supabase.from('lawyer_clients').insert({ user_id: userId, birth, name, email: form.email.trim(), phone: form.phone.trim(), note: form.note.trim(), address: form.address.trim(), ico: form.ico.trim(), dic: form.dic.trim(), hourly_rate: Number.isFinite(rate) ? rate : null }).select('*').single();
+        const { data, error: err } = await supabase.from('lawyer_clients').insert({ user_id: userId, ...(birth ? { birth } : {}), name, email: form.email.trim(), phone: form.phone.trim(), note: form.note.trim(), address: form.address.trim(), ico: form.ico.trim(), dic: form.dic.trim(), hourly_rate: Number.isFinite(rate) ? rate : null }).select('*').single();
         if (err) { setError(err.code === '23505' ? 'Klient s tímto jménem už existuje.' : err.message); return; }
         setClients((c) => [...c, data as LawyerClient].sort((a, b) => a.name.localeCompare(b.name, 'cs')));
         setForm(EMPTY); setError('');
@@ -97,7 +97,7 @@ export default function LawyerClients() {
         const rate = edit.rate.trim() ? Number(edit.rate.replace(',', '.')) : null;
         const birth = edit.birth.trim() ? parseCzDate(edit.birth) : null;
         if (edit.birth.trim() && !birth) { setError(BIRTH_HINT); return; }
-        const patch = { birth, name, email: edit.email.trim(), phone: edit.phone.trim(), note: edit.note.trim(), address: edit.address.trim(), ico: edit.ico.trim(), dic: edit.dic.trim(), hourly_rate: rate !== null && Number.isFinite(rate) ? rate : null };
+        const patch = { ...(birth || c.birth ? { birth } : {}), name, email: edit.email.trim(), phone: edit.phone.trim(), note: edit.note.trim(), address: edit.address.trim(), ico: edit.ico.trim(), dic: edit.dic.trim(), hourly_rate: rate !== null && Number.isFinite(rate) ? rate : null };
         const { error: err } = await supabase.from('lawyer_clients').update(patch).eq('id', c.id);
         if (err) { setError(err.code === '23505' ? 'Klient s tímto jménem už existuje.' : err.message); return; }
         setClients((list) => list.map((x) => (x.id === c.id ? { ...x, ...patch } : x)).sort((a, b) => a.name.localeCompare(b.name, 'cs')));
