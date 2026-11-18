@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Download, File as FileIcon, FileImage, FileText, Folder, FolderPlus, Lock, Trash2, Upload } from 'lucide-react';
 import { DEFAULT_FOLDERS, deleteRow, formatSize, insertRow, openCaseFile, removeCaseFile, updateRow, uploadCaseFile, type CaseFolder } from '@/lib/caseFile';
 import { ghostBtn, inputCls, primaryBtn, shortDate, type TabProps } from './caseUi';
@@ -9,6 +9,9 @@ import { saveEncryptedFile } from '@/lib/e2eeFiles';
 import { limitsFor } from '@/lib/tiers';
 import UpgradeNote from './UpgradeNote';
 import { logActivity } from '@/lib/activity';
+import { supabase } from '@/lib/supabase';
+import { findSameName, groupVersions, nextVersionInfo } from '@/lib/fileVersions';
+import { INDEXABLE, extractText } from '@/lib/fileText';
 
 const iconFor = (mime: string, name: string) => (mime.startsWith('image/') ? FileImage : /pdf|word|text|document/.test(mime) || /\.(pdf|docx?|txt)$/i.test(name) ? FileText : FileIcon);
 
@@ -21,6 +24,26 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
     const [dragging, setDragging] = useState(false);
     const [newFolder, setNewFolder] = useState('');
     const input = useRef<HTMLInputElement>(null);
+    const [openVersions, setOpenVersions] = useState<string | null>(null);
+    // Které soubory už mají vytažený text (pro hledání v obsahu); bez migrace 20261118_09 se funkce tiše vypne
+    const [indexed, setIndexed] = useState<Set<string> | null>(null);
+    const [indexing, setIndexing] = useState(false);
+    useEffect(() => {
+        let a = true;
+        supabase.from('case_file_text').select('file_id').eq('case_id', item.id).then(({ data, error }) => { if (a) setIndexed(error ? null : new Set(((data ?? []) as { file_id: string }[]).map((x) => x.file_id))); });
+        return () => { a = false; };
+    }, [item.id]);
+    async function indexText(fileId: string, name: string, bytes: ArrayBuffer) {
+        const text = await extractText(name, bytes); if (!text) return;
+        const { error } = await supabase.from('case_file_text').upsert({ file_id: fileId, case_id: item.id, user_id: userId, body: text });
+        if (!error) setIndexed((s) => new Set([...(s ?? []), fileId]));
+    }
+    const toIndex = indexed ? bundle.files.filter((f) => !f.enc && INDEXABLE.test(f.name) && !indexed.has(f.id)) : [];
+    async function indexAll() {
+        setIndexing(true);
+        for (const f of toIndex) { try { const { data } = await supabase.storage.from('case-files').download(f.path); if (data) await indexText(f.id, f.name, await data.arrayBuffer()); } catch { /* další soubor */ } }
+        setIndexing(false);
+    }
     const channel = useChannelKey(item.id);
     const names = useDecryptedNames(bundle.files, channel.key);
     const shownName = (f: (typeof bundle.files)[number]) => (f.enc ? (names[f.id] ?? 'Šifrovaný soubor') : f.name);
@@ -43,8 +66,12 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
         const target = folderId === 'all' || folderId === 'none' ? null : folderId;
         for (const file of files) {
             try {
-                const saved = await uploadCaseFile(userId, item.id, target, file);
+                // Stejný název ve stejné složce: nabídne se nová verze (starší zůstane k dispozici)
+                const same = findSameName(bundle.files, target, file.name);
+                const asVersion = !!same && window.confirm(`Soubor „${file.name}“ už ve spisu je. Nahrát jako novou verzi (starší verze zůstane k dispozici)?\n\nOK = nová verze, Zrušit = samostatný soubor.`);
+                const saved = await uploadCaseFile(userId, item.id, target, file, asVersion && same ? nextVersionInfo(bundle.files, same) : {});
                 setBundle((b) => ({ ...b, files: [saved, ...b.files] }));
+                if (INDEXABLE.test(file.name) && indexed) void file.arrayBuffer().then((buf) => indexText(saved.id, file.name, buf));
             } catch (err) { fail(err); }
         }
         setBusy(false);
@@ -127,20 +154,23 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
 
             {!lawyer && bundle.files.length >= limits.filesPerCase - 2 && <UpgradeNote>Bezplatný účet má limit souborů a velikosti na případ. Bez limitů a se ZIP exportem přes</UpgradeNote>}
 
+            {toIndex.length > 0 && <p className="flex flex-wrap items-center gap-3 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-950">Obsah {toIndex.length} {toIndex.length === 1 ? 'souboru' : 'souborů'} (txt, csv, md, html, docx) zatím nejde hledat. <button type="button" onClick={() => void indexAll()} disabled={indexing} className={ghostBtn}>{indexing ? 'Zpracovávám…' : 'Zpřístupnit pro hledání'}</button><span className="text-xs text-indigo-900">PDF a skeny se zatím nevyhledávají. Šifrované soubory se nikdy neindexují.</span></p>}
+
             {bundle.files.length > 4 && <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Hledat v názvech souborů…" className={inputCls} aria-label="Hledat v souborech" />}
 
             {visible.length === 0 ? (
                 <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{bundle.files.length === 0 ? 'Zatím tu nejsou žádné soubory. Vložte třeba doručený dokument nebo fotku.' : 'V této složce nic není.'}</p>
             ) : (
                 <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
-                    {visible.map((file) => {
+                    {groupVersions(visible).flatMap((g) => [g.latest, ...(openVersions === g.latest.id ? g.older : [])].map((file) => ({ file, g }))).map(({ file, g }) => {
+                        const isOld = file.id !== g.latest.id;
                         const Icon = iconFor(file.mime, shownName(file));
                         return (
-                            <li key={file.id} className="flex flex-wrap items-center gap-3 p-3 sm:p-4">
+                            <li key={file.id} className={`flex flex-wrap items-center gap-3 p-3 sm:p-4 ${isOld ? 'bg-slate-50 pl-8' : ''}`}>
                                 <Icon size={22} className="shrink-0 text-indigo-800" />
                                 <button type="button" onClick={() => void openFile(file, false)} className="min-w-0 flex-1 text-left cursor-pointer">
                                     <span className="block truncate text-sm font-semibold text-slate-900 hover:text-indigo-800">{shownName(file)}{file.enc && <Lock size={12} className="ml-1.5 inline text-indigo-800" aria-label="Šifrováno end-to-end" />}{file.source === 'client' && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 align-middle text-[10px] font-bold uppercase text-indigo-900">od klienta</span>}</span>
-                                    <span className="text-xs text-slate-500">{formatSize(file.size)} · {shortDate(new Date(file.created_at))}</span>
+                                    <span className="text-xs text-slate-500">{formatSize(file.size)} · {shortDate(new Date(file.created_at))}{(file.version ?? 1) > 1 || g.older.length > 0 ? ` · verze ${file.version ?? 1}` : ''}{isOld ? ' (starší)' : ''}</span>
                                 </button>
                                 {bundle.folders.length > 0 && (
                                     <select value={file.folder_id ?? ''} onChange={(e) => void moveFile(file.id, e.target.value)} aria-label={`Složka souboru ${shownName(file)}`} className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700">
@@ -148,6 +178,7 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
                                         {bundle.folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
                                     </select>
                                 )}
+                                {!isOld && g.older.length > 0 && <button type="button" onClick={() => setOpenVersions(openVersions === file.id ? null : file.id)} aria-expanded={openVersions === file.id} className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Starší verze ({g.older.length})</button>}
                                 <button type="button" onClick={() => void openFile(file, true)} aria-label={`Stáhnout ${shownName(file)}`} className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 cursor-pointer"><Download size={16} /></button>
                                 <button type="button" onClick={() => void remove(file)} aria-label={`Smazat ${shownName(file)}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={16} /></button>
                             </li>

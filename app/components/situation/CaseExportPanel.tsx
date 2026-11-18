@@ -7,6 +7,7 @@ import { formatSize, type CaseDeadlineView } from '@/lib/caseFile';
 import { ghostBtn, primaryBtn, type TabProps } from './caseUi';
 import { useChannelKey, useDecryptedNames } from './useChannelKey';
 import UpgradeNote from './UpgradeNote';
+import { logCaseEvent } from '@/lib/audit';
 
 // Předání spisu: úplný přehled k tisku nebo ZIP se souhrnem a očíslovanými přílohami
 export default function CaseExportPanel({ item, bundle, deadlines, lawyer, onClose, fail }: { item: TabProps['item']; bundle: TabProps['bundle']; deadlines: CaseDeadlineView[]; lawyer: boolean; onClose: () => void; fail: TabProps['fail'] }) {
@@ -24,11 +25,13 @@ export default function CaseExportPanel({ item, bundle, deadlines, lawyer, onClo
 
     async function print() {
         setBusy('print');
+        logCaseEvent(item.id, 'exportovano', 'cases', 'tisk spisu');
         try { if (!printDossier(await build())) fail(new Error('Prohlížeč zablokoval nové okno. Povolte vyskakovací okna.')); } catch (err) { fail(err); } finally { setBusy(''); }
     }
 
     async function zip() {
         setBusy('zip');
+        logCaseEvent(item.id, 'exportovano', 'cases', options.files ? 'ZIP archiv včetně souborů' : 'ZIP archiv');
         try { await downloadDossierZip(item, await build(), bundle, options.files, (done, all) => setBusy(all ? `zip ${done}/${all}` : 'zip'), { key: channel.key, names }); } catch (err) { fail(err); } finally { setBusy(''); }
     }
 

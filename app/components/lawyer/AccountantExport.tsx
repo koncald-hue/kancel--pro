@@ -15,6 +15,7 @@ export default function AccountantExport() {
     const today = todayIso();
     const [range, setRange] = useState(presetPeriod('lastmonth', today));
     const [isdoc, setIsdoc] = useState(true);
+    const [pohoda, setPohoda] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [result, setResult] = useState<{ summary: ExportSummary; warnings: string[]; name: string } | null>(null);
@@ -36,7 +37,7 @@ export default function AccountantExport() {
             const numberOf = new Map(recv.map((r) => [r.id, r.number ?? '']));
             const who = new Map(((txs.error ? [] : txs.data) as { payment_id: string; counterparty: string }[]).map((t) => [t.payment_id, t.counterparty]));
             const payments: PayRow[] = (pays.error ? [] : (pays.data as PayRow[])).map((p) => ({ ...p, amount: Number(p.amount), invoice_number: numberOf.get(p.invoice_id) ?? '', counterparty: who.get(p.id) ?? '' }));
-            const built = buildExport({ invoices, payments, from: range.from, to: range.to, today }, { isdoc });
+            const built = buildExport({ invoices, payments, from: range.from, to: range.to, today }, { isdoc, pohoda });
             const blob = await zipFiles(built.files);
             const name = `podklady-pro-ucetni-${range.from}_${range.to}.zip`;
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
@@ -60,6 +61,7 @@ export default function AccountantExport() {
                     <label className="text-sm font-semibold text-slate-700">Do<input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className={`${input} mt-1 block`} /></label>
                 </div>
                 <label className="mt-3 flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={isdoc} onChange={(e) => setIsdoc(e.target.checked)} /> Přidat faktury ve formátu ISDOC</label>
+                <label className="mt-2 flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={pohoda} onChange={(e) => setPohoda(e.target.checked)} /> Přidat soubor pro import do Pohody (XML). Formálně ověřeno proti schématu výrobce, před ostrým importem vyzkoušejte na kopii účetnictví.</label>
                 <button type="button" onClick={run} disabled={busy} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"><FileArchive size={16} aria-hidden="true" /> {busy ? 'Připravuji…' : 'Stáhnout podklady'}</button>
                 {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
             </div>

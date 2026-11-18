@@ -29,13 +29,15 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
         const t = window.setTimeout(async () => {
             if (text.length < 2) { if (mine === seq.current) { setRows([]); setError(''); setBusy(false); } return; }
             setBusy(true); setError('');
-            const { data, error: err } = await supabase.rpc('search_all', { p_q: text });
+            const [{ data, error: err }, ft] = await Promise.all([supabase.rpc('search_all', { p_q: text }), text.length >= 3 ? supabase.rpc('search_file_text', { p_q: text }) : Promise.resolve({ data: null, error: null })]);
             if (mine !== seq.current) return;
             setBusy(false);
             if (err) { setRows([]); setError(/search_all|schema cache|find the function/i.test(err.message) ? 'Hledání zatím není v databázi zapnuté (chybí spuštění souboru hledani.sql).' : err.message); return; }
             // Zprávy načtené z datové schránky (jen z této relace) se přidají k výsledkům; kliknutím se otevře schránka
             const live: SearchRow[] = searchCached(text).map((r) => ({ kind: 'datovka', id: `live:${r.id}`, case_id: null, title: r.annotation || '(bez věci)', snippet: `V datové schránce · od ${r.sender} · ${STATUS_LABELS[r.status] ?? r.status}`, rank: 1 }));
-            setRows([...live, ...((data ?? []) as SearchRow[])]); setActive(0);
+            // Nalezený text uvnitř souborů se přidá ke skupině „Soubory“ (bez migrace 20261118_09 se prostě nic nepřidá)
+            const inside: SearchRow[] = ft.error ? [] : ((ft.data ?? []) as { file_id: string; case_id: string; case_title: string; file_name: string; snippet: string }[]).map((x, i) => ({ kind: 'soubor', id: `ft:${x.file_id}`, case_id: x.case_id, title: `${x.file_name} (obsah souboru)`, snippet: x.snippet.replace(/<\/?b>/g, ''), rank: 0.5 - i / 100 }));
+            setRows([...live, ...((data ?? []) as SearchRow[]), ...inside]); setActive(0);
         }, text.length < 2 ? 0 : 250);
         return () => window.clearTimeout(t);
     }, [q]);

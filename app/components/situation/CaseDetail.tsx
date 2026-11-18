@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpenCheck, BadgeCheck, BookUser, CalendarClock, CalendarPlus, Check, Clock, FileSignature, FileText, FolderOpen, LayoutDashboard, Pin, PinOff, ShieldCheck, Share2, Landmark, Link2, MailCheck, Trash2, Users, Wallet } from 'lucide-react';
+import { ArrowLeft, BookOpenCheck, BadgeCheck, BookUser, CalendarClock, CalendarPlus, Check, Clock, FileSignature, FileText, FolderOpen, LayoutDashboard, Pin, PinOff, ShieldCheck, Sparkles, Share2, Landmark, Link2, MailCheck, Trash2, Users, Wallet } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { hasLawyerAccess, useLawyerAccess } from '@/lib/lawyer';
@@ -25,12 +25,14 @@ import CaseContactsTab from './CaseContactsTab';
 import CaseDefenseTab from './CaseDefenseTab';
 import CaseExportPanel from './CaseExportPanel';
 import CaseClientTab from './CaseClientTab';
+import CaseAiTab from './CaseAiTab';
 import CaseSharePanel from './CaseSharePanel';
 import { loadShare, ROLE_LABEL, type ShareRole, type ShareRow } from '@/lib/caseShare';
 import { ghostBtn, type TabProps } from './caseUi';
+import { logCaseEvent } from '@/lib/audit';
 
-type TabId = 'prehled' | 'katastr' | 'obrana' | 'klient' | 'soubory' | 'lhuty' | 'chronologie' | 'kontakty' | 'datovky' | 'resers' | 'finance' | 'podpisy' | 'identifikace';
-const TAB_IDS: TabId[] = ['prehled', 'katastr', 'obrana', 'klient', 'soubory', 'lhuty', 'chronologie', 'kontakty', 'datovky', 'resers', 'finance', 'podpisy', 'identifikace'];
+type TabId = 'asistent' | 'prehled' | 'katastr' | 'obrana' | 'klient' | 'soubory' | 'lhuty' | 'chronologie' | 'kontakty' | 'datovky' | 'resers' | 'finance' | 'podpisy' | 'identifikace';
+const TAB_IDS: TabId[] = ['asistent', 'prehled', 'katastr', 'obrana', 'klient', 'soubory', 'lhuty', 'chronologie', 'kontakty', 'datovky', 'resers', 'finance', 'podpisy', 'identifikace'];
 
 export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen' | 'office' }) {
     const isOffice = variant === 'office';
@@ -75,6 +77,9 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
             .catch((err) => { if (!cancelled) setError(describeCaseError(err)); });
         return () => { cancelled = true; };
     }, [accountId, caseId]);
+
+    // Otevření věci se zapíše do auditního záznamu (jednou za 10 minut, jen u advokátských věcí)
+    useEffect(() => { if (accountId && caseId && isLawyer && item) logCaseEvent(caseId, 'otevreno'); }, [accountId, caseId, isLawyer, item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Počet nepřečtených zpráv od klienta; když tabulka chybí (nespuštěné SQL), badge se prostě nezobrazí
     useEffect(() => {
@@ -138,6 +143,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
         obrana: { id: 'obrana', label: 'Obrana', icon: ShieldCheck },
         katastr: { id: 'katastr', label: 'Katastr', icon: Landmark },
         finance: { id: 'finance', label: 'Peníze', icon: Wallet },
+        asistent: { id: 'asistent', label: 'Asistent (AI)', icon: Sparkles },
     };
     // Advokát vidí šest hlavních záložek a v nich podzáložky; občan zůstává u krátkého plochého seznamu
     type Group = { id: string; label: string; icon: typeof FileText; items: TabDef[]; count?: number };
@@ -154,7 +160,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
         { id: 'klient', label: 'Klient', icon: Link2, items: [T.klient, T.podpisy, T.identifikace], count: unread },
         { id: 'dokumenty', label: 'Dokumenty', icon: FolderOpen, items: [T.soubory, T.datovky], count: bundle.files.length },
         { id: 'prubeh', label: 'Průběh', icon: CalendarClock, items: [T.lhuty, T.chronologie, T.kontakty], count: open.length },
-        { id: 'prace', label: 'Právní práce', icon: BookOpenCheck, items: [T.resers, T.obrana, T.katastr] },
+        { id: 'prace', label: 'Právní práce', icon: BookOpenCheck, items: [T.resers, T.obrana, T.katastr, T.asistent] },
         { id: 'penize', label: 'Peníze', icon: Wallet, items: [T.finance] },
     ] : [T.prehled, T.obrana, T.soubory, T.lhuty, T.chronologie, T.kontakty].map((t) => ({ id: t.id, label: t.label, icon: t.icon, items: [t], count: t.count }));
     const activeGroup = groups.find((g) => g.items.some((i) => i.id === tab)) ?? groups[0];
@@ -224,6 +230,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
                 {shown === 'datovky' && <CaseDataMessagesTab {...tabProps} />}
                 {shown === 'resers' && <CaseResearchTab {...tabProps} />}
                 {shown === 'finance' && <CaseFinanceTab {...tabProps} />}
+                {shown === 'asistent' && <CaseAiTab {...tabProps} />}
                 {shown === 'podpisy' && <CaseSignTab {...tabProps} />}
                 {shown === 'identifikace' && <CaseIdentityTab {...tabProps} />}
                 {shown === 'obrana' && <CaseDefenseTab {...tabProps} />}

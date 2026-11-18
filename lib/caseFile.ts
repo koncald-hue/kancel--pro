@@ -1,8 +1,9 @@
 import { supabase } from './supabase';
 import { computeDeadlineEnd, deadlineById, type LegalCase } from './cases';
+import { logCaseEvent } from './audit';
 
 export type CaseFolder = { id: string; case_id: string; name: string };
-export type CaseFile = { id: string; case_id: string; folder_id: string | null; name: string; path: string; size: number; mime: string; note: string; created_at: string; source?: string; client_visible?: boolean; request_id?: string | null; enc?: boolean };
+export type CaseFile = { id: string; case_id: string; folder_id: string | null; name: string; path: string; size: number; mime: string; note: string; created_at: string; source?: string; client_visible?: boolean; request_id?: string | null; enc?: boolean; version?: number; version_of?: string | null };
 export type CaseEntry = { id: string; case_id: string; kind: 'event' | 'note'; title: string; body: string; happened_on: string | null; pinned: boolean; created_at: string; client_visible?: boolean };
 // kind: 'lhuta' = lhůta (právní nebo procesní), 'ukol' = úkol / termín. confirmed_at: datum výslovně potvrdil advokát
 // (zapisuje databáze, viz supabase/migrations/20261117_01). Sloupce z migrace jsou volitelné, aby aplikace fungovala i bez ní.
@@ -58,13 +59,16 @@ export async function deleteRow(table: Table, id: string) {
 
 export const safeFileName = (name: string) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]+/g, '_').slice(-80) || 'soubor';
 
-export async function uploadCaseFile(userId: string, caseId: string, folderId: string | null, file: File): Promise<CaseFile> {
+export async function uploadCaseFile(userId: string, caseId: string, folderId: string | null, file: File, extra: { version_of?: string; version?: number } = {}): Promise<CaseFile> {
     if (file.size > MAX_FILE_BYTES) throw new Error(`Soubor „${file.name}“ je větší než 15 MB.`);
     const path = `${userId}/${caseId}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
     const { error } = await supabase.storage.from('case-files').upload(path, file, { contentType: file.type || undefined });
     if (error) throw new Error(error.message);
     try {
-        return await insertRow<CaseFile>('case_files', { case_id: caseId, folder_id: folderId, user_id: userId, name: file.name, path, size: file.size, mime: file.type });
+        const row = { case_id: caseId, folder_id: folderId, user_id: userId, name: file.name, path, size: file.size, mime: file.type };
+        // Bez migrace 20261118_09 sloupce verzí neexistují: soubor se pak uloží jako samostatný
+        if (extra.version_of) { try { return await insertRow<CaseFile>('case_files', { ...row, ...extra }); } catch (e) { if (!/version|column|schema cache/i.test(e instanceof Error ? e.message : '')) throw e; } }
+        return await insertRow<CaseFile>('case_files', row);
     } catch (err) {
         await supabase.storage.from('case-files').remove([path]);
         throw err;
@@ -79,6 +83,8 @@ export async function removeCaseFile(file: Pick<CaseFile, 'id' | 'path'>) {
 export async function openCaseFile(path: string, download = false) {
     const { data, error } = await supabase.storage.from('case-files').createSignedUrl(path, 120, download ? { download: true } : undefined);
     if (error || !data) throw new Error(error?.message ?? 'Soubor se nepodařilo otevřít.');
+    const [, caseId, stored] = path.split('/');
+    if (caseId && stored) logCaseEvent(caseId, 'stazeno', 'case_files', stored.replace(/^[0-9a-f-]{36}-/i, '').slice(0, 200));
     window.open(data.signedUrl, '_blank', 'noopener');
 }
 

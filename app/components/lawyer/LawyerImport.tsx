@@ -4,10 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, CheckCircle2, FileUp, Loader2, Undo2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { ENTITY_LABEL, FIELDS, buildRecords, detectEntity, planImport, readFile, suggestMapping, summarize, type Entity, type Existing, type Mapping, type Sheet } from '@/lib/importer';
+import { ENTITY_LABEL, FIELDS, buildRecords, detectEntity, planImport, readFile, summarize, type Entity, type Existing, type Mapping, type Sheet } from '@/lib/importer';
 import { loadExisting, runImport, undoImport, type RunResult } from '@/lib/importRun';
 import { useLawyer } from './LawyerGate';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
+import { PRESETS, guessPreset, presetById, suggestWithPreset, type PresetId } from '@/lib/importPresets';
 
 type Batch = { id: string; entity: Entity; source: string; counts: { created?: number; updated?: number }; undone: boolean; created_at: string };
 const BADGE: Record<string, string> = { create: 'bg-emerald-100 text-emerald-900', update: 'bg-indigo-100 text-indigo-900', skip: 'bg-slate-100 text-slate-700', error: 'bg-rose-100 text-rose-900' };
@@ -22,6 +23,7 @@ export default function LawyerImport() {
     const [fileName, setFileName] = useState('');
     const [entity, setEntity] = useState<Entity>('klienti');
     const [mapping, setMapping] = useState<Mapping>([]);
+    const [preset, setPreset] = useState<PresetId>('auto');
     const [existing, setExisting] = useState<Existing | null>(null);
     const [createMissing, setCreateMissing] = useState(true);
     const [fillExisting, setFillExisting] = useState(true);
@@ -43,7 +45,7 @@ export default function LawyerImport() {
     const table = sheets[sheetIdx]?.table;
     function choose(i: number, list: Sheet[] = sheets) {
         const t = list[i]?.table; if (!t) return;
-        const d = detectEntity(t.headers); setSheetIdx(i); setEntity(d.entity); setMapping(suggestMapping(d.entity, t.headers)); setResult(null);
+        const d = detectEntity(t.headers); const guess = guessPreset(d.entity, t.headers) ?? 'auto'; setSheetIdx(i); setEntity(d.entity); setPreset(guess); setMapping(suggestWithPreset(d.entity, t.headers, guess)); setResult(null);
     }
     async function load(bytes: Uint8Array, name: string) {
         setError(''); setResult(null);
@@ -103,8 +105,10 @@ export default function LawyerImport() {
                 <section className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
                     <div className="flex flex-wrap items-end gap-3">
                         {sheets.length > 1 && <label className="text-xs font-semibold text-slate-600">List<select value={sheetIdx} onChange={(e) => choose(Number(e.target.value))} className={`${inputCls} mt-1 block font-normal`}>{sheets.map((s, i) => <option key={s.name} value={i}>{s.name}</option>)}</select></label>}
-                        <label className="text-xs font-semibold text-slate-600">Co soubor obsahuje<select value={entity} onChange={(e) => { const en = e.target.value as Entity; setEntity(en); setMapping(suggestMapping(en, table.headers)); }} className={`${inputCls} mt-1 block font-normal`}>{(Object.keys(ENTITY_LABEL) as Entity[]).map((k) => <option key={k} value={k}>{ENTITY_LABEL[k]}</option>)}</select></label>
+                        <label className="text-xs font-semibold text-slate-600">Co soubor obsahuje<select value={entity} onChange={(e) => { const en = e.target.value as Entity; setEntity(en); setMapping(suggestWithPreset(en, table.headers, preset)); }} className={`${inputCls} mt-1 block font-normal`}>{(Object.keys(ENTITY_LABEL) as Entity[]).map((k) => <option key={k} value={k}>{ENTITY_LABEL[k]}</option>)}</select></label>
+                        <label className="text-xs font-semibold text-slate-600">Zdroj dat<select value={preset} onChange={(e) => { const id = e.target.value as PresetId; setPreset(id); setMapping(suggestWithPreset(entity, table.headers, id)); }} className={`${inputCls} mt-1 block font-normal`}>{PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
                         <p className="text-sm text-slate-500">{table.rows.length} řádků</p>
+                        {preset !== 'auto' && <p className="basis-full text-xs text-slate-500">{presetById(preset).hint} Předvolba je návrh podle běžných názvů sloupců, ne ověřený formát exportu. Zkontrolujte přiřazení sloupců níže, než import potvrdíte.</p>}
                     </div>
 
                     <div className="overflow-x-auto rounded-xl border border-slate-200">

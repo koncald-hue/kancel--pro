@@ -8,8 +8,9 @@ import PortalSign from './PortalSign';
 import PortalAml from './PortalAml';
 import { KEY_FRAGMENT, decryptText, decryptToBlob, encryptFile, encryptText, importKey, isEncrypted } from '@/lib/e2ee';
 import PortalCodeGate from './PortalCodeGate';
+import { ACCENTS, accentOf } from '@/lib/portalBrand';
 
-type Lawyer = { firm: string; name: string; phone: string; office: string; website: string; barNumber: string; email: string; photo?: string; verified?: boolean; profession?: string; verifiedAt?: string | null };
+type Lawyer = { accent?: string; greeting?: string; firm: string; name: string; phone: string; office: string; website: string; barNumber: string; email: string; photo?: string; verified?: boolean; profession?: string; verifiedAt?: string | null };
 type PortalFile = { id: string; name: string; size: number; created_at: string; source: string; request_id: string | null; client_visible: boolean; enc?: boolean };
 type Onboarded = {
     onboarded: true; e2ee: boolean; lawyer: Lawyer; title: string; status: string;
@@ -34,18 +35,19 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 function LawyerCard({ lawyer }: { lawyer: Lawyer }) {
     const name = lawyer.name || lawyer.firm || 'Váš advokát';
     return (
-        <section className="rounded-2xl border border-indigo-200 bg-white p-5 shadow-xs" aria-label="Váš advokát">
+        <section className="rounded-2xl border bg-white p-5 shadow-xs" style={{ borderColor: ACCENTS[accentOf(lawyer.accent)].hex, borderTopWidth: 4 }} aria-label="Váš advokát">
             <div className="flex items-start gap-4">
                 {lawyer.photo?.startsWith('data:image/jpeg;base64,')
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={lawyer.photo} alt="" aria-hidden="true" className="h-20 w-20 shrink-0 rounded-full object-cover" />
                     : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-indigo-800 text-lg font-bold text-white" aria-hidden="true">{initials(name)}</span>}
                 <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-800">Váš advokát</p>
+                    <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: ACCENTS[accentOf(lawyer.accent)].hex }}>Váš advokát</p>
                     <p className="text-xl font-bold leading-tight text-slate-900">{name}</p>
                     {lawyer.name && lawyer.firm && <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-600"><Building2 size={14} aria-hidden="true" />{lawyer.firm}</p>}
                     {lawyer.barNumber && <p className="text-xs text-slate-500">Ev. č. ČAK {lawyer.barNumber}</p>}
                     {lawyer.office && <p className="mt-1 text-xs text-slate-500">{lawyer.office}</p>}
+                    {lawyer.greeting && <p className="mt-3 whitespace-pre-line rounded-lg bg-slate-50 p-3 text-sm leading-relaxed text-slate-700">{lawyer.greeting}</p>}
                 </div>
             </div>
             {(lawyer.phone || lawyer.email || lawyer.website) && (

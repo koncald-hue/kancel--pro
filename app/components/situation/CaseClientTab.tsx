@@ -11,6 +11,7 @@ import type { LawyerAccess } from '@/lib/lawyer';
 import E2eeBox from './E2eeBox';
 import { ghostBtn, inputCls, primaryBtn, shortDate, type TabProps } from './caseUi';
 import PortalAccessCard from './PortalAccessCard';
+import { reminderText } from '@/lib/portalBrand';
 
 type Link = { second_factor?: 'none' | 'email'; code_email?: string; id: string; token: string; label: string; status_text: string; expires_at: string | null; revoked: boolean; opens: number; last_opened_at: string | null; client_name?: string; client_email?: string; client_phone?: string; client_address?: string; consent_at?: string | null; onboarded_at?: string | null; e2ee?: boolean; wrapped_key?: string | null; client_verified_at?: string | null };
 type Request = { id: string; title: string; done: boolean };
@@ -185,6 +186,8 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
     }
 
     const mailto = `mailto:?subject=${encodeURIComponent(`Vaše věc: ${item.title}`)}&body=${encodeURIComponent(`Dobrý den,\n\nna tomto soukromém odkazu uvidíte stav vaší věci, můžete nahrát podklady a napsat mi zprávu:\n${url}\n\nOdkaz otevřete celý, včetně části za znakem #, a nikomu ho nepředávejte.`)}`;
+    const waitingTitles = requests.filter((r) => !r.done && !bundle.files.some((f) => f.request_id === r.id)).map((r) => r.title);
+    const reminder = waitingTitles.length && url ? `mailto:?subject=${encodeURIComponent(`Připomenutí podkladů: ${item.title}`)}&body=${encodeURIComponent(reminderText(waitingTitles, url, item.client_name ?? ''))}` : '';
     const ownFiles = bundle.files;
     const visibleEvents = bundle.entries.filter((e) => e.kind === 'event');
     const sharedEnc = ownFiles.filter((f) => f.enc && f.source !== 'client');
@@ -286,6 +289,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                             <button type="submit" disabled={!newRequest.trim()} className={ghostBtn}><Plus size={15} /> Přidat</button>
                         </form>
                         <p className="mt-2 text-xs text-slate-500">Nahrané soubory se objeví v záložce Soubory s označením „od klienta“.</p>
+                        {reminder && <a href={reminder} className={`${ghostBtn} mt-3`}><Mail size={15} aria-hidden="true" /> Připomenout klientovi chybějící podklady ({waitingTitles.length})</a>}
                     </section>
 
                     {link.e2ee && (
