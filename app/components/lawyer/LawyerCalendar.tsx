@@ -47,7 +47,7 @@ export default function LawyerCalendar() {
             const [cs, cu, t, ev, col] = await Promise.all([loadCases().catch(() => [] as LegalCase[]), loadAllDeadlines().catch(() => [] as CaseDeadline[]), loadTasks().catch(() => null), loadEvents(pragueToIso(range.from), pragueToIso(range.to)).catch(() => null), loadColleagues()]);
             setCases(cs); setCustoms(cu); setTasks(t); setEvents(ev); setColleagues(col);
             setNames(await loadNames([...(t ?? []).flatMap((x) => [x.created_by, x.assignee_id]), ...(ev ?? []).flatMap((e) => [e.user_id, ...e.attendees])]));
-        } catch (e) { setErr(e instanceof Error ? e.message : 'Kalendář se nepodařilo načíst.'); } finally { setLoading(false); }
+        } catch { setErr('Kalendář se nepodařilo načíst. Zkontrolujte připojení a obnovte stránku.'); } finally { setLoading(false); }
     }, [range.from, range.to]);
     useEffect(() => { let a = true; Promise.resolve().then(() => { if (a) void load(); }); return () => { a = false; }; }, [load]);
 
@@ -142,7 +142,7 @@ export default function LawyerCalendar() {
                             <p className="text-sm text-slate-700">{(() => { const s = pragueParts(ev.starts_at), f = pragueParts(ev.ends_at); return ev.all_day ? `${longDate(s.date)}${f.date > s.date ? ` až ${longDate(f.date)}` : ''}, celý den` : `${longDate(s.date)}, ${s.time}–${f.date !== s.date ? `${longDate(f.date)} ` : ''}${f.time}`; })()}</p>
                             {ev.place && <p className="text-sm text-slate-700"><MapPin size={13} className="mr-1 inline" aria-hidden="true" />{ev.place}</p>}
                             {ev.case_id && <Link href={`/kancelar/veci/${ev.case_id}`} className="text-sm text-indigo-800 underline">{ev.case_title || 'Věc'}</Link>}
-                            {(ev.attendees.length > 0 || ev.user_id !== userId) && <p className="text-sm text-slate-700"><Users size={13} className="mr-1 inline" aria-hidden="true" />{[names[ev.user_id] && ev.user_id !== userId ? `pořádá ${names[ev.user_id]}` : '', ev.attendees.map((a) => names[a] ?? 'kolega').join(', ')].filter(Boolean).join(' · ')}</p>}
+                            {(ev.attendees.length > 0 || ev.user_id !== userId) && <p className="text-sm text-slate-700"><Users size={13} className="mr-1 inline" aria-hidden="true" />{[names[ev.user_id] && ev.user_id !== userId ? `pořádá ${names[ev.user_id]}` : '', ev.attendees.length ? `pozvaní: ${ev.attendees.map((a) => names[a] ?? 'kolega').join(', ')}` : ''].filter(Boolean).join(' · ')}</p>}
                             {ev.note && <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{ev.note}</p>}
                         </div>
                         {ev.user_id === userId && <><button type="button" onClick={() => editEvent(ev)} className={ghostBtn}>Upravit</button><button type="button" onClick={() => void removeEvent(ev)} className={`${ghostBtn} text-rose-700`}><Trash2 size={14} /> Smazat</button></>}

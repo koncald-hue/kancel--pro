@@ -29,7 +29,7 @@ export function buildFeed(events: FeedEvent[], opt: { includeTitles: boolean; or
             L.push(`SUMMARY:${esc(summary)}`);
             if (e.place) L.push(`LOCATION:${esc(e.place)}`);
             L.push(`DESCRIPTION:${esc('Podrobnosti najdete v Kanceláři.')}`, `URL:${opt.origin}/kancelar/${type === 'ukol' ? 'ukoly' : 'kalendar'}`);
-            L.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(type === 'ukol' ? 'Úkol na dnes' : 'Za 30 minut')}`, e.startUtc ? 'TRIGGER:-PT30M' : 'TRIGGER:PT8H', 'END:VALARM', 'END:VEVENT');
+            L.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(e.startUtc ? 'Za 30 minut' : 'Úkol na dnes')}`, e.startUtc ? 'TRIGGER:-PT30M' : 'TRIGGER:PT8H', 'END:VALARM', 'END:VEVENT');
             continue;
         }
         const summary = `Lhůta: ${e.title}${opt.includeTitles && e.caseTitle ? ` · ${e.caseTitle}` : ''}`;
