@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { ARES_BASE, cleanIco, isValidIco, normalizeCompany } from '@/lib/ares';
 import { FORMS, normalizeRzp, normalizeVr } from '@/lib/registers';
 import { rateLimited } from '@/lib/serverSupabase';
+import { mfaBlocked } from '@/lib/serverMfa';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
@@ -33,6 +34,7 @@ export async function GET(req: Request) {
     const user = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
     const { data: u, error } = await user.auth.getUser(token);
     if (error || !u.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    if (mfaBlocked(u.user, token)) return NextResponse.json({ error: 'mfa' }, { status: 401 });
     if (await rateLimited(`reg:${u.user.id}`, 30, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
 
     const ico = cleanIco(new URL(req.url).searchParams.get('ico') ?? '');

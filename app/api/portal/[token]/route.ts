@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { clientIp, findActiveLink, rateLimited, serviceClient } from '@/lib/serverSupabase';
 import { secondFactorBlock, type FactorLink } from '@/lib/portalSession';
 import { maskEmail } from '@/lib/mail';
+import { accentOf, greetingOf } from '@/lib/portalBrand';
 
 const NOT_FOUND = () => NextResponse.json({ error: 'notfound' }, { status: 404 });
 
@@ -37,6 +38,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
         email: (lawyerRow?.contact_email as string | undefined) ?? '',
         photo: ((lawyerRow as { avatar_large?: string } | null)?.avatar_large) ?? '',
     };
+    // Vzhled stránky (migrace 20261118_07): když sloupce nejsou, použije se výchozí
+    const brand = await db.from('lawyer_access').select('portal_accent, portal_greeting').eq('user_id', link.user_id).maybeSingle();
+    const b = (brand.error ? null : brand.data) as { portal_accent?: string; portal_greeting?: string } | null;
+    (lawyer as Record<string, unknown>).accent = accentOf(b?.portal_accent);
+    (lawyer as Record<string, unknown>).greeting = greetingOf(b?.portal_greeting);
     // Dokud klient nevyplní údaje, nečteme ani nevracíme údaje ze spisu.
     const linkAny = link as unknown as { onboarded_at?: string | null; client_name?: string; client_email?: string; client_phone?: string; client_verified_at?: string | null };
     // Druhý faktor: bez ověřeného kódu jen vizitka advokáta a výzva k zadání kódu, nic ze spisu

@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Vendored third-party code (patched picomatch), kept as published
     "vendor/**",
+    // Node skripty pro zálohy a testy (CommonJS, spouštějí se ručně)
+    "scripts/**/*.cjs",
+    "scripts/**/*.mjs",
   ]),
 ]);
 

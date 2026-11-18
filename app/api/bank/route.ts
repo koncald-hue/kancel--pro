@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimited } from '@/lib/serverSupabase';
 import { normalizeFio } from '@/lib/bank';
+import { mfaBlocked } from '@/lib/serverMfa';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
@@ -15,6 +16,7 @@ export async function POST(req: Request) {
     const user = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
     const { data: u, error: ue } = await user.auth.getUser(token);
     if (ue || !u.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    if (mfaBlocked(u.user, token)) return NextResponse.json({ error: 'mfa' }, { status: 401 });
     if (await rateLimited(`bank:${u.user.id}`, 20, 60_000)) return NextResponse.json({ error: 'rate', message: 'Příliš mnoho požadavků, zkuste to za chvíli.' }, { status: 429 });
     const { data: allowed } = await user.rpc('has_lawyer_access');
     if (allowed !== true) return NextResponse.json({ error: 'forbidden' }, { status: 403 });

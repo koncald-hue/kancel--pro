@@ -29,6 +29,12 @@ Potřebuje v `.env.local` hodnoty `NEXT_PUBLIC_SUPABASE_URL` a `SUPABASE_SERVICE
 | `20261117_01_ukoly-a-potvrzeni-lhut.sql` | Evidence migrací; u lhůt druh (lhůta/úkol), odpovědná osoba, potvrzení data advokátem, vazba na vypočtenou lhůtu a na poptávku. Kontroly v databázi (trigger). Existující lhůty zůstávají nepotvrzené. |
 | `20261117_02_portal-kod-z-emailu.sql` | Volitelný druhý faktor klientského odkazu (kód z e-mailu zadaného advokátem), tabulka relací klientů jen s otisky kódů. Existující odkazy se nemění. |
 | `20261117_03_prava-funkci.sql` | Nepřihlášený návštěvník (anon) nesmí spouštět funkce pro přihlášené; `has_lawyer_access` neprozradí předplatné cizího uživatele. |
+| `20261117_04_klientske-zaznamy-jen-vlastnik.sql` | Klientský odkaz, požadavky, zprávy, podpisy a identifikace smí ke věci vytvořit jen její vlastník (kolega u sdílené věci ne); příznak „viditelné klientovi“ mění jen vlastník. |
+| `20261118_05_druhy-faktor-v-databazi.sql` | Dvoufázové přihlášení (TOTP) vynucené v databázi: u účtu se zapnutým druhým faktorem vydá databáze data jen v relaci aal2. Kdo faktor nemá, nepozná změnu. |
+| `20261118_06_auditni-zaznam.sql` | Auditní záznam (kdo kdy co ve věci otevřel nebo změnil), jen pro přidávání, čtení přes funkci `audit_list`. |
+| `20261118_07_vzhled-klientske-stranky.sql` | Barva (z pevné nabídky) a uvítání na klientské stránce. |
+| `20261118_08_ai-souhlas.sql` | Souhlas advokáta s asistentem AI (čas souhlasu, odvolání). |
+| `20261118_09_verze-a-obsah-souboru.sql` | Verze souborů a vyhledávání v textu nešifrovaných souborů (txt, csv, md, html, docx). |
 
 ## Starší skripty (před zavedením složky migrations)
 

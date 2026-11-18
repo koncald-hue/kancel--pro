@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Check, Copy, CreditCard } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { primaryBtn, ghostBtn, inputCls } from '../situation/caseUi';
@@ -12,6 +13,8 @@ import { useLawyer } from './LawyerGate';
 import ProfileForm from './ProfileForm';
 import GoogleCalendarCard from './GoogleCalendarCard';
 import CalendarFeedCard from './CalendarFeedCard';
+import MfaCard from './MfaCard';
+import PortalBrandingCard from './PortalBrandingCard';
 import FirmSettings from './FirmSettings';
 import { useAuth } from '../site/AuthContext';
 
@@ -125,6 +128,9 @@ export default function LawyerSettings() {
                 <p className="mt-1 text-sm text-slate-600">Povinné údaje o vás. Vidí je provozovatel služby a klient na své stránce. Jakmile je uložíte, zapnou se klientské odkazy a poptávky.</p>
                 <div className="mt-4"><ProfileForm access={access} onSaved={() => window.location.reload()} /></div>
             </section>
+            <PortalBrandingCard />
+            <MfaCard />
+            <Link href="/kancelar/audit" className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 text-sm hover:border-indigo-300"><span><strong className="block text-base text-slate-900">Auditní záznam</strong><span className="text-slate-600">Kdo kdy co ve věcech otevřel nebo změnil, s exportem do CSV.</span></span><span className="font-semibold text-indigo-800">Otevřít →</span></Link>
             <GoogleCalendarCard />
             <CalendarFeedCard />
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Předplatné">

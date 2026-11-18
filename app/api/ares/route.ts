@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimited } from '@/lib/serverSupabase';
 import { ARES_BASE, cleanIco, isSearchableName, isValidIco, normalizeCompany, type AresCompany } from '@/lib/ares';
+import { mfaBlocked } from '@/lib/serverMfa';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
@@ -13,6 +14,7 @@ export async function GET(req: Request) {
     const client = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
     const { data: userData, error: userError } = await client.auth.getUser(token);
     if (userError || !userData.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    if (mfaBlocked(userData.user, token)) return NextResponse.json({ error: 'mfa' }, { status: 401 });
     if (await rateLimited(`ares:${userData.user.id}`, 40, 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
 
     const q = (new URL(req.url).searchParams.get('q') ?? '').trim();

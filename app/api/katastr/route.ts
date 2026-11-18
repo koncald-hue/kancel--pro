@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { rateLimited } from '@/lib/serverSupabase';
 import { RUIAN_ADDRESS_URL, addressWhere, parseWfsParcels, pickByArea, pointInParcel, wfsPointUrl, wfsRefUrl } from '@/lib/katastrMap';
 import { CUZK_BASE, RIZENI_TYPY, normalizeJednotka, normalizeNeighbor, normalizeParcel, normalizeRizeni, normalizeStavba, searchCastiObce, searchKu, type CastObce, type KatastralniUzemi } from '@/lib/katastr';
+import { mfaBlocked } from '@/lib/serverMfa';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
@@ -77,6 +78,7 @@ export async function GET(req: Request) {
         const client = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
         const { data: userData, error: userError } = await client.auth.getUser(token);
         if (userError || !userData.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+        if (mfaBlocked(userData.user, token)) return NextResponse.json({ error: 'mfa' }, { status: 401 });
         const uid = userData.user.id;
         const { data: staff } = await client.rpc('is_staff');
         if (staff !== true) {

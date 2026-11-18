@@ -9,6 +9,8 @@ import { primaryBtn, ghostBtn } from '../situation/caseUi';
 import Onboarding from './Onboarding';
 import { onboardingComplete } from '@/lib/onboarding';
 import AuthForm from '../site/AuthForm';
+import MfaChallenge from './MfaChallenge';
+import { useMfaState } from '@/lib/mfa';
 
 const LawyerContext = createContext<{ access: LawyerAccess; userId: string; locked?: boolean } | null>(null);
 export const useLawyer = () => { const ctx = useContext(LawyerContext); if (!ctx) throw new Error('useLawyer mimo LawyerGate'); return ctx; };
@@ -22,8 +24,10 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const state = useLawyerAccess(account?.id, version);
+    const [mfaVersion, setMfaVersion] = useState(0);
+    const mfa = useMfaState(account?.id, mfaVersion);
 
-    if (!authReady || state.loading) return <p className="mx-auto max-w-4xl px-4 py-12 text-sm text-slate-500" role="status">Načítám…</p>;
+    if (!authReady || state.loading || (account && mfa.loading)) return <p className="mx-auto max-w-4xl px-4 py-12 text-sm text-slate-500" role="status">Načítám…</p>;
     if (!account) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white">
@@ -50,6 +54,8 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
             </div>
         );
     }
+    // Druhý faktor zapnutý, ale v této relaci ještě nepotvrzený: nic dalšího se neotevře
+    if (mfa.needed) return <MfaChallenge factorId={mfa.factorId} email={account.email ?? ''} onDone={() => { setMfaVersion((v) => v + 1); setVersion((v) => v + 1); }} onLogout={logout} />;
     if (state.error === 'setup') return <Box><p className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-slate-700">Kancelář ještě není v databázi zapnutá (chybí spuštění SQL lawyer.sql).</p></Box>;
 
     const access = state.access;

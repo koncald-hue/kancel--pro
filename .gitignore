@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Zálohy obsahují data klientů: nikdy do repozitáře
+/backups/

@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { rateLimited } from '@/lib/serverSupabase';
 import { OFFENSES_DATABASE } from '../../data/offenses';
 import { deadlineById } from '@/lib/cases';
+import { mfaBlocked } from '@/lib/serverMfa';
 
 // Klient se vytvoří až při prvním použití, aby šlo aplikaci sestavit i bez klíče OpenAI
 let openaiClient: OpenAI | null = null;
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
         const client = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
         const { data: userData, error: userError } = await client.auth.getUser(token);
         if (userError || !userData.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+        if (mfaBlocked(userData.user, token)) return NextResponse.json({ error: 'mfa' }, { status: 401 });
         const uid = userData.user.id;
         // Bezplatný účet: 2 přípravy denně, advokát nebo člen týmu: 12
         const { data: staffFlag } = await client.rpc('is_staff');

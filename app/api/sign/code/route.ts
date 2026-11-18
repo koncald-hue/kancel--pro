@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { rateLimited, serviceClient } from '@/lib/serverSupabase';
 import { sealSecret } from '@/lib/signServer';
 import { generateOtp, isExpired, otpHash, OTP_MAX_SENDS_PER_HOUR } from '@/lib/signing';
+import { mfaBlocked } from '@/lib/serverMfa';
 
 const TTL_MS = 30 * 60_000;
 
@@ -17,6 +18,7 @@ export async function POST(req: Request) {
     const user = createClient(url, anon, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
     const { data: authData, error: authError } = await user.auth.getUser(token);
     if (authError || !authData.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    if (mfaBlocked(authData.user, token)) return NextResponse.json({ error: 'mfa' }, { status: 401 });
     if (await rateLimited(`sign-code:${authData.user.id}`, 20, 60 * 60_000)) return NextResponse.json({ error: 'rate' }, { status: 429 });
     const { data: r } = await user.from('signature_requests').select('id, status, level, expires_at').eq('id', body.id).maybeSingle();
     if (!r || r.status !== 'pending' || r.level !== 'advanced' || isExpired(r as { expires_at: string | null })) return NextResponse.json({ error: 'invalid' }, { status: 400 });
