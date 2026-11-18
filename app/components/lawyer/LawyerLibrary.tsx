@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Copy, Download, FilePlus2, Library, Loader2, Pencil, Plus, Printer, Trash2, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -144,7 +145,7 @@ function Editor({ template, userId, onDone, onCancel }: { template: LawyerTempla
         await onDone();
     }
     async function remove() {
-        if (!template || !window.confirm('Opravdu smazat tento vzor?')) return;
+        if (!template || !await confirmAction('Opravdu smazat tento vzor?')) return;
         const { error: err } = await supabase.from('lawyer_templates').delete().eq('id', template.id);
         if (err) { setError(err.message); return; }
         await onDone();

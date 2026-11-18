@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, Check, ExternalLink, Loader2, Lock, Plus, RefreshCw, ShieldAlert, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -105,7 +106,7 @@ export default function LawyerInsolvency() {
     }
 
     async function remove(w: Watch) {
-        if (!window.confirm(`Přestat hlídat „${w.label}“? Smažou se i uložené nálezy.`)) return;
+        if (!await confirmAction(`Přestat hlídat „${w.label}“? Smažou se i uložené nálezy.`)) return;
         const { error: err } = await supabase.from('isir_watches').delete().eq('id', w.id);
         if (err) { setError(err.message); return; }
         await load();

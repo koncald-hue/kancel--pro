@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import { BellRing } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -32,7 +33,7 @@ export default function NotifyClient({ caseId, userId, email }: { caseId: string
     }
     const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
     async function send() {
-        if (!window.confirm(`Odeslat klientovi na ${email} krátký e-mail, že ve věci je novinka?\n\nE-mail neobsahuje žádné údaje o věci ani odkaz. Klient si otevře svůj soukromý odkaz, který už má.`)) return;
+        if (!await confirmAction(`Odeslat klientovi na ${email} krátký e-mail, že ve věci je novinka?\n\nE-mail neobsahuje žádné údaje o věci ani odkaz. Klient si otevře svůj soukromý odkaz, který už má.`)) return;
         setBusy(true); setMsg(null);
         try {
             const { data: { session } } = await supabase.auth.getSession();

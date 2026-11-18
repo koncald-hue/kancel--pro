@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BadgeCheck, Download, FileSignature, KeyRound, Loader2, Plus, ShieldCheck, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -113,7 +114,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
         });
     }
     async function setStatus(r: Req, status: SignStatus) { await run(`st-${r.id}`, async () => { const { error } = await supabase.from('signature_requests').update({ status }).eq('id', r.id); if (error) throw new Error(error.message); await load(); }); }
-    async function remove(r: Req) { if (!window.confirm('Smazat žádost o podpis?')) return; await run(`del-${r.id}`, async () => { const { error } = await supabase.from('signature_requests').delete().eq('id', r.id); if (error) throw new Error(error.message); await load(); }); }
+    async function remove(r: Req) { if (!await confirmAction('Smazat žádost o podpis?')) return; await run(`del-${r.id}`, async () => { const { error } = await supabase.from('signature_requests').delete().eq('id', r.id); if (error) throw new Error(error.message); await load(); }); }
 
     if (!enabled) return <p className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-slate-700">Podpisy zatím nejsou v databázi zapnuté (chybí spuštění souboru podpisy-a-aml.sql).</p>;
     const advanced = defaultLevel(f.kind) === 'advanced';

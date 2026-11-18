@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, CheckCircle2, FileUp, Loader2, Undo2 } from 'lucide-react';
@@ -75,7 +76,7 @@ export default function LawyerImport() {
         setBusy(false); setProgress('');
     }
     async function undo(id: string) {
-        if (!window.confirm('Vrátit tento import? Smažou se všechny záznamy, které vytvořil (včetně toho, co jste k nim mezitím přidal). Doplněné údaje u stávajících klientů se nevracejí.')) return;
+        if (!await confirmAction('Vrátit tento import? Smažou se všechny záznamy, které vytvořil (včetně toho, co jste k nim mezitím přidal). Doplněné údaje u stávajících klientů se nevracejí.', { title: 'Vrátit import?', confirmLabel: 'Vrátit import', danger: true, typeToConfirm: 'VRÁTIT' })) return;
         setBusy(true); setError('');
         try { await undoImport(id); setResult(null); await loadBatches(); setExisting(await loadExisting()); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); }
         setBusy(false);

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { AuthProvider } from '@/app/components/site/AuthContext';
+import ConfirmHost from '@/app/components/site/ConfirmHost';
 import './globals.css';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin', 'latin-ext'] });
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang="cs" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-800">
         <AuthProvider>{children}</AuthProvider>
+        <ConfirmHost />
       </body>
     </html>
   );

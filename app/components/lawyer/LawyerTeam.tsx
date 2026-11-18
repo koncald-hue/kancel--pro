@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import Substitutions from './Substitutions';
 import { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, CreditCard, Loader2, Mail, Trash2, UserPlus, Users } from 'lucide-react';
@@ -102,7 +103,7 @@ export default function LawyerTeam() {
                         </div>
                         <span className={`rounded-full px-3 py-1 text-xs font-bold ${active ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-100 text-slate-700'}`}>{active ? `Balíček pro ${f.seats} do ${dateCz(f.until)}` : 'Bez aktivního balíčku'}</span>
                     </div>
-                    {!isOwner && <button type="button" onClick={() => { if (window.confirm('Opravdu opustit kancelář? Ztratíte přístup z jejího balíčku. Vaše data zůstanou vaše.')) void run(() => supabase.rpc('leave_firm')); }} disabled={busy} className={`${ghostBtn} mt-4`}>Opustit kancelář</button>}
+                    {!isOwner && <button type="button" onClick={async () => { if (await confirmAction('Opravdu opustit kancelář? Ztratíte přístup z jejího balíčku. Vaše data zůstanou vaše.')) void run(() => supabase.rpc('leave_firm')); }} disabled={busy} className={`${ghostBtn} mt-4`}>Opustit kancelář</button>}
                 </section>
             )}
 
@@ -138,7 +139,7 @@ export default function LawyerTeam() {
                                 <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
                                     <span><strong className="text-slate-900">{m.name || m.email || 'Člen'}</strong><span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${m.role === 'owner' ? 'bg-indigo-100 text-indigo-900' : m.role === 'admin' ? 'bg-sky-100 text-sky-900' : 'bg-slate-100 text-slate-600'}`}>{ROLE_LABELS[m.role]}</span><span className="block text-xs text-slate-500">{m.email} · {VERIFICATION_LABEL[m.verification]}{m.until ? ` · přístup do ${dateCz(m.until)}` : ''}</span></span>
                                     {isOwner && m.role !== 'owner' && <select value={m.role} onChange={(e) => void run(() => supabase.rpc('set_member_role', { p_user: m.user_id, p_role: e.target.value }), 'Role byla změněna.')} aria-label={`Role: ${m.name || m.email}`} className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"><option value="member">Člen</option><option value="admin">Správce</option></select>}
-                                    {m.user_id !== userId && m.role !== 'owner' && (isOwner || m.role === 'member') && <button type="button" onClick={() => { if (window.confirm('Odebrat člena? Ztratí přístup z balíčku kanceláře, jeho data zůstanou jeho.')) void run(() => supabase.rpc('remove_firm_member', { p_user: m.user_id })); }} disabled={busy} aria-label={`Odebrat ${m.name || m.email}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button>}
+                                    {m.user_id !== userId && m.role !== 'owner' && (isOwner || m.role === 'member') && <button type="button" onClick={async () => { if (await confirmAction('Odebrat člena? Ztratí přístup z balíčku kanceláře, jeho data zůstanou jeho.')) void run(() => supabase.rpc('remove_firm_member', { p_user: m.user_id })); }} disabled={busy} aria-label={`Odebrat ${m.name || m.email}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button>}
                                 </li>
                             ))}
                         </ul>

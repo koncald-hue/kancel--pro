@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import { KeyRound, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -31,6 +32,7 @@ export default function PortalAccessCard({ linkId, factor, codeEmail, suggestedE
         finally { setBusy(false); }
     }
     async function logoutAll() {
+        if (!(await confirmAction('Odhlásit klienta ze všech zařízení? Při dalším otevření odkazu se bude muset znovu ověřit kódem z e-mailu.', { danger: false, confirmLabel: 'Odhlásit' }))) return;
         setBusy(true);
         const { error } = await supabase.from('portal_sessions').delete().eq('link_id', linkId);
         setBusy(false);

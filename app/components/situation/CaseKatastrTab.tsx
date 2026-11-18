@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -38,7 +39,7 @@ export default function CaseKatastrTab({ item, userId, fail }: TabProps) {
     }
 
     async function remove(id: string) {
-        if (!window.confirm('Odebrat nemovitost ze spisu?')) return;
+        if (!await confirmAction('Odebrat nemovitost ze spisu?')) return;
         const { error } = await supabase.from('case_properties').delete().eq('id', id);
         if (error) fail(new Error(error.message)); else setSaved((s) => (s ?? []).filter((x) => x.id !== id));
     }

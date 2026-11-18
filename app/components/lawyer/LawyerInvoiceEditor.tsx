@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -97,7 +98,7 @@ export default function LawyerInvoiceEditor() {
 
     async function issue() {
         if (!inv) return;
-        if (!window.confirm(inv.kind === 'zaloha' ? 'Vystavit zálohovou fakturu? Dostane číslo z řady záloh a nepůjde upravit. Výkazy se neoznačí jako vyfakturované.' : 'Vystavit vyúčtování? Po vystavení už nepůjde upravit a použité výkazy se označí jako vyfakturované.')) return;
+        if (!await confirmAction(inv.kind === 'zaloha' ? 'Vystavit zálohovou fakturu? Dostane číslo z řady záloh a nepůjde upravit. Výkazy se neoznačí jako vyfakturované.' : 'Vystavit vyúčtování? Po vystavení už nepůjde upravit a použité výkazy se označí jako vyfakturované.')) return;
         if (!(await save())) return;
         setBusy(true);
         const { data, error: err } = await supabase.rpc('issue_invoice', { p_id: inv.id });
@@ -116,7 +117,7 @@ export default function LawyerInvoiceEditor() {
     }
 
     async function remove() {
-        if (!inv || !window.confirm('Smazat koncept vyúčtování?')) return;
+        if (!inv || !await confirmAction('Smazat koncept vyúčtování?')) return;
         const { error: err } = await supabase.from('invoices').delete().eq('id', inv.id);
         if (err) setError(err.message); else router.push('/kancelar/faktury');
     }
@@ -194,7 +195,7 @@ export default function LawyerInvoiceEditor() {
                 <div className="flex flex-wrap gap-2">
                     <button type="button" onClick={() => void print()} className={ghostBtn}><Printer size={15} /> Tisk / PDF</button>
                     {!draft && <button type="button" onClick={() => void duplicate()} className={ghostBtn}><Copy size={15} /> Kopírovat jako nový</button>}
-                    {inv.status === 'issued' && <><button type="button" onClick={() => void markPaidFully()} className={primaryBtn}><Check size={15} /> Označit jako zaplacené</button><button type="button" onClick={() => { if (window.confirm('Stornovat vyúčtování?')) void setStatus('cancelled'); }} className={`${ghostBtn} text-rose-700`}>Storno</button></>}
+                    {inv.status === 'issued' && <><button type="button" onClick={() => void markPaidFully()} className={primaryBtn}><Check size={15} /> Označit jako zaplacené</button><button type="button" onClick={async () => { if (await confirmAction('Stornovat vyúčtování?')) void setStatus('cancelled'); }} className={`${ghostBtn} text-rose-700`}>Storno</button></>}
                     {inv.status === 'paid' && <button type="button" onClick={() => void setStatus('issued')} className={ghostBtn}>Vrátit na nezaplacené</button>}
                     {draft && <><button type="button" onClick={() => void remove()} className={`${ghostBtn} text-rose-700`}><Trash2 size={15} /> Smazat</button><button type="button" onClick={() => void save()} disabled={busy} className={ghostBtn}><Save size={15} /> Uložit</button><button type="button" onClick={() => void issue()} disabled={busy} className={primaryBtn}><Send size={15} /> Vystavit</button></>}
                 </div>

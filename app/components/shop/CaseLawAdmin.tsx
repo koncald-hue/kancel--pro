@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check, Trash2 } from 'lucide-react';
@@ -50,7 +51,7 @@ export default function CaseLawAdmin() {
     }
 
     async function remove(id: string) {
-        if (!window.confirm('Smazat rozhodnutí z knihovny?')) return;
+        if (!await confirmAction('Smazat rozhodnutí z knihovny?')) return;
         const { error } = await supabase.from('case_law').delete().eq('id', id);
         if (error) setMessage(error.message); else setReload((n) => n + 1);
     }

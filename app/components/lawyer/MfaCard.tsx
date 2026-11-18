@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import { ShieldCheck, Smartphone, Trash2 } from 'lucide-react';
 import { enrollTotp, listTotp, removeTotp, verifyCode, type TotpFactor } from '@/lib/mfa';
@@ -30,7 +31,7 @@ export default function MfaCard() {
         finally { setBusy(false); }
     }
     async function remove(f: TotpFactor) {
-        if ((factors ?? []).length === 1 && !window.confirm('Vypnout dvoufázové přihlášení? Účet pak bude chráněný jen heslem.')) return;
+        if ((factors ?? []).length === 1 && !await confirmAction('Vypnout dvoufázové přihlášení? Účet pak bude chráněný jen heslem.')) return;
         setBusy(true); setError('');
         try { await removeTotp(f.id); await load(); setNote('Zařízení odebráno.'); }
         catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se odebrat.'); }

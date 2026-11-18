@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Bell, Briefcase, Building2, Check, Download, FileText, KeyRound, Landmark, Loader2, Lock, MessageSquare, Paperclip, Send, Trash2, User } from 'lucide-react';
@@ -185,7 +186,7 @@ export default function LawyerChat() {
     }
 
     async function removeMessage(m: Msg) {
-        if (!window.confirm('Smazat zprávu? Zmizí oběma.')) return;
+        if (!await confirmAction('Smazat zprávu? Zmizí oběma.')) return;
         const { data: fs } = await supabase.from('firm_message_files').select('path').eq('message_id', m.id);
         if (fs?.length) await supabase.storage.from('firm-shares').remove(fs.map((f) => f.path as string));
         const { error: err } = await supabase.from('firm_messages').delete().eq('id', m.id);
@@ -223,7 +224,7 @@ export default function LawyerChat() {
             {keys.error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{keys.error}</p>}
             {!master ? <div className="mt-4"><E2eeBox access={access} onChanged={() => window.location.reload()} /></div>
                 : !myRow ? <button type="button" onClick={() => void keys.enable()} disabled={keys.busy} className={`${primaryBtn} mt-4`}>{keys.busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />} Zapnout šifrovaný chat</button>
-                : keys.keyProblem ? <KeyRecovery busy={keys.busy} onRecover={keys.recover} onNew={() => { if (window.confirm('Vytvořit nové klíče? Dříve přijaté zprávy pak nepůjde otevřít.')) void keys.enable(true); }} />
+                : keys.keyProblem ? <KeyRecovery busy={keys.busy} onRecover={keys.recover} onNew={async () => { if (await confirmAction('Vytvořit nové klíče? Dříve přijaté zprávy pak nepůjde otevřít.')) void keys.enable(true); }} />
                 : <p className="mt-4 text-sm text-slate-500" role="status">Odemykám…</p>}
         </section>
     );

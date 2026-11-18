@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useState } from 'react';
 import { CalendarSync, Check, KeyRound, Link2, Loader2, RefreshCw } from 'lucide-react';
 import { useMasterKey } from '@/lib/useE2ee';
@@ -31,7 +32,7 @@ export default function GoogleCalendarCard() {
     async function sync() { if (!master) return; setBusy('sync'); setError(''); try { const r = await syncGoogle(master, userId); setMsg(r.message); await load(); } catch (e) { setError(e instanceof Error ? e.message : 'Synchronizace se nepodařila.'); } setBusy(''); }
     async function options(detail: Detail, internal: boolean) { try { await saveGoogleOptions(detail, internal); await load(); await sync(); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se uložit.'); } }
     async function off(del: boolean) {
-        if (!master || !window.confirm(del ? 'Odpojit Google Kalendář a smazat kalendář „Kancelář – lhůty“ ve vašem Googlu?' : 'Odpojit Google Kalendář? Kalendář v Googlu zůstane, jen se přestane aktualizovat.')) return;
+        if (!master || !await confirmAction(del ? 'Odpojit Google Kalendář a smazat kalendář „Kancelář – lhůty“ ve vašem Googlu?' : 'Odpojit Google Kalendář? Kalendář v Googlu zůstane, jen se přestane aktualizovat.')) return;
         setBusy('off'); try { await disconnectGoogle(master, del); setConn(null); setMsg('Odpojeno.'); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy('');
     }
 

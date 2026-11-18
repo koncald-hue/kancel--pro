@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useState } from 'react';
 import { BadgeCheck, Loader2, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -40,7 +41,7 @@ export default function CaseIdentityTab({ item, userId, fail }: TabProps) {
         if (missing.length) { fail(new Error(`Před potvrzením doplňte: ${missing.join(', ')}.`)); return; }
         await patch(r.id, { status: 'confirmed', identified_at: today(), next_review: r.next_review || suggestReview(r.risk) });
     }
-    async function remove(id: string) { if (!window.confirm('Smazat tuto identifikaci?')) return; await supabase.from('client_identifications').delete().eq('id', id); await load(); }
+    async function remove(id: string) { if (!await confirmAction('Smazat tuto identifikaci?')) return; await supabase.from('client_identifications').delete().eq('id', id); await load(); }
 
     if (!enabled) return <p className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-slate-700">Identifikace zatím není v databázi zapnutá (chybí spuštění souboru podpisy-a-aml.sql).</p>;
     return (

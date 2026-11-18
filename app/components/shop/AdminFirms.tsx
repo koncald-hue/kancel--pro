@@ -1,8 +1,10 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import { Building2, Ban } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { opsLog } from '@/lib/opsLog';
 import type { LawyerAccess } from '@/lib/lawyer';
 import { ghostBtn } from '../situation/caseUi';
 
@@ -29,8 +31,9 @@ export default function AdminFirms({ rows, onDone }: { rows: LawyerAccess[]; onD
     }, [reload]);
 
     async function cancel(f: Firm) {
-        if (!window.confirm(`Zrušit balíček kanceláře „${f.name}“ okamžitě?\n\nVšem členům (${counts[f.id] ?? 0}) hned skončí přístup. Svá data uvidí jen ke čtení, všechny funkce se jim zamknou, dokud nezaplatí.`)) return;
+        if (!await confirmAction(`Zrušit balíček kanceláře „${f.name}“ okamžitě?\n\nVšem členům (${counts[f.id] ?? 0}) hned skončí přístup. Svá data uvidí jen ke čtení, všechny funkce se jim zamknou, dokud nezaplatí.`, { title: 'Zrušit balíček kanceláře?', confirmLabel: 'Zrušit balíček', typeToConfirm: 'ZRUŠIT' })) return;
         const { data, error } = await supabase.rpc('staff_cancel_firm_package', { p_firm: f.id });
+        if (!error) await opsLog('zrušení balíčku kanceláře', f.name);
         setMsg(error ? (/function|schema cache/i.test(error.message) ? 'Chybí spuštění souboru zruseni-a-zamek.sql.' : error.message) : String(data));
         setReload((n) => n + 1); onDone();
     }

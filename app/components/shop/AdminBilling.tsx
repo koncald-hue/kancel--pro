@@ -1,9 +1,11 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import { FIRM_SIZES } from '@/lib/firm';
 import { PLANS } from '@/lib/plans';
 import { supabase } from '@/lib/supabase';
+import { opsLog } from '@/lib/opsLog';
 import { czk, type LawyerAccess } from '@/lib/lawyer';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 
@@ -38,8 +40,9 @@ export default function AdminBilling({ rows }: { rows: LawyerAccess[] }) {
     }
 
     async function markPaid(o: Order) {
-        if (!window.confirm('Potvrdit, že platba dorazila? Advokátovi se tím aktivuje přístup na zaplacené období.')) return;
+        if (!await confirmAction('Potvrdit, že platba dorazila? Advokátovi se tím aktivuje přístup na zaplacené období.')) return;
         const { data, error } = await supabase.rpc('staff_mark_order_paid', { p_order: o.id });
+        if (!error) await opsLog('potvrzení platby', who(o.user_id), `${o.plan} ${o.price_czk} Kč`);
         setMsg(error ? error.message : data === 'refund_due' ? 'Advokát nemá vyplněný profil, platbu je potřeba vrátit.' : 'Platba potvrzena, přístup aktivován.');
         setReload((n) => n + 1);
     }

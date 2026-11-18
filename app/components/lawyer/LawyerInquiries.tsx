@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, Check, Clock3, Copy, Eye, FileText, Link2, ListTodo, Lock, Mail, MessageSquare, Paperclip, Phone, X } from 'lucide-react';
@@ -139,6 +140,7 @@ export default function LawyerInquiries() {
     }
 
     async function decline(q: Inquiry) {
+        if (!(await confirmAction(`Odmítnout poptávku od ${q.name}? Přiložené dokumenty se smažou a nepůjdou obnovit.`, { title: 'Odmítnout poptávku?', confirmLabel: 'Odmítnout', danger: true }))) return;
         const { error: err } = await supabase.from('lawyer_inquiries').update({ status: 'declined' }).eq('id', q.id);
         if (err) { setError(err.message); return; }
         // Odmítnuté poptávce se přílohy mažou, aby u kanceláře nezůstávaly cizí dokumenty

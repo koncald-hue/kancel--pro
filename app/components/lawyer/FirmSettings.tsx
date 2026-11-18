@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Building2, Check, Lock } from 'lucide-react';
@@ -35,7 +36,7 @@ export default function FirmSettings() {
     }
 
     async function leave() {
-        if (!window.confirm('Opravdu opustit kancelář? Ztratíte přístup z jejího balíčku. Vaše data zůstanou vaše.')) return;
+        if (!await confirmAction('Opravdu opustit kancelář? Ztratíte přístup z jejího balíčku. Vaše data zůstanou vaše.')) return;
         const { error } = await supabase.rpc('leave_firm');
         if (error) setMsg(error.message); else window.location.reload();
     }

@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { hasBlocker, hasWarning, pdfSigned, preflight, type Check as PreCheck } from '@/lib/preflight';
 import { assignActivity, logActivity } from '@/lib/activity';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -254,7 +255,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
                 </div>
                 <button type="button" onClick={() => void refresh(tab)} disabled={busy} className={ghostBtn}>{busy ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />} Načíst znovu</button>
                 <button type="button" onClick={() => setCompose(true)} className={`${primaryBtn} ml-auto`}><Mail size={15} /> Napsat zprávu</button>
-                <button type="button" onClick={() => { if (window.confirm(`Odpojit schránku „${account.label}“? Smažou se uložené přihlašovací údaje (zprávy ve schránce zůstanou).`)) void onRemove(); }} aria-label="Odpojit schránku" className="rounded-lg p-2 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={15} /></button>
+                <button type="button" onClick={async () => { if (await confirmAction(`Odpojit schránku „${account.label}“? Smažou se uložené přihlašovací údaje (zprávy ve schránce zůstanou).`)) void onRemove(); }} aria-label="Odpojit schránku" className="rounded-lg p-2 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={15} /></button>
             </div>
             {tab === 'received' && records && records.filter((r) => ['5', '6', '7'].includes(r.status) && !checked.has(r.id)).length > 0 && <p role="status" className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-950"><AlertTriangle size={15} aria-hidden="true" /> {records.filter((r) => ['5', '6', '7'].includes(r.status) && !checked.has(r.id)).length} přijatých zpráv zatím nemá zkontrolované lhůty. Otevřete zprávu a projděte její lhůty.</p>}
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}

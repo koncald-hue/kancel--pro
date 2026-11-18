@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -122,7 +123,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
     };
 
     const remove = async () => {
-        if (!window.confirm(`Opravdu smazat celý spis „${item.title}“ včetně souborů? Nelze vrátit zpět.`)) return;
+        if (!await confirmAction(`Opravdu smazat celý spis „${item.title}“ včetně souborů? Nelze vrátit zpět.`, { title: 'Smazat celý spis?', confirmLabel: 'Smazat spis', typeToConfirm: 'SMAZAT' })) return;
         try {
             await removeCaseStorage(bundle.files);
             await deleteCase(item.id);

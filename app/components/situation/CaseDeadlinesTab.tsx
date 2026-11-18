@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import { BadgeCheck, Calculator, CalendarPlus, Check, Pencil, Plus, Trash2 } from 'lucide-react';
 import { buildIcs, collectDeadlines, deleteRow, downloadTextFile, insertRow, updateRow, type CaseDeadline } from '@/lib/caseFile';
@@ -62,6 +63,7 @@ export default function CaseDeadlinesTab({ item, bundle, userId, patchItem, setB
     }
 
     async function remove(id: string) {
+        if (!(await confirmAction('Smazat lhůtu nebo úkol? Pokud lhůta stále běží, přestane ji Kancelář hlídat.'))) return;
         try { await deleteRow('case_deadlines', id); setBundle((b) => ({ ...b, deadlines: b.deadlines.filter((d) => d.id !== id) })); scheduleGoogleSync(); } catch (err) { fail(err); }
     }
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import WorkSuggestions from './WorkSuggestions';
 import { useEffect, useState } from 'react';
 import { Download, Pause, Play, Trash2 } from 'lucide-react';
@@ -84,6 +85,7 @@ export default function LawyerTimesheet() {
     }
 
     async function remove(e: TimeEntry) {
+        if (!(await confirmAction(`Smazat záznam práce „${e.description || 'bez popisu'}“ (${e.minutes} min)?`))) return;
         const { error: err } = await supabase.from('time_entries').delete().eq('id', e.id);
         if (err) setError(err.message); else setEntries((list) => list.filter((x) => x.id !== e.id));
     }

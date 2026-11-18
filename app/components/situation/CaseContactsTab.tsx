@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useState } from 'react';
 import { Mail, Phone, Radar, Trash2 } from 'lucide-react';
 import { deleteRow, insertRow, updateRow, type CaseContact } from '@/lib/caseFile';
@@ -37,6 +38,7 @@ export default function CaseContactsTab({ item, bundle, userId, lawyer, setBundl
     }
 
     async function remove(id: string) {
+        if (!(await confirmAction('Smazat kontakt ze spisu?'))) return;
         try { await deleteRow('case_contacts', id); setBundle((b) => ({ ...b, contacts: b.contacts.filter((c) => c.id !== id) })); } catch (err) { fail(err); }
     }
 

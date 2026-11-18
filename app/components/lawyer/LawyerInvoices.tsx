@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import RecurringInvoices from './RecurringInvoices';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -74,7 +75,7 @@ export default function LawyerInvoices() {
     async function togglePaid(r: Receivable) {
         setError('');
         if (r.state === 'paid') {
-            if (!window.confirm('Vrátit vyúčtování mezi nezaplacené? Zapsané platby se smažou.')) return;
+            if (!await confirmAction('Vrátit vyúčtování mezi nezaplacené? Zapsané platby se smažou.')) return;
             const del = await supabase.from('invoice_payments').delete().eq('invoice_id', r.id);
             if (del.error) { setError(del.error.message); return; }
             const up = await supabase.from('invoices').update({ status: 'issued', paid_at: null }).eq('id', r.id);

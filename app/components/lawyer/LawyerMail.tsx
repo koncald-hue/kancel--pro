@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Download, FolderInput, Loader2, Mail, MailPlus, Paperclip, RefreshCw, Reply, Search, Trash2 } from 'lucide-react';
@@ -167,7 +168,7 @@ export default function LawyerMail() {
         setBusy('');
     }
     async function removeAccount() {
-        if (!account || !window.confirm(`Odpojit schránku ${account.email}? Zprávy zůstanou u poskytovatele, smaže se jen propojení.`)) return;
+        if (!account || !await confirmAction(`Odpojit schránku ${account.email}? Zprávy zůstanou u poskytovatele, smaže se jen propojení.`)) return;
         await supabase.from('mail_accounts').delete().eq('id', account.id); setSel(null); setMessages([]); await reloadAccounts();
     }
 

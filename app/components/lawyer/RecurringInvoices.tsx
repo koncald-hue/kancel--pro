@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useState } from 'react';
 import { CalendarClock, Loader2, Pause, Play, Plus, Repeat, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -65,7 +66,7 @@ export default function RecurringInvoices({ onCreated }: { onCreated: () => void
         await load(); await onCreated();
     }
     const toggle = async (r: Row) => { await supabase.from('invoice_recurring').update({ active: !r.active }).eq('id', r.id); await load(); };
-    const remove = async (r: Row) => { if (window.confirm(`Smazat opakovanou fakturaci „${r.title}“? Už vystavené faktury zůstanou.`)) { await supabase.from('invoice_recurring').delete().eq('id', r.id); await load(); } };
+    const remove = async (r: Row) => { if (await confirmAction(`Smazat opakovanou fakturaci „${r.title}“? Už vystavené faktury zůstanou.`)) { await supabase.from('invoice_recurring').delete().eq('id', r.id); await load(); } };
     const total = (r: Row) => r.lines.reduce((s, l) => s + l.qty * l.unit_price, 0);
 
     return (

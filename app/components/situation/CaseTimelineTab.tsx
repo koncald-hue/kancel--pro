@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useState } from 'react';
 import { Pin, PinOff, StickyNote, Trash2, Flag } from 'lucide-react';
 import { deleteRow, insertRow, updateRow, type CaseEntry } from '@/lib/caseFile';
@@ -32,6 +33,7 @@ export default function CaseTimelineTab({ item, bundle, userId, setBundle, fail 
     }
 
     async function remove(id: string) {
+        if (!(await confirmAction('Smazat záznam z chronologie?'))) return;
         try { await deleteRow('case_entries', id); setBundle((b) => ({ ...b, entries: b.entries.filter((e) => e.id !== id) })); } catch (err) { fail(err); }
     }
 

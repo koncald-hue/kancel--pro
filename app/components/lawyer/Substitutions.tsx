@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Trash2, UserRoundCheck } from 'lucide-react';
@@ -41,7 +42,7 @@ export default function Substitutions({ colleagues }: { colleagues: { user_id: s
         if (error) { setErr(/check/i.test(error.message) ? 'Zastupování může trvat nejvýš rok a zástupce musí být někdo jiný.' : error.message); return; }
         setForm({ substitute_id: '', from_on: today, to_on: today, note: '' }); await load();
     }
-    const remove = async (s: Sub) => { if (window.confirm('Zrušit zastupování?')) { await supabase.from('substitutions').delete().eq('id', s.id); await load(); } };
+    const remove = async (s: Sub) => { if (await confirmAction('Zrušit zastupování?')) { await supabase.from('substitutions').delete().eq('id', s.id); await load(); } };
 
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Zastupování">

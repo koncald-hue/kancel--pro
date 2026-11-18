@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useState } from 'react';
 import { CalendarDays, Check, Copy, Loader2, RefreshCw, Smartphone, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -30,7 +31,7 @@ export default function CalendarFeedCard() {
     const webcal = url.replace(/^https?:/, 'webcal:');
 
     async function create() { setBusy('c'); setError(''); const { error: e } = await supabase.from('calendar_feeds').upsert({ user_id: userId, token: generateToken(), include_titles: feed?.include_titles ?? false }); if (e) setError(e.message); await load(); setBusy(''); }
-    async function remove() { if (!window.confirm('Zrušit odkaz? Kalendář v telefonu přestane fungovat.')) return; setBusy('d'); await supabase.from('calendar_feeds').delete().eq('user_id', userId); await load(); setBusy(''); }
+    async function remove() { if (!await confirmAction('Zrušit odkaz? Kalendář v telefonu přestane fungovat.')) return; setBusy('d'); await supabase.from('calendar_feeds').delete().eq('user_id', userId); await load(); setBusy(''); }
     async function titles(v: boolean) { if (!feed) return; setFeed({ ...feed, include_titles: v }); await supabase.from('calendar_feeds').update({ include_titles: v }).eq('user_id', userId); }
     async function copy() { await navigator.clipboard?.writeText(url); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }
 

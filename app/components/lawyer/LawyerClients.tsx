@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import ConflictPanel from './ConflictPanel';
@@ -77,7 +78,7 @@ export default function LawyerClients() {
     }
 
     async function remove(c: LawyerClient) {
-        if (!window.confirm(`Smazat klienta „${c.name}“? Věci zůstanou zachované.`)) return;
+        if (!await confirmAction(`Smazat klienta „${c.name}“? Věci zůstanou zachované.`)) return;
         const { error: err } = await supabase.from('lawyer_clients').delete().eq('id', c.id);
         if (err) setError(err.message); else setClients((list) => list.filter((x) => x.id !== c.id));
     }

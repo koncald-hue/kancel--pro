@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useState } from 'react';
 import { Inbox, MailCheck, Send, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -20,7 +21,7 @@ export default function CaseDataMessagesTab({ item, bundle, fail }: TabProps) {
     useEffect(() => { let alive = true; Promise.resolve().then(() => { if (alive) void load(); }); return () => { alive = false; }; }, [load]);
 
     async function remove(r: SavedMessage) {
-        if (!window.confirm('Odebrat záznam o zprávě z věci? Uložené přílohy zůstanou v souborech věci.')) return;
+        if (!await confirmAction('Odebrat záznam o zprávě z věci? Uložené přílohy zůstanou v souborech věci.')) return;
         const { error } = await supabase.from('case_data_messages').delete().eq('id', r.id);
         if (error) fail(new Error(error.message)); else setRows((l) => (l ?? []).filter((x) => x.id !== r.id));
     }

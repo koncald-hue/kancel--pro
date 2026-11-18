@@ -1,8 +1,10 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { opsLog } from '@/lib/opsLog';
 import { PLANS } from '@/lib/plans';
 import { czk } from '@/lib/lawyer';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
@@ -39,14 +41,16 @@ export default function AdminIsir() {
         setMsg(error ? error.message : 'Ceny příplatku uloženy.');
     }
     async function confirm(o: Order) {
-        if (!window.confirm('Potvrdit, že platba dorazila? Příplatek se aktivuje na zaplacené období.')) return;
+        if (!await confirmAction('Potvrdit, že platba dorazila? Příplatek se aktivuje na zaplacené období.')) return;
         const { data, error } = await supabase.rpc('staff_confirm_isir_order', { p_order: o.id });
+        if (!error) await opsLog('potvrzení platby (insolvence)', o.id, `${o.price_czk} Kč`);
         setMsg(error ? error.message : data === 'ok' ? 'Platba potvrzena, hlídání aktivováno.' : String(data));
         setReload((n) => n + 1);
     }
     async function grant(e: React.FormEvent) {
         e.preventDefault();
         const { data, error } = await supabase.rpc('staff_grant_isir', { p_email: email, p_months: Number(months) || 1 });
+        if (!error) await opsLog('přidělení hlídání insolvence', email, `${months} měs.`);
         setMsg(error ? error.message : String(data));
     }
 

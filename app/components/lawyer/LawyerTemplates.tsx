@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import { ListChecks, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -32,7 +33,7 @@ export default function LawyerTemplates() {
         if (err) { setError('Šablonu se nepodařilo uložit.'); return; }
         setEditing(null); await reload();
     }
-    async function remove(id: string) { await supabase.from('case_templates').delete().eq('id', id); await reload(); }
+    async function remove(id: string) { if (!(await confirmAction('Smazat šablonu úkolů? Úkoly, které už z ní vznikly ve věcech, zůstanou.'))) return; await supabase.from('case_templates').delete().eq('id', id); await reload(); }
     async function addStarters() {
         try { setList(await addStarterTemplates(userId)); } catch { setError('Vzorové šablony se nepodařilo přidat.'); }
     }

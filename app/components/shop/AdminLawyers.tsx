@@ -7,6 +7,8 @@ import { downloadTextFile } from '@/lib/caseFile';
 import { daysUntil } from '@/lib/cases';
 import { czk, type LawyerAccess } from '@/lib/lawyer';
 import { ghostBtn, inputCls } from '../situation/caseUi';
+import ContactActions from '../lawyer/ContactActions';
+import AdminNote from './AdminNote';
 
 type OrderRow = { user_id: string; status: 'pending' | 'paid' | 'cancelled' | 'refund_due'; price_czk: number; paid_at: string | null };
 type Filter = 'all' | 'verified' | 'pending' | 'active' | 'expiring' | 'expired' | 'refund';
@@ -106,12 +108,14 @@ export default function AdminLawyers({ rows, onSet }: { rows: LawyerAccess[]; on
                                     {open === r.user_id && (
                                         <tr className="bg-slate-50/60">
                                             <td colSpan={7} className="px-4 py-3 text-xs text-slate-700">
-                                                <p>Telefon: {r.phone || '–'} · Adresa: {r.office || '–'} · Web: {r.website || '–'} · Kontaktní e-mail: {r.contact_email || '–'}</p>
+                                                <p>Adresa: {r.office || '–'} · Web: {r.website || '–'}</p>
+                                                <p className="mt-1">Kontakt: <ContactActions email={r.contact_email || r.email} phone={r.phone} /></p>
                                                 <div className="mt-3 flex flex-wrap gap-2">
                                                     <button type="button" onClick={() => onSet(r, 'active', addMonths(1))} className={ghostBtn}>Ručně aktivovat 1 měsíc</button>
                                                     <button type="button" onClick={() => onSet(r, 'active', addMonths(12))} className={ghostBtn}>Ručně aktivovat 1 rok</button>
                                                     <button type="button" onClick={() => onSet(r, 'expired', null)} className={`${ghostBtn} text-rose-700`}>Zrušit přístup</button>
                                                 </div>
+                                                <AdminNote userId={r.user_id} />
                                             </td>
                                         </tr>
                                     )}

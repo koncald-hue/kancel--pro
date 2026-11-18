@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useRef, useState } from 'react';
 import { Download, File as FileIcon, FileImage, FileText, Folder, FolderPlus, Lock, Trash2, Upload } from 'lucide-react';
 import { DEFAULT_FOLDERS, deleteRow, formatSize, insertRow, openCaseFile, removeCaseFile, updateRow, uploadCaseFile, type CaseFolder } from '@/lib/caseFile';
@@ -118,7 +119,7 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
             try {
                 // Stejný název ve stejné složce: nabídne se nová verze (starší zůstane k dispozici)
                 const same = findSameName(bundle.files, target, file.name);
-                const asVersion = !!same && window.confirm(`Soubor „${file.name}“ už ve spisu je. Nahrát jako novou verzi (starší verze zůstane k dispozici)?\n\nOK = nová verze, Zrušit = samostatný soubor.`);
+                const asVersion = !!same && await confirmAction(`Soubor „${file.name}“ už ve spisu je. Nahrát ho jako novou verzi? Starší verze zůstane k dispozici.`, { title: 'Soubor se stejným názvem', confirmLabel: 'Jako novou verzi', cancelLabel: 'Jako samostatný soubor', danger: false });
                 const saved = await uploadCaseFile(userId, item.id, target, file, asVersion && same ? nextVersionInfo(bundle.files, same) : {});
                 setBundle((b) => ({ ...b, files: [saved, ...b.files] }));
                 // Text se zpřístupní hned po nahrání; u skenů a obrázků běží rozpoznání samo na pozadí (jeden soubor po druhém)
@@ -144,7 +145,7 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
     }
 
     async function removeFolder(folder: CaseFolder) {
-        if (!window.confirm(`Smazat složku „${folder.name}“? Soubory v ní zůstanou ve spisu bez složky.`)) return;
+        if (!await confirmAction(`Smazat složku „${folder.name}“? Soubory v ní zůstanou ve spisu bez složky.`)) return;
         try {
             await deleteRow('case_folders', folder.id);
             setBundle((b) => ({ ...b, folders: b.folders.filter((f) => f.id !== folder.id), files: b.files.map((f) => (f.folder_id === folder.id ? { ...f, folder_id: null } : f)) }));
@@ -161,7 +162,7 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
     }
 
     async function remove(file: (typeof bundle.files)[number]) {
-        if (!window.confirm(`Smazat soubor „${file.name}“ ze spisu?`)) return;
+        if (!await confirmAction(`Smazat soubor „${file.name}“ ze spisu?`)) return;
         try { await removeCaseFile(file); setBundle((b) => ({ ...b, files: b.files.filter((f) => f.id !== file.id) })); } catch (err) { fail(err); }
     }
 

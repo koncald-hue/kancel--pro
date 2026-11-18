@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Gift } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { opsLog } from '@/lib/opsLog';
 import { FIRM_SIZES } from '@/lib/firm';
 import { inputCls, primaryBtn } from '../situation/caseUi';
 
@@ -18,6 +19,7 @@ export default function AdminGrantPackage({ onDone }: { onDone: () => void }) {
         e.preventDefault();
         setBusy(true); setMsg('');
         const { data, error } = await supabase.rpc('staff_grant_firm_package', { p_email: email, p_seats: seats, p_months: Number(months) || 1 });
+        if (!error) await opsLog('přidělení balíčku kanceláře', email, `${seats} míst, ${months} měs.`);
         setBusy(false);
         setMsg(error ? (/function|schema cache/i.test(error.message) ? 'Chybí spuštění souboru testovaci-balicek.sql.' : error.message) : String(data));
         if (!error) onDone();

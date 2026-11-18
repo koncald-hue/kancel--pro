@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { isCamt, parseCamt053 } from '@/lib/camt';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -207,7 +208,7 @@ function BankPanel({ accounts, master, userId, vat, busy, run, setMsg }: { accou
                             <span className="min-w-0 flex-1"><strong className="text-slate-900">{a.label}</strong><span className="block text-xs text-slate-500">{a.provider === 'fio' ? 'Fio API' : 'nahrané výpisy'}{a.iban ? ` · ${a.iban}` : ''} · {a.last_sync_at ? `staženo ${new Date(a.last_sync_at).toLocaleString('cs-CZ')}` : 'zatím nestaženo'}</span>{a.last_error && <span className="block text-xs font-semibold text-rose-800">{a.last_error}</span>}</span>
                             <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-600"><input type="checkbox" checked={a.auto_match} onChange={(e) => void run(`am-${a.id}`, async () => { await supabase.from('bank_accounts').update({ auto_match: e.target.checked }).eq('id', a.id); })} className="h-3.5 w-3.5 accent-indigo-800" /> párovat automaticky</label>
                             {a.provider === 'fio' && <button type="button" disabled={!master || busy === `sync-${a.id}`} onClick={() => master && void run(`sync-${a.id}`, async () => { setMsg(summaryText(await syncFio(master, userId, a, vat))); })} className={ghostBtn}>{busy === `sync-${a.id}` ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Stáhnout nyní</button>}
-                            <button type="button" onClick={() => { if (window.confirm(`Odpojit účet „${a.label}“? Stažené pohyby se smažou, zapsané platby u vyúčtování zůstanou.`)) void run(`del-${a.id}`, async () => { await supabase.from('bank_accounts').delete().eq('id', a.id); }); }} aria-label="Odpojit účet" className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={14} /></button>
+                            <button type="button" onClick={async () => { if (await confirmAction(`Odpojit účet „${a.label}“? Stažené pohyby se smažou, zapsané platby u vyúčtování zůstanou.`)) void run(`del-${a.id}`, async () => { await supabase.from('bank_accounts').delete().eq('id', a.id); }); }} aria-label="Odpojit účet" className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={14} /></button>
                         </li>
                     ))}
                 </ul>

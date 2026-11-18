@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useState } from 'react';
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -56,7 +57,7 @@ export default function LawyerPriceList() {
     }
 
     async function remove(p: PriceItem) {
-        if (!window.confirm(`Smazat položku „${p.name}“? Už vystavená vyúčtování zůstanou beze změny.`)) return;
+        if (!await confirmAction(`Smazat položku „${p.name}“? Už vystavená vyúčtování zůstanou beze změny.`)) return;
         const { error: err } = await supabase.from('price_items').delete().eq('id', p.id);
         if (err) setError(err.message); else setItems((l) => (l ?? []).filter((x) => x.id !== p.id));
     }

@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, BookOpenCheck, Check, ExternalLink, FileText, KeyRound, Link2, Loader2, Lock, NotebookText, Quote, Scale, Search, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -105,7 +106,7 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
         } catch (e) { fail(e); }
     }
     async function removeSaved(id: string) {
-        if (!window.confirm('Smazat uloženou rešerši?')) return;
+        if (!await confirmAction('Smazat uloženou rešerši?')) return;
         const { error: err } = await supabase.from('case_research').delete().eq('id', id);
         if (err) fail(new Error(err.message)); else setSaved((l) => (l ?? []).filter((x) => x.id !== id));
     }
@@ -137,7 +138,7 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
                 </section>
             ) : (
                 <>
-                    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950"><Check size={15} aria-hidden="true" /><span className="flex-1">Právní databáze DirectCase je připojená.</span><button type="button" onClick={() => { if (window.confirm('Odpojit DirectCase?')) void disconnect().then(() => setConn(null)); }} className={ghostBtn}>Odpojit</button></div>
+                    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950"><Check size={15} aria-hidden="true" /><span className="flex-1">Právní databáze DirectCase je připojená.</span><button type="button" onClick={async () => { if (await confirmAction('Odpojit DirectCase?')) void disconnect().then(() => setConn(null)); }} className={ghostBtn}>Odpojit</button></div>
 
                     <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5" aria-label="Nová rešerše">
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Scale size={18} className="text-indigo-700" /> Nová rešerše</h2>

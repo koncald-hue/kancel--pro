@@ -1,5 +1,6 @@
 'use client';
 
+import { confirmAction } from '@/lib/confirm';
 import { useEffect, useRef, useState } from 'react';
 import { BadgeCheck, Check, Copy, Eye, EyeOff, Link2, Lock, Mail, Paperclip, Phone, Plus, Send, Trash2, UserCheck, UserRound } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -150,7 +151,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
     }
 
     async function setAllVisible(visible: boolean) {
-        if (visible && !window.confirm('Zpřístupnit klientovi všechny dokumenty, události a termíny ve spisu? Zkontrolujte, že tam nejsou interní poznámky.')) return;
+        if (visible && !await confirmAction('Zpřístupnit klientovi všechny dokumenty, události a termíny ve spisu? Zkontrolujte, že tam nejsou interní poznámky.')) return;
         for (const f of bundle.files.filter((x) => x.source !== 'client' && !x.enc && Boolean(x.client_visible) !== visible)) await setVisible('case_files', f.id, visible);
         for (const e of bundle.entries.filter((x) => x.kind === 'event' && Boolean(x.client_visible) !== visible)) await setVisible('case_entries', e.id, visible);
         for (const d of bundle.deadlines.filter((x) => Boolean(x.client_visible) !== visible)) await setVisible('case_deadlines', d.id, visible);
@@ -226,7 +227,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                                 <p className="text-xs text-slate-500">Otevřen {link.opens}× {link.last_opened_at && <>· naposledy {shortDate(new Date(link.last_opened_at))}</>} · platí {link.expires_at ? `do ${shortDate(new Date(link.expires_at))}` : 'bez omezení'}</p>
                                 <div className="flex flex-wrap gap-3 text-xs">
                                     <button type="button" onClick={() => void patchLink({ expires_at: plusDays(90) })} className="font-semibold text-indigo-900 underline cursor-pointer">Prodloužit o 90 dní</button>
-                                    <button type="button" onClick={() => { if (window.confirm('Zrušit odkaz? Klient přestane mít přístup.')) void patchLink({ revoked: true }); }} className="font-semibold text-rose-700 underline cursor-pointer">Zrušit odkaz</button>
+                                    <button type="button" onClick={async () => { if (await confirmAction('Zrušit odkaz? Klient přestane mít přístup.')) void patchLink({ revoked: true }); }} className="font-semibold text-rose-700 underline cursor-pointer">Zrušit odkaz</button>
                                 </div>
                             </div>
                         )}
@@ -250,7 +251,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                                     </p>
                                     {link.client_address && <p className="mt-1 text-xs text-slate-600">{link.client_address}</p>}
                                     <p className="mt-2 text-xs text-slate-500">Údaje vyplnil {link.onboarded_at && shortDate(new Date(link.onboarded_at))} a potvrdil souhlas se zpracováním{link.consent_at ? ` (${shortDate(new Date(link.consent_at))})` : ''}. Údaje o klientovi nejsou end-to-end šifrované (potřebuje je adresář klientů).</p>
-                                    {!link.client_verified_at && <button type="button" onClick={() => { if (window.confirm('Potvrdit, že jste totožnost klienta ověřili (např. při osobním setkání nebo hovoru)? Klient uvidí potvrzení na své stránce.')) void patchLink({ client_verified_at: new Date().toISOString() }); }} className={`${ghostBtn} mt-3`}><BadgeCheck size={15} /> Potvrdit totožnost klienta</button>}
+                                    {!link.client_verified_at && <button type="button" onClick={async () => { if (await confirmAction('Potvrdit, že jste totožnost klienta ověřili (např. při osobním setkání nebo hovoru)? Klient uvidí potvrzení na své stránce.')) void patchLink({ client_verified_at: new Date().toISOString() }); }} className={`${ghostBtn} mt-3`}><BadgeCheck size={15} /> Potvrdit totožnost klienta</button>}
                                 </div>
                             ) : (
                                 <p className="mt-1 text-sm text-slate-600">Klient zatím nevyplnil své údaje. Po otevření odkazu se nejdřív představí a potvrdí souhlas, teprve potom uvidí věc.</p>
