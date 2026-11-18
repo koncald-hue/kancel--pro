@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Check, KeyRound, Lock, LockOpen, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { masterFromRecovery, setMaster, setupMaster, unlockMaster } from '@/lib/e2ee';
+import { masterFromRecovery, recoveryCodeOf, setMaster, setupMaster, unlockMaster } from '@/lib/e2ee';
 import { useMasterKey } from '@/lib/useE2ee';
 import type { LawyerAccess } from '@/lib/lawyer';
 import { ghostBtn, inputCls, primaryBtn } from './caseUi';
@@ -20,6 +20,10 @@ export default function E2eeBox({ access, onChanged }: { access: LawyerAccess | 
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
+    // Nový klíč se aktivuje až po potvrzení záchranného kódu: jinak by stránka, která E2eeBox ukazuje jen u zamčeného
+    // šifrování, kód skryla dřív, než si ho uživatel stihl uložit
+    const [pending, setPending] = useState<CryptoKey | null>(null);
+    const [reveal, setReveal] = useState(false);
 
     async function setup() {
         if (pass.length < 10) { setError('Šifrovací heslo musí mít aspoň 10 znaků.'); return; }
@@ -29,7 +33,7 @@ export default function E2eeBox({ access, onChanged }: { access: LawyerAccess | 
             const out = await setupMaster(pass);
             const { error: err } = await supabase.rpc('set_e2ee_keys', { p_salt: out.salt, p_wrapped: out.wrapped });
             if (err) throw new Error('Uložení klíčů se nepovedlo. Zkontrolujte, že je spuštěné SQL verification-e2ee.sql.');
-            await setMaster(out.master);
+            setPending(out.master);
             setShown(out.recovery);
             setPass(''); setPass2('');
         } catch (e) { setError(e instanceof Error ? e.message : 'Něco se nepovedlo.'); } finally { setBusy(false); }
@@ -52,15 +56,31 @@ export default function E2eeBox({ access, onChanged }: { access: LawyerAccess | 
                 <p className="mt-1 text-sm text-slate-700">Kdybyste zapomněli heslo, jen tímto kódem obnovíte přístup k šifrovaným zprávám a souborům. <strong>Nikdo jiný vám ho nevydá.</strong> Bez hesla i kódu jsou data nenávratně ztracená.</p>
                 <p className="mt-3 break-all rounded-xl bg-white p-3 font-mono text-sm text-slate-900 select-all">{shown}</p>
                 <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-sm text-slate-800"><input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-800" /> Kód jsem si uložil na bezpečné místo (správce hesel nebo vytištěný papír).</label>
-                <button type="button" disabled={!saved} onClick={() => { setShown(null); setSaved(false); onChanged(); }} className={`${primaryBtn} mt-3`}><Check size={16} /> Pokračovat</button>
+                <button type="button" disabled={!saved} onClick={() => { void (async () => { if (pending) await setMaster(pending); setPending(null); setShown(null); setSaved(false); onChanged(); })(); }} className={`${primaryBtn} mt-3`}><Check size={16} /> Pokračovat</button>
             </section>
         );
     }
 
+    async function showRecovery() {
+        setBusy(true); setError('');
+        try { await unlockMaster(pass, access!.e2ee_salt!, access!.e2ee_wrapped_master!); setShown(await recoveryCodeOf(master!)); setPass(''); setReveal(false); }
+        catch { setError('Heslo nesedí.'); } finally { setBusy(false); }
+    }
+
     if (master) {
         return (
-            <p className="flex flex-wrap items-center gap-2 text-sm text-emerald-800"><LockOpen size={15} aria-hidden="true" /> Šifrování je odemčené na tomto zařízení.
-                <button type="button" onClick={() => void setMaster(null)} className="text-xs font-semibold text-slate-600 underline cursor-pointer">Zamknout</button></p>
+            <div className="space-y-2">
+                <p className="flex flex-wrap items-center gap-2 text-sm text-emerald-800"><LockOpen size={15} aria-hidden="true" /> Šifrování je odemčené na tomto zařízení.
+                    <button type="button" onClick={() => void setMaster(null)} className="text-xs font-semibold text-slate-600 underline cursor-pointer">Zamknout</button>
+                    {configured && <button type="button" onClick={() => { setReveal((v) => !v); setError(''); }} className="text-xs font-semibold text-slate-600 underline cursor-pointer">Zobrazit záchranný kód</button>}</p>
+                {reveal && (
+                    <form onSubmit={(e) => { e.preventDefault(); void showRecovery(); }} className="flex flex-wrap items-center gap-2">
+                        <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Pro jistotu zadejte šifrovací heslo" autoComplete="current-password" className={`${inputCls} max-w-xs`} aria-label="Šifrovací heslo" />
+                        <button type="submit" disabled={busy || !pass} className={ghostBtn}><KeyRound size={14} /> Zobrazit</button>
+                    </form>
+                )}
+                {error && <p role="alert" className="text-sm text-rose-800">{error}</p>}
+            </div>
         );
     }
 

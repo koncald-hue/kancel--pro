@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel, Eye, ListChecks, FileSpreadsheet } from 'lucide-react';
+import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel, Eye, ListChecks, FileSpreadsheet, ChevronDown, Puzzle, Plus } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
+import QuickAdd from './QuickAdd';
 import E2eeLockNotice from './E2eeLockNotice';
 import DataBoxLauncher from './DataBoxLauncher';
 import { useAuth } from '../site/AuthContext';
@@ -15,16 +16,19 @@ import { ROLE_LABELS } from '@/lib/firm';
 export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'sablony' | 'epr' | 'stret' | 'uschovy' | 'doplnky' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
 
-// Nástroje jsou seskupené podle toho, k čemu slouží
-const GROUPS: { title: string; items: Item[] }[] = [
+// Menu: nahoře to, co advokát potřebuje každý den; odborné nástroje a nastavení jsou ve sbalitelných skupinách
+type Group = { title: string; items: Item[]; fold?: string };
+const GROUPS: Group[] = [
     // „Dnes“ je pracovní plocha (adresa /kancelar zůstává)
     { title: '', items: [['prehled', '/kancelar', 'Dnes', LayoutDashboard]] },
-    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['email', '/kancelar/email', 'E-mail', Mail]] },
-    // Odborné a méně časté nástroje
-    { title: 'Nástroje', items: [['epr', '/kancelar/epr', 'Platební rozkazy', FileSpreadsheet], ['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['stret', '/kancelar/stret-zajmu', 'Střet zájmů', Scale], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel]] },
+    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['email', '/kancelar/email', 'E-mail', Mail], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library]] },
     { title: 'Peníze', items: [['penize', '/kancelar/penize', 'Peníze', Wallet]] },
-    { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound], ['sablony', '/kancelar/sablony', 'Šablony úkolů', ListChecks], ['import', '/kancelar/import', 'Import dat', FileUp], ['doplnky', '/kancelar/doplnky', 'Word a Outlook', Mail]] },
+    { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound]] },
+    // Odborné a méně časté nástroje
+    { title: 'Nástroje', fold: 'tools', items: [['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['stret', '/kancelar/stret-zajmu', 'Střet zájmů', Scale], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel], ['epr', '/kancelar/epr', 'Platební rozkazy', FileSpreadsheet], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert]] },
+    { title: 'Přizpůsobit', fold: 'setup', items: [['sablony', '/kancelar/sablony', 'Šablony úkolů', ListChecks], ['import', '/kancelar/import', 'Import dat', FileUp], ['doplnky', '/kancelar/doplnky', 'Word a Outlook', Puzzle]] },
 ];
+const FOLD_KEY = 'kancelar-menu-otevreno';
 const SETTINGS: Item = ['nastaveni', '/kancelar/nastaveni', 'Nastavení', Settings];
 const ALL: Item[] = [...GROUPS.flatMap((g) => g.items), SETTINGS];
 
@@ -33,12 +37,14 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
     const { account, isStaff, logout } = useAuth();
     const [lockNote, setLockNote] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
+    const [addOpen, setAddOpen] = useState(false);
     // Zkratka Ctrl/Cmd+K nebo lomítko (mimo psaní do pole) otevře hledání
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             const t = e.target as HTMLElement | null;
             const typing = !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
             if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && !typing && !e.metaKey && !e.ctrlKey)) { e.preventDefault(); setSearchOpen(true); }
+            else if (e.key.toLowerCase() === 'n' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey && !document.querySelector('[role=dialog]')) { e.preventDefault(); setAddOpen(true); }
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
@@ -51,6 +57,10 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
         return () => { cancelled = true; };
     }, []);
     const [open, setOpen] = useState(false);
+    // Sbalené skupiny menu: pamatuje si je prohlížeč; skupina s otevřenou stránkou je rozbalená vždy
+    const [unfolded, setUnfolded] = useState<string[]>([]);
+    useEffect(() => { try { const v = JSON.parse(localStorage.getItem(FOLD_KEY) ?? '[]'); if (Array.isArray(v)) { const t = window.setTimeout(() => setUnfolded(v.filter((x) => typeof x === 'string')), 0); return () => window.clearTimeout(t); } } catch { /* nic */ } }, []);
+    const toggleFold = (id: string) => setUnfolded((list) => { const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id]; try { localStorage.setItem(FOLD_KEY, JSON.stringify(next)); } catch { /* nic */ } return next; });
     // Počet nepřečtených zpráv v chatu kanceláře (když chat ještě není zapnutý, odznak se nezobrazí)
     const [unread, setUnread] = useState(0);
     useEffect(() => {
@@ -91,12 +101,17 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                 </div>
             </div>
             <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="Části kanceláře">
-                {GROUPS.map((g) => (
-                    <div key={g.title || 'main'}>
-                        {g.title && <p className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>}
-                        <div className="space-y-0.5">{g.items.map((item) => link(item))}</div>
-                    </div>
-                ))}
+                {GROUPS.map((g) => {
+                    const shown = !g.fold || unfolded.includes(g.fold) || g.items.some(([id]) => id === navActive);
+                    return (
+                        <div key={g.title || 'main'}>
+                            {g.title && (g.fold
+                                ? <button type="button" onClick={() => toggleFold(g.fold!)} aria-expanded={shown} className="flex w-full items-center gap-1 px-3 pb-1.5 text-left text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 hover:text-slate-600 cursor-pointer">{g.title}<span className="ml-auto font-semibold normal-case tracking-normal">{shown ? '' : `${g.items.length}`}</span><ChevronDown size={13} aria-hidden="true" className={`transition ${shown ? 'rotate-180' : ''}`} /></button>
+                                : <p className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>)}
+                            {shown && <div className="space-y-0.5">{g.items.map((item) => link(item))}</div>}
+                        </div>
+                    );
+                })}
             </nav>
             <div className="space-y-0.5 border-t border-slate-100 px-3 py-3">
                 {link(SETTINGS)}
@@ -114,6 +129,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
                 <button type="button" onClick={() => setOpen(true)} aria-label="Otevřít nabídku" aria-expanded={open} className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100"><Menu size={20} /></button>
                 <p className="flex-1 truncate text-sm font-bold text-slate-900">{current?.[2] ?? 'Kancelář'}</p>
+                {!locked && <button type="button" onClick={() => setAddOpen(true)} aria-label="Rychle zapsat" className="rounded-lg bg-indigo-600 p-1.5 text-white hover:bg-indigo-700"><Plus size={18} /></button>}
                 <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat" className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100"><Search size={18} /></button>
                 {unread > 0 && <Link href="/kancelar/chat" className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] font-bold text-white">{unread}</Link>}
             </div>
@@ -128,13 +144,17 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             )}
 
             <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+            {!locked && <QuickAdd open={addOpen} onClose={() => setAddOpen(false)} />}
             {!locked && <DataBoxLauncher />}
 
             <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
                 <div className="mx-auto max-w-6xl">
                     <div className="mb-6 hidden items-center justify-between gap-4 lg:flex">
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900">{current?.[2]}</h1>
+                        <div className="flex items-center gap-2">
+                        {!locked && <button type="button" onClick={() => setAddOpen(true)} title="Klávesa N" className="flex items-center gap-1.5 rounded-xl bg-indigo-700 px-3.5 py-2 text-sm font-bold text-white shadow-xs hover:bg-indigo-800 cursor-pointer"><Plus size={15} aria-hidden="true" /> Zapsat</button>}
                         <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat v celé kanceláři" className="flex w-72 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-left text-sm text-slate-500 shadow-xs hover:border-indigo-300 cursor-pointer"><Search size={15} aria-hidden="true" /><span className="flex-1">Hledat…</span><kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-500">Ctrl/⌘ K</kbd></button>
+                        </div>
                     </div>
                     <E2eeLockNotice />
                     {locked && (

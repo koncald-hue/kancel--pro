@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, FileText, Gavel, Lightbulb, Plus, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ClipboardCheck, FileText, Gavel, Lightbulb, Plus, X } from 'lucide-react';
 import { OFFENSES_DATABASE } from '@/app/data/offenses';
 import { getOffenseUrl } from '@/lib/slug';
 import { PUBLIC_SITE } from '@/lib/publicSite';
@@ -11,6 +11,7 @@ import { daysUntil } from '@/lib/cases';
 import { inputCls, ghostBtn, type TabProps } from './caseUi';
 import AresPicker from '../lawyer/AresPicker';
 import Link from 'next/link';
+import { caseCheck } from '@/lib/caseCheck';
 import { isCourt, parseFileNumber } from '@/lib/infosoud';
 import { upsertAresClient } from '@/lib/aresClients';
 
@@ -85,6 +86,18 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
                 {lawyer && <Link href={`/kancelar/knihovna?case=${item.id}`} className="mt-3 mr-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><FileText size={13} aria-hidden="true" /> Vyplnit vzor dokumentu z údajů věci</Link>}
                 {parseFileNumber(item.reference ?? '') && isCourt(item.authority ?? '') && <Link href="/kancelar/infosoud" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><Gavel size={13} aria-hidden="true" /> Zjistit průběh řízení v InfoSoudu</Link>}
             </section>}
+
+            {lawyer && (() => {
+                const checks = caseCheck({ item, files: bundle.files, deadlines: bundle.deadlines, contacts: bundle.contacts, today: new Date().toISOString().slice(0, 10) });
+                const todo = checks.filter((c) => c.level !== 'ok');
+                const where: Record<string, string> = { prehled: 'Přehled', soubory: 'Dokumenty → Soubory', lhuty: 'Průběh → Lhůty', kontakty: 'Průběh → Kontakty' };
+                return (
+                    <details className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5" open={todo.some((c) => c.level === 'error')}>
+                        <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-900"><ClipboardCheck size={16} className="text-indigo-700" aria-hidden="true" /> Kontrola věci před podáním nebo jednáním <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold ${todo.length ? (todo.some((c) => c.level === 'error') ? 'bg-rose-100 text-rose-900' : 'bg-amber-100 text-amber-900') : 'bg-emerald-100 text-emerald-900'}`}>{todo.length ? `${todo.length} k vyřešení` : 'vše v pořádku'}</span></summary>
+                        <ul className="mt-3 space-y-1.5">{checks.map((c) => <li key={c.id} className={`flex items-start gap-2 text-sm ${c.level === 'error' ? 'font-semibold text-rose-800' : c.level === 'warn' ? 'text-amber-900' : 'text-slate-600'}`}>{c.level === 'ok' ? <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" /> : <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />}<span>{c.text}{c.tab && where[c.tab] ? <span className="font-normal text-slate-500"> ({where[c.tab]})</span> : null}</span></li>)}</ul>
+                    </details>
+                );
+            })()}
 
             {item.summary && (
                 <section>

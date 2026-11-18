@@ -19,15 +19,17 @@ export function nameTokens(name: string): string[] {
 export const normalizeName = (name: string) => nameTokens(name).sort().join(' ');
 
 // Odliší tvary jmen: „Jan Novák“ a „Novák Jan“ jsou stejné; „Nováková“ a „Novák“ jen podobné
-const stem = (t: string) => (t.length > 5 ? t.slice(0, -1) : t);
+// Kmen slova bez typických pádových koncovek (Dvořákovi → dvorak, Nováková → novak): nejvýš tři znaky, nejméně čtyři zbydou
+export const stem = (t: string) => (t.length > 5 ? t.slice(0, Math.max(4, t.length - 3)) : t);
+// Dvě slova jsou stejná osoba v jiném pádě, když jedno začíná kmenem druhého
+const sameWord = (a: string, b: string) => a === b || (a.length >= 4 && b.length >= 4 && (a.startsWith(stem(b)) || b.startsWith(stem(a))));
 
 function nameScore(a: string, b: string): { score: number; why: 'jmeno' | 'podobne' } | null {
     const ta = nameTokens(a), tb = nameTokens(b);
     if (!ta.length || !tb.length) return null;
     if (ta.slice().sort().join(' ') === tb.slice().sort().join(' ')) return { score: 100, why: 'jmeno' };
-    const sa = ta.map(stem), sb = tb.map(stem);
-    const [small, big] = sa.length <= sb.length ? [sa, sb] : [sb, sa];
-    const common = small.filter((t) => big.includes(t)).length;
+    const [small, big] = ta.length <= tb.length ? [ta, tb] : [tb, ta];
+    const common = small.filter((t) => big.some((u) => sameWord(t, u))).length;
     // Jediné slovo (třeba jen příjmení) je málo na jistotu, proto nejvýš „podobné“
     if (small.length >= 2 && common === small.length) return { score: 80, why: 'podobne' };
     if (common >= 2 && common / big.length >= 0.6) return { score: 65, why: 'podobne' };

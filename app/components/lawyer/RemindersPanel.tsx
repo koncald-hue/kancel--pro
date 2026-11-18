@@ -11,6 +11,7 @@ import { qrSvg, spayd } from '@/lib/qrPayment';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 import { MAILER_HINT, useMailer } from '@/lib/useMailer';
+import E2eeBox from '../situation/E2eeBox';
 
 const draftFor = (inv: Receivable, level: Level, history: Sent[], signature: string, account: string): Draft => {
     const last = [...history].sort((a, b) => b.sent_on.localeCompare(a.sent_on))[0];
@@ -67,7 +68,7 @@ export default function RemindersPanel({ invoices, userId, onChanged }: { invoic
                 <div className="mt-3 rounded-2xl border-2 border-rose-200 bg-rose-50/50 p-4">
                     <p className="text-sm font-bold text-slate-900">Připraveno {batchList.length} {batchList.length === 1 ? 'upomínka' : 'upomínek'} k odeslání</p>
                     <p className="mt-0.5 text-xs text-slate-600">Každou odešlete klientovi z vaší schránky se standardním textem příslušného stupně (včetně účtu a případného úroku). Nic se neodešle bez vašeho potvrzení. Text konkrétní upomínky můžete předtím upravit tlačítkem u faktury.</p>
-                    {mailer.status !== 'ready' && mailer.status !== 'loading' && <p role="alert" className="mt-2 text-xs text-amber-950">{MAILER_HINT[mailer.status]}</p>}
+                    {mailer.status === 'locked' ? <div className="mt-2"><E2eeBox access={access} onChanged={() => undefined} /></div> : mailer.status !== 'ready' && mailer.status !== 'loading' && <p role="alert" className="mt-2 text-xs text-amber-950">{MAILER_HINT[mailer.status]}</p>}
                     {mailer.status === 'ready' && (
                         <>
                             <ul className="mt-2 space-y-0.5 text-xs text-slate-700">{batchList.map((x) => <li key={x.inv.id}>{x.inv.number} · {x.inv.client_snapshot.name} → {x.inv.client_snapshot.email} · {LEVELS[x.next!.level].name.toLowerCase()}, {money(x.inv.outstanding, x.inv.currency)}</li>)}</ul>

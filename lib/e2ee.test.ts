@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { createAdminKeys, unlockAdminKey, wrapForAdmin, unwrapFromAdmin, decryptBytes, decryptText, encryptBytes, encryptText, fromRecoveryCode, generateKey, isEncrypted, masterFromRecovery, setupMaster, unlockMaster, unwrapKey, wrapKey, exportKey, importKey } from './e2ee';
+import { createAdminKeys, unlockAdminKey, wrapForAdmin, unwrapFromAdmin, decryptBytes, decryptText, encryptBytes, encryptText, fromRecoveryCode, generateKey, isEncrypted, masterFromRecovery, setupMaster, unlockMaster, unwrapKey, wrapKey, exportKey, importKey, recoveryCodeOf } from './e2ee';
 
 describe('end-to-end encryption', () => {
     it('round-trips text and bytes and never reveals plaintext', async () => {
@@ -33,6 +33,8 @@ describe('end-to-end encryption', () => {
         const recovered = await masterFromRecovery(setup.recovery);
         expect(await exportKey(recovered)).toBe(await exportKey(setup.master));
         expect(() => fromRecoveryCode('abc')).toThrow();
+        // Záchranný kód jde znovu zobrazit z odemčeného klíče a je stejný jako při nastavení
+        expect(await recoveryCodeOf(unlocked)).toBe(setup.recovery);
     });
 
     it('wraps a link key with the master key', async () => {

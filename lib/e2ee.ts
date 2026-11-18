@@ -81,6 +81,10 @@ export async function unlockMaster(passphrase: string, saltB64: string, wrappedB
     const raw = await decryptBytes(kek, fromB64u(wrappedB64)); // špatné heslo = chyba ověření
     return subtle().importKey('raw', toBuf(raw), 'AES-GCM', true, ['encrypt', 'decrypt']);
 }
+// Záchranný kód je surový hlavní klíč; z odemčeného klíče jde kdykoli znovu zobrazit
+export async function recoveryCodeOf(master: CryptoKey): Promise<string> {
+    return toRecoveryCode(new Uint8Array(await subtle().exportKey('raw', master)));
+}
 export async function masterFromRecovery(code: string): Promise<CryptoKey> {
     return subtle().importKey('raw', toBuf(fromRecoveryCode(code)), 'AES-GCM', true, ['encrypt', 'decrypt']);
 }

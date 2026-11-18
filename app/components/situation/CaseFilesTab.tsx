@@ -21,6 +21,17 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
     const limits = limitsFor(lawyer);
     const [folderId, setFolderId] = useState<string>('all');
     const [query, setQuery] = useState('');
+    // Hledání v textu dokumentů této věci (načtený text z nahraných souborů a OCR)
+    const [hits, setHits] = useState<{ file_id: string; snippet: string }[]>([]);
+    useEffect(() => {
+        const q = query.trim();
+        if (!lawyer || q.length < 3) { const t = window.setTimeout(() => setHits([]), 0); return () => window.clearTimeout(t); }
+        let a = true;
+        const t = window.setTimeout(() => {
+            supabase.rpc('search_file_text', { p_q: q }).then(({ data, error }) => { if (a) setHits(error ? [] : ((data ?? []) as { file_id: string; case_id: string; snippet: string }[]).filter((h) => h.case_id === item.id)); });
+        }, 350);
+        return () => { a = false; window.clearTimeout(t); };
+    }, [query, item.id, lawyer]);
     const [busy, setBusy] = useState(false);
     const [dragging, setDragging] = useState(false);
     const [newFolder, setNewFolder] = useState('');
@@ -198,7 +209,17 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
             {toOcr.length > 0 && <p className="flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">{toOcr.length} {toOcr.length === 1 ? 'soubor je sken nebo obrázek' : 'souborů jsou skeny nebo obrázky'} bez textu. <button type="button" onClick={() => void ocrAll()} disabled={indexing} className={ghostBtn}>{indexing ? 'Rozpoznávám…' : 'Rozpoznat text (OCR)'}</button><span className="text-xs text-amber-900">Běží ve vašem prohlížeči, soubor se nikam neposílá. Trvá řádově několik sekund na stranu a výsledek může obsahovat chyby.</span></p>}
             {ocrNote && <p role="status" className="rounded-xl bg-slate-50 p-3 text-xs text-slate-700">{ocrNote}</p>}
 
-            {bundle.files.length > 4 && <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Hledat v názvech souborů…" className={inputCls} aria-label="Hledat v souborech" />}
+            {bundle.files.length > 0 && <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={lawyer ? 'Hledat v názvech i v textu dokumentů…' : 'Hledat v názvech souborů…'} className={inputCls} aria-label="Hledat v souborech" />}
+            {hits.length > 0 && (
+                <section aria-label="Nalezeno v textu dokumentů" className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-indigo-900">Nalezeno v textu dokumentů ({hits.length})</p>
+                    <ul className="mt-2 space-y-2">{hits.map((h) => { const f = bundle.files.find((x) => x.id === h.file_id); if (!f) return null; return (
+                        <li key={h.file_id}><button type="button" onClick={() => void openFile(f, false)} className="w-full rounded-lg bg-white p-2.5 text-left hover:ring-1 hover:ring-indigo-300 cursor-pointer">
+                            <span className="block text-sm font-semibold text-slate-900">{shownName(f)}</span>
+                            <span className="block text-xs text-slate-600">{h.snippet.split(/<\/?b>/).map((part, i) => (i % 2 ? <mark key={i} className="bg-amber-100 text-slate-900">{part}</mark> : <span key={i}>{part}</span>))}</span>
+                        </button></li>); })}</ul>
+                </section>
+            )}
 
             {visible.length === 0 ? (
                 <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{bundle.files.length === 0 ? 'Zatím tu nejsou žádné soubory. Vložte třeba doručený dokument nebo fotku.' : 'V této složce nic není.'}</p>

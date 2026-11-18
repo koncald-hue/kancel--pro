@@ -10,6 +10,7 @@ import { BULK_PRESETS, MAX_BULK, cleanRecipients, render, unknownPlaceholders, t
 import { MAILER_HINT, useMailer } from '@/lib/useMailer';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
+import E2eeBox from '../situation/E2eeBox';
 
 type Client = { id: string; name: string; email: string };
 type Audience = 'all' | 'open' | 'overdue';
@@ -75,7 +76,7 @@ export default function LawyerBulkMail() {
             <section className={card}>
                 <h2 className="text-lg font-bold text-slate-900">Hromadný e-mail klientům</h2>
                 <p className="mt-1 text-sm leading-relaxed text-slate-600">Vyberte klienty, upravte text a zkontrolujte ho. Každý klient dostane vlastní e-mail z vaší schránky (nikdo nevidí adresy ostatních). Hodí se na provozní sdělení: změnu sazby, výzvu k doplnění podkladů, změnu adresy. Ne na obchodní nabídky (ty podléhají souhlasu podle zákona č. 480/2004 Sb.).</p>
-                {mailer.status !== 'ready' && <p role="alert" className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">{MAILER_HINT[mailer.status]}</p>}
+                {mailer.status === 'locked' ? <div className="mt-3"><E2eeBox access={access} onChanged={() => undefined} /></div> : mailer.status !== 'ready' && <p role="alert" className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">{MAILER_HINT[mailer.status]}</p>}
                 {mailer.status === 'ready' && <p className="mt-2 text-xs text-slate-500">Odesílá se z adresy {mailer.email}.</p>}
             </section>
 

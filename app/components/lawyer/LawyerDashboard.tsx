@@ -3,6 +3,7 @@
 import LegalNews from './LegalNews';
 import EveningSummary from './EveningSummary';
 import MonthGlance from './MonthGlance';
+import FirstSteps from './FirstSteps';
 import { RadarPanel } from './RadarEvents';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -80,6 +81,7 @@ export default function LawyerDashboard() {
 
     return (
         <div className="space-y-6">
+            <FirstSteps />
             <DayPanel deadlinesToday={upcoming.filter((u) => u.left === 0).length} />
             {/* Pracovní plocha: co je nové, co hoří, na koho se čeká a co je nevyúčtované */}
             <TodayBoard />
