@@ -22,10 +22,10 @@ async function call(path: string, params: Record<string, string>): Promise<Recor
 // Částka se Comgate posílá v haléřích.
 export const toMinor = (czk: number) => String(Math.round(czk * 100));
 
-export async function createPayment(cfg: ComgateConfig, o: { orderId: string; priceCzk: number; label: string; email: string }): Promise<{ transId: string; redirect: string } | null> {
+export async function createPayment(cfg: ComgateConfig, o: { orderId: string; priceCzk: number; label: string; email: string; initRecurring?: boolean }): Promise<{ transId: string; redirect: string } | null> {
     const r = await call('create', {
         merchant: cfg.merchant, secret: cfg.secret, test: String(cfg.test), price: toMinor(o.priceCzk), curr: 'CZK',
-        label: o.label.slice(0, 16), refId: o.orderId, email: o.email, country: 'CZ', lang: 'cs', method: 'ALL', prepareOnly: 'true', preauth: 'false',
+        label: o.label.slice(0, 16), refId: o.orderId, email: o.email, country: 'CZ', lang: 'cs', method: 'ALL', prepareOnly: 'true', preauth: 'false', ...(o.initRecurring ? { initRecurring: 'true' } : {}),
     });
     if (!r || r.code !== '0' || !r.transId || !r.redirect) return null;
     return { transId: r.transId, redirect: r.redirect };
@@ -43,4 +43,14 @@ export async function getStatus(cfg: ComgateConfig, transId: string): Promise<Co
 // Zaplacená objednávka se uplatní jen když stav je PAID, odkazuje na naši objednávku, sedí částka a měna a režim (test × ostrý).
 export function isPaidFor(cfg: ComgateConfig, st: ComgateStatus, orderId: string, priceCzk: number): boolean {
     return st.status === 'PAID' && st.refId === orderId && st.curr === 'CZK' && st.price === toMinor(priceCzk) && st.test === cfg.test;
+}
+
+// Další období z uložené první platby (zákazník při ní odsouhlasil opakované strhávání). Vrací transId nové platby.
+export async function chargeRecurring(cfg: ComgateConfig, o: { initTransId: string; orderId: string; priceCzk: number; label: string; email: string }): Promise<{ transId: string } | null> {
+    const r = await call('recurring', {
+        merchant: cfg.merchant, secret: cfg.secret, test: String(cfg.test), initRecurringId: o.initTransId, price: toMinor(o.priceCzk), curr: 'CZK',
+        label: o.label.slice(0, 16), refId: o.orderId, email: o.email,
+    });
+    if (!r || r.code !== '0' || !r.transId) return null;
+    return { transId: r.transId };
 }

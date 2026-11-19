@@ -26,10 +26,12 @@ export async function POST(req: Request) {
         return reply(true);
     }
     if (st.status !== 'PAID') return reply(true); // PENDING a další stavy: počká se na další oznámení
-    const { data: order } = await db.from('lawyer_orders').select('price_czk, status').eq('id', st.refId).maybeSingle();
+    const { data: order } = await db.from('lawyer_orders').select('user_id, price_czk, status, recurring_kind').eq('id', st.refId).maybeSingle();
     if (!order || !isPaidFor(cfg, st, st.refId, Number(order.price_czk))) { console.warn('[comgate] platba neodpovídá objednávce'); return reply(false, 400); }
     const { error } = await db.rpc('apply_lawyer_payment', { p_order: st.refId, p_ref: `comgate:${transId}` });
     if (error) { console.warn('[comgate] uplatnění selhalo:', error.message); return reply(false, 500); }
+    // První platba s opakováním: uloží se její číslo, ze kterého se strhávají další období
+    if (order.recurring_kind === 'init') await db.from('lawyer_recurring').update({ init_trans: transId, active: true, fails: 0, updated_at: new Date().toISOString() }).eq('user_id', order.user_id).eq('active', false);
     // Oznámení správci o nové platbě (jen poprvé; opakované oznámení od Comgate už e-mail nespustí)
     const to = process.env.ADMIN_NOTIFY_EMAIL?.trim();
     if (to && mailConfigured() && order.status !== 'paid') {

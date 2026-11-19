@@ -45,6 +45,16 @@ export default function LawyerSettings() {
     const [prices, setPrices] = useState<Prices | null>(null);
     const [orders, setOrders] = useState<{ id: string; plan: PlanId; price_czk: number; status: string; period_end: string | null }[]>([]);
     const [payMsg, setPayMsg] = useState('');
+    const [autoRenew, setAutoRenew] = useState(true);
+    const [renew, setRenew] = useState<{ plan: PlanId; active: boolean } | null>(null);
+    const loadRenew = async () => { const r = await supabase.from('lawyer_recurring').select('plan, active').maybeSingle(); if (!r.error) setRenew(r.data as typeof renew); };
+    useEffect(() => { void Promise.resolve(supabase.from('lawyer_recurring').select('plan, active').maybeSingle()).then((r) => { if (!r.error) setRenew(r.data as typeof renew); }); }, []);
+    async function stopRenew() {
+        const { data } = await supabase.auth.getSession();
+        const res = await fetch('/api/payments/recurring', { method: 'DELETE', headers: { Authorization: `Bearer ${data.session?.access_token ?? ''}` } }).catch(() => null);
+        setPayMsg(res?.ok ? 'Automatické obnovování je zrušené. Zaplacené období běží dál do konce a další se už nestrhne.' : 'Zrušení se nepodařilo, zkuste to prosím znovu.');
+        if (res?.ok) await loadRenew();
+    }
     const paymentUrl = process.env.NEXT_PUBLIC_LAWYER_PAYMENT_URL ?? '';
     useEffect(() => {
         let cancelled = false;
@@ -76,7 +86,7 @@ export default function LawyerSettings() {
         setPayMsg('');
         const { data, error } = await supabase.rpc('create_lawyer_order', { p_plan: plan });
         if (error) { setPayMsg(error.message); return; }
-        const pay = await startComgatePayment(String(data));
+        const pay = await startComgatePayment(String(data), autoRenew);
         if (pay.redirected) return;
         if (pay.error) { setPayMsg(pay.error); return; }
         if (paymentUrl) { window.open(`${paymentUrl}${paymentUrl.includes('?') ? '&' : '?'}order=${data}`, '_self'); return; }
@@ -169,6 +179,7 @@ export default function LawyerSettings() {
                     <p className="mt-3 text-sm text-slate-600">Ceny budou brzy zveřejněny.</p>
                 ) : (
                     <>
+                        <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm text-slate-800"><input type="checkbox" checked={autoRenew} onChange={(e) => setAutoRenew(e.target.checked)} className="mt-1" /><span>Automaticky obnovovat. Platba kartou se po každém období sama zopakuje ve stejné výši, dokud obnovování nezrušíte v Nastavení (kdykoli, bez udání důvodu).</span></label>
                         <div className="mt-3 flex flex-wrap gap-3">
                             {PLANS.filter((pl) => prices[pl.id] > 0).map((pl, i) => <button key={pl.id} type="button" onClick={() => void buy(pl.id)} disabled={!complete} className={i === 0 ? primaryBtn : ghostBtn}>{pl.name} · {czk(prices[pl.id])}</button>)}
                         </div>
@@ -182,8 +193,10 @@ export default function LawyerSettings() {
                 <h2 className="text-lg font-bold text-slate-900">Přístup</h2>
                 <p className="mt-2"><strong>{STATUS[access.status] ?? access.status}</strong>{access.until && <> do {new Date(`${access.until}T12:00:00`).toLocaleDateString('cs-CZ')}</>}</p>
                 <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-700">
-                    <strong className="block text-sm text-slate-900">Ukončení předplatného</strong>
-                    Předplatné se kupuje jednorázově na zvolené období a <strong>samo se neobnovuje</strong>. Z karty se nic automaticky nestrhává, takže ho není třeba rušit: po uplynutí období přístup jen skončí. Vaše data zůstanou zachována a po obnovení předplatného je opět uvidíte. Před skončením si je můžete kdykoli stáhnout na stránce <Link href="/kancelar/export" className="font-semibold text-indigo-900 underline">Export dat</Link>.
+                    <strong className="block text-sm text-slate-900">Automatické obnovování</strong>
+                    {renew?.active
+                        ? <>Zapnuto ({planName(renew.plan)}). Předplatné se v den skončení samo obnoví strhnutím z karty použité při první platbě, 3 dny předem vám pošleme upozornění. <button type="button" onClick={() => void stopRenew()} className="mt-2 block cursor-pointer rounded-lg border border-rose-300 bg-white px-3 py-1.5 font-semibold text-rose-800 hover:bg-rose-50">Zrušit automatické obnovování</button></>
+                        : <>Vypnuto. Po skončení období přístup skončí a data zůstanou zachována. Při další platbě můžete obnovování zapnout. Před skončením si data můžete stáhnout na stránce <Link href="/kancelar/export" className="font-semibold text-indigo-900 underline">Export dat</Link>.</>}
                 </div>
                 <p className="mt-2 text-xs text-slate-500">Prodloužení nebo změnu tarifu vám potvrdíme e-mailem na adrese {access.email || 'vašeho účtu'}.</p>
             </section>
