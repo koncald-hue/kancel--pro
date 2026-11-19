@@ -75,7 +75,7 @@ Právo srozumitelně: průvodce situací (AI), chytré hledání, přestupky a t
 
 ## 5. Databáze webu (Právo srozumitelně)
 
-Soubory ve složce `pravo-web/supabase/` se spouštějí ručně v Supabase webu. Nově: `ucetnictvi-provozovatele.sql` (účetnictví a záznam správce) a `ai-verejne-limity.sql` (denní strop veřejných AI funkcí; **bez něj se v produkci veřejné AI funkce vypnou**, protože bez stropu by šly zneužít), `nabidky-prace.sql`.
+Soubory ve složce `pravo-web/supabase/` se spouštějí ručně v Supabase webu. Nově: `obchod-souhlasy.sql` (uložení souhlasu s podmínkami a se zahájením plnění při nákupu, vyžaduje ho zánik práva na odstoupení u digitálního obsahu), `ucetnictvi-provozovatele.sql` (účetnictví a záznam správce) a `ai-verejne-limity.sql` (denní strop veřejných AI funkcí; **bez něj se v produkci veřejné AI funkce vypnou**, protože bez stropu by šly zneužít), `nabidky-prace.sql`.
 
 ## 6. Testy a kontroly
 
@@ -92,6 +92,13 @@ Soubory ve složce `pravo-web/supabase/` se spouštějí ručně v Supabase webu
 5. Nezávislý penetrační test.
 6. Kontrola účetních výstupů účetní (faktury provozovatele, import do Pohody/Money S3).
 7. Pilot se 3–5 advokáty.
+
+## 7a. Právní texty a údaje prodávajícího (web Právo srozumitelně)
+
+- Obchodní podmínky (`/obchodni-podminky`), informace o ochraně osobních údajů (`/ochrana-osobnich-udaju`) a poučení s formulářem pro odstoupení (`/odstoupeni-od-smlouvy`) jsou hotové jako návrh a **musí je před prodejem projít právník**.
+- Údaje prodávajícího (jméno, IČO, adresa, e-mail, plátce DPH) se vyplňují na jednom místě: `pravo-web/lib/seller.ts`. Dokud jsou prázdné, texty ukazují „[doplní provozovatel]“ a nákup nesmí být spuštěn.
+- Při nákupu placeného obsahu zákazník zaškrtne souhlas se začátkem plnění (§ 1837 písm. l) občanského zákoníku). Zákon vyžaduje také **potvrzení smlouvy a souhlasu v textové podobě** (§ 1824a), tedy e-mail po zaplacení. Ten zatím není napojený (chybí odesílání e-mailů na webu) a je podmínkou spuštění prodeje.
+- Údaje o trestných činech a přestupcích: trestní zákoník a zákon č. 361/2000 Sb. byly porovnány se zněním zákona a opraveny (viz seznam v poznámce o ověření); zbylé přestupky podle jiných zákonů ověřeny nejsou.
 
 ## 8. Známá omezení
 
