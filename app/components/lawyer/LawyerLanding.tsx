@@ -27,12 +27,12 @@ export default function LawyerLanding() {
                     <div>
                         <p className="text-sm font-semibold text-indigo-700">Pracovní prostor pro advokáty</p>
                         <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">Všechna vaše práce na jednom místě.</h1>
-                        <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">Spisy, lhůty, klienti a faktury. Nahrazuje Excel, složky v e-mailu a papírový kalendář.</p>
+                        <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">Kancelář hlídá lhůty, počítá odpracované hodiny, vystaví fakturu a pošle klientovi odkaz, přes který nahraje podklady a podepíše. Nahrazuje Excel, složky v e-mailu a papírový kalendář. Do prvního spisu jste za deset minut.</p>
                         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                             <StartButton />
                             <Link href="/funkce" className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-[15px] font-semibold text-slate-800 hover:bg-slate-50">Co všechno umí</Link>
                         </div>
-                        <p className="mt-4 text-sm text-slate-500">14 dní zdarma · bez platební karty · bez závazku</p>
+                        <p className="mt-4 text-sm text-slate-500">14 dní zdarma · bez platební karty · bez závazku · data šifrovaná, <Link href="/zabezpeceni" className="underline hover:text-slate-700">jak je chráníme</Link></p>
                     </div>
                     <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
                         <div className="lg:pr-24"><CaseMock /></div>

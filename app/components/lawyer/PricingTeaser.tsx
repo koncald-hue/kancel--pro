@@ -37,7 +37,7 @@ export default function PricingTeaser() {
                     })}
                 </div>
                 <ul className="mx-auto mt-8 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm text-slate-600">
-                    {['Všechny funkce ve všech plánech', 'Bez automatického strhávání', 'Balíčky pro kanceláře'].map((t) => <li key={t} className="flex items-center gap-2"><Check size={15} className="text-emerald-600" aria-hidden="true" />{t}</li>)}
+                    {['Všechny funkce ve všech plánech', 'Zrušíte kdykoli jedním tlačítkem', 'Balíčky pro kanceláře'].map((t) => <li key={t} className="flex items-center gap-2"><Check size={15} className="text-emerald-600" aria-hidden="true" />{t}</li>)}
                 </ul>
                 <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                     {account ? <Link href="/kancelar/nastaveni" className="inline-flex items-center justify-center rounded-lg bg-indigo-700 px-6 py-3 text-[15px] font-semibold text-white hover:bg-indigo-800">Otevřít předplatné</Link> : <button type="button" onClick={() => openLogin('register')} className="inline-flex items-center justify-center rounded-lg bg-indigo-700 px-6 py-3 text-[15px] font-semibold text-white hover:bg-indigo-800 cursor-pointer">Začít 14 dní zdarma</button>}

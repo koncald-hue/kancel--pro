@@ -73,7 +73,7 @@ export default function PricingPage() {
                                 <p className="mt-2 h-5 text-sm text-slate-500">{pm > 0 && plan.months > 1 ? `tedy ${czk(pm)} měsíčně` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>
                                 <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Ušetříte ${czk(save)}` : ' '}</p>
                                 <ul className="mt-5 flex-1 space-y-2 text-sm text-slate-700">
-                                    {['Všechny funkce', 'Neomezený počet věcí a klientů', mode === 'firm' ? `Až ${size} advokátů v ceně` : 'Zkušební období 14 dní zdarma', 'Bez automatického strhávání'].map((f) => <li key={f} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}
+                                    {['Všechny funkce', 'Neomezený počet věcí a klientů', mode === 'firm' ? `Až ${size} advokátů v ceně` : 'Zkušební období 14 dní zdarma', 'Zrušíte kdykoli jedním tlačítkem'].map((f) => <li key={f} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}
                                 </ul>
                                 {account
                                     ? <Link href={mode === 'firm' ? '/kancelar/tym' : '/kancelar/nastaveni'} className={`mt-7 inline-flex justify-center rounded-xl px-4 py-3 text-sm font-bold ${featured ? 'bg-indigo-700 text-white hover:bg-indigo-800' : 'border border-slate-300 text-slate-800 hover:bg-slate-50'}`}>{mode === 'firm' ? 'Otevřít tým' : 'Otevřít předplatné'}</Link>
