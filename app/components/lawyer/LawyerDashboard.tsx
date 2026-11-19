@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CalendarClock, Clock3, FolderOpen, Plus, ShieldAlert, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import AttentionAlerts from './AttentionAlerts';
 import { collectDeadlines, loadAllDeadlines, type CaseDeadline } from '@/lib/caseFile';
 import { daysUntil, loadCases, type LegalCase } from '@/lib/cases';
 import { czk, entryAmount, formatMinutes, type TimeEntry } from '@/lib/lawyer';
@@ -88,6 +89,7 @@ export default function LawyerDashboard() {
             <TeamTasksCard />
             <DayPanel deadlinesToday={upcoming.filter((u) => u.left === 0).length} />
             {/* Pracovní plocha: co je nové, co hoří, na koho se čeká a co je nevyúčtované */}
+            <AttentionAlerts />
             <TodayBoard />
             <EveningSummary />
             <RadarPanel />

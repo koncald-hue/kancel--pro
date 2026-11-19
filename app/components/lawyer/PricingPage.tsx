@@ -20,7 +20,7 @@ const STEPS: [string, string][] = [['Vyzkoušíte 14 dní zdarma', 'Zaregistruje
 
 const FAQ: [string, string][] = [
     ['Musím při registraci zadat kartu?', 'Ne. Zkušební období trvá 14 dní a nechce po vás žádné platební údaje.'],
-    ['Obnovuje se předplatné samo?', 'Ne. Platíte předem na zvolené období a nic se automaticky nestrhává. Před koncem si můžete koupit další období.'],
+    ['Obnovuje se předplatné samo?', 'Jen když si to při platbě zvolíte. Tři dny předem vám pošleme upozornění a obnovování můžete kdykoli zrušit v Nastavení. Bez něj platíte předem na zvolené období a nic se nestrhává.'],
     ['Co se stane s daty, když přestanu platit?', 'Funkce se zamknou, ale vaše data zůstanou uložená k nahlížení a stažení. Po obnovení předplatného se zase odemknou.'],
     ['Liší se plány funkcemi?', 'Ne. Měsíční, půlroční i roční plán mají úplně stejné funkce. Delší období je jen levnější za měsíc.'],
     ['Je cena s DPH?', 'Zda a v jaké výši je DPH, uvidíte u objednávky a na daňovém dokladu, který po zaplacení dostanete.'],
@@ -112,7 +112,7 @@ export default function PricingPage() {
                         {STEPS.map(([t, d], i) => <li key={t}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-700 text-sm font-bold text-white">{i + 1}</span><h3 className="mt-4 font-bold text-slate-900">{t}</h3><p className="mt-1.5 text-sm leading-relaxed text-slate-600">{d}</p></li>)}
                     </ol>
                     <ul className="mt-12 grid gap-4 sm:grid-cols-3">
-                        {([[BadgeCheck, 'Žádné skryté poplatky', 'Cena je za předplatné, nic dalšího za základní funkce.'], [CalendarClock, 'Žádná automatická obnova', 'Platíte jen to, co si koupíte, a nic se nestrhává.'], [Lock, 'Vaše data zůstávají vaše', 'Po skončení je máte měsíce k nahlížení a stažení.']] as const).map(([Icon, t, d]) => <li key={t} className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-5"><Icon size={20} className="mt-0.5 shrink-0 text-indigo-700" aria-hidden="true" /><span><span className="block font-semibold text-slate-900">{t}</span><span className="mt-1 block text-sm text-slate-600">{d}</span></span></li>)}
+                        {([[BadgeCheck, 'Žádné skryté poplatky', 'Cena je za předplatné, nic dalšího za základní funkce.'], [CalendarClock, 'Obnova pod vaší kontrolou', 'Automatické obnovování je volitelné, předem vás upozorníme a zrušíte ho kdykoli.'], [Lock, 'Vaše data zůstávají vaše', 'Po skončení je máte měsíce k nahlížení a stažení.']] as const).map(([Icon, t, d]) => <li key={t} className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-5"><Icon size={20} className="mt-0.5 shrink-0 text-indigo-700" aria-hidden="true" /><span><span className="block font-semibold text-slate-900">{t}</span><span className="mt-1 block text-sm text-slate-600">{d}</span></span></li>)}
                     </ul>
                 </div>
             </section>

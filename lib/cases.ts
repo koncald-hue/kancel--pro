@@ -38,6 +38,10 @@ export type LegalCase = {
     budget_czk?: number | null;
     budget_warn_pct?: number;
     parent_id?: string | null;
+    // Druh případu, štítky a odpovědná osoba (migrace 20261119_28)
+    case_type?: string;
+    labels?: string[];
+    responsible?: string;
     created_at: string;
 };
 
@@ -66,7 +70,7 @@ export async function createCase(userId: string, input: NewCase): Promise<LegalC
     return data as LegalCase;
 }
 
-export async function updateCase(id: string, patch: Partial<Pick<LegalCase, 'steps' | 'event_date' | 'note' | 'status' | 'title' | 'summary' | 'situation' | 'pinned' | 'client_name' | 'client_email' | 'client_phone' | 'reference' | 'authority' | 'budget_czk' | 'budget_warn_pct' | 'parent_id'>>) {
+export async function updateCase(id: string, patch: Partial<Pick<LegalCase, 'steps' | 'event_date' | 'note' | 'status' | 'title' | 'summary' | 'situation' | 'pinned' | 'client_name' | 'client_email' | 'client_phone' | 'reference' | 'authority' | 'budget_czk' | 'budget_warn_pct' | 'parent_id' | 'case_type' | 'labels' | 'responsible'>>) {
     const { error } = await supabase.from('cases').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id);
     if (error) throw new Error(error.message);
 }

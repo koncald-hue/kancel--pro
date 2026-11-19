@@ -12,6 +12,7 @@ import { BLANK_CASE, createCase, daysUntil, loadCases, type LegalCase } from '@/
 import { deadlineText, deadlineTone } from './CaseDeadlinesTab';
 import { inputCls, primaryBtn } from './caseUi';
 import SavedViews from './SavedViews';
+import { CASE_TYPES } from '@/lib/caseMeta';
 import { DEFAULT_FILTER, matchesFilter, type CaseFilter } from '@/lib/savedViews';
 import { limitsFor, useLawyerTier } from '@/lib/tiers';
 import UpgradeNote from './UpgradeNote';
@@ -163,6 +164,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                         <select value={fx.client} onChange={(e) => setFx((f) => ({ ...f, client: e.target.value }))} aria-label="Klient" className={`${inputCls} w-auto py-1 text-xs`}><option value="">Všichni klienti</option>{clientNames.map((n) => <option key={n} value={n}>{n}</option>)}</select>
                         <select value={fx.within} onChange={(e) => setFx((f) => ({ ...f, within: Number(e.target.value) as CaseFilter['within'] }))} aria-label="Nejbližší lhůta" className={`${inputCls} w-auto py-1 text-xs`}><option value={0}>Lhůta kdykoli</option><option value={7}>Lhůta do 7 dní</option><option value={30}>Lhůta do 30 dní</option></select>
+                        <select value={fx.type} onChange={(e) => setFx((f) => ({ ...f, type: e.target.value }))} aria-label="Druh případu" className={`${inputCls} w-auto py-1 text-xs`}><option value="">Všechny druhy</option>{CASE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select>
                         <select value={fx.kind} onChange={(e) => setFx((f) => ({ ...f, kind: e.target.value as CaseFilter['kind'] }))} aria-label="Druh" className={`${inputCls} w-auto py-1 text-xs`}><option value="all">Věci i podspisy</option><option value="main">Jen hlavní věci</option><option value="sub">Jen podspisy</option></select>
                     </div>
                     <SavedViews userId={account.id} filter={fx} onApply={setFx} />
@@ -207,7 +209,8 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                                     <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">{c.pinned && <Pin size={14} className="text-indigo-700" aria-label="Připnuto" />}{c.title}{c.parent_id && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-700">Podspis</span>}{c.user_id && c.user_id !== accountId && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold uppercase text-indigo-900">Sdíleno s vámi</span>}</h2>
                                     {next && <span className={`shrink-0 text-xs font-bold ${deadlineTone(daysUntil(next.date), false)}`}>{deadlineText(daysUntil(next.date))}</span>}
                                 </div>
-                                {(c.client_name || c.reference || c.authority) && <p className="mt-1 text-xs font-semibold text-slate-500">{[c.client_name, c.reference, c.authority].filter(Boolean).join(' · ')}</p>}
+                                {(c.client_name || c.reference || c.authority || c.case_type || c.responsible) && <p className="mt-1 text-xs font-semibold text-slate-500">{[c.client_name, c.reference, c.authority, c.case_type, c.responsible ? `vede ${c.responsible}` : ''].filter(Boolean).join(' · ')}</p>}
+                                {(c.labels ?? []).length > 0 && <ul className="mt-1.5 flex flex-wrap gap-1">{(c.labels ?? []).map((l) => <li key={l} className="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-semibold text-indigo-950">{l}</li>)}</ul>}
                                 {c.summary && <p className="mt-1 line-clamp-2 text-sm text-slate-600">{c.summary}</p>}
                                 {c.steps.length > 0 && (
                                     <div className="mt-3 flex items-center gap-3">

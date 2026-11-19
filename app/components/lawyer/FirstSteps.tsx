@@ -6,6 +6,8 @@ import { CheckCircle2, ChevronDown, Circle, Rocket, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { firstStepsDone, type FirstStep } from '@/lib/firstSteps';
 import { useLawyer } from './LawyerGate';
+import { useRouter } from 'next/navigation';
+import { createDemoCase } from '@/lib/demoCase';
 
 const HIDE_KEY = 'kancelar-prvni-kroky-skryto';
 // Na telefonu je průvodce sbalený (nezabírá první obrazovku), na velké obrazovce rozbalený; klepnutím jde přepnout
@@ -15,7 +17,15 @@ const head = { count: 'exact' as const, head: true };
 
 // Průvodce prvními dny: co nastavit, aby Kancelář pracovala za vás. Zmizí, jakmile je vše hotové, nebo ho skryjete.
 export default function FirstSteps() {
-    const { userId } = useLawyer();
+    const { userId, access } = useLawyer();
+    const router = useRouter();
+    const [demoBusy, setDemoBusy] = useState(false);
+    const [demoError, setDemoError] = useState('');
+    async function demo() {
+        setDemoBusy(true); setDemoError('');
+        try { router.push(`/kancelar/veci/${await createDemoCase(userId, access.default_rate || 1500)}`); }
+        catch (e) { setDemoError(e instanceof Error ? e.message : 'Ukázku se nepodařilo založit.'); setDemoBusy(false); }
+    }
     const [steps, setSteps] = useState<FirstStep[] | null>(null);
     const [hidden, setHidden] = useState(true);
     const wide = useSyncExternalStore(subscribeWide, isWide, () => true);
@@ -84,6 +94,13 @@ export default function FirstSteps() {
                     </li>
                 ))}
             </ol>}
+            {open && steps && !steps.find((x) => x.id === 'vec')?.done && (
+                <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-white/70 p-3 text-sm">
+                    <span className="text-slate-700">Chcete si Kancelář nejdřív prohlédnout?</span>
+                    <button type="button" onClick={() => void demo()} disabled={demoBusy} className="cursor-pointer rounded-lg border border-indigo-300 bg-white px-3 py-1.5 text-xs font-bold text-indigo-900 hover:bg-indigo-50 disabled:opacity-60">{demoBusy ? 'Zakládám…' : 'Vyzkoušet na ukázkovém spisu'}</button>
+                    {demoError && <span role="alert" className="text-xs text-rose-800">{demoError}</span>}
+                </div>
+            )}
         </section>
     );
 }

@@ -20,7 +20,7 @@ export const PROVIDER = {
 export type ProviderKey = keyof typeof PROVIDER;
 
 // Verze znění; uloží se spolu se souhlasem při registraci. Při každé změně podmínek ji zvyšte.
-export const TERMS_VERSION = '2026-1';
+export const TERMS_VERSION = '2026-2';
 
 // Jak dlouho po skončení přístupu se data uchovají (měsíce), než se smažou
 export const RETENTION_MONTHS = 12;

@@ -16,6 +16,7 @@ import ArchiveCard from '../lawyer/ArchiveCard';
 import { isCourt, parseFileNumber } from '@/lib/infosoud';
 import { upsertAresClient } from '@/lib/aresClients';
 import CaseSubcases from './CaseSubcases';
+import CaseMetaFields from './CaseMetaFields';
 
 // Chytré rady podle toho, co ve spisu chybí
 export function caseHints(item: TabProps['item'], bundle: TabProps['bundle']): { tone: 'warn' | 'tip'; text: string }[] {
@@ -86,6 +87,7 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
                     ))}
                     <datalist id="clients">{clients.map((c) => <option key={c.id} value={c.name} />)}</datalist>
                 </div>
+                <CaseMetaFields item={item} patchItem={patchItem} />
                 {lawyer && <Link href={`/kancelar/knihovna?case=${item.id}`} className="mt-3 mr-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><FileText size={13} aria-hidden="true" /> Vyplnit vzor dokumentu z údajů věci</Link>}
                 {parseFileNumber(item.reference ?? '') && isCourt(item.authority ?? '') && <Link href="/kancelar/infosoud" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><Gavel size={13} aria-hidden="true" /> Zjistit průběh řízení v InfoSoudu</Link>}
             </section>}
