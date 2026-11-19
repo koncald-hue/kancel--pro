@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Check, Copy, CreditCard } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { startComgatePayment } from '@/lib/payStart';
 import { primaryBtn, ghostBtn, inputCls } from '../situation/caseUi';
 import { intakeUrl, isValidIntakeCode, SECURITY_TEXT_LAWYER } from '@/lib/portal';
 import { czk } from '@/lib/lawyer';
@@ -67,6 +68,9 @@ export default function LawyerSettings() {
         setPayMsg('');
         const { data, error } = await supabase.rpc('create_lawyer_order', { p_plan: plan });
         if (error) { setPayMsg(error.message); return; }
+        const pay = await startComgatePayment(String(data));
+        if (pay.redirected) return;
+        if (pay.error) { setPayMsg(pay.error); return; }
         if (paymentUrl) { window.open(`${paymentUrl}${paymentUrl.includes('?') ? '&' : '?'}order=${data}`, '_self'); return; }
         setPayMsg(`Objednávka ${String(data).slice(0, 8)} je vytvořena. Platební brána se připravuje, po jejím spuštění tu uvidíte tlačítko Zaplatit a přístup se po zaplacení aktivuje automaticky.`);
         const o = await supabase.from('lawyer_orders').select('id, plan, price_czk, status, period_end').order('created_at', { ascending: false }).limit(5);

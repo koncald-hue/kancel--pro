@@ -53,7 +53,8 @@ Právo srozumitelně: průvodce situací (AI), chytré hledání, přestupky a t
 | `CRON_SECRET` | ochrana plánovaných úloh | ano |
 | `SIGN_SEAL_SECRET` | pečeť dokladů o podpisu | ano |
 | `OPENAI_API_KEY` | AI asistent, návrh věci k e-mailu | ne |
-| `PAYMENT_WEBHOOK_SECRET`, `NEXT_PUBLIC_LAWYER_PAYMENT_URL` | platební brána (nahradí se konkrétní bránou) | před spuštěním |
+| `COMGATE_MERCHANT`, `COMGATE_SECRET`, `COMGATE_TEST` | platební brána Comgate (ID obchodu, heslo API, `true` = testovací platby) | před spuštěním |
+| `PAYMENT_WEBHOOK_SECRET`, `NEXT_PUBLIC_LAWYER_PAYMENT_URL` | záložní vlastní brána přes podepsaný webhook (nepovinné) | ne |
 | `TWILIO_*` | SMS kódy k podpisu (jinak e-mail) | ne |
 | `BANKID_*`, `MOJEID_*`, `IDENTITY_PROVIDER` | ověření totožnosti klienta | ne |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Kalendář | ne |
@@ -83,7 +84,7 @@ Soubory ve složce `pravo-web/supabase/` se spouštějí ručně v Supabase webu
 
 ## 7. Co zbývá před spuštěním
 
-1. Platební brána (napojení konkrétního poskytovatele, viz rozhodnutí o bráně).
+1. Comgate: založit obchod, v klientském portálu nastavit adresu oznámení `https://<doména>/api/payments/comgate/notify`, adresy návratu (zaplaceno/zrušeno/čeká) na `https://<doména>/kancelar/nastaveni`, povolit IP serveru pro API; vyzkoušet v testovacím režimu (`COMGATE_TEST=true`) a ověřit podmínky opakovaných plateb.
 2. Doména, odesílání e-mailů (Brevo: ověřený odesílatel, IP), hosting a plánovač.
 3. Obchodní podmínky, zpracovatelská smlouva a ochrana osobních údajů prověřené právníkem; posouzení úschov a navrhovaných lhůt (ČAK).
 4. Výměna všech klíčů a hesel použitých při vývoji (Supabase service key, Brevo, Google, testovací hesla).

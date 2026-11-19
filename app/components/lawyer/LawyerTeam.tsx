@@ -5,6 +5,7 @@ import Substitutions from './Substitutions';
 import { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, CreditCard, Loader2, Mail, Trash2, UserPlus, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { startComgatePayment } from '@/lib/payStart';
 import { czk } from '@/lib/lawyer';
 import { PLANS, type PlanId } from '@/lib/plans';
 import { EMPTY_FIRM_PRICES, FIRM_SIZES, ROLE_HELP, ROLE_LABELS, VERIFICATION_LABEL, canManageFirm, inviteUrl, type FirmRole, type FirmOverview, type FirmPrices, type FirmSize } from '@/lib/firm';
@@ -62,6 +63,9 @@ export default function LawyerTeam() {
         const { data, error: err } = await supabase.rpc('create_firm_order', { p_plan: plan, p_seats: size });
         setBusy(false);
         if (err) { setMsg(err.message); return; }
+        const pay = await startComgatePayment(String(data));
+        if (pay.redirected) return;
+        if (pay.error) { setMsg(pay.error); return; }
         if (paymentUrl) { window.open(`${paymentUrl}${paymentUrl.includes('?') ? '&' : '?'}order=${data}`, '_self'); return; }
         setMsg(`Objednávka ${String(data).slice(0, 8)} je vytvořena. Platební brána se připravuje, po jejím spuštění tu uvidíte tlačítko Zaplatit a přístup se po zaplacení aktivuje všem členům automaticky.`);
     }
