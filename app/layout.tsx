@@ -1,6 +1,7 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { AuthProvider } from '@/app/components/site/AuthContext';
+import PwaRegister from '@/app/components/site/PwaRegister';
 import ConfirmHost from '@/app/components/site/ConfirmHost';
 import './globals.css';
 
@@ -10,7 +11,12 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin',
 export const metadata: Metadata = {
   title: 'Kancelář | software pro advokáty a právníky',
   description: 'Spisy, lhůty, klienti, výkazy práce a bezpečná komunikace s klientem na jednom místě.',
+  applicationName: 'Kancelář',
+  appleWebApp: { capable: true, title: 'Kancelář', statusBarStyle: 'default' },
+  icons: { apple: '/pwa-icon/apple-180' },
 };
+
+export const viewport: Viewport = { themeColor: '#4338ca' };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
@@ -18,6 +24,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-800">
         <AuthProvider>{children}</AuthProvider>
         <ConfirmHost />
+        <PwaRegister />
       </body>
     </html>
   );

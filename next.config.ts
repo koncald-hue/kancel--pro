@@ -58,6 +58,11 @@ const nextConfig: NextConfig = {
         { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
         { key: 'Content-Security-Policy', value: addinCsp },
       ] },
+      // Service worker se nesmí držet v mezipaměti, aby se opravy dostaly k uživatelům hned
+      { source: '/sw.js', headers: [
+        { key: 'Cache-Control', value: 'no-cache, max-age=0, must-revalidate' },
+        { key: 'Content-Type', value: 'text/javascript; charset=utf-8' },
+      ] },
       // Data aplikace (API) se nesmějí ukládat do sdílených mezipamětí
       { source: '/api/:path((?!news$).*)', headers: [
         { key: 'Cache-Control', value: 'no-store, max-age=0' },

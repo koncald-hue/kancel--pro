@@ -16,6 +16,7 @@ import ProfileForm from './ProfileForm';
 import GoogleCalendarCard from './GoogleCalendarCard';
 import CalendarFeedCard from './CalendarFeedCard';
 import MfaCard from './MfaCard';
+import { InstallCard } from './InstallApp';
 import PortalBrandingCard from './PortalBrandingCard';
 import FirmSettings from './FirmSettings';
 import { useAuth } from '../site/AuthContext';
@@ -135,6 +136,7 @@ export default function LawyerSettings() {
             </section>
             <PortalBrandingCard />
             <MfaCard />
+            <InstallCard />
             <Link href="/kancelar/audit" className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 text-sm hover:border-indigo-300"><span><strong className="block text-base text-slate-900">Auditní záznam</strong><span className="text-slate-600">Kdo kdy co ve věcech otevřel nebo změnil, s exportem do CSV.</span></span><span className="font-semibold text-indigo-800">Otevřít →</span></Link>
             <GoogleCalendarCard />
             <CalendarFeedCard />

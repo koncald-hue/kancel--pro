@@ -1,5 +1,6 @@
 'use client';
 
+import { InstallBanner } from './InstallApp';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
@@ -164,6 +165,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                         </div>
                     </div>
                     <E2eeLockNotice />
+                    {!locked && <InstallBanner />}
                     {locked && (
                         <div role="status" className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
                             <Lock size={18} className="shrink-0" aria-hidden="true" />
