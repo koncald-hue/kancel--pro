@@ -1,6 +1,6 @@
 // Service worker aplikace Kancelář. ZÁMĚRNĚ MINIMÁLNÍ: do zařízení se neukládá žádný obsah aplikace, jen stránka „Jste offline“.
 // Spisy, klienti, lhůty ani odpovědi API se nikdy neukládají, takže ztracený nebo sdílený telefon z nich nic neprozradí.
-const CACHE = 'kancelar-offline-v1';
+const CACHE = 'kancelar-offline-v2';
 const OFFLINE = '/offline';
 
 self.addEventListener('install', (event) => {

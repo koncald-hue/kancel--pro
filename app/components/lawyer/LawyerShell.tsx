@@ -1,6 +1,7 @@
 'use client';
 
 import { InstallBanner } from './InstallApp';
+import { OfflineSync, clearOffline } from './OfflineDeadlines';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
@@ -124,7 +125,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             <div className="space-y-0.5 border-t border-slate-100 px-3 py-3">
                 {link(SETTINGS)}
                 {isStaff && <Link href="/admin" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"><ShieldCheck size={17} aria-hidden="true" className="text-slate-400" /> Správa</Link>}
-                <button type="button" onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"><LogOut size={17} aria-hidden="true" className="text-slate-400" /> Odhlásit se</button>
+                <button type="button" onClick={() => { clearOffline(); logout(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"><LogOut size={17} aria-hidden="true" className="text-slate-400" /> Odhlásit se</button>
                 {access.status === 'trial' && access.until && <p className="mx-3 mt-2 rounded-lg bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-950">Zkušební přístup do {new Date(`${access.until}T12:00:00`).toLocaleDateString('cs-CZ')}</p>}
             </div>
         </div>
@@ -166,6 +167,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                     </div>
                     <E2eeLockNotice />
                     {!locked && <InstallBanner />}
+                    {!locked && <OfflineSync />}
                     {locked && (
                         <div role="status" className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
                             <Lock size={18} className="shrink-0" aria-hidden="true" />
