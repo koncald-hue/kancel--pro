@@ -16,7 +16,7 @@ const GROUPS: { icon: typeof Users; tone: string; title: string; items: string[]
     { icon: Landmark, tone: 'bg-amber-100 text-amber-700', title: 'Přehled a rejstříky', items: ['Přehled dne s nejbližšími lhůtami', 'Právní novinky a změny zákonů', 'ARES a katastr nemovitostí', 'Import dat z Excelu a jiných programů', 'Sdílené věci pro kolegy v kanceláři'] },
 ];
 
-const STEPS: [string, string][] = [['Vyzkoušíte 14 dní zdarma', 'Zaregistrujete se e-mailem. Žádná platební karta, žádný závazek.'], ['Vyplníte profil', 'Jméno, číslo ČAK, adresa kanceláře a údaje pro fakturaci. Jednou a na pár minut.'], ['Vyberete délku předplatného', 'Měsíční, půlroční nebo roční. Funkce jsou ve všech stejné, liší se cena za měsíc.'], ['Platíte předem, bez automatického strhávání', 'Po skončení zaplaceného období se nic nestrhne. Pokračujete, jen když chcete.']];
+const STEPS: [string, string][] = [['Vyzkoušíte 14 dní zdarma', 'Zaregistrujete se e-mailem. Žádná platební karta, žádný závazek.'], ['Vyplníte profil', 'Jméno, číslo ČAK, adresa kanceláře a údaje pro fakturaci. Jednou a na pár minut.'], ['Vyberete délku předplatného', 'Měsíční, půlroční nebo roční. Funkce jsou ve všech stejné, liší se cena za měsíc.'], ['Předplatné se samo obnovuje', 'Chcete-li, zaškrtnete automatické obnovování, a platba se strhne vždy na konci období. Zrušíte ho kdykoli v Nastavení jedním tlačítkem. Bez zaškrtnutí se nic nestrhne.']];
 
 const FAQ: [string, string][] = [
     ['Musím při registraci zadat kartu?', 'Ne. Zkušební období trvá 14 dní a nechce po vás žádné platební údaje.'],
