@@ -82,6 +82,7 @@ export default function CaseFinanceTab({ item, userId, fail, patchItem }: TabPro
         <div className="space-y-5">
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
             <BudgetCard budget={item.budget_czk ?? null} warnPct={item.budget_warn_pct ?? 80} worked={worked} billed={billedNet} onSave={(b, p) => patchItem({ budget_czk: b, budget_warn_pct: p })} />
+            {rate === 0 && <p className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">Nemáte nastavenou hodinovou sazbu, takže zapsaný čas má hodnotu 0 Kč a nespotřebuje rozpočet. Nastavte ji v <Link href="/kancelar/nastaveni" className="font-semibold underline">Nastavení</Link> (výchozí sazba) nebo u klienta.</p>}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {tile('K vyfakturování', money(openAmount), `${formatMinutes(openMin)} h nevyfakturované práce`)}
                 {tile('Čeká na zaplacení', money(outstanding), `${live.length} vyúčtování`)}

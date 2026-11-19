@@ -13,6 +13,7 @@ import { deadlineText, deadlineTone } from './CaseDeadlinesTab';
 import { inputCls, primaryBtn } from './caseUi';
 import SavedViews from './SavedViews';
 import { CASE_TYPES } from '@/lib/caseMeta';
+import { createDemoCase } from '@/lib/demoCase';
 import { DEFAULT_FILTER, matchesFilter, type CaseFilter } from '@/lib/savedViews';
 import { limitsFor, useLawyerTier } from '@/lib/tiers';
 import UpgradeNote from './UpgradeNote';
@@ -38,6 +39,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
     const setQuery = (q: string) => setFx((f) => ({ ...f, q }));
     const setFilter = (status: 'open' | 'done') => setFx((f) => ({ ...f, status }));
     const [creating, setCreating] = useState(false);
+    const [demoBusy, setDemoBusy] = useState(false);
     const [templates, setTemplates] = useState<CaseTemplate[]>([]);
     const [tplId, setTplId] = useState('');
     useEffect(() => { if (isOffice) loadTemplates().then((l) => { setTemplates(l); setTplId(defaultTemplate(l)?.id ?? ''); }).catch(() => undefined); }, [isOffice]);
@@ -120,6 +122,9 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                 <button type="submit" disabled={!title.trim() || creating || (cases?.length ?? 0) >= limits.cases} className={`${primaryBtn} justify-center whitespace-nowrap`}><FolderPlus size={16} /> {isOffice ? 'Založit věc' : 'Založit spis'}</button>
             </form>
             {isOffice && (() => { const sides = partiesFromTitle(title); return sides.length === 2 ? <div className="mt-2 space-y-2"><ConflictPanel parties={[{ name: sides[1] }]} role="protistrana" compact /><ConflictPanel parties={[{ name: sides[0] }]} role="klient" compact /></div> : null; })()}
+            {isOffice && account && (
+                <p className="mt-2 text-xs text-slate-500">Chcete si Kancelář prohlédnout na hotovém příkladu? <button type="button" disabled={demoBusy} onClick={() => { setDemoBusy(true); createDemoCase(account.id, 1500).then((id) => router.push(casePath(id))).catch((e) => { setError(describeCaseError(e)); setDemoBusy(false); }); }} className="cursor-pointer font-semibold text-indigo-800 underline disabled:opacity-60">{demoBusy ? 'Zakládám…' : 'Založit ukázkový spis'}</button></p>
+            )}
             {isOffice && templates.length === 0 && <p className="mt-2 text-xs text-slate-500">Tip: <button type="button" onClick={() => account && void addStarterTemplates(account.id).then((l) => { setTemplates(l); setTplId(defaultTemplate(l)?.id ?? ''); }).catch(() => undefined)} className="cursor-pointer font-semibold text-indigo-900 underline">Přidat vzorové šablony úkolů</button> a nová věc dostane úkoly s termíny sama (plná moc, podklady od klienta, příprava jednání). <Link href="/kancelar/sablony" className="underline">Upravit šablony</Link></p>}
             {isOffice && templates.length > 0 && tplId && <p className="mt-2 text-xs text-slate-500">K nové věci se automaticky přidají úkoly ze šablony „{templates.find((t) => t.id === tplId)?.name}“. Jinou nebo žádnou vyberete v seznamu u názvu.</p>}
             {!isOffice && <p className="mt-2 text-xs text-slate-500">Nevíte, jak začít? <Link href="/situace" className="font-semibold text-indigo-900 underline">Popište situaci a spis se předvyplní</Link> kroky, lhůtami i vzory dokumentů.</p>}
@@ -161,11 +166,11 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
 
             {isOffice && account && (
                 <>
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                        <select value={fx.client} onChange={(e) => setFx((f) => ({ ...f, client: e.target.value }))} aria-label="Klient" className={`${inputCls} w-auto py-1 text-xs`}><option value="">Všichni klienti</option>{clientNames.map((n) => <option key={n} value={n}>{n}</option>)}</select>
-                        <select value={fx.within} onChange={(e) => setFx((f) => ({ ...f, within: Number(e.target.value) as CaseFilter['within'] }))} aria-label="Nejbližší lhůta" className={`${inputCls} w-auto py-1 text-xs`}><option value={0}>Lhůta kdykoli</option><option value={7}>Lhůta do 7 dní</option><option value={30}>Lhůta do 30 dní</option></select>
-                        <select value={fx.type} onChange={(e) => setFx((f) => ({ ...f, type: e.target.value }))} aria-label="Druh případu" className={`${inputCls} w-auto py-1 text-xs`}><option value="">Všechny druhy</option>{CASE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select>
-                        <select value={fx.kind} onChange={(e) => setFx((f) => ({ ...f, kind: e.target.value as CaseFilter['kind'] }))} aria-label="Druh" className={`${inputCls} w-auto py-1 text-xs`}><option value="all">Věci i podspisy</option><option value="main">Jen hlavní věci</option><option value="sub">Jen podspisy</option></select>
+                    <div className="mt-3 grid grid-cols-2 items-center gap-2 text-xs sm:flex sm:flex-wrap">
+                        <select value={fx.client} onChange={(e) => setFx((f) => ({ ...f, client: e.target.value }))} aria-label="Klient" className={`${inputCls} py-1 text-xs sm:!w-auto`}><option value="">Všichni klienti</option>{clientNames.map((n) => <option key={n} value={n}>{n}</option>)}</select>
+                        <select value={fx.within} onChange={(e) => setFx((f) => ({ ...f, within: Number(e.target.value) as CaseFilter['within'] }))} aria-label="Nejbližší lhůta" className={`${inputCls} py-1 text-xs sm:!w-auto`}><option value={0}>Lhůta kdykoli</option><option value={7}>Lhůta do 7 dní</option><option value={30}>Lhůta do 30 dní</option></select>
+                        <select value={fx.type} onChange={(e) => setFx((f) => ({ ...f, type: e.target.value }))} aria-label="Druh případu" className={`${inputCls} py-1 text-xs sm:!w-auto`}><option value="">Všechny druhy</option>{CASE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select>
+                        <select value={fx.kind} onChange={(e) => setFx((f) => ({ ...f, kind: e.target.value as CaseFilter['kind'] }))} aria-label="Druh" className={`${inputCls} py-1 text-xs sm:!w-auto`}><option value="all">Věci i podspisy</option><option value="main">Jen hlavní věci</option><option value="sub">Jen podspisy</option></select>
                     </div>
                     <SavedViews userId={account.id} filter={fx} onApply={setFx} />
                 </>
@@ -187,7 +192,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                         <tbody className="divide-y divide-slate-100">
                             {shown.map(({ c, next }) => (
                                 <tr key={c.id} className="hover:bg-indigo-50/50">
-                                    <td className="px-4 py-2.5 font-semibold text-slate-900"><Link href={casePath(c.id)} className="hover:text-indigo-800 hover:underline">{c.pinned && <Pin size={12} className="mr-1 inline text-indigo-700" />}{c.title}{c.user_id && c.user_id !== accountId && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold uppercase text-indigo-900">Sdíleno s vámi</span>}</Link></td>
+                                    <td className="px-4 py-2.5 font-semibold text-slate-900"><Link href={casePath(c.id)} className="hover:text-indigo-800 hover:underline">{c.pinned && <Pin size={12} className="mr-1 inline text-indigo-700" />}{c.title}{c.user_id && c.user_id !== accountId && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold uppercase text-indigo-900">Sdíleno s vámi</span>}</Link>{c.parent_id && <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 align-middle text-[11px] font-bold uppercase text-slate-700">Podspis</span>}{(c.case_type || (c.labels ?? []).length > 0) && <span className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px] font-semibold text-slate-500">{c.case_type}{(c.labels ?? []).map((l) => <span key={l} className="rounded-full bg-indigo-100 px-2 py-0.5 text-indigo-950">{l}</span>)}</span>}</td>
                                     <td className="px-3 py-2.5 text-slate-700">{c.client_name || '–'}</td>
                                     <td className="px-3 py-2.5 text-slate-700">{c.reference || '–'}</td>
                                     <td className="px-3 py-2.5 text-slate-700">{c.authority || '–'}</td>
