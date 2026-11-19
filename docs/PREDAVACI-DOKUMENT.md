@@ -70,6 +70,7 @@ Právo srozumitelně: průvodce situací (AI), chytré hledání, přestupky a t
 | `NEXT_PUBLIC_OFFICE_URL` | odkaz na Kancelář | ano |
 | `OPENAI_API_KEY`, `OPENAI_DOCUMENT_MODEL` | AI funkce | ano pro AI |
 | `PUBLIC_AI_SALT` | sůl pro otisk IP v denním stropu AI | doporučeno |
+| `COMGATE_MERCHANT`, `COMGATE_SECRET`, `COMGATE_TEST` | platby v e-shopu (oznámení: `/api/payments/comgate/notify`) | před spuštěním e-shopu |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `GOOGLE_SITE_VERIFICATION` | analytika (jen se souhlasem), ověření webu | ne |
 
 ## 5. Databáze webu (Právo srozumitelně)
