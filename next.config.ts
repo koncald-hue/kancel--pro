@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   // Poštovní knihovny běží jen na serveru a nesmějí se sbalovat do balíčku
-  serverExternalPackages: ['imapflow', 'mailparser', 'nodemailer'],
+  serverExternalPackages: ['imapflow', 'mailparser', 'nodemailer', 'web-push'],
   async headers() {
     return [
       { source: '/((?!doplnek).*)', headers: [

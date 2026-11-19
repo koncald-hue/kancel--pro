@@ -79,19 +79,17 @@ export function syncGoogle(master: CryptoKey, userId: string): Promise<SyncResul
     return running;
 }
 
-async function doSync(master: CryptoKey, userId: string): Promise<SyncResult> {
-    const loaded = await loadGoogleConnection(master);
-    if (!loaded || loaded === 'broken') throw new Error(loaded === 'broken' ? 'Přihlášení ke Googlu nejde dešifrovat. Připojte se znovu.' : 'Google Kalendář není připojený.');
-    const [cases, customs, mappedRes] = await Promise.all([loadCases(), loadAllDeadlines(), supabase.from('google_calendar_sync').select('key, kind, event_id, hash')]);
-    const mapped = (mappedRes.data ?? []) as Mapped[];
-    const desired: Desired[] = desiredEvents(cases, customs, { detail: loaded.row.detail, internal: loaded.row.internal }, pragueDate(new Date().toISOString()), window.location.origin);
+// Události, které mají být v kalendáři (lhůty, úkoly pro mě, události); společné pro Google i Microsoft 365
+export async function collectDesired(userId: string, detail: Detail, internal: boolean): Promise<Desired[]> {
+    const [cases, customs] = await Promise.all([loadCases(), loadAllDeadlines()]);
+    const desired: Desired[] = desiredEvents(cases, customs, { detail, internal }, pragueDate(new Date().toISOString()), window.location.origin);
     // Úkoly pro mě a události (vlastní i s pozváním); bez migrace 20261118_21 se tiše vynechají
     const today = pragueDate(new Date().toISOString());
     const [tt, ce] = await Promise.all([
         supabase.from('team_tasks').select('id, title, due_date, due_time, case_title').eq('assignee_id', userId).eq('status', 'open').gte('due_date', today),
         supabase.from('calendar_events').select('id, title, starts_at, ends_at, all_day, place, case_title').gte('ends_at', new Date().toISOString()),
     ]);
-    const showCase = loaded.row.detail !== 'minimal';
+    const showCase = detail !== 'minimal';
     for (const t of (tt.error ? [] : tt.data ?? []) as { id: string; title: string; due_date: string; due_time: string | null; case_title: string }[]) {
         const start = t.due_time ? pragueToIso(t.due_date, t.due_time.slice(0, 5)) : undefined;
         desired.push({ key: `task:${t.id}`, kind: 'main', date: t.due_date, summary: `Úkol: ${t.title}${showCase && t.case_title ? ` – ${t.case_title}` : ''}`.slice(0, 200), description: `Detail: ${window.location.origin}/kancelar/ukoly`, lowKey: true, ...(start ? { startAt: start, endAt: new Date(Date.parse(start) + 30 * 60_000).toISOString() } : {}) });
@@ -100,6 +98,14 @@ async function doSync(master: CryptoKey, userId: string): Promise<SyncResult> {
         const s = pragueParts(e.starts_at).date;
         desired.push({ key: `event:${e.id}`, kind: 'main', date: s, summary: `${e.title}${showCase && e.case_title ? ` – ${e.case_title}` : ''}`.slice(0, 200), description: `Detail: ${window.location.origin}/kancelar/kalendar?udalost=${e.id}`, location: e.place || undefined, lowKey: true, ...(e.all_day ? {} : { startAt: new Date(e.starts_at).toISOString(), endAt: new Date(e.ends_at).toISOString() }) });
     }
+    return desired;
+}
+
+async function doSync(master: CryptoKey, userId: string): Promise<SyncResult> {
+    const loaded = await loadGoogleConnection(master);
+    if (!loaded || loaded === 'broken') throw new Error(loaded === 'broken' ? 'Přihlášení ke Googlu nejde dešifrovat. Připojte se znovu.' : 'Google Kalendář není připojený.');
+    const [desired, mappedRes] = await Promise.all([collectDesired(userId, loaded.row.detail, loaded.row.internal), supabase.from('google_calendar_sync').select('key, kind, event_id, hash')]);
+    const mapped = (mappedRes.data ?? []) as Mapped[];
     const plan = planSync(desired, mapped);
     const calendarId = loaded.row.calendar_id;
     const res: SyncResult = { inserted: 0, patched: 0, removed: 0, same: plan.same, failed: 0, message: '' };
@@ -148,9 +154,13 @@ export function scheduleGoogleSync() {
     if (timer) clearTimeout(timer);
     timer = setTimeout(async () => {
         const master = getMaster();
-        let connected = false;
-        try { connected = localStorage.getItem('kancelar-google') === '1'; } catch { /* nic */ }
-        if (!master || !connected) return;
-        try { const { data: { user } } = await supabase.auth.getUser(); if (user) await syncGoogle(master, user.id); } catch { /* neúspěšná tichá synchronizace se ukáže v Nastavení při dalším ručním pokusu */ }
+        const flag = (k: string) => { try { return localStorage.getItem(k) === '1'; } catch { return false; } };
+        if (!master) return;
+        try {
+            const { data: { user } } = await supabase.auth.getUser(); if (!user) return;
+            if (flag('kancelar-google')) await syncGoogle(master, user.id).catch(() => undefined);
+            // Microsoft 365 se načte až když je připojený, aby se kód zbytečně netahal všem
+            if (flag('kancelar-microsoft')) { const m = await import('./microsoftSync'); await m.syncMicrosoft(master, user.id).catch(() => undefined); }
+        } catch { /* neúspěšná tichá synchronizace se ukáže v Nastavení při dalším ručním spuštění */ }
     }, 2500);
 }

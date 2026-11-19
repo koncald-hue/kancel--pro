@@ -14,10 +14,12 @@ import { PLANS, planName, type PlanId, type Prices } from '@/lib/plans';
 import { useLawyer } from './LawyerGate';
 import ProfileForm from './ProfileForm';
 import GoogleCalendarCard from './GoogleCalendarCard';
+import MicrosoftCalendarCard from './MicrosoftCalendarCard';
 import CalendarFeedCard from './CalendarFeedCard';
 import MfaCard from './MfaCard';
 import { InstallCard } from './InstallApp';
 import { OfflineCard } from './OfflineDeadlines';
+import PushCard from './PushCard';
 import PortalBrandingCard from './PortalBrandingCard';
 import FirmSettings from './FirmSettings';
 import { useAuth } from '../site/AuthContext';
@@ -138,9 +140,11 @@ export default function LawyerSettings() {
             <PortalBrandingCard />
             <MfaCard />
             <InstallCard />
+            <PushCard />
             <OfflineCard />
             <Link href="/kancelar/audit" className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 text-sm hover:border-indigo-300"><span><strong className="block text-base text-slate-900">Auditní záznam</strong><span className="text-slate-600">Kdo kdy co ve věcech otevřel nebo změnil, s exportem do CSV.</span></span><span className="font-semibold text-indigo-800">Otevřít →</span></Link>
             <GoogleCalendarCard />
+            <MicrosoftCalendarCard />
             <CalendarFeedCard />
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Předplatné">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><CreditCard size={18} className="text-indigo-800" /> Předplatné</h2>

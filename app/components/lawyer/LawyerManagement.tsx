@@ -7,6 +7,7 @@ import ProfitSection from './ProfitSection';
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { czk, formatMinutes } from '@/lib/lawyer';
+import { teamStats } from '@/lib/teamProfit';
 import { byCase, byWeek, changePct, forecast, inMonth, monthEnd, monthOf, monthStart, shiftMonth, sumEntries, type Entry } from '@/lib/mgmt';
 
 type Member = { user_id: string; name: string; shared: boolean; minutes: number | null; amount: number | null; billed_minutes: number | null };
@@ -117,16 +118,36 @@ export default function LawyerManagement() {
 
             {role === 'owner' && members && (
                 <section className={card} aria-labelledby="mg-team">
-                    <h2 id="mg-team" className="text-base font-bold text-slate-900">Hodiny podle lidí ({monthName(ym)})</h2>
+                    <h2 id="mg-team" className="text-base font-bold text-slate-900">Výkon podle právníků ({monthName(ym)})</h2>
                     <p className="mt-1 text-sm text-slate-600">Hodiny kolegy uvidíte jen tehdy, když je sám zapne ve svém Přehledu. Ostatní se tu zobrazí bez čísel. Sdílí se jen součty za měsíc, nikdy popisy ani věci.</p>
-                    <ul className="mt-3 divide-y divide-slate-100">
-                        {members.map((m) => (
-                            <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
-                                <span className="font-semibold text-slate-900">{m.name}</span>
-                                {m.shared ? <span className="text-slate-700">{formatMinutes(m.minutes ?? 0)} · {czk(Number(m.amount ?? 0))} <span className="text-slate-500">(vyfakturováno {formatMinutes(m.billed_minutes ?? 0)})</span></span> : <span className="inline-flex items-center gap-1.5 text-slate-500"><EyeOff size={14} aria-hidden="true" /> nesdílí</span>}
-                            </li>
-                        ))}
-                    </ul>
+                    {(() => {
+                        const t = teamStats(members);
+                        return (
+                            <>
+                                {t.rows.length > 0 && (
+                                    <div className="mt-3 overflow-x-auto">
+                                        <table className="w-full text-left text-sm">
+                                            <thead className="text-[11px] uppercase tracking-wide text-slate-500"><tr><th className="py-2 pr-3">Právník</th><th className="px-3 py-2 text-right">Hodin</th><th className="px-3 py-2 text-right">Hodnota práce</th><th className="px-3 py-2 text-right">Za hodinu</th><th className="px-3 py-2 text-right">K vyfakturování</th><th className="py-2 pl-3 text-right">Realizace</th></tr></thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {t.rows.map((r) => (
+                                                    <tr key={r.user_id}>
+                                                        <td className="py-2 pr-3 font-semibold text-slate-900">{r.name}</td>
+                                                        <td className="px-3 py-2 text-right text-slate-700">{String(r.hours).replace('.', ',')}</td>
+                                                        <td className="px-3 py-2 text-right text-slate-700">{czk(r.value)}</td>
+                                                        <td className="px-3 py-2 text-right text-slate-700">{r.avgRate === null ? '–' : czk(r.avgRate)}</td>
+                                                        <td className={`px-3 py-2 text-right ${r.unbilledValue > 0 ? 'font-semibold text-amber-800' : 'text-slate-400'}`}>{czk(r.unbilledValue)}</td>
+                                                        <td className={`py-2 pl-3 text-right ${r.realization !== null && r.realization < 70 ? 'font-semibold text-amber-800' : 'text-slate-700'}`}>{r.realization === null ? '–' : `${r.realization} %`}</td>
+                                                    </tr>
+                                                ))}
+                                                <tr className="bg-slate-50 font-bold text-slate-900"><td className="py-2 pr-3">Celkem ({t.totals.sharing} z {t.totals.total})</td><td className="px-3 py-2 text-right">{String(t.totals.hours).replace('.', ',')}</td><td className="px-3 py-2 text-right">{czk(t.totals.value)}</td><td className="px-3 py-2 text-right">{t.totals.hours > 0 ? czk(Math.round(t.totals.value / t.totals.hours)) : '–'}</td><td className="px-3 py-2 text-right">{czk(t.totals.unbilledValue)}</td><td className="py-2 pl-3 text-right">{t.totals.realization === null ? '–' : `${t.totals.realization} %`}</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                                {t.hidden.length > 0 && <p className="mt-3 flex items-center gap-1.5 text-sm text-slate-500"><EyeOff size={14} aria-hidden="true" /> Nesdílí hodiny: {t.hidden.join(', ')}. Čísla se jim nezapočítávají.</p>}
+                            </>
+                        );
+                    })()}
                 </section>
             )}
             {role === 'member' && share !== null && (

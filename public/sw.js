@@ -17,3 +17,23 @@ self.addEventListener('fetch', (event) => {
     if (req.method !== 'GET' || req.mode !== 'navigate') return;
     event.respondWith(fetch(req).catch(async () => (await caches.match(OFFLINE)) ?? new Response('Jste offline.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } })));
 });
+
+// Push upozornění: text je obecný (počty lhůt), žádné názvy věcí ani klientů
+self.addEventListener('push', (event) => {
+    let d = {};
+    try { d = event.data ? event.data.json() : {}; } catch { /* nic */ }
+    const title = typeof d.title === 'string' ? d.title.slice(0, 80) : 'Kancelář';
+    event.waitUntil(self.registration.showNotification(title, {
+        body: typeof d.body === 'string' ? d.body.slice(0, 200) : '', tag: typeof d.tag === 'string' ? d.tag.slice(0, 60) : 'kancelar',
+        icon: '/pwa-icon/any-192', badge: '/pwa-icon/any-192', data: { url: typeof d.url === 'string' && d.url.startsWith('/') ? d.url : '/kancelar' },
+    }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const url = (event.notification.data && event.notification.data.url) || '/kancelar';
+    event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+        for (const c of list) { if ('focus' in c) { c.navigate(url).catch(() => undefined); return c.focus(); } }
+        return self.clients.openWindow(url);
+    }));
+});
