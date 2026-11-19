@@ -97,7 +97,7 @@ export default function OpsAccounting() {
     if (!settings) return <p className="text-sm text-slate-500" role="status">Načítám…</p>;
     const incomplete = !settings.name || !settings.ico || !settings.address;
     const years = [...new Set([Number(today().slice(0, 4)), ...invoices.map((i) => Number(i.issue_date.slice(0, 4))), ...expenses.map((e) => Number(e.spent_on.slice(0, 4)))])].sort((a, b) => b - a);
-    const tile = (label: string, value: string, tone = 'text-slate-900', note = '') => <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</p><p className={`mt-1 text-xl font-bold ${tone}`}>{value}</p>{note && <p className="text-xs text-slate-500">{note}</p>}</div>;
+    const tile = (label: string, value: string, tone = 'text-slate-900', note = '') => <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p><p className={`mt-1 text-xl font-bold ${tone}`}>{value}</p>{note && <p className="text-xs text-slate-500">{note}</p>}</div>;
 
     return (
         <div className="space-y-5">
@@ -130,7 +130,7 @@ export default function OpsAccounting() {
                             </span></div>
                         {months.length === 0 ? <p className="mt-2 text-sm text-slate-500">V roce {year} zatím žádné doklady.</p> : (
                             <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[640px] text-sm">
-                                <thead className="text-[11px] uppercase tracking-wide text-slate-500"><tr><th className="py-1 text-left">Měsíc</th><th className="text-right">Faktur</th><th className="text-right">Příjmy bez DPH</th><th className="text-right">Výdaje bez DPH</th><th className="text-right">Zisk</th>{settings.vat_payer && <th className="text-right">DPH k odvodu</th>}</tr></thead>
+                                <thead className="text-xs uppercase tracking-wide text-slate-500"><tr><th className="py-1 text-left">Měsíc</th><th className="text-right">Faktur</th><th className="text-right">Příjmy bez DPH</th><th className="text-right">Výdaje bez DPH</th><th className="text-right">Zisk</th>{settings.vat_payer && <th className="text-right">DPH k odvodu</th>}</tr></thead>
                                 <tbody className="divide-y divide-slate-100">{months.map((m) => <tr key={m.month}><td className="py-1.5 capitalize">{monthName(m.month)}</td><td className="text-right">{m.invoices}</td><td className="text-right">{kc(m.incomeBase)}</td><td className="text-right">{kc(m.expensesBase)}</td><td className={`text-right font-semibold ${m.profit < 0 ? 'text-rose-700' : 'text-emerald-800'}`}>{kc(m.profit)}</td>{settings.vat_payer && <td className="text-right">{kc(m.vatDue)}</td>}</tr>)}</tbody>
                             </table></div>
                         )}
@@ -159,9 +159,9 @@ export default function OpsAccounting() {
                     )}
                     {yInv.length === 0 ? <p className="mt-3 text-sm text-slate-500">V roce {year} žádné faktury.</p> : (
                         <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[760px] text-sm">
-                            <thead className="text-[11px] uppercase tracking-wide text-slate-500"><tr><th className="py-1 text-left">Číslo</th><th className="text-left">Datum</th><th className="text-left">Odběratel</th><th className="text-left">Popis</th><th className="text-right">Celkem</th><th /></tr></thead>
+                            <thead className="text-xs uppercase tracking-wide text-slate-500"><tr><th className="py-1 text-left">Číslo</th><th className="text-left">Datum</th><th className="text-left">Odběratel</th><th className="text-left">Popis</th><th className="text-right">Celkem</th><th /></tr></thead>
                             <tbody className="divide-y divide-slate-100">{yInv.map((i) => (
-                                <tr key={i.id} className="align-top"><td className="py-1.5 font-mono font-semibold">{i.number}<span className="block font-sans text-[11px] font-normal text-slate-500">{SOURCE_LABEL[i.source] ?? i.source}</span></td><td>{dmy(i.issue_date)}</td><td>{i.buyer.name}{i.buyer.ico ? <span className="block text-xs text-slate-500">IČO {i.buyer.ico}</span> : null}</td><td className="text-slate-700">{i.description}{i.note && <span className="block text-xs text-slate-500">{i.note}</span>}</td><td className={`text-right font-semibold ${i.total < 0 ? 'text-rose-700' : ''}`}>{kc(i.total)}</td>
+                                <tr key={i.id} className="align-top"><td className="py-1.5 font-mono font-semibold">{i.number}<span className="block font-sans text-xs font-normal text-slate-500">{SOURCE_LABEL[i.source] ?? i.source}</span></td><td>{dmy(i.issue_date)}</td><td>{i.buyer.name}{i.buyer.ico ? <span className="block text-xs text-slate-500">IČO {i.buyer.ico}</span> : null}</td><td className="text-slate-700">{i.description}{i.note && <span className="block text-xs text-slate-500">{i.note}</span>}</td><td className={`text-right font-semibold ${i.total < 0 ? 'text-rose-700' : ''}`}>{kc(i.total)}</td>
                                     <td className="whitespace-nowrap pl-2 text-right"><button type="button" onClick={() => print(i)} aria-label={`Tisk ${i.number}`} className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 cursor-pointer"><Printer size={15} /></button>
                                         {i.total > 0 && !invoices.some((x) => x.credit_for === i.id) && <button type="button" onClick={() => setCredit({ id: i.id, reason: '' })} aria-label={`Dobropis k ${i.number}`} title="Dobropis" className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Undo2 size={15} /></button>}</td></tr>
                             ))}</tbody>

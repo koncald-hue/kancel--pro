@@ -52,11 +52,11 @@ export default function MicrosoftCalendarCard() {
                     <p className="flex flex-wrap items-center gap-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-950"><Check size={15} aria-hidden="true" /> <span className="flex-1">Připojeno. {conn.row.last_sync_at ? `Naposledy synchronizováno ${new Date(conn.row.last_sync_at).toLocaleString('cs-CZ')}.` : 'Zatím nesynchronizováno.'}</span><button type="button" onClick={() => void sync()} disabled={busy === 'sync'} className={ghostBtn}>{busy === 'sync' ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Synchronizovat teď</button></p>
                     <label className="block text-xs font-semibold text-slate-600">Co se zapisuje do událostí
                         <select value={conn.row.detail} onChange={(e) => void options(e.target.value as Detail, conn.row.internal)} className={`${inputCls} mt-1 max-w-md font-normal`}>{(Object.keys(DETAIL_LABELS) as Detail[]).map((d) => <option key={d} value={d}>{DETAIL_LABELS[d]}</option>)}</select>
-                        <span className="mt-1 block text-[11px] font-normal text-slate-500">Události se ukládají u Microsoftu. Názvy věcí a jména klientů jsou důvěrné, proto je výchozí volba jen název lhůty.</span>
+                        <span className="mt-1 block text-xs font-normal text-slate-500">Události se ukládají u Microsoftu. Názvy věcí a jména klientů jsou důvěrné, proto je výchozí volba jen název lhůty.</span>
                     </label>
                     <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={conn.row.internal} onChange={(e) => void options(conn.row.detail, e.target.checked)} className="h-4 w-4 accent-indigo-800" /> Přidat i interní termín „Podat nejpozději“ (poslední pracovní den před koncem lhůty)</label>
                     <div className="flex flex-wrap gap-2"><button type="button" onClick={() => void off(false)} disabled={busy === 'off'} className={ghostBtn}>Odpojit</button><button type="button" onClick={() => void off(true)} disabled={busy === 'off'} className={`${ghostBtn} text-rose-800`}>Odpojit a smazat kalendář</button></div>
-                    <p className="text-[11px] leading-relaxed text-slate-500">Kalendář je jen pomůcka. Konec lhůty vždy ověřte v dokumentu. Ruční úpravy událostí v tomto kalendáři se při další synchronizaci přepíšou.</p>
+                    <p className="text-xs leading-relaxed text-slate-500">Kalendář je jen pomůcka. Konec lhůty vždy ověřte v dokumentu. Ruční úpravy událostí v tomto kalendáři se při další synchronizaci přepíšou.</p>
                 </div>
             )}
             {msg && <p role="status" className="mt-3 text-sm text-slate-700">{msg}</p>}

@@ -233,7 +233,7 @@ export default function CaseFilesTab({ item, bundle, userId, lawyer, setBundle, 
                             <li key={file.id} className={`flex flex-wrap items-center gap-3 p-3 sm:p-4 ${isOld ? 'bg-slate-50 pl-8' : ''}`}>
                                 <Icon size={22} className="shrink-0 text-indigo-800" />
                                 <button type="button" onClick={() => void openFile(file, false)} className="min-w-0 flex-1 text-left cursor-pointer">
-                                    <span className="block truncate text-sm font-semibold text-slate-900 hover:text-indigo-800">{shownName(file)}{file.enc && <Lock size={12} className="ml-1.5 inline text-indigo-800" aria-label="Šifrováno end-to-end" />}{file.source === 'client' && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 align-middle text-[10px] font-bold uppercase text-indigo-900">od klienta</span>}</span>
+                                    <span className="block truncate text-sm font-semibold text-slate-900 hover:text-indigo-800">{shownName(file)}{file.enc && <Lock size={12} className="ml-1.5 inline text-indigo-800" aria-label="Šifrováno end-to-end" />}{file.source === 'client' && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 align-middle text-[11px] font-bold uppercase text-indigo-900">od klienta</span>}</span>
                                     <span className="text-xs text-slate-500">{formatSize(file.size)} · {shortDate(new Date(file.created_at))}{(file.version ?? 1) > 1 || g.older.length > 0 ? ` · verze ${file.version ?? 1}` : ''}{isOld ? ' (starší)' : ''}</span>
                                 </button>
                                 {bundle.folders.length > 0 && (

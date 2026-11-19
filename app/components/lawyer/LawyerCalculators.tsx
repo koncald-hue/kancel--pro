@@ -107,7 +107,7 @@ function Reward({ cases, presetCase }: { cases: LegalCase[]; presetCase?: string
                     <ul className="mt-2 divide-y divide-slate-100 rounded-xl border border-slate-200">
                         {UKONY.map((u) => (
                             <li key={u.id} className="flex items-center gap-3 px-3 py-2">
-                                <span className="min-w-0 flex-1 text-sm text-slate-800">{u.label}<span className="block text-[11px] text-slate-400">{u.hint}{u.half ? ' · polovina sazby' : ''}</span></span>
+                                <span className="min-w-0 flex-1 text-sm text-slate-800">{u.label}<span className="block text-xs text-slate-400">{u.hint}{u.half ? ' · polovina sazby' : ''}</span></span>
                                 <span className="flex items-center gap-1">
                                     <button type="button" onClick={() => setCount(u.id, (pocty[u.id] ?? 0) - 1)} aria-label={`Ubrat: ${u.label}`} className="h-7 w-7 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer">−</button>
                                     <input value={pocty[u.id] ?? 0} onChange={(e) => setCount(u.id, Math.floor(num(e.target.value)))} inputMode="numeric" aria-label={`Počet: ${u.label}`} className="h-7 w-11 rounded-lg border border-slate-300 text-center text-sm" />
@@ -120,9 +120,9 @@ function Reward({ cases, presetCase }: { cases: LegalCase[]; presetCase?: string
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-3">
-                    <label className={label}>Úprava odměny (%)<input value={uprava} onChange={(e) => setUprava(e.target.value)} inputMode="numeric" className={`${inputCls} mt-1 font-normal`} /><span className="mt-1 block text-[11px] font-normal text-slate-500">§ 12 odst. 1 a 2: snížit nejvýše o polovinu, zvýšit až na trojnásobek{num(uprava) !== adj && num(uprava) ? ` (použito ${adj} %)` : ''}</span></label>
-                    <label className={label}>Zastupované osoby<input value={osoby} onChange={(e) => setOsoby(e.target.value)} inputMode="numeric" className={`${inputCls} mt-1 font-normal`} /><span className="mt-1 block text-[11px] font-normal text-slate-500">§ 12 odst. 4: za 2. osobu 80 %, 3. 60 %, 4. 40 %, další 20 %</span></label>
-                    <label className={label}>Paušál výdajů na úkon (Kč)<input value={pausal} onChange={(e) => setPausal(e.target.value)} inputMode="decimal" className={`${inputCls} mt-1 font-normal`} /><span className="mt-1 block text-[11px] font-normal text-slate-500">§ 13 odst. 4: 450 Kč, nedohodnuto-li jinak</span></label>
+                    <label className={label}>Úprava odměny (%)<input value={uprava} onChange={(e) => setUprava(e.target.value)} inputMode="numeric" className={`${inputCls} mt-1 font-normal`} /><span className="mt-1 block text-xs font-normal text-slate-500">§ 12 odst. 1 a 2: snížit nejvýše o polovinu, zvýšit až na trojnásobek{num(uprava) !== adj && num(uprava) ? ` (použito ${adj} %)` : ''}</span></label>
+                    <label className={label}>Zastupované osoby<input value={osoby} onChange={(e) => setOsoby(e.target.value)} inputMode="numeric" className={`${inputCls} mt-1 font-normal`} /><span className="mt-1 block text-xs font-normal text-slate-500">§ 12 odst. 4: za 2. osobu 80 %, 3. 60 %, 4. 40 %, další 20 %</span></label>
+                    <label className={label}>Paušál výdajů na úkon (Kč)<input value={pausal} onChange={(e) => setPausal(e.target.value)} inputMode="decimal" className={`${inputCls} mt-1 font-normal`} /><span className="mt-1 block text-xs font-normal text-slate-500">§ 13 odst. 4: 450 Kč, nedohodnuto-li jinak</span></label>
                     <label className={label}>Další hotové výdaje (Kč)<input value={vydaje} onChange={(e) => setVydaje(e.target.value)} inputMode="decimal" className={`${inputCls} mt-1 font-normal`} /></label>
                     <label className="flex cursor-pointer items-center gap-2 self-end pb-2 text-sm text-slate-700"><input type="checkbox" checked={dph} onChange={(e) => setDph(e.target.checked)} className="h-4 w-4 accent-indigo-800" /> Plátce DPH ({DPH_DEFAULT} %)</label>
                 </div>
@@ -145,7 +145,7 @@ function Reward({ cases, presetCase }: { cases: LegalCase[]; presetCase?: string
                 <CaseSelect cases={cases} value={caseId} onChange={setCaseId} />
                 <button type="button" onClick={toInvoice} disabled={r.ukonu === 0 || draft.busy} className={`${primaryBtn} w-full justify-center`}>{draft.busy ? <Loader2 size={15} className="animate-spin" /> : <FilePlus2 size={15} />} Vytvořit koncept vyúčtování</button>
                 {draft.error && <p role="alert" className="rounded-lg bg-rose-50 p-2.5 text-xs text-rose-900">{draft.error}</p>}
-                <p className="text-[11px] leading-relaxed text-slate-500">Orientační výpočet podle vyhlášky č. 177/1996 Sb. (advokátní tarif). Před použitím zkontrolujte tarifní hodnotu a počet úkonů.</p>
+                <p className="text-xs leading-relaxed text-slate-500">Orientační výpočet podle vyhlášky č. 177/1996 Sb. (advokátní tarif). Před použitím zkontrolujte tarifní hodnotu a počet úkonů.</p>
             </aside>
         </div>
     );
@@ -225,7 +225,7 @@ function Interest({ cases, preset }: { cases: LegalCase[]; preset: { case?: stri
                         {draft.error && <p role="alert" className="rounded-lg bg-rose-50 p-2.5 text-xs text-rose-900">{draft.error}</p>}
                     </>
                 )}
-                <p className="text-[11px] leading-relaxed text-slate-500">Počítá se každý den po splatnosti až do dne zaplacení včetně, rok má 365 dní. Sazby repo vycházejí z historie ČNB (aktualizováno {dateCz(REPO_UPDATED)}); u prodlení v dalším pololetí se sazba doplní po rozhodnutí ČNB. Orientační výpočet, vždy ho ověřte.</p>
+                <p className="text-xs leading-relaxed text-slate-500">Počítá se každý den po splatnosti až do dne zaplacení včetně, rok má 365 dní. Sazby repo vycházejí z historie ČNB (aktualizováno {dateCz(REPO_UPDATED)}); u prodlení v dalším pololetí se sazba doplní po rozhodnutí ČNB. Orientační výpočet, vždy ho ověřte.</p>
             </aside>
         </div>
     );

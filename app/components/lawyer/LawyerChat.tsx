@@ -249,7 +249,7 @@ export default function LawyerChat() {
                                         {!o ? <p className="opacity-70">Dešifruji…</p> : o === 'error' ? <p className="italic opacity-80">[nelze dešifrovat]</p> : (
                                             <Bubble m={m} payload={o.payload} k={o.key} mine={mine} fromName={peerName(m.sender_id)} userId={userId} cases={cases} loadCases={async () => { if (!cases.length) setCases(await loadCases().catch(() => [])); }} onDownload={downloadFile} busy={busy} />
                                         )}
-                                        <p className={`mt-1 flex items-center justify-end gap-2 text-[10px] ${mine ? 'text-indigo-200' : 'text-slate-400'}`}>{time(m.created_at)}{mine && (m.read_at ? ' · přečteno' : '')}<button type="button" onClick={() => void removeMessage(m)} aria-label="Smazat zprávu" className="opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"><Trash2 size={11} /></button></p>
+                                        <p className={`mt-1 flex items-center justify-end gap-2 text-[11px] ${mine ? 'text-indigo-200' : 'text-slate-400'}`}>{time(m.created_at)}{mine && (m.read_at ? ' · přečteno' : '')}<button type="button" onClick={() => void removeMessage(m)} aria-label="Smazat zprávu" className="opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"><Trash2 size={11} /></button></p>
                                     </div>
                                 </div>
                             );
@@ -303,7 +303,7 @@ export default function LawyerChat() {
                                     <button type="button" onClick={() => { setPeer(c.user_id); setAttach(null); setError(''); setMessages([]); void loadMessages(c.user_id); }} aria-current={peer === c.user_id ? 'true' : undefined} className={`flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 ${peer === c.user_id ? 'bg-indigo-50/60' : ''}`}>
                                         <Avatar name={c.name || c.email} src={c.avatar} size={36} />
                                         <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-slate-900">{c.name || c.email}</span><span className="block truncate text-xs text-slate-500">{c.has_keys ? (s ? `${KIND_LABELS[s.last_kind]} · ${time(s.last_at)}` : 'Zatím bez zpráv') : 'chat zatím nezapnutý'}</span></span>
-                                        {s && s.unread > 0 && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] font-bold text-white">{s.unread}</span>}
+                                        {s && s.unread > 0 && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">{s.unread}</span>}
                                     </button>
                                 </li>
                             );

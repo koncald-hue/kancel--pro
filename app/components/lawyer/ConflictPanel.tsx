@@ -54,7 +54,7 @@ export default function ConflictPanel({ parties, role, compact = false }: { part
                 </>
             )}
             {firm?.available === false && <p className="flex items-start gap-1.5 text-xs text-slate-500"><Info size={12} className="mt-0.5 shrink-0" aria-hidden="true" /> Kontrola napříč kanceláří se zapne po spuštění migrace 20261118_13. Zatím se kontrolují jen vaše data.</p>}
-            <p className="text-[11px] leading-relaxed text-slate-500">Kontrola je pomůcka, nenahrazuje vaše posouzení podle stavovských předpisů. Porovnání se děje ve vašem prohlížeči, jména se neposílají nikam mimo databázi kanceláře a do AI.</p>
+            <p className="text-xs leading-relaxed text-slate-500">Kontrola je pomůcka, nenahrazuje vaše posouzení podle stavovských předpisů. Porovnání se děje ve vašem prohlížeči, jména se neposílají nikam mimo databázi kanceláře a do AI.</p>
         </section>
     );
 }

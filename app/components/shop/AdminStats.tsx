@@ -22,7 +22,7 @@ const nf = new Intl.NumberFormat('cs-CZ');
 function Tile({ label, value, note, warn }: { label: string; value: string; note?: string; warn?: boolean }) {
     return (
         <div className={`rounded-2xl border p-4 ${warn ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-white'}`}>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
             {note && <p className="mt-1 text-xs text-slate-600">{note}</p>}
         </div>

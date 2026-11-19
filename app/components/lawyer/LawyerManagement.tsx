@@ -127,7 +127,7 @@ export default function LawyerManagement() {
                                 {t.rows.length > 0 && (
                                     <div className="mt-3 overflow-x-auto">
                                         <table className="w-full text-left text-sm">
-                                            <thead className="text-[11px] uppercase tracking-wide text-slate-500"><tr><th className="py-2 pr-3">Právník</th><th className="px-3 py-2 text-right">Hodin</th><th className="px-3 py-2 text-right">Hodnota práce</th><th className="px-3 py-2 text-right">Za hodinu</th><th className="px-3 py-2 text-right">K vyfakturování</th><th className="py-2 pl-3 text-right">Realizace</th></tr></thead>
+                                            <thead className="text-xs uppercase tracking-wide text-slate-500"><tr><th className="py-2 pr-3">Právník</th><th className="px-3 py-2 text-right">Hodin</th><th className="px-3 py-2 text-right">Hodnota práce</th><th className="px-3 py-2 text-right">Za hodinu</th><th className="px-3 py-2 text-right">K vyfakturování</th><th className="py-2 pl-3 text-right">Realizace</th></tr></thead>
                                             <tbody className="divide-y divide-slate-100">
                                                 {t.rows.map((r) => (
                                                     <tr key={r.user_id}>

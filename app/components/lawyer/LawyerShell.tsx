@@ -95,8 +95,8 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${navActive === id ? 'bg-indigo-50 text-indigo-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
             <Icon size={17} aria-hidden="true" className={navActive === id ? 'text-indigo-700' : 'text-slate-400'} />
             <span className="flex-1">{label}</span>
-            {id === 'ukoly' && newTasks > 0 && <span className="rounded-full bg-violet-600 px-1.5 py-0.5 text-[10px] font-bold text-white" aria-label={`${newTasks} nových úkolů`}>{newTasks}</span>}
-            {id === 'chat' && unread > 0 && <span className="rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white" aria-label={`${unread} nepřečtených`}>{unread}</span>}
+            {id === 'ukoly' && newTasks > 0 && <span className="rounded-full bg-violet-600 px-1.5 py-0.5 text-[11px] font-bold text-white" aria-label={`${newTasks} nových úkolů`}>{newTasks}</span>}
+            {id === 'chat' && unread > 0 && <span className="rounded-full bg-indigo-600 px-1.5 py-0.5 text-[11px] font-bold text-white" aria-label={`${unread} nepřečtených`}>{unread}</span>}
         </Link>
     );
 
@@ -115,8 +115,8 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                     return (
                         <div key={g.title || 'main'}>
                             {g.title && (g.fold
-                                ? <button type="button" onClick={() => toggleFold(g.fold!)} aria-expanded={shown} className="flex w-full items-center gap-1 px-3 pb-1.5 text-left text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 hover:text-slate-600 cursor-pointer">{g.title}<span className="ml-auto font-semibold normal-case tracking-normal">{shown ? '' : `${g.items.length}`}</span><ChevronDown size={13} aria-hidden="true" className={`transition ${shown ? 'rotate-180' : ''}`} /></button>
-                                : <p className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>)}
+                                ? <button type="button" onClick={() => toggleFold(g.fold!)} aria-expanded={shown} className="flex w-full items-center gap-1 px-3 pb-1.5 text-left text-xs font-bold uppercase tracking-[0.14em] text-slate-400 hover:text-slate-600 cursor-pointer">{g.title}<span className="ml-auto font-semibold normal-case tracking-normal">{shown ? '' : `${g.items.length}`}</span><ChevronDown size={13} aria-hidden="true" className={`transition ${shown ? 'rotate-180' : ''}`} /></button>
+                                : <p className="px-3 pb-1.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>)}
                             {shown && <div className="space-y-0.5">{g.items.map((item) => link(item))}</div>}
                         </div>
                     );
@@ -140,7 +140,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                 <p className="flex-1 truncate text-sm font-bold text-slate-900">{current?.[2] ?? 'Kancelář'}</p>
                 {!locked && <button type="button" onClick={() => setAddOpen(true)} aria-label="Rychle zapsat" className="rounded-lg bg-indigo-600 p-1.5 text-white hover:bg-indigo-700"><Plus size={18} /></button>}
                 <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat" className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100"><Search size={18} /></button>
-                {unread > 0 && <Link href="/kancelar/chat" className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] font-bold text-white">{unread}</Link>}
+                {unread > 0 && <Link href="/kancelar/chat" className="rounded-full bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">{unread}</Link>}
             </div>
             {open && (
                 <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Nabídka">
@@ -156,13 +156,13 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             {!locked && <QuickAdd open={addOpen} onClose={() => setAddOpen(false)} />}
             {!locked && <DataBoxLauncher />}
 
-            <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
+            <main className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-8 sm:pt-8">
                 <div className="mx-auto max-w-6xl">
                     <div className="mb-6 hidden items-center justify-between gap-4 lg:flex">
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900">{current?.[2]}</h1>
                         <div className="flex items-center gap-2">
                         {!locked && <button type="button" onClick={() => setAddOpen(true)} title="Klávesa N" className="flex items-center gap-1.5 rounded-xl bg-indigo-700 px-3.5 py-2 text-sm font-bold text-white shadow-xs hover:bg-indigo-800 cursor-pointer"><Plus size={15} aria-hidden="true" /> Zapsat</button>}
-                        <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat v celé kanceláři" className="flex w-72 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-left text-sm text-slate-500 shadow-xs hover:border-indigo-300 cursor-pointer"><Search size={15} aria-hidden="true" /><span className="flex-1">Hledat…</span><kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-500">Ctrl/⌘ K</kbd></button>
+                        <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat v celé kanceláři" className="flex w-72 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-left text-sm text-slate-500 shadow-xs hover:border-indigo-300 cursor-pointer"><Search size={15} aria-hidden="true" /><span className="flex-1">Hledat…</span><kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 text-[11px] font-semibold text-slate-500">Ctrl/⌘ K</kbd></button>
                         </div>
                     </div>
                     <E2eeLockNotice />

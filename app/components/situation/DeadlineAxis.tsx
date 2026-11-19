@@ -23,7 +23,7 @@ export default function DeadlineAxis({ deadlines }: { deadlines: CaseDeadlineVie
                 <div className="absolute top-1/2 -translate-y-1/2" style={{ left: `${pos(today)}%` }}>
                     <div className="-translate-x-1/2 text-center">
                         <div className="mx-auto h-5 w-0.5 bg-slate-800" />
-                        <span className="mt-0.5 block rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-white">Dnes</span>
+                        <span className="mt-0.5 block rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">Dnes</span>
                     </div>
                 </div>
                 {items.map((d, i) => {
@@ -33,8 +33,8 @@ export default function DeadlineAxis({ deadlines }: { deadlines: CaseDeadlineVie
                     return (
                         <div key={d.key} className="absolute -translate-x-1/2" style={{ left: `${x}%`, top: up ? '0' : 'auto', bottom: up ? 'auto' : '0' }}>
                             <div className={`flex max-w-32 flex-col items-center text-center ${up ? '' : 'flex-col-reverse'}`}>
-                                <span className="text-[10px] font-semibold leading-tight text-slate-700">{d.title.length > 34 ? `${d.title.slice(0, 33)}…` : d.title}</span>
-                                <span className="text-[10px] text-slate-500">{shortDate(d.date)}</span>
+                                <span className="text-[11px] font-semibold leading-tight text-slate-700">{d.title.length > 34 ? `${d.title.slice(0, 33)}…` : d.title}</span>
+                                <span className="text-[11px] text-slate-500">{shortDate(d.date)}</span>
                                 <span className={`my-1 h-3.5 w-3.5 rounded-full border-2 border-white shadow ${dot(left)}`} />
                             </div>
                         </div>

@@ -100,7 +100,7 @@ export default function LawyerTeamTasks() {
                 <Link href="/kancelar/kalendar" className={`${ghostBtn} ml-auto`}>Kalendář</Link>
                 <button type="button" onClick={() => setForm(true)} className={primaryBtn}><Plus size={15} /> Zadat úkol</button>
             </div>
-            {colleagues.length === 0 && <p className="text-xs text-slate-500">Nejste v kanceláři s kolegy, úkoly si můžete zadávat jen sami sobě. Kolegy přidáte v sekci Tým.</p>}
+            {colleagues.length === 0 && <p className="text-sm text-slate-500">Nejste v kanceláři s kolegy, úkoly si můžete zadávat jen sami sobě. Kolegy přidáte v sekci Tým.</p>}
             {form && <TaskForm colleagues={colleagues} cases={cases} me={userId} onDone={() => { setForm(false); void load(); }} />}
             {err && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-900">{err}</p>}
             {shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{tab === 'pro-me' ? 'Nemáte žádný otevřený úkol.' : tab === 'zadane' ? 'Nikomu jste nezadali úkol, který by čekal.' : 'Zatím nic hotového.'}</p> : (

@@ -7,7 +7,7 @@ import { CaseMock, DashboardMock, WorkMock, Window } from './LandingMockups';
 
 // Ukázky rozhraní vykreslené z kódu. Jména, čísla a údaje jsou smyšlené.
 
-const Badge = ({ tone, children }: { tone: string; children: React.ReactNode }) => <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${tone}`}>{children}</span>;
+const Badge = ({ tone, children }: { tone: string; children: React.ReactNode }) => <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${tone}`}>{children}</span>;
 
 // Datová zpráva, ze které Kancelář vytáhla lhůtu
 export function DatovkaMock() {
@@ -39,13 +39,13 @@ export function MailMock() {
         <Window title="E-mail · Doručené">
             <div className="grid text-sm sm:grid-cols-[11rem_1fr]">
                 <ul className="divide-y divide-slate-100 border-b border-slate-100 sm:border-b-0 sm:border-r">
-                    {rows.map(([f, s, t, seen], i) => <li key={f} className={`px-3 py-2 ${i === 0 ? 'bg-indigo-50' : ''}`}><p className={`flex justify-between gap-2 truncate text-xs ${seen ? 'text-slate-600' : 'font-bold text-slate-900'}`}><span className="truncate">{f}</span><span className="shrink-0 font-normal text-slate-400">{t}</span></p><p className="truncate text-[11px] text-slate-500">{s}</p></li>)}
+                    {rows.map(([f, s, t, seen], i) => <li key={f} className={`px-3 py-2 ${i === 0 ? 'bg-indigo-50' : ''}`}><p className={`flex justify-between gap-2 truncate text-xs ${seen ? 'text-slate-600' : 'font-bold text-slate-900'}`}><span className="truncate">{f}</span><span className="shrink-0 font-normal text-slate-400">{t}</span></p><p className="truncate text-xs text-slate-500">{s}</p></li>)}
                 </ul>
                 <div className="p-3">
                     <p className="font-semibold text-slate-900">Fotky poškozeného zboží</p>
                     <p className="text-xs text-slate-500">Od: Petr Novák</p>
                     <p className="mt-2 text-[13px] leading-relaxed text-slate-700">Dobrý den, posílám fotky, jak jste chtěla. Fakturu doložím v pátek.</p>
-                    <div className="mt-2 flex flex-wrap gap-1.5"><span className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] text-slate-600"><Paperclip size={10} /> foto-1.jpg</span><span className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] text-slate-600"><Paperclip size={10} /> foto-2.jpg</span></div>
+                    <div className="mt-2 flex flex-wrap gap-1.5"><span className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-600"><Paperclip size={10} /> foto-1.jpg</span><span className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-600"><Paperclip size={10} /> foto-2.jpg</span></div>
                     <p className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 px-2.5 py-2 text-xs font-semibold text-emerald-900"><FolderInput size={13} /> Uložit do věci: Novák proti Dvořákovi</p>
                 </div>
             </div>
@@ -73,7 +73,7 @@ export function InvoiceMock() {
                 </div>
                 <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 p-2">
                     {qr ? <span className="block h-24 w-24 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qr }} /> : <span className="block h-24 w-24 rounded bg-slate-100" />}
-                    <span className="mt-1 text-[10px] font-semibold text-slate-500">QR platba</span>
+                    <span className="mt-1 text-[11px] font-semibold text-slate-500">QR platba</span>
                 </div>
             </div>
         </Window>
@@ -85,7 +85,7 @@ export function RadarMock() {
     return (
         <Window title="Přehled · Radar">
             <ul className="space-y-2 p-4 text-sm">
-                <li className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 p-3"><ShieldAlert size={16} className="mt-0.5 shrink-0 text-rose-700" /><span className="min-w-0"><span className="block font-semibold text-slate-900">Dlužník v insolvenci</span><span className="block text-xs text-slate-600">Stavby Horák s.r.o. · věc Novák proti Horákovi</span><span className="mt-1.5 inline-block rounded-md bg-white px-2 py-0.5 text-[11px] font-semibold text-rose-800">Navržená lhůta: přihláška pohledávky</span></span></li>
+                <li className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 p-3"><ShieldAlert size={16} className="mt-0.5 shrink-0 text-rose-700" /><span className="min-w-0"><span className="block font-semibold text-slate-900">Dlužník v insolvenci</span><span className="block text-xs text-slate-600">Stavby Horák s.r.o. · věc Novák proti Horákovi</span><span className="mt-1.5 inline-block rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-rose-800">Navržená lhůta: přihláška pohledávky</span></span></li>
                 <li className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3"><AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-700" /><span className="min-w-0"><span className="block font-semibold text-slate-900">Firma vstoupila do likvidace</span><span className="block text-xs text-slate-600">Obchod Jih a.s. · protistrana ve věci Svoboda</span></span></li>
                 <li className="flex items-start gap-3 rounded-xl border border-slate-200 p-3"><Briefcase size={16} className="mt-0.5 shrink-0 text-slate-500" /><span className="min-w-0"><span className="block font-semibold text-slate-900">Změna sídla</span><span className="block text-xs text-slate-600">Dvořák Trade s.r.o. · zkontrolujte doručovací adresu</span></span></li>
             </ul>
@@ -124,7 +124,7 @@ export function ProductDemo() {
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_30px_80px_-30px_rgba(15,23,42,0.35)]">
             <div className="flex items-center gap-1.5 border-b border-slate-200 bg-slate-50 px-4 py-2.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-slate-300" /><span className="h-2.5 w-2.5 rounded-full bg-slate-300" /><span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
-                <span className="mx-auto flex items-center gap-1.5 rounded-md bg-white px-3 py-0.5 text-[11px] text-slate-400"><Search size={10} aria-hidden="true" /> kancelar.cz</span>
+                <span className="mx-auto flex items-center gap-1.5 rounded-md bg-white px-3 py-0.5 text-xs text-slate-400"><Search size={10} aria-hidden="true" /> kancelar.cz</span>
             </div>
             <div className="grid md:grid-cols-[11.5rem_1fr]">
                 <nav className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50/60 p-2 md:flex-col md:border-b-0 md:border-r" aria-label="Ukázka aplikace">

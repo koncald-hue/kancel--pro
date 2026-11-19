@@ -63,7 +63,7 @@ export default function LawyerArchive() {
                             <button type="button" onClick={() => setOpen(open === r.id ? null : r.id)} aria-expanded={open === r.id} className="flex w-full flex-wrap items-center gap-3 p-3 text-left cursor-pointer">
                                 <span className="min-w-0 flex-1"><span className="block font-semibold text-slate-900">{r.title}</span><span className="block text-xs text-slate-500">{[r.client_name, r.archived_on && `archivováno ${dmy(r.archived_on)}`, r.archive_place].filter(Boolean).join(' · ')}</span></span>
                                 {r.archive_until && !r.disposal && <span className="text-xs text-slate-600">uložit do {dmy(r.archive_until)}</span>}
-                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[s] ?? 'bg-slate-100 text-slate-600'}`}>{STATE_LABEL[s]}</span>
+                                <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${TONE[s] ?? 'bg-slate-100 text-slate-600'}`}>{STATE_LABEL[s]}</span>
                             </button>
                             {open === r.id && <div className="border-t border-slate-100 p-3"><ArchiveCard item={r} onChanged={load} /><Link href={`/kancelar/veci/${r.id}`} className="mt-2 inline-block text-xs font-semibold text-indigo-800 hover:underline">Otevřít věc</Link></div>}
                         </li>

@@ -93,18 +93,18 @@ function Panel() {
                         </select>
                     </label>
                     {customKeys.slice(0, 12).map((k) => (
-                        <label key={k} className="block text-[11px] font-semibold text-slate-600">{customLabel(k)}
+                        <label key={k} className="block text-xs font-semibold text-slate-600">{customLabel(k)}
                             <input value={custom[k] ?? ''} onChange={(e) => setCustom({ ...custom, [k]: e.target.value })} className={`${inputCls} mt-0.5 font-normal`} />
                         </label>
                     ))}
-                    {customKeys.length > 12 && <p className="text-[11px] text-slate-500">Dalších {customKeys.length - 12} polí doplníte přímo ve Wordu.</p>}
+                    {customKeys.length > 12 && <p className="text-xs text-slate-500">Dalších {customKeys.length - 12} polí doplníte přímo ve Wordu.</p>}
                     <button type="button" disabled={!tpl || !!busy} onClick={() => void insertTemplate()} className={`${primaryBtn} w-full justify-center`}>{busy === 'tpl' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Vložit vzor do dokumentu</button>
                     <button type="button" disabled={!!busy} onClick={() => void insertDeadlines()} className={`${ghostBtn} w-full justify-center`}>{busy === 'dl' ? <Loader2 size={14} className="animate-spin" /> : <ListChecks size={14} />} Vložit lhůty věci</button>
                 </div>
             )}
             {msg && <p role="status" className="flex items-start gap-1.5 text-xs font-semibold text-emerald-800"><CheckCircle2 size={14} className="mt-px shrink-0" aria-hidden="true" /> {msg}</p>}
             {err && <p role="alert" className="text-xs font-semibold text-rose-800">{err}</p>}
-            <p className="text-[11px] leading-relaxed text-slate-500">Dokument se uloží do souborů věci (stejná věc ve Vaší Kanceláři) a při stejném názvu vznikne nová verze.</p>
+            <p className="text-xs leading-relaxed text-slate-500">Dokument se uloží do souborů věci (stejná věc ve Vaší Kanceláři) a při stejném názvu vznikne nová verze.</p>
         </div>
     );
 }

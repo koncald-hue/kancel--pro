@@ -43,8 +43,8 @@ export function EventCard({ e, caseTitle, onChanged }: { e: RadarEvent; caseTitl
     return (
         <li className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
             <div className="flex flex-wrap items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${TONE[info.tone]}`}>{info.label}</span>
-                {!e.seen && <span className="rounded-full bg-indigo-800 px-2 py-0.5 text-[10px] font-bold uppercase text-white">Nové</span>}
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${TONE[info.tone]}`}>{info.label}</span>
+                {!e.seen && <span className="rounded-full bg-indigo-800 px-2 py-0.5 text-[11px] font-bold uppercase text-white">Nové</span>}
                 <strong className="min-w-0 flex-1 truncate text-slate-900">{e.title}</strong>
                 <span className="text-xs text-slate-400">{new Date(e.created_at).toLocaleDateString('cs-CZ')}</span>
             </div>
@@ -60,7 +60,7 @@ export function EventCard({ e, caseTitle, onChanged }: { e: RadarEvent; caseTitl
                 <div className="mt-3 space-y-2 rounded-lg bg-slate-50 p-3">
                     <label className="block text-xs font-semibold text-slate-600">{info.months ? 'Datum zveřejnění rozhodnutí o úpadku (najdete v rejstříku)' : 'Konec lhůty podle zveřejněné výzvy'}<input type="date" value={date} onChange={(ev) => setDate(ev.target.value)} className={`${inputCls} mt-1 w-auto font-normal`} /></label>
                     {plan && <p className="text-xs text-slate-700"><strong>{plan.title}</strong>: konec {plan.weekday} {czDate(plan.end)}{plan.shiftedFrom ? ` (posunuto z ${czDate(plan.shiftedFrom)}: ${plan.reasons.join('; ')})` : ''}, doporučený interní termín {czDate(plan.internal)}.</p>}
-                    <p className="text-[11px] text-amber-900">{info.months ? 'Lhůta je stanovena v rozhodnutí o úpadku. Výpočet je jen návrh, před přidáním ji v rozhodnutí ověřte.' : 'Lhůtu ověřte ve zveřejněné výzvě likvidátora.'}</p>
+                    <p className="text-xs text-amber-900">{info.months ? 'Lhůta je stanovena v rozhodnutí o úpadku. Výpočet je jen návrh, před přidáním ji v rozhodnutí ověřte.' : 'Lhůtu ověřte ve zveřejněné výzvě likvidátora.'}</p>
                     <button type="button" onClick={() => void addDeadline()} disabled={!plan || busy} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <CalendarPlus size={15} />} Přidat lhůtu do věci</button>
                     {error && <p role="alert" className="text-xs text-rose-800">{error}</p>}
                 </div>

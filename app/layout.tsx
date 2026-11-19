@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { AuthProvider } from '@/app/components/site/AuthContext';
+import { THEME_INIT_SCRIPT } from '@/lib/theme';
+import ThemeSync from '@/app/components/site/ThemeSync';
 import PwaRegister from '@/app/components/site/PwaRegister';
 import ConfirmHost from '@/app/components/site/ConfirmHost';
 import './globals.css';
@@ -20,11 +22,13 @@ export const viewport: Viewport = { themeColor: '#4338ca' };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="cs" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="cs" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <head><script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} /></head>
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-800">
         <AuthProvider>{children}</AuthProvider>
         <ConfirmHost />
         <PwaRegister />
+        <ThemeSync />
       </body>
     </html>
   );

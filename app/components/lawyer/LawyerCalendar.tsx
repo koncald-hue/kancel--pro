@@ -92,8 +92,8 @@ export default function LawyerCalendar() {
 
     const chip = (i: AgendaItem, compact = false) => {
         const evId = i.kind === 'udalost' ? i.id.replace(/^ev-/, '').slice(0, 36) : null;
-        const body = <><span className="font-semibold">{i.start ? `${i.start} ` : ''}{i.high && <Flag size={10} className="mr-0.5 inline" aria-hidden="true" />}{i.title}</span>{!compact && i.sub && <span className="block text-[11px] opacity-80">{i.sub}</span>}</>;
-        const cls = `block w-full truncate rounded-md px-1.5 py-0.5 text-left text-[11px] ${COLOR[i.kind]} ${i.done ? 'line-through opacity-60' : ''}`;
+        const body = <><span className="font-semibold">{i.start ? `${i.start} ` : ''}{i.high && <Flag size={10} className="mr-0.5 inline" aria-hidden="true" />}{i.title}</span>{!compact && i.sub && <span className="block text-xs opacity-80">{i.sub}</span>}</>;
+        const cls = `block w-full truncate rounded-md px-1.5 py-0.5 text-left text-xs ${COLOR[i.kind]} ${i.done ? 'line-through opacity-60' : ''}`;
         return evId ? <button key={i.id} type="button" onClick={(e) => { e.stopPropagation(); setOpenEv(evId); }} className={`${cls} cursor-pointer`} title={`${i.title}${i.sub ? ` · ${i.sub}` : ''}`}>{body}</button>
             : <Link key={i.id} href={i.href} onClick={(e) => e.stopPropagation()} className={cls} title={`${KIND_LABEL[i.kind]}: ${i.title}${i.sub ? ` · ${i.sub}` : ''}`}>{body}</Link>;
     };
@@ -154,7 +154,7 @@ export default function LawyerCalendar() {
             {view === 'mesic' ? (
                 <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center text-[11px] font-bold uppercase text-slate-500">{DOW.map((d) => <div key={d} className="py-1.5">{d}</div>)}</div>
+                        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center text-xs font-bold uppercase text-slate-500">{DOW.map((d) => <div key={d} className="py-1.5">{d}</div>)}</div>
                         {weeks.map((w) => (
                             <div key={w[0]} className="grid grid-cols-7 border-b border-slate-100 last:border-b-0">
                                 {w.map((d) => {
@@ -162,7 +162,7 @@ export default function LawyerCalendar() {
                                     return (
                                         <div key={d} role="button" tabIndex={0} onClick={() => setDay(d)} onKeyDown={(e) => { if (e.key === 'Enter') setDay(d); }} aria-label={`${longDate(d)}, ${list.length} položek`} className={`min-h-24 cursor-pointer border-r border-slate-100 p-1 last:border-r-0 ${other ? 'bg-slate-50/60 text-slate-400' : weekend ? 'bg-slate-50/30' : ''} ${day === d ? 'ring-2 ring-inset ring-indigo-400' : ''}`}>
                                             <p className={`mb-0.5 text-right text-xs font-semibold ${d === today ? 'text-white' : ''}`}><span className={d === today ? 'rounded-full bg-indigo-700 px-1.5 py-0.5' : ''}>{Number(d.slice(8))}</span></p>
-                                            <div className="space-y-0.5">{list.slice(0, 3).map((i) => chip(i, true))}{list.length > 3 && <p className="px-1 text-[11px] font-semibold text-slate-500">+{list.length - 3} další</p>}</div>
+                                            <div className="space-y-0.5">{list.slice(0, 3).map((i) => chip(i, true))}{list.length > 3 && <p className="px-1 text-xs font-semibold text-slate-500">+{list.length - 3} další</p>}</div>
                                         </div>
                                     );
                                 })}

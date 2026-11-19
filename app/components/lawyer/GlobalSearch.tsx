@@ -100,10 +100,10 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
                     {!error && q.trim().length < 2 && <p className="px-5 py-8 text-center text-sm text-slate-500">Pište aspoň dvě písmena. Hledá se bez ohledu na velikost písmen a diakritiku. <span className="block mt-1 text-xs text-slate-400">Šifrované zprávy a chat se prohledat nedají, server je nevidí.</span></p>}
                     {tools.length > 0 && (
                         <section aria-label="Nástroje a stránky">
-                            <h3 className="sticky top-0 flex items-center gap-1.5 bg-slate-50 px-5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500"><Compass size={12} aria-hidden="true" /> Nástroje a stránky</h3>
+                            <h3 className="sticky top-0 flex items-center gap-1.5 bg-slate-50 px-5 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-500"><Compass size={12} aria-hidden="true" /> Nástroje a stránky</h3>
                             <ul>{tools.map((t, i) => (
                                 <li key={t.id}><button type="button" id={`sr-${i}`} role="option" aria-selected={active === i} onMouseEnter={() => setActive(i)} onClick={() => goTool(t)} className={`block w-full px-5 py-2.5 text-left cursor-pointer ${active === i ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}>
-                                    <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">{t.name}{t.reason && <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-800"><Sparkles size={10} aria-hidden="true" /> doporučeno</span>}</span>
+                                    <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">{t.name}{t.reason && <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-800"><Sparkles size={10} aria-hidden="true" /> doporučeno</span>}</span>
                                     <span className="mt-0.5 block text-xs text-slate-600">{t.reason || t.desc}</span>
                                 </button></li>))}</ul>
                         </section>
@@ -116,7 +116,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
                         const Icon = meta.icon;
                         return (
                             <section key={g.kind} aria-label={meta.label}>
-                                <h3 className="sticky top-0 flex items-center gap-1.5 bg-slate-50 px-5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500"><Icon size={12} aria-hidden="true" /> {meta.label} ({g.rows.length})</h3>
+                                <h3 className="sticky top-0 flex items-center gap-1.5 bg-slate-50 px-5 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-500"><Icon size={12} aria-hidden="true" /> {meta.label} ({g.rows.length})</h3>
                                 <ul>{g.rows.map((r) => {
                                     index += 1;
                                     const i = index;
@@ -133,7 +133,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
                         );
                     })}
                 </div>
-                <p className="border-t border-slate-100 px-5 py-2 text-[11px] text-slate-400">↑↓ výběr · Enter otevřít · Esc zavřít</p>
+                <p className="border-t border-slate-100 px-5 py-2 text-xs text-slate-400">↑↓ výběr · Enter otevřít · Esc zavřít</p>
             </div>
         </div>
     );

@@ -57,7 +57,7 @@ export default function MfaCard() {
                     <p className="text-sm font-semibold text-slate-900">1. V ověřovací aplikaci naskenujte QR kód</p>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={setup.qr} alt="QR kód pro ověřovací aplikaci" className="mt-2 h-40 w-40 rounded-lg bg-white p-1" />
-                    <p className="mt-2 text-xs text-slate-600">Nejde naskenovat? Zadejte ručně klíč: <code className="select-all break-all rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">{setup.secret}</code>. Klíč nikde nesdílejte.</p>
+                    <p className="mt-2 text-xs text-slate-600">Nejde naskenovat? Zadejte ručně klíč: <code className="select-all break-all rounded bg-white px-1.5 py-0.5 font-mono text-xs">{setup.secret}</code>. Klíč nikde nesdílejte.</p>
                     <p className="mt-3 text-sm font-semibold text-slate-900">2. Opište šestimístný kód z aplikace</p>
                     <form onSubmit={(e) => { e.preventDefault(); void confirm(); }} className="mt-2 flex flex-wrap items-center gap-2">
                         <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="123456" aria-label="Kód z aplikace" className={`${inputCls} w-36 text-lg tracking-[0.25em]`} />

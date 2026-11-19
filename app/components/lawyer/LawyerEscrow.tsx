@@ -115,7 +115,7 @@ function EscrowRow({ e, moves, clientName, caseTitle, caseId, userId, today, exp
         <li className={`rounded-2xl border bg-white ${stale ? 'border-amber-300' : 'border-slate-200'}`}>
             <button type="button" onClick={onToggle} aria-expanded={expanded} className="flex w-full flex-wrap items-center gap-3 p-4 text-left cursor-pointer">
                 {expanded ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}
-                <span className="min-w-0 flex-1"><span className="block font-semibold text-slate-900">{e.title}{e.status === 'closed' && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600"><Lock size={10} aria-hidden="true" /> uzavřeno</span>}</span>
+                <span className="min-w-0 flex-1"><span className="block font-semibold text-slate-900">{e.title}{e.status === 'closed' && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600"><Lock size={10} aria-hidden="true" /> uzavřeno</span>}</span>
                     <span className="block text-xs text-slate-500">{[clientName, caseTitle, `od ${dateCz(e.opened_on)}`].filter(Boolean).join(' · ')}</span></span>
                 {stale && <span className="flex items-center gap-1 text-xs font-semibold text-amber-900"><AlertTriangle size={13} aria-hidden="true" /> leží {daysOpen(e, today)} dní</span>}
                 <span className="text-base font-bold text-slate-900">{money(balance, e.currency)}</span>
@@ -125,7 +125,7 @@ function EscrowRow({ e, moves, clientName, caseTitle, caseId, userId, today, exp
                     {e.purpose && <p className="text-sm text-slate-700"><strong>Účel:</strong> {e.purpose}</p>}
                     {caseId && <Link href={`/kancelar/veci/${caseId}`} className="text-xs font-semibold text-indigo-800 hover:underline">Otevřít věc</Link>}
                     <div className="overflow-x-auto"><table className="w-full text-left text-sm">
-                        <thead className="text-[11px] uppercase tracking-wide text-slate-500"><tr><th className="py-1 pr-3">Datum</th><th className="pr-3">Pohyb</th><th className="pr-3">Strana / odkaz</th><th className="pr-3 text-right">Částka</th><th className="text-right">Zůstatek</th></tr></thead>
+                        <thead className="text-xs uppercase tracking-wide text-slate-500"><tr><th className="py-1 pr-3">Datum</th><th className="pr-3">Pohyb</th><th className="pr-3">Strana / odkaz</th><th className="pr-3 text-right">Částka</th><th className="text-right">Zůstatek</th></tr></thead>
                         <tbody className="divide-y divide-slate-100">{rows.length === 0 ? <tr><td colSpan={5} className="py-3 text-slate-500">Zatím žádný pohyb.</td></tr> : rows.map(({ m, run: r }) => <tr key={m.id}><td className="py-1.5 pr-3">{dateCz(m.moved_on)}</td><td className="pr-3">{KIND_LABEL[m.kind]}</td><td className="pr-3 text-slate-600">{[m.party, m.reference, m.note].filter(Boolean).join(' · ')}</td><td className={`pr-3 text-right font-semibold ${isIn(m.kind) ? 'text-emerald-800' : 'text-rose-800'}`}>{isIn(m.kind) ? '+' : '−'}{money(m.amount, e.currency)}</td><td className="text-right">{money(r, e.currency)}</td></tr>)}</tbody>
                     </table></div>
                     {e.status === 'open' && (

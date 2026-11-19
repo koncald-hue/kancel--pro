@@ -5,7 +5,7 @@ export const Window = ({ title, children, className = '' }: { title: string; chi
     <div className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/50 ${className}`} role="img" aria-label={`Ukázka rozhraní: ${title}`}>
         <div className="flex items-center gap-1.5 border-b border-slate-100 bg-slate-50 px-4 py-2.5">
             <span className="h-2.5 w-2.5 rounded-full bg-rose-300" /><span className="h-2.5 w-2.5 rounded-full bg-amber-300" /><span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-            <span className="ml-3 text-[11px] font-medium text-slate-400">{title}</span>
+            <span className="ml-3 text-xs font-medium text-slate-400">{title}</span>
         </div>
         <div aria-hidden="true">{children}</div>
     </div>
@@ -13,9 +13,9 @@ export const Window = ({ title, children, className = '' }: { title: string; chi
 
 const Stat = ({ label, value, note }: { label: string; value: string; note?: string }) => (
     <div className="rounded-xl border border-slate-100 bg-white p-3">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
+        <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
         <p className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">{value}</p>
-        {note && <p className="text-[10px] text-slate-400">{note}</p>}
+        {note && <p className="text-[11px] text-slate-400">{note}</p>}
     </div>
 );
 
@@ -68,7 +68,7 @@ export function CaseMock() {
                         <li key={t} className="rounded-xl border border-slate-100 p-3">
                             <p className="font-semibold text-slate-800">{t}</p>
                             <p className={`text-xs font-bold ${c}`}>{d}</p>
-                            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-400"><Check size={11} /> {n}</p>
+                            <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400"><Check size={11} /> {n}</p>
                         </li>
                     ))}
                 </ul>
@@ -83,15 +83,15 @@ export function ClientMock() {
         <div className="mx-auto w-64 rounded-[2.2rem] border-8 border-slate-900 bg-white shadow-2xl shadow-slate-400/50" role="img" aria-label="Ukázka rozhraní: klientský portál na telefonu">
             <div aria-hidden="true" className="overflow-hidden rounded-[1.5rem] bg-slate-50">
                 <div className="bg-indigo-700 px-4 py-3 text-white">
-                    <p className="flex items-center gap-1.5 text-[11px] font-semibold opacity-90"><Scale size={12} /> JUDr. Jana Králová</p>
+                    <p className="flex items-center gap-1.5 text-xs font-semibold opacity-90"><Scale size={12} /> JUDr. Jana Králová</p>
                     <p className="mt-0.5 text-sm font-bold">Vaše věc: Novák proti Dvořákovi</p>
                 </div>
                 <div className="space-y-2.5 p-3">
-                    <p className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-800"><Lock size={11} /> Zprávy jsou end-to-end šifrované</p>
+                    <p className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-800"><Lock size={11} /> Zprávy jsou end-to-end šifrované</p>
                     <div className="rounded-xl rounded-tl-sm bg-white p-2.5 text-xs text-slate-700 shadow-xs">Dobrý den, žalobu jsme podali. Prosím nahrajte fotky poškozeného zboží.</div>
                     <div className="ml-6 rounded-xl rounded-tr-sm bg-indigo-600 p-2.5 text-xs text-white">Posílám, ještě v pátek doložím fakturu.</div>
-                    <div className="flex items-center gap-2 rounded-xl border border-dashed border-slate-300 p-2.5 text-[11px] text-slate-600"><Paperclip size={12} /> foto-skoda-1.jpg · nahráno</div>
-                    <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-400">Napište zprávu… <Send size={12} className="ml-auto text-indigo-600" /></div>
+                    <div className="flex items-center gap-2 rounded-xl border border-dashed border-slate-300 p-2.5 text-xs text-slate-600"><Paperclip size={12} /> foto-skoda-1.jpg · nahráno</div>
+                    <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-400">Napište zprávu… <Send size={12} className="ml-auto text-indigo-600" /></div>
                 </div>
             </div>
         </div>

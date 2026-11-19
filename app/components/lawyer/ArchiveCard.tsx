@@ -45,7 +45,7 @@ export default function ArchiveCard({ item, onChanged }: { item: CaseArch; onCha
 
     return (
         <section aria-label="Archiv spisu" className={`rounded-2xl border p-4 sm:p-5 ${tone}`}>
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Archive size={16} className="text-indigo-700" aria-hidden="true" /> Archiv spisu <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 ring-1 ring-slate-200">{STATE_LABEL[state]}</span></h3>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Archive size={16} className="text-indigo-700" aria-hidden="true" /> Archiv spisu <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200">{STATE_LABEL[state]}</span></h3>
             {state === 'k-archivaci' && <p className="mt-1 text-sm text-slate-600">Věc je uzavřená. Archivujte spis: zapíše se datum, místo uložení a lhůta, po které ho lze vydat nebo skartovat.</p>}
             {item.archived_on && <p className="mt-1 text-sm text-slate-700">Archivováno {dmy(item.archived_on)}{item.archive_place ? `, uloženo: ${item.archive_place}` : ''}. Uložit do {dmy(item.archive_until)}.{item.disposed_on ? ` ${item.disposal === 'vydano' ? 'Vydáno' : 'Skartováno'} ${dmy(item.disposed_on)}.` : ''}</p>}
             {!open && !item.disposed_on && (

@@ -14,7 +14,7 @@ const plural = (n: number) => (n === 1 ? 'den' : n < 5 ? 'dny' : 'dní');
 // Dlaždice s datem účinnosti
 function DateTile({ iso, hot }: { iso: string; hot: boolean }) {
     const d = new Date(`${iso}T12:00:00`);
-    return <span className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl leading-none ${hot ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700'}`}><span className="text-xl font-bold">{d.getDate()}</span><span className="mt-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">{MONTHS[d.getMonth()]}</span></span>;
+    return <span className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl leading-none ${hot ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700'}`}><span className="text-xl font-bold">{d.getDate()}</span><span className="mt-1 text-[11px] font-semibold uppercase tracking-wide opacity-80">{MONTHS[d.getMonth()]}</span></span>;
 }
 
 function Law({ it }: { it: NewsItem }) {
@@ -79,7 +79,7 @@ export default function LegalNews() {
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Newspaper size={18} className="text-indigo-700" aria-hidden="true" /> Právní novinky</h2>
                         <p className="mt-0.5 text-sm text-slate-600">Co se mění v zákonech a co je nového ve světě práva.</p>
                     </div>
-                    <span className="flex items-center gap-1.5 text-[11px] text-slate-400">Automaticky z veřejných zdrojů{updated ? `, ${new Date(updated).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}` : ''}<button type="button" onClick={() => void load()} aria-label="Obnovit" className="rounded p-1 hover:bg-slate-100 cursor-pointer"><RefreshCw size={11} /></button></span>
+                    <span className="flex items-center gap-1.5 text-xs text-slate-400">Automaticky z veřejných zdrojů{updated ? `, ${new Date(updated).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}` : ''}<button type="button" onClick={() => void load()} aria-label="Obnovit" className="rounded p-1 hover:bg-slate-100 cursor-pointer"><RefreshCw size={11} /></button></span>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Druh novinek">
                     {TABS.map(([id, label, Icon]) => (
@@ -100,7 +100,7 @@ export default function LegalNews() {
                     <ul className="divide-y divide-slate-100">{shown.map((it) => <Law key={it.id} it={it} />)}</ul>
                 )}
                 {list.length > shown.length || more ? <div className="mt-2 text-center"><button type="button" onClick={() => setMore((m) => !m)} className="rounded-full px-4 py-1.5 text-sm font-semibold text-indigo-800 hover:bg-indigo-50 cursor-pointer">{more ? 'Zobrazit méně' : 'Zobrazit další'}</button></div> : null}
-                <p className="mt-3 px-1 text-[11px] leading-relaxed text-slate-400">Zdroje: Sbírka zákonů (zakonyprolidi.cz), epravo.cz, Advokátní deník. Přehled je jen upozornění a odkaz na zdroj, nikoli právní informace. Znění předpisů si před použitím ověřte ve Sbírce zákonů.</p>
+                <p className="mt-3 px-1 text-xs leading-relaxed text-slate-400">Zdroje: Sbírka zákonů (zakonyprolidi.cz), epravo.cz, Advokátní deník. Přehled je jen upozornění a odkaz na zdroj, nikoli právní informace. Znění předpisů si před použitím ověřte ve Sbírce zákonů.</p>
             </div>
         </section>
     );

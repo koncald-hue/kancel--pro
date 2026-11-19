@@ -157,11 +157,11 @@ export default function QuickAdd({ open, onClose, initial = 'cas' }: { open: boo
                             <p className="text-xs text-slate-500">Věc dostane úkoly z výchozí šablony (máte-li ji) a otevře se.</p>
                         </>
                     )}
-                    {chosen && tab !== 'vec' && <p className="text-[11px] text-slate-500">Ukládá se do věci „{chosen.title}“.</p>}
+                    {chosen && tab !== 'vec' && <p className="text-xs text-slate-500">Ukládá se do věci „{chosen.title}“.</p>}
                     {err && <p role="alert" className="text-sm font-semibold text-rose-800">{err}</p>}
                     {done && <p role="status" className="flex items-center gap-1.5 text-sm font-semibold text-emerald-800"><CheckCircle2 size={15} aria-hidden="true" /> {done}</p>}
                     <div className="flex items-center justify-between gap-2 pt-1">
-                        <span className="hidden text-[11px] text-slate-400 sm:inline">Otevřete kdykoli klávesou N, zavřete Esc.</span>
+                        <span className="hidden text-xs text-slate-400 sm:inline">Otevřete kdykoli klávesou N, zavřete Esc.</span>
                         <button type="submit" disabled={busy} className={primaryBtn}>{busy && <Loader2 size={14} className="animate-spin" />} {tab === 'vec' ? 'Založit věc' : 'Uložit'}</button>
                     </div>
                 </form>

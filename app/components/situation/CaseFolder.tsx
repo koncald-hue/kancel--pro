@@ -170,7 +170,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                         <tbody className="divide-y divide-slate-100">
                             {shown.map(({ c, next }) => (
                                 <tr key={c.id} className="hover:bg-indigo-50/50">
-                                    <td className="px-4 py-2.5 font-semibold text-slate-900"><Link href={casePath(c.id)} className="hover:text-indigo-800 hover:underline">{c.pinned && <Pin size={12} className="mr-1 inline text-indigo-700" />}{c.title}{c.user_id && c.user_id !== accountId && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-900">Sdíleno s vámi</span>}</Link></td>
+                                    <td className="px-4 py-2.5 font-semibold text-slate-900"><Link href={casePath(c.id)} className="hover:text-indigo-800 hover:underline">{c.pinned && <Pin size={12} className="mr-1 inline text-indigo-700" />}{c.title}{c.user_id && c.user_id !== accountId && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold uppercase text-indigo-900">Sdíleno s vámi</span>}</Link></td>
                                     <td className="px-3 py-2.5 text-slate-700">{c.client_name || '–'}</td>
                                     <td className="px-3 py-2.5 text-slate-700">{c.reference || '–'}</td>
                                     <td className="px-3 py-2.5 text-slate-700">{c.authority || '–'}</td>
@@ -189,7 +189,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                         <li key={c.id}>
                             <Link href={casePath(c.id)} className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-indigo-400 sm:p-5">
                                 <div className="flex items-start justify-between gap-3">
-                                    <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">{c.pinned && <Pin size={14} className="text-indigo-700" aria-label="Připnuto" />}{c.title}{c.user_id && c.user_id !== accountId && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-900">Sdíleno s vámi</span>}</h2>
+                                    <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">{c.pinned && <Pin size={14} className="text-indigo-700" aria-label="Připnuto" />}{c.title}{c.user_id && c.user_id !== accountId && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold uppercase text-indigo-900">Sdíleno s vámi</span>}</h2>
                                     {next && <span className={`shrink-0 text-xs font-bold ${deadlineTone(daysUntil(next.date), false)}`}>{deadlineText(daysUntil(next.date))}</span>}
                                 </div>
                                 {(c.client_name || c.reference || c.authority) && <p className="mt-1 text-xs font-semibold text-slate-500">{[c.client_name, c.reference, c.authority].filter(Boolean).join(' · ')}</p>}

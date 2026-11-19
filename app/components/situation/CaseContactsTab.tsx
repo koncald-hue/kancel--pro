@@ -52,7 +52,7 @@ export default function CaseContactsTab({ item, bundle, userId, lawyer, setBundl
                         <li key={c.id} className="rounded-xl border border-slate-200 bg-white p-4">
                             <div className="flex items-start justify-between gap-2">
                                 <div>
-                                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">{c.role}</span>
+                                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600">{c.role}</span>
                                     <p className="mt-1.5 text-sm font-semibold text-slate-900">{c.name}</p>
                                 </div>
                                 <button type="button" onClick={() => void remove(c.id)} aria-label={`Smazat ${c.name}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50 cursor-pointer"><Trash2 size={15} /></button>
@@ -62,7 +62,7 @@ export default function CaseContactsTab({ item, bundle, userId, lawyer, setBundl
                                 {c.phone && <a href={`tel:${c.phone.replace(/\s+/g, '')}`} className="flex items-center gap-2 text-indigo-900 hover:underline"><Phone size={14} className="shrink-0" />{c.phone}</a>}
                                 {c.note && <p className="text-xs leading-relaxed text-slate-600">{c.note}</p>}
                                 {(c.ico || c.birth) && <p className="text-xs text-slate-500">{c.ico ? `IČO ${c.ico}` : ''}{c.ico && c.birth ? ' · ' : ''}{c.birth ? `nar. ${new Date(`${c.birth}T12:00:00`).toLocaleDateString('cs-CZ')}` : ''}</p>}
-                                {lawyer && <button type="button" onClick={() => void toggleWatch(c)} disabled={!c.watch && !c.ico && !c.birth} title={!c.ico && !c.birth ? 'Pro hlídání je potřeba IČO nebo datum narození' : ''} className={`mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${c.watch ? 'bg-indigo-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Radar size={12} aria-hidden="true" /> {c.watch ? 'Hlídáno radarem' : 'Hlídat v radaru'}</button>}
+                                {lawyer && <button type="button" onClick={() => void toggleWatch(c)} disabled={!c.watch && !c.ico && !c.birth} title={!c.ico && !c.birth ? 'Pro hlídání je potřeba IČO nebo datum narození' : ''} className={`mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${c.watch ? 'bg-indigo-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Radar size={12} aria-hidden="true" /> {c.watch ? 'Hlídáno radarem' : 'Hlídat v radaru'}</button>}
                             </div>
                         </li>
                     ))}

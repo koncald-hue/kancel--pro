@@ -79,7 +79,7 @@ export default function WorkSuggestions({ userId, cases, rateFor, onAdded }: { u
                                             <button type="button" onClick={() => void dismiss(s)} aria-label="Zahodit návrh" title="Zahodit návrh" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 cursor-pointer"><X size={15} /></button>
                                         </div>
                                         <input value={v.description} onChange={(e) => set(s.key, { description: e.target.value })} aria-label="Popis" className={`${inputCls} mt-2 py-1.5`} />
-                                        <p className="mt-1 text-[11px] text-slate-400">{s.activityIds.length} úkonů, {new Date(s.from).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}–{new Date(s.to).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}{s.already ? ` · už zapsáno ${fmtMinutes(s.already)}` : ''} · odhad {fmtMinutes(s.rawMinutes)}</p>
+                                        <p className="mt-1 text-xs text-slate-400">{s.activityIds.length} úkonů, {new Date(s.from).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}–{new Date(s.to).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}{s.already ? ` · už zapsáno ${fmtMinutes(s.already)}` : ''} · odhad {fmtMinutes(s.rawMinutes)}</p>
                                     </li>); })}
                             </ul>
                         </div>

@@ -107,7 +107,7 @@ export default function LawyerInvoices() {
         return [...map.entries()].map(([key, g]) => ({ key, ...g, outstanding: sum(g.items.filter((r) => r.state !== 'paid' && r.state !== 'draft'), (r) => r.outstanding), paid: sum(g.items, (r) => r.paid), overdue: sum(g.items.filter((r) => r.state === 'overdue'), (r) => r.outstanding) })).sort((a, b) => b.overdue - a.overdue || b.outstanding - a.outstanding || a.name.localeCompare(b.name, 'cs'));
     }, [shown]);
 
-    const Tile = ({ label, value, note, tone }: { label: string; value: string; note?: string; tone?: string }) => <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</p><p className={`mt-1 text-2xl font-bold ${tone || 'text-slate-900'}`}>{value}</p>{note && <p className="text-xs text-slate-500">{note}</p>}</div>;
+    const Tile = ({ label, value, note, tone }: { label: string; value: string; note?: string; tone?: string }) => <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</p><p className={`mt-1 text-2xl font-bold ${tone || 'text-slate-900'}`}>{value}</p>{note && <p className="text-xs text-slate-500">{note}</p>}</div>;
 
     const table = (list: Receivable[]) => (
         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">

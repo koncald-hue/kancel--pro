@@ -267,10 +267,10 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
                                 <span className="min-w-0 flex-1">
                                     <span className="block truncate text-sm font-semibold text-slate-900">{tab === 'received' ? r.sender : r.recipient || r.recipientBox}</span>
                                     <span className="block truncate text-sm text-slate-600">{r.annotation || '(bez věci)'}</span>
-                                    {tab === 'received' && ['5', '6', '7'].includes(r.status) && !checked.has(r.id) && <span className="mr-1.5 mt-0.5 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-950"><AlertTriangle size={11} aria-hidden="true" /> lhůty nezkontrolovány</span>}
-                                    {inCases[r.id]?.length ? <span className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-900"><Check size={11} aria-hidden="true" /> ve věci: {inCases[r.id].join(', ')}</span> : null}
+                                    {tab === 'received' && ['5', '6', '7'].includes(r.status) && !checked.has(r.id) && <span className="mr-1.5 mt-0.5 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-950"><AlertTriangle size={11} aria-hidden="true" /> lhůty nezkontrolovány</span>}
+                                    {inCases[r.id]?.length ? <span className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-semibold text-emerald-900"><Check size={11} aria-hidden="true" /> ve věci: {inCases[r.id].join(', ')}</span> : null}
                                 </span>
-                                <span className="shrink-0 text-right text-xs text-slate-500">{fmtTime(r.delivered || r.accepted)}<span title={STATUS_LABELS[r.status] ?? r.status} className={`mt-1 block w-28 truncate rounded-full px-1.5 py-px text-center text-[10px] font-bold uppercase tracking-wide ${statusTone(r.status)}`}>{STATUS_LABELS[r.status] ?? r.status}</span></span>
+                                <span className="shrink-0 text-right text-xs text-slate-500">{fmtTime(r.delivered || r.accepted)}<span title={STATUS_LABELS[r.status] ?? r.status} className={`mt-1 block w-28 truncate rounded-full px-1.5 py-px text-center text-[11px] font-bold uppercase tracking-wide ${statusTone(r.status)}`}>{STATUS_LABELS[r.status] ?? r.status}</span></span>
                             </button>
                         </li>
                     ))}

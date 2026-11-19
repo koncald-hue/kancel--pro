@@ -39,7 +39,7 @@ export default function AdminHome() {
         return () => { a = false; };
     }, []);
     if (!d) return <p className="text-sm text-slate-500" role="status">Načítám…</p>;
-    const tile = (label: string, value: string, href: string, note = '') => <Link href={href} className="rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>{note && <p className="text-xs text-slate-500">{note}</p>}</Link>;
+    const tile = (label: string, value: string, href: string, note = '') => <Link href={href} className="rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>{note && <p className="text-xs text-slate-500">{note}</p>}</Link>;
     const todo: [string, string][] = [
         ...(d.pendingOrders ? [[`${d.pendingOrders} objednávek čeká na zaplacení nebo potvrzení platby`, '/admin/advokati'] as [string, string]] : []),
         ...(d.refunds ? [[`${d.refunds} objednávek k vrácení peněz (a vystavení dobropisu)`, '/admin/advokati'] as [string, string]] : []),

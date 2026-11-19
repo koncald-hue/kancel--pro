@@ -42,7 +42,7 @@ function LawyerCard({ lawyer }: { lawyer: Lawyer }) {
                     ? <img src={lawyer.photo} alt="" aria-hidden="true" className="h-20 w-20 shrink-0 rounded-full object-cover" />
                     : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-indigo-800 text-lg font-bold text-white" aria-hidden="true">{initials(name)}</span>}
                 <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: ACCENTS[accentOf(lawyer.accent)].hex }}>Váš advokát</p>
+                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: ACCENTS[accentOf(lawyer.accent)].hex }}>Váš advokát</p>
                     <p className="text-xl font-bold leading-tight text-slate-900">{name}</p>
                     {lawyer.name && lawyer.firm && <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-600"><Building2 size={14} aria-hidden="true" />{lawyer.firm}</p>}
                     {lawyer.barNumber && <p className="text-xs text-slate-500">Ev. č. ČAK {lawyer.barNumber}</p>}
@@ -314,7 +314,7 @@ export default function ClientPortal() {
                 <nav className="flex gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Části stránky">
                     {tabs.map(([id, label, Icon, badge]) => (
                         <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold cursor-pointer ${tab === id ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
-                            <Icon size={16} aria-hidden="true" /> {label}{badge > 0 && <span className="rounded-full bg-indigo-800 px-1.5 text-[11px] font-bold text-white">{badge}</span>}
+                            <Icon size={16} aria-hidden="true" /> {label}{badge > 0 && <span className="rounded-full bg-indigo-800 px-1.5 text-xs font-bold text-white">{badge}</span>}
                         </button>
                     ))}
                 </nav>
@@ -380,7 +380,7 @@ export default function ClientPortal() {
                     <div role="tabpanel">
                         <Card title={`Zprávy s ${lawyerName}`}>
                             {data.messages.length === 0 ? <p className="text-sm text-slate-500">Máte dotaz? Napište ho sem a advokát vám odpoví.</p> : (
-                                <ul className="space-y-2">{data.messages.map((m) => <li key={m.id} className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${m.from_client ? 'ml-auto bg-indigo-800 text-white' : 'bg-slate-100 text-slate-900'}`}><p className="whitespace-pre-line">{isEncrypted(m.body) ? (plain[m.id] ?? '🔒 Zašifrovaná zpráva') : m.body}</p><p className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${m.from_client ? 'text-indigo-100' : 'text-slate-500'}`}>{!m.from_client && data.lawyer.photo?.startsWith('data:image/jpeg;base64,') && (<img src={data.lawyer.photo} alt="" aria-hidden="true" className="h-5 w-5 rounded-full object-cover" />)}{m.from_client ? data.client.name || 'Vy' : lawyerName} · {fmtDate(m.created_at)}</p></li>)}</ul>
+                                <ul className="space-y-2">{data.messages.map((m) => <li key={m.id} className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${m.from_client ? 'ml-auto bg-indigo-800 text-white' : 'bg-slate-100 text-slate-900'}`}><p className="whitespace-pre-line">{isEncrypted(m.body) ? (plain[m.id] ?? '🔒 Zašifrovaná zpráva') : m.body}</p><p className={`mt-0.5 flex items-center gap-1.5 text-xs ${m.from_client ? 'text-indigo-100' : 'text-slate-500'}`}>{!m.from_client && data.lawyer.photo?.startsWith('data:image/jpeg;base64,') && (<img src={data.lawyer.photo} alt="" aria-hidden="true" className="h-5 w-5 rounded-full object-cover" />)}{m.from_client ? data.client.name || 'Vy' : lawyerName} · {fmtDate(m.created_at)}</p></li>)}</ul>
                             )}
                             <form onSubmit={(e) => { e.preventDefault(); void send(); }} className="mt-3 flex gap-2">
                                 <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} maxLength={2000} placeholder="Napište zprávu advokátovi…" aria-label="Zpráva advokátovi" className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-700/40" />

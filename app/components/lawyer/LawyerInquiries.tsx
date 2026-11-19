@@ -193,7 +193,7 @@ export default function LawyerInquiries() {
                             <Link href={`/kancelar/veci/${inv.caseId}`} className={ghostBtn}>Otevřít věc</Link>
                         </div>
                         <NextSteps caseId={inv.caseId} taskCreated={!!taskDone[id]} onTask={() => setTask({ caseId: inv.caseId, caseTitle: q.name, title: `Vyřídit: ${q.name}`, inquiryId: q.id, kind: 'ukol' })} />
-                        <p className="mt-2 text-[11px] text-slate-500">Odkaz zůstává i ve věci v záložce Klient. Tady se ukazuje jen teď, protože klíč se po opuštění stránky už nezobrazí.</p>
+                        <p className="mt-2 text-xs text-slate-500">Odkaz zůstává i ve věci v záložce Klient. Tady se ukazuje jen teď, protože klíč se po opuštění stránky už nezobrazí.</p>
                     </section>
                 );
             })}

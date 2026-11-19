@@ -115,7 +115,7 @@ export default function LawyerMailLog() {
             {shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{rows.length ? 'Nic neodpovídá filtru.' : `V roce ${year} zatím žádná zásilka.`}</p> : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                     <table className="w-full min-w-[880px] text-left text-sm">
-                        <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-2">Č. j.</th><th className="px-3 py-2">Datum</th><th className="px-3 py-2">Způsob</th><th className="px-3 py-2">Odesílatel / adresát</th><th className="px-3 py-2">Věc</th><th className="px-3 py-2">Spis</th><th className="px-3 py-2">Doručení</th></tr></thead>
+                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-2">Č. j.</th><th className="px-3 py-2">Datum</th><th className="px-3 py-2">Způsob</th><th className="px-3 py-2">Odesílatel / adresát</th><th className="px-3 py-2">Věc</th><th className="px-3 py-2">Spis</th><th className="px-3 py-2">Doručení</th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                             {shown.map((r) => {
                                 const st = deliveryState(r);

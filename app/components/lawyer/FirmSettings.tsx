@@ -83,7 +83,7 @@ export default function FirmSettings() {
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Role">
                 <h2 className="text-lg font-bold text-slate-900">Role v kanceláři</h2>
                 <dl className="mt-3 space-y-3 text-sm">
-                    {(['owner', 'admin', 'member'] as FirmRole[]).map((r) => <div key={r}><dt className="font-semibold text-slate-900">{ROLE_LABELS[r]}{r === role && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-900">vy</span>}</dt><dd className="text-slate-600">{ROLE_HELP[r]}</dd></div>)}
+                    {(['owner', 'admin', 'member'] as FirmRole[]).map((r) => <div key={r}><dt className="font-semibold text-slate-900">{ROLE_LABELS[r]}{r === role && <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold text-indigo-900">vy</span>}</dt><dd className="text-slate-600">{ROLE_HELP[r]}</dd></div>)}
                 </dl>
                 <p className="mt-3 text-xs text-slate-500">Role přiděluje jen vedoucí. Obsah cizích věcí, klientů a zpráv nevidí nikdo z nich, ani vedoucí.</p>
             </section>

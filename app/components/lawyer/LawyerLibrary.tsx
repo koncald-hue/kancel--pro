@@ -168,7 +168,7 @@ function Editor({ template, userId, onDone, onCancel }: { template: LawyerTempla
                     <div>
                         <p className="font-bold uppercase tracking-wide text-slate-500">Vložit pole (na místo kurzoru)</p>
                         {groups.map((g) => (
-                            <div key={g} className="mt-2"><p className="font-semibold text-slate-600">{g}</p><div className="mt-1 flex flex-wrap gap-1">{AUTO_FIELDS.filter((f) => f.group === g).map((f) => <button key={f.key} type="button" onClick={() => insert(f.key)} title={f.label} className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-semibold text-indigo-900 hover:bg-indigo-100 cursor-pointer">{f.label}</button>)}</div></div>
+                            <div key={g} className="mt-2"><p className="font-semibold text-slate-600">{g}</p><div className="mt-1 flex flex-wrap gap-1">{AUTO_FIELDS.filter((f) => f.group === g).map((f) => <button key={f.key} type="button" onClick={() => insert(f.key)} title={f.label} className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-900 hover:bg-indigo-100 cursor-pointer">{f.label}</button>)}</div></div>
                         ))}
                     </div>
                     <div>

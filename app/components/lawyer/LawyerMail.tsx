@@ -196,7 +196,7 @@ export default function LawyerMail() {
                 <ul className="max-h-[70vh] divide-y divide-slate-100 overflow-y-auto rounded-2xl border border-slate-200 bg-white text-sm">
                     {messages.map((m) => (
                         <li key={m.uid}><button type="button" onClick={() => void open(m)} className={`block w-full px-4 py-2.5 text-left hover:bg-slate-50 cursor-pointer ${sel?.uid === m.uid ? 'bg-indigo-50' : ''}`}>
-                            <span className="flex items-baseline justify-between gap-2"><span className={`truncate ${m.seen ? 'text-slate-700' : 'font-bold text-slate-900'}`}>{folder === 'SENT' ? m.to : m.from}</span><span className="shrink-0 text-[11px] text-slate-400">{fmt(m.date)}</span></span>
+                            <span className="flex items-baseline justify-between gap-2"><span className={`truncate ${m.seen ? 'text-slate-700' : 'font-bold text-slate-900'}`}>{folder === 'SENT' ? m.to : m.from}</span><span className="shrink-0 text-xs text-slate-400">{fmt(m.date)}</span></span>
                             <span className={`block truncate ${m.seen ? 'text-slate-500' : 'font-semibold text-slate-800'}`}>{m.attachments && <Paperclip size={11} className="mr-1 inline" aria-label="Příloha" />}{m.subject}</span></button></li>
                     ))}
                     {messages.length === 0 && busy !== 'list' && <li className="px-4 py-6 text-slate-500">Žádné zprávy.</li>}

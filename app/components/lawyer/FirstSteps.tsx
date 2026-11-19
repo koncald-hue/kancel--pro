@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Circle, Rocket, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Circle, Rocket, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { firstStepsDone, type FirstStep } from '@/lib/firstSteps';
 import { useLawyer } from './LawyerGate';
 
 const HIDE_KEY = 'kancelar-prvni-kroky-skryto';
+// Na telefonu je průvodce sbalený (nezabírá první obrazovku), na velké obrazovce rozbalený; klepnutím jde přepnout
+const subscribeWide = (cb: () => void) => { const mq = window.matchMedia('(min-width: 1024px)'); mq.addEventListener('change', cb); return () => mq.removeEventListener('change', cb); };
+const isWide = () => window.matchMedia('(min-width: 1024px)').matches;
 const head = { count: 'exact' as const, head: true };
 
 // Průvodce prvními dny: co nastavit, aby Kancelář pracovala za vás. Zmizí, jakmile je vše hotové, nebo ho skryjete.
@@ -15,6 +18,9 @@ export default function FirstSteps() {
     const { userId } = useLawyer();
     const [steps, setSteps] = useState<FirstStep[] | null>(null);
     const [hidden, setHidden] = useState(true);
+    const wide = useSyncExternalStore(subscribeWide, isWide, () => true);
+    const [manual, setManual] = useState<boolean | null>(null);
+    const open = manual ?? wide;
 
     useEffect(() => {
         let show = true;
@@ -64,9 +70,10 @@ export default function FirstSteps() {
                     <p className="text-sm text-slate-600">Hotovo {done} z {steps.length}. Každý krok zabere pár minut.</p>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-indigo-100"><div className="h-full rounded-full bg-indigo-600 transition-all" style={{ width: `${Math.round((done / steps.length) * 100)}%` }} /></div>
                 </div>
+                <button type="button" onClick={() => setManual(!open)} aria-expanded={open} aria-label={open ? 'Sbalit první kroky' : 'Rozbalit první kroky'} title={open ? 'Sbalit' : 'Rozbalit'} className="cursor-pointer rounded-lg p-1 text-slate-400 hover:bg-white hover:text-slate-700"><ChevronDown size={16} className={open ? 'rotate-180' : ''} /></button>
                 <button type="button" onClick={hide} aria-label="Skrýt první kroky" title="Skrýt" className="rounded-lg p-1 text-slate-400 hover:bg-white hover:text-slate-700 cursor-pointer"><X size={16} /></button>
             </div>
-            <ol className="mt-4 grid gap-2 sm:grid-cols-2">
+            {open && <ol className="mt-4 grid gap-2 sm:grid-cols-2">
                 {steps.map((s) => (
                     <li key={s.id} className={`flex gap-2.5 rounded-xl p-3 ${s.done ? 'bg-white/60' : 'bg-white shadow-xs'}`}>
                         {s.done ? <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-600" aria-label="Hotovo" /> : <Circle size={18} className="mt-0.5 shrink-0 text-slate-300" aria-label="Zbývá" />}
@@ -76,7 +83,7 @@ export default function FirstSteps() {
                         </span>
                     </li>
                 ))}
-            </ol>
+            </ol>}
         </section>
     );
 }

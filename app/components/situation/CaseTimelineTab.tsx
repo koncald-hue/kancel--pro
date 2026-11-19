@@ -69,7 +69,7 @@ export default function CaseTimelineTab({ item, bundle, userId, setBundle, fail 
                             <span className="absolute -left-[1.78rem] top-4 flex h-4 w-4 items-center justify-center rounded-full border-2 border-indigo-300 bg-white" aria-hidden="true" />
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
-                                    <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                    <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500">
                                         {e.kind === 'event' ? <Flag size={12} className="text-indigo-700" /> : <StickyNote size={12} className="text-slate-500" />}
                                         {e.kind === 'event' ? shortDate(new Date(`${dayOf(e)}T12:00:00`)) : 'Poznámka'}
                                         {e.pinned && <span className="text-indigo-700">· připnuto</span>}

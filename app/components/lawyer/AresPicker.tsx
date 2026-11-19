@@ -57,7 +57,7 @@ export default function AresPicker({ onPick, label = 'Najít firmu v ARES', comp
                     ))}
                 </ul>
             )}
-            {!compact && <p className="mt-1.5 text-[11px] text-slate-500">Údaje se načtou z veřejného registru ARES (Ministerstvo financí). Před použitím je zkontrolujte.</p>}
+            {!compact && <p className="mt-1.5 text-xs text-slate-500">Údaje se načtou z veřejného registru ARES (Ministerstvo financí). Před použitím je zkontrolujte.</p>}
         </div>
     );
 }

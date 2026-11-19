@@ -191,7 +191,7 @@ export default function TodayBoard() {
                         <ul className="divide-y divide-slate-100">
                             {agenda.slice(0, 12).map((a, idx) => (
                                 <li key={a.key} className="px-1 py-2.5">
-                                    {(idx === 0 || agenda[idx - 1].urgency !== a.urgency) && <p className={`mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wider ${a.urgency === 'overdue' ? 'text-rose-700' : a.urgency === 'today' ? 'text-amber-700' : 'text-slate-400'}`}>{URGENCY_LABEL[a.urgency]}</p>}
+                                    {(idx === 0 || agenda[idx - 1].urgency !== a.urgency) && <p className={`mb-1.5 px-1 text-xs font-bold uppercase tracking-wider ${a.urgency === 'overdue' ? 'text-rose-700' : a.urgency === 'today' ? 'text-amber-700' : 'text-slate-400'}`}>{URGENCY_LABEL[a.urgency]}</p>}
                                     <div className="flex items-start gap-2.5">
                                         {a.customId ? (
                                             <button type="button" onClick={() => void markDone(a)} aria-label={`Označit jako hotové: ${a.title}`} className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-emerald-600 hover:bg-emerald-50 cursor-pointer"><Check size={12} className="text-transparent hover:text-emerald-700" /></button>
@@ -220,7 +220,7 @@ export default function TodayBoard() {
                             {agenda.length > 12 && <li className="px-2 py-2 text-xs text-slate-500">a dalších {agenda.length - 12} ve věcech</li>}
                         </ul>
                     )}
-                    <p className="px-2 pb-1 pt-2 text-[11px] leading-relaxed text-slate-400">Upozornění na termíny je pomůcka. „Vypočteno orientačně“ znamená, že datum spočítala aplikace a nikdo ho neověřil.</p>
+                    <p className="px-2 pb-1 pt-2 text-xs leading-relaxed text-slate-400">Upozornění na termíny je pomůcka. „Vypočteno orientačně“ znamená, že datum spočítala aplikace a nikdo ho neověřil.</p>
                 </Block>
 
                 {/* 3. Čekání na klienta */}
@@ -234,7 +234,7 @@ export default function TodayBoard() {
                                     <Link href={caseLink(w.caseId, 'klient')} className="group flex items-start gap-3 rounded-xl px-2 py-2.5 hover:bg-slate-50">
                                         <span className="min-w-0 flex-1">
                                             <span className="block truncate text-sm font-semibold text-slate-900">{w.caseTitle}{w.clientName && <span className="font-normal text-slate-500"> · {w.clientName}</span>}</span>
-                                            <span className="mt-1 flex flex-wrap gap-1">{w.reasons.slice(0, 3).map((r, i) => <span key={i} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700"><strong>{WAIT_LABEL[r.kind]}:</strong> {r.title}</span>)}{w.reasons.length > 3 && <span className="text-[11px] text-slate-500">+{w.reasons.length - 3}</span>}</span>
+                                            <span className="mt-1 flex flex-wrap gap-1">{w.reasons.slice(0, 3).map((r, i) => <span key={i} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"><strong>{WAIT_LABEL[r.kind]}:</strong> {r.title}</span>)}{w.reasons.length > 3 && <span className="text-xs text-slate-500">+{w.reasons.length - 3}</span>}</span>
                                         </span>
                                         <span className={`shrink-0 text-xs font-bold ${w.days >= 7 ? 'text-rose-700' : w.days >= 3 ? 'text-amber-700' : 'text-slate-500'}`}>{waitDays(w.days)}</span>
                                     </Link>

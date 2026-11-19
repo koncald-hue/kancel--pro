@@ -26,7 +26,7 @@ export default function DayPanel({ deadlinesToday = 0 }: { deadlinesToday?: numb
         <section aria-label="Dnes" className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-white p-5">
             <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-indigo-800 text-white" aria-hidden="true">
-                    <span className="text-[10px] font-bold uppercase leading-none tracking-wider opacity-80">{now.toLocaleDateString('cs-CZ', { month: 'short' })}</span>
+                    <span className="text-[11px] font-bold uppercase leading-none tracking-wider opacity-80">{now.toLocaleDateString('cs-CZ', { month: 'short' })}</span>
                     <span className="text-2xl font-bold leading-tight">{now.getDate()}</span>
                 </div>
                 <div>
