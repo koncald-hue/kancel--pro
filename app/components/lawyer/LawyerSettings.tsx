@@ -181,7 +181,11 @@ export default function LawyerSettings() {
             <section className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
                 <h2 className="text-lg font-bold text-slate-900">Přístup</h2>
                 <p className="mt-2"><strong>{STATUS[access.status] ?? access.status}</strong>{access.until && <> do {new Date(`${access.until}T12:00:00`).toLocaleDateString('cs-CZ')}</>}</p>
-                <p className="mt-1 text-xs text-slate-500">Prodloužení nebo změnu tarifu vám potvrdíme e-mailem na adrese {access.email || 'vašeho účtu'}.</p>
+                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-700">
+                    <strong className="block text-sm text-slate-900">Ukončení předplatného</strong>
+                    Předplatné se kupuje jednorázově na zvolené období a <strong>samo se neobnovuje</strong>. Z karty se nic automaticky nestrhává, takže ho není třeba rušit: po uplynutí období přístup jen skončí. Vaše data zůstanou zachována a po obnovení předplatného je opět uvidíte. Před skončením si je můžete kdykoli stáhnout na stránce <Link href="/kancelar/export" className="font-semibold text-indigo-900 underline">Export dat</Link>.
+                </div>
+                <p className="mt-2 text-xs text-slate-500">Prodloužení nebo změnu tarifu vám potvrdíme e-mailem na adrese {access.email || 'vašeho účtu'}.</p>
             </section>
             </>)}
             {sec === 'aplikace' && (<>
