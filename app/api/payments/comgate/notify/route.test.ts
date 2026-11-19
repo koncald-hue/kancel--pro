@@ -24,7 +24,7 @@ describe('comgate notify', () => {
         expect(rpc).toHaveBeenCalledWith('apply_lawyer_payment', { p_order: ORDER, p_ref: 'comgate:AB12-CD34-EF56' });
     });
     it('refuses a wrong amount, a test payment in live mode and unpaid status', async () => {
-        for (const o of [{ price: '100' }, { test: 'true' }, { curr: 'EUR' }]) { gateway(o); expect((await POST(notify())).status).toBe(400); }
+        for (const o of [{ price: '100' }, { test: 'true' }, { curr: 'EUR' }] as Record<string, string>[]) { gateway(o); expect((await POST(notify())).status).toBe(400); }
         gateway({ status: 'PENDING' }); expect((await POST(notify())).status).toBe(200);
         expect(rpc).not.toHaveBeenCalled();
     });
