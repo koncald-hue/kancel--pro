@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { AI_MAX_CHARS } from '@/lib/redact';
+import { anonymizeText } from '@/lib/anonymizer';
 import { buildRoutePrompt, parseRoute, type RouteCase } from '@/lib/aiRoute';
 import { ghostBtn } from '../situation/caseUi';
 
@@ -17,7 +18,7 @@ export default function AiRouteSuggest({ mail, cases, onPick }: { mail: { subjec
     async function run() {
         setBusy(true); setErr(''); setRes(null);
         try {
-            const { text, list } = buildRoutePrompt(mail, cases);
+            const { text, list } = buildRoutePrompt({ subject: anonymizeText(mail.subject).text, text: anonymizeText(mail.text).text }, cases);
             if (text.length > AI_MAX_CHARS) throw new Error('E-mail je příliš dlouhý.');
             const { data: { session } } = await supabase.auth.getSession();
             const r = await fetch('/api/case-ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ mode: 'route', text, confirmed: true }) });

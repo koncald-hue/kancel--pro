@@ -24,7 +24,7 @@ const CONTROLS = [
     'Přísná Content-Security-Policy, zákaz vložení aplikace do cizí stránky a ochrana proti přesměrování.',
     'Hlídání lhůt a práv v databázi, ne jen v rozhraní: kolega ani vedoucí kanceláře nevidí data, která mu nebyla sdílena.',
     'Kontrola střetu zájmů napříč kanceláří vrací jen to, že shoda existuje, nikdy jméno kolegy ani věc.',
-    'AI asistent je vypnutý, dokud advokát neudělí souhlas. Odesílá se jen vybraný text a před odesláním se zakryjí identifikátory.',
+    'AI asistent je vypnutý, dokud advokát neudělí souhlas. Odesílá se jen vybraný text a před odesláním se zakryjí jména klienta a kontaktů a identifikátory.',
     'Anonymizér v aplikaci zakryje jména, rodná čísla, účty, adresy a kontakty číslovanými značkami a po odpovědi AI je vrátí zpět. Probíhá jen ve vašem prohlížeči, text se neodesílá ani neukládá.',
     'Přístupové tokeny ke kalendářům Google a Microsoft jsou uložené šifrovaně a do kalendáře se zapisují jen názvy a data lhůt, nikdy obsah věci. Push upozornění nesou jen počty lhůt, žádná jména.',
     'Offline lhůty na zařízení jsou nepovinné, zapíná je advokát sám a jdou smazat jedním tlačítkem. Servisní skript aplikace do paměti neukládá žádná data věcí.',

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Copy, FilePlus2, Loader2, ShieldAlert, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { AI_MAX_CHARS, redact } from '@/lib/redact';
+import { anonymizeText, restoreText, suggestNames, TOTAL } from '@/lib/anonymizer';
 import { buildContext, DRAFT_TYPES, type AiTask, type Doc, type DraftType } from '@/lib/caseContext';
 import { todayIso } from '@/lib/billing';
 import { insertRow } from '@/lib/caseFile';
@@ -34,6 +35,8 @@ export default function CaseAiTab({ item, bundle, userId }: TabProps) {
     const [answer, setAnswer] = useState<{ text: string; redacted: number; task: AiTask } | null>(null);
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
+    const [extraNames, setExtraNames] = useState<string[]>([]);
+    const [nameInput, setNameInput] = useState('');
     const [saved, setSaved] = useState('');
 
     useEffect(() => {
@@ -57,7 +60,14 @@ export default function CaseAiTab({ item, bundle, userId }: TabProps) {
         if (current.needsText) return text.trim();
         return buildContext({ task, item, deadlines: bundle.deadlines, entries: bundle.entries, docs: docs.filter((d) => picked.has(d.id)), today: todayIso(), max: AI_MAX_CHARS - 200, draftType, instructions, question });
     }, [current.needsText, text, task, item, bundle.deadlines, bundle.entries, docs, picked, draftType, instructions, question]);
-    const prepared = useMemo(() => redact(outgoing), [outgoing]);
+    // Před odesláním se zakryjí jména klienta a kontaktů věci, jména přidaná advokátem a identifikátory; odpověď se pak vrátí do čitelné podoby
+    const names = useMemo(() => [...new Set([item.client_name ?? '', ...bundle.contacts.map((c) => c.name), ...extraNames].map((n) => n.trim()).filter((n) => n.length > 2))], [item.client_name, bundle.contacts, extraNames]);
+    const suggested = useMemo(() => suggestNames(outgoing).filter((n) => !names.some((k) => k.toLowerCase() === n.toLowerCase())), [outgoing, names]);
+    const prepared = useMemo(() => {
+        const a = anonymizeText(outgoing, names);
+        const r = redact(a.text);
+        return { text: r.text, count: TOTAL(a.counts) + r.count, map: a.map };
+    }, [outgoing, names]);
     const tooLong = prepared.text.length > AI_MAX_CHARS;
     const missing = current.needsText ? !text.trim() : task === 'ask' ? question.trim().length < 5 : false;
 
@@ -69,10 +79,10 @@ export default function CaseAiTab({ item, bundle, userId }: TabProps) {
         setBusy(true); setError(''); setAnswer(null); setSaved('');
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch('/api/case-ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ mode: task, text: outgoing, confirmed: true }) });
+            const res = await fetch('/api/case-ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ mode: task, text: prepared.text, confirmed: true }) });
             const out = await res.json().catch(() => ({})) as { answer?: string; redacted?: number; error?: string; message?: string };
             if (!res.ok) { setError(out.error === 'disabled' ? 'AI není na serveru zapnutá (chybí OPENAI_API_KEY).' : out.error === 'consent' ? 'Nejdřív udělte souhlas níže.' : out.error === 'rate' ? 'Příliš mnoho dotazů, zkuste to za chvíli.' : out.message || 'AI teď neodpověděla. Zkuste to znovu.'); return; }
-            setAnswer({ text: out.answer ?? '', redacted: out.redacted ?? 0, task }); setConfirmed(false);
+            setAnswer({ text: restoreText(out.answer ?? '', prepared.map), redacted: out.redacted ?? 0, task }); setConfirmed(false);
         } catch { setError('Spojení selhalo.'); } finally { setBusy(false); }
     }
     async function saveNote() {
@@ -122,10 +132,17 @@ export default function CaseAiTab({ item, bundle, userId }: TabProps) {
 
             <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5" aria-labelledby="ai-preview">
                 <details>
-                    <summary className="cursor-pointer text-sm font-bold text-slate-900" id="ai-preview">Přesně tohle odejde poskytovateli AI ({prepared.text.length} znaků, zakryto identifikátorů: {prepared.count})</summary>
+                    <summary className="cursor-pointer text-sm font-bold text-slate-900" id="ai-preview">Přesně tohle odejde poskytovateli AI ({prepared.text.length} znaků, zakryto údajů: {prepared.count})</summary>
                     <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-white p-3 text-xs leading-relaxed text-slate-800">{prepared.text || '(zatím nic)'}</pre>
                 </details>
-                <p className="mt-2 text-xs text-slate-600">Rodná čísla, účty, e-maily a telefony se zakryjí. Jména a adresy ne{tooLong ? <span className="font-semibold text-rose-800">. Podklad je delší než {AI_MAX_CHARS} znaků, odeberte některý dokument</span> : ''}.</p>
+                <p className="mt-2 text-xs text-slate-600">Zakryjí se jména klienta a kontaktů věci, rodná čísla, účty, adresy, e-maily a telefony. Odpověď se vám zobrazí zpět se skutečnými jmény{tooLong ? <span className="font-semibold text-rose-800">. Podklad je delší než {AI_MAX_CHARS} znaků, odeberte některý dokument</span> : ''}.</p>
+                <div className="mt-2 text-xs text-slate-700">
+                    <span className="font-semibold">Zakrývaná jména:</span>{' '}
+                    {names.length === 0 && <span className="text-slate-500">zatím žádná. </span>}
+                    {names.map((n) => <span key={n} className="mr-1.5 inline-block rounded-full bg-indigo-100 px-2.5 py-0.5 font-semibold text-indigo-950">{n}{extraNames.includes(n) && <button type="button" aria-label={`Odebrat ${n}`} onClick={() => setExtraNames(extraNames.filter((x) => x !== n))} className="ml-1 cursor-pointer">×</button>}</span>)}
+                    {suggested.slice(0, 8).map((n) => <button key={n} type="button" onClick={() => setExtraNames([...extraNames, n])} className="mr-1.5 cursor-pointer rounded-full border border-slate-300 bg-white px-2.5 py-0.5 font-semibold hover:bg-slate-50">+ {n}</button>)}
+                    <input value={nameInput} onChange={(e) => setNameInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const v = nameInput.trim(); if (v && !extraNames.includes(v)) setExtraNames([...extraNames, v]); setNameInput(''); } }} placeholder="Přidat jméno a Enter" aria-label="Přidat jméno k zakrytí" className="mt-1 w-44 rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs" />
+                </div>
                 <label className="mt-3 flex items-start gap-2 text-sm font-semibold text-slate-800"><input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-800" /> Souhlasím s odesláním tohoto podkladu externímu poskytovateli AI.</label>
                 <button type="button" disabled={!confirmed || !prepared.text.trim() || tooLong || missing || busy} onClick={() => void run()} className={`${primaryBtn} mt-3`}>{busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />} {current.label}</button>
                 {missing && <p className="mt-2 text-xs text-slate-500">{current.needsText ? 'Vložte text.' : 'Napište otázku.'}</p>}
