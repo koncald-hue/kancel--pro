@@ -22,6 +22,7 @@ export const TOOLS: Tool[] = [
     { id: 'platby', name: 'Platby z banky', href: '/kancelar/platby', desc: 'Příchozí platby, párování s fakturami, upomínky.', words: ['banka', 'fio', 'vypis', 'zaplaceno', 'zaplatil', 'sparovat', 'platba'] },
     { id: 'export', name: 'Export pro účetní', href: '/kancelar/export', desc: 'ZIP s přehledem faktur, DPH a ISDOC pro účetní.', words: ['ucetni', 'dph', 'isdoc', 'pohoda', 'money', 'ucetnictvi', 'kontrolni hlaseni'] },
     { id: 'kalkulacky', name: 'Kalkulačky', href: '/kancelar/kalkulacky', desc: 'Odměna podle advokátního tarifu a úrok z prodlení.', words: ['tarif', 'urok', 'prodleni', 'sazba', 'odmena', 'vypocet', 'repo'] },
+    { id: 'anonymizer', name: 'Anonymizér', href: '/kancelar/anonymizer', desc: 'Zakrytí jmen a osobních údajů před vložením do AI, s vrácením zpět.', words: ['anonymizace', 'osobni', 'udaje', 'gdpr', 'ai', 'zakryt'] },
     { id: 'import', name: 'Import dat', href: '/kancelar/import', desc: 'Nahrání klientů, věcí, lhůt a času z Excelu, CSV nebo vCard.', words: ['excel', 'csv', 'prenos', 'migrace', 'nahrat data', 'jiny program', 'xlsx'] },
     { id: 'tym', name: 'Tým', href: '/kancelar/tym', desc: 'Kolegové z kanceláře, pozvánky a role.', words: ['kolega', 'pozvat', 'clen', 'kancelar', 'role', 'sdileni'] },
     { id: 'chat', name: 'Chat kanceláře', href: '/kancelar/chat', desc: 'Šifrované zprávy a předávání souborů mezi kolegy.', words: ['zprava kolegovi', 'poslat soubor', 'predat spis', 'sifrovany chat'] },
