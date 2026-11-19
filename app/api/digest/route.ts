@@ -4,6 +4,7 @@ import { rateLimited, serviceClient } from '@/lib/serverSupabase';
 import { mfaBlocked } from '@/lib/serverMfa';
 import { mailConfigured, maskEmail, sendMail } from '@/lib/mail';
 import { digestFor } from '@/lib/digestServer';
+import { getSiteOrigin } from '@/lib/siteUrl';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
     const db = serviceClient();
     if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
     const today = new Date().toISOString().slice(0, 10);
-    const d = await digestFor(db, u.user.id, today, details, new URL(req.url).origin);
+    const d = await digestFor(db, u.user.id, today, details, getSiteOrigin() ?? new URL(req.url).origin);
     if (!send) return NextResponse.json({ subject: d.mail.subject, text: d.mail.text, worth: d.worth }, { headers: { 'Cache-Control': 'no-store' } });
     if (!mailConfigured()) return NextResponse.json({ error: 'mail_off' }, { status: 503 });
     const to = u.user.email ?? '';

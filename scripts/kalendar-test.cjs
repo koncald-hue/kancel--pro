@@ -23,6 +23,7 @@ const T = 'KAL-TEST'; const day = (n) => new Date(Date.now() + n * 86400000).toI
     r = await A.from('team_tasks').insert({ created_by: B_USER, assignee_id: UA, title: `${T} za cizí jméno`, due_date: day(2) }); ok('úkol za jiného zadavatele nejde', !!r.error);
     r = await A.from('team_tasks').insert({ created_by: UA, assignee_id: UA, title: `${T} pro sebe`, due_date: day(1), status: 'done' }).select('status, seen_at').single(); ok('vlastní úkol vznikne otevřený a viděný', !r.error && r.data.status === 'open' && !!r.data.seen_at, r.error?.message);
     r = await A.from('team_tasks').update({ title: `${T} pro kolegu upraveno`, priority: 'high' }).eq('id', t1.id).select('title'); ok('zadavatel smí upravit zadání', (r.data || [])[0]?.title === `${T} pro kolegu upraveno`, r.error?.message);
+    r = await A.from('team_tasks').update({ created_by: B_USER, assignee_id: UA }).eq('id', t1.id); ok('zadavatele úkolu nejde přepsat na kolegu', !!r.error, r.error?.message?.slice(0, 60));
     r = await A.from('team_tasks').update({ assignee_id: C_USER }).eq('id', t1.id); ok('předat úkol mimo kancelář nejde', !!r.error, r.error?.message?.slice(0, 60));
 
     // --- Úkoly: A řeší úkol od B

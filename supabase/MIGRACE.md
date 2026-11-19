@@ -48,6 +48,7 @@ Potřebuje v `.env.local` hodnoty `NEXT_PUBLIC_SUPABASE_URL` a `SUPABASE_SERVICE
 | `20261118_20_ucetnictvi-provozovatele.sql` | Účetnictví provozovatele: automatická faktura při zaplacení objednávky, ruční faktura, dobropis, výdaje, poznámky týmu k uživatelům a záznam úkonů správce. |
 | `20261118_21_ukoly-tymu-a-kalendar.sql` | Úkoly mezi kolegy (zadání, splnění, odmítnutí s důvodem) a události kalendáře s pozvanými kolegy. |
 | `20261119_22_oprava-kodovani.sql` | Znovu spustí migrace 11, 15, 19, 20 a 21, jejichž české texty ve funkcích se při vložení přes schránku poškodily. |
+| `20261119_23_ukoly-zadavatel.sql` | Zadavatele úkolu nelze přepsat (nalezeno při kontrole kódu). |
 
 ## Starší skripty (před zavedením složky migrations)
 

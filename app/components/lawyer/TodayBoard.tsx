@@ -58,7 +58,7 @@ const waitDays = (n: number) => (n === 0 ? 'od dneška' : n === 1 ? '1 den' : n 
 
 function Block({ id, icon: Icon, title, count: n, action, children }: { id: string; icon: typeof Inbox; title: string; count?: number; action?: React.ReactNode; children: React.ReactNode }) {
     return (
-        <section aria-labelledby={id} className="flex flex-col rounded-2xl border border-slate-200 bg-white">
+        <section aria-labelledby={id} className="flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white">
             <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 sm:px-5">
                 <h2 id={id} className="flex items-center gap-2 text-base font-bold text-slate-900"><Icon size={17} className="text-indigo-700" aria-hidden="true" /> {title}{n ? <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-900">{n}</span> : null}</h2>
                 {action}
