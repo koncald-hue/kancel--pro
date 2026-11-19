@@ -55,15 +55,17 @@ export default function ProfitSection() {
                 </div>
             </div>
             {groups.length === 0 && <p className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">V tomto období není zapsaná práce ani faktura.</p>}
+            {groups.length > 0 && groups.some((g) => g.profit.unbilledValue > 0) && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">Nevyfakturovaná práce celkem: <strong>{money(groups.reduce((s, g) => s + g.profit.unbilledValue, 0))}</strong> (bez DPH). Nejvíc čeká ve {by === 'case' ? 'věci' : 'u klienta'} <strong>{[...groups].sort((a, b) => b.profit.unbilledValue - a.profit.unbilledValue)[0].name}</strong>.</p>}
             {groups.length > 0 && <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                 <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-2">{by === 'case' ? 'Věc' : 'Klient'}</th><th className="px-3 py-2 text-right">Hodin</th><th className="px-3 py-2 text-right">Hodnota práce</th><th className="px-3 py-2 text-right">Vyfakturováno</th><th className="px-3 py-2 text-right">Zaplaceno</th><th className="px-3 py-2 text-right">Za hodinu</th><th className="px-3 py-2 text-right">Realizace</th><th className="px-3 py-2 text-right">Inkaso</th>{costNum && <th className="px-3 py-2 text-right">Zisk</th>}</tr></thead>
+                    <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-2">{by === 'case' ? 'Věc' : 'Klient'}</th><th className="px-3 py-2 text-right">Hodin</th><th className="px-3 py-2 text-right">Hodnota práce</th><th className="px-3 py-2 text-right">K vyfakturování</th><th className="px-3 py-2 text-right">Vyfakturováno</th><th className="px-3 py-2 text-right">Zaplaceno</th><th className="px-3 py-2 text-right">Za hodinu</th><th className="px-3 py-2 text-right">Realizace</th><th className="px-3 py-2 text-right">Inkaso</th>{costNum && <th className="px-3 py-2 text-right">Zisk</th>}</tr></thead>
                     <tbody className="divide-y divide-slate-100">
                         {groups.slice(0, 25).map((g) => (
                             <tr key={g.id}>
                                 <td className="px-4 py-2 font-semibold text-slate-900">{by === 'case' ? <Link href={`/kancelar/veci/${g.id}`} className="text-indigo-800 hover:underline">{g.name}</Link> : g.name}</td>
                                 <td className="px-3 py-2 text-right text-slate-700">{g.profit.hours.toString().replace('.', ',')}</td>
                                 <td className="px-3 py-2 text-right text-slate-700">{money(g.profit.workValue)}</td>
+                                <td className={`px-3 py-2 text-right ${g.profit.unbilledValue > 0 ? 'font-semibold text-amber-800' : 'text-slate-400'}`}>{money(g.profit.unbilledValue)}</td>
                                 <td className="px-3 py-2 text-right text-slate-700">{money(g.profit.billed)}</td>
                                 <td className="px-3 py-2 text-right font-semibold text-emerald-800">{money(g.profit.paid)}</td>
                                 <td className={`px-3 py-2 text-right font-semibold ${g.profit.effectiveRate !== null && costNum !== null && g.profit.effectiveRate < costNum ? 'text-rose-700' : 'text-slate-900'}`}>{g.profit.effectiveRate === null ? '–' : money(g.profit.effectiveRate)}</td>

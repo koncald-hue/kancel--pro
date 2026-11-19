@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Copy, Download, FilePlus2, Library, Loader2, Pencil, Plus, Printer, Trash2, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { loadCases, type LegalCase } from '@/lib/cases';
-import { AUTO_FIELDS, autoValues, buildDocx, customLabel, fieldsIn, fillTemplate, type LawyerTemplate } from '@/lib/templates';
+import { AUTO_FIELDS, autoValues, buildDocx, type CaseExtras, customLabel, fieldsIn, fillTemplate, type LawyerTemplate } from '@/lib/templates';
 import { insertRow, uploadCaseFile } from '@/lib/caseFile';
 import { plainPreview } from '@/lib/docx';
 import { STARTER_TEMPLATES } from '@/lib/starterTemplates';
@@ -206,7 +206,15 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
     useEffect(() => { let alive = true; loadCases().then((c) => { if (alive) setCases(c); }).catch(() => {}); supabase.from('lawyer_clients').select('id, address, ico, dic, birth').then(({ data }) => { if (alive && data) setClients(data); }); return () => { alive = false; }; }, []);
 
     const chosen = cases.find((c) => c.id === caseId) ?? null;
-    const auto = useMemo(() => ({ ...autoValues(chosen, access, undefined, clients.find((c) => c.id === chosen?.client_id)), ...override }), [chosen, access, override, clients]);
+    // Protistrana, lhůty a výkazy vybrané věci: doplní se do polí vzoru
+    const [extras, setExtras] = useState<{ id: string; x: CaseExtras } | null>(null);
+    useEffect(() => {
+        if (!caseId) return; let alive = true;
+        Promise.all([supabase.from('case_contacts').select('role, name, email, phone, ico').eq('case_id', caseId), supabase.from('case_deadlines').select('title, due_date, done').eq('case_id', caseId), supabase.from('time_entries').select('minutes, rate, billed').eq('case_id', caseId)])
+            .then(([c, d, t]) => { if (alive) setExtras({ id: caseId, x: { contacts: c.data ?? [], deadlines: d.data ?? [], entries: (t.data ?? []).map((e) => ({ ...e, minutes: Number(e.minutes), rate: Number(e.rate) })) } }); }).catch(() => {});
+        return () => { alive = false; };
+    }, [caseId]);
+    const auto = useMemo(() => ({ ...autoValues(chosen, access, undefined, clients.find((c) => c.id === chosen?.client_id), extras?.id === caseId ? extras.x : null), ...override }), [chosen, access, override, clients, extras, caseId]);
     const text = fillTemplate(template.body, auto, custom);
     const open = fieldsIn(text);
     const remaining = [...open.auto, ...open.custom];

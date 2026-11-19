@@ -30,3 +30,23 @@ describe('document templates', () => {
         expect(xml.match(/<w:p>/g)).toHaveLength(2);
     });
 });
+
+describe('údaje ze spisu ve vzoru', () => {
+    it('doplní protistranu, nejbližší lhůtu a nevyfakturovanou práci', async () => {
+        const { extrasValues } = await import('./templates');
+        const v = extrasValues({
+            contacts: [{ role: 'Soud', name: 'OS Plzeň', email: '', phone: '' }, { role: 'Protistrana', name: 'Alfa s.r.o.', email: 'a@alfa.cz', phone: '777', ico: '27082440' }],
+            deadlines: [{ title: 'Odvolání', due_date: '2026-12-20', done: false }, { title: 'Vyjádření', due_date: '2026-12-01', done: false }, { title: 'Hotovo', due_date: '2026-11-01', done: true }],
+            entries: [{ minutes: 90, rate: 2000, billed: false }, { minutes: 60, rate: 2000, billed: true }],
+        });
+        expect(v['protistrana.jmeno']).toBe('Alfa s.r.o.');
+        expect(v['vec.nejblizsi_lhuta']).toBe('Vyjádření (do 1. 12. 2026)');
+        expect(v['vec.odpracovano_hodin']).toBe('2,5');
+        expect(v['vec.nevyfakturovano']).toBe('3 000');
+    });
+    it('bez údajů nevrací nic', async () => {
+        const { extrasValues } = await import('./templates');
+        expect(extrasValues(null)).toEqual({});
+        expect(extrasValues({ contacts: [{ role: 'Soud', name: 'x', email: '', phone: '' }] })).toEqual({});
+    });
+});
