@@ -21,7 +21,7 @@ export default function AdminShell({ title, intro, children }: { title: string; 
     if (!authReady) return <p className="mx-auto max-w-3xl px-4 py-12 text-sm text-slate-500" role="status">Načítám…</p>;
     if (!isStaff) return <p className="mx-auto max-w-3xl px-4 py-12 text-sm text-slate-600">Tato stránka je jen pro tým provozovatele.</p>;
     return (
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-8 sm:px-6">
             <nav aria-label="Správa" className="mb-6 flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
                 {NAV.map(([href, label, Icon]) => <Link key={href} href={href} aria-current={path === href ? 'page' : undefined} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold ${path === href ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}><Icon size={15} aria-hidden="true" />{label}</Link>)}
                 <Link href="/kancelar" className="ml-auto flex shrink-0 items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-900">← Kancelář</Link>

@@ -103,7 +103,7 @@ export default function OpsAccounting() {
         <div className="space-y-5">
             {incomplete && <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">Doplňte údaje provozovatele (název, IČO, adresa) v záložce Nastavení, jinak budou na fakturách chybět.</p>}
             <div className="flex flex-wrap items-center gap-2">
-                <div className="flex gap-1 rounded-xl bg-slate-100 p-1" role="tablist">
+                <div className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1" role="tablist">
                     {([['prehled', 'Přehled'], ['faktury', `Faktury (${yInv.length})`], ['vydaje', `Výdaje (${yExp.length})`], ['nastaveni', 'Nastavení']] as const).map(([id, l]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold cursor-pointer ${tab === id ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600'}`}>{l}</button>)}
                 </div>
                 <select value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label="Rok" className={`${inputCls} w-auto`}>{years.map((y) => <option key={y}>{y}</option>)}</select>
