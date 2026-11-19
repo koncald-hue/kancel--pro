@@ -156,7 +156,7 @@ export default function LawyerInquiries() {
     return (
         <div className="space-y-5">
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
-            {items.length === 0 && !error && <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-600">Zatím žádné poptávky. Odkaz pro zájemce najdete v Nastavení, můžete ho vložit na web nebo do podpisu e-mailu.</p>}
+            {items.length === 0 && !error && <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-600">Zatím žádné poptávky. Poptávka je zpráva od někoho, kdo se vám ozve přes váš veřejný formulář a ještě není klient. Odkaz na formulář najdete v <Link href="/kancelar/nastaveni" className="font-semibold underline">Nastavení</Link>, vložte ho na web nebo do podpisu e-mailu. Z poptávky pak jedním klepnutím uděláte klienta a věc.</p>}
             {fresh.length > 0 && <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Nové ({fresh.length})</h2>}
             <ul className="space-y-2">
                 {fresh.map((q) => {

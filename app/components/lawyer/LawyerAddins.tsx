@@ -19,10 +19,15 @@ export default function LawyerAddins() {
             <section className={card}>
                 <h2 className="text-lg font-bold text-slate-900">Doplňky pro Word a Outlook</h2>
                 <p className="mt-1 text-sm leading-relaxed text-slate-600">Pracujte s Kanceláří přímo v programech, ve kterých trávíte den. Ve Wordu uložíte rozepsaný dokument do věci (při stejném názvu jako novou verzi), vložíte údaje věci do hlavičky podání a zapíšete čas. V Outlooku uložíte e-mail i s přílohami do správné věci jedním klepnutím, věc se navrhne podle klienta a spisové značky.</p>
-                <label className="mt-4 block text-xs font-semibold text-slate-600">Adresa, na které Kancelář běží
-                    <input value={origin} onChange={(e) => setOrigin(e.target.value.trim())} className={`${inputCls} mt-1 max-w-sm font-normal`} aria-label="Adresa aplikace" />
-                </label>
-                {!okOrigin && <p role="alert" className="mt-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-950">Office načte doplněk jen přes HTTPS. Na ostré adrese se manifest vytvoří sám. Pro vyzkoušení na vlastním počítači spusťte vývojový server s HTTPS (<code>next dev --experimental-https</code>) a zadejte jeho adresu.</p>}
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">Jak na to: stáhněte si soubor (manifest) pro Word nebo Outlook a přidejte ho v daném programu v nabídce Doplňky, Moje doplňky, Nahrát můj doplněk. Stačí jednou, pak doplněk najdete na kartě Kancelář.</p>
+                {!okOrigin && (
+                    <div className="mt-3">
+                        <p role="alert" className="rounded-lg bg-amber-50 p-3 text-xs text-amber-950">Doplňky Office funguje jen na zabezpečené adrese (HTTPS). Tuto verzi Kanceláře otevíráte na adrese bez HTTPS, proto je stažení vypnuté. Na ostré adrese kanceláře bude fungovat hned.</p>
+                        <label className="mt-2 block text-xs font-semibold text-slate-600">Adresa Kanceláře (jen pro vyzkoušení)
+                            <input value={origin} onChange={(e) => setOrigin(e.target.value.trim())} className={`${inputCls} mt-1 max-w-sm font-normal`} aria-label="Adresa aplikace" />
+                        </label>
+                    </div>
+                )}
                 <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" disabled={!okOrigin} onClick={() => download('word')} className={ghostBtn}><FileText size={14} /> Manifest pro Word <Download size={13} /></button>
                     <button type="button" disabled={!okOrigin} onClick={() => download('outlook')} className={ghostBtn}><Mail size={14} /> Manifest pro Outlook <Download size={13} /></button>

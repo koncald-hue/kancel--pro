@@ -82,7 +82,7 @@ export default function LawyerManagement() {
         return {
             cur, old, fc: forecast(entries, today),
             weeks: byWeek(inMonth(entries, ym)),
-            cases: byCase(inMonth(entries, ym)).slice(0, 8).map((r) => ({ ...r, title: r.caseId ? (titles.get(r.caseId) ?? 'Věc') : 'Bez věci' })),
+            cases: byCase(inMonth(entries, ym)).slice(0, 8).map((r) => ({ ...r, title: r.caseId ? (titles.get(r.caseId) ?? 'Věc') : 'Čas bez přiřazené věci' })),
         };
     }, [entries, cases, ym, prev, today]);
 
@@ -93,6 +93,7 @@ export default function LawyerManagement() {
 
     return (
         <div className="space-y-5">
+            <p className="max-w-3xl text-sm leading-relaxed text-slate-600">Přehled, jak se vám daří tento měsíc. Vychází z času, který zapisujete u věcí (Výkazy práce): kolik jste odpracovali, jakou to má hodnotu podle vaší sazby a kolik z toho už je vyfakturováno. Prognóza odhaduje konec měsíce podle dosavadního tempa. Pokud pracujete sami, najdete tu jen své číslo, výkon kolegů uvidí vedoucí kanceláře.</p>
             <section className="grid gap-4 md:grid-cols-3">
                 <div className={card}><p className="text-sm text-slate-500">Hodiny, {monthName(ym)}</p><p className="mt-1 text-3xl font-extrabold text-slate-900">{formatMinutes(cur.minutes)}</p><p className="mt-1"><Change cur={cur.minutes} prev={old.minutes} /></p><p className="mt-1 text-xs text-slate-500">Minulý měsíc: {formatMinutes(old.minutes)}</p></div>
                 <div className={card}><p className="text-sm text-slate-500">Hodnota práce</p><p className="mt-1 text-3xl font-extrabold text-slate-900">{czk(cur.amount)}</p><p className="mt-1"><Change cur={cur.amount} prev={old.amount} /></p><p className="mt-1 text-xs text-slate-500">Z toho vyfakturováno {czk(cur.billedAmount)}, k vyfakturování {czk(cur.amount - cur.billedAmount)}</p></div>
