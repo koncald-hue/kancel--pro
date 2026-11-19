@@ -11,12 +11,13 @@ import { profitOf } from '@/lib/profit';
 import { entryAmount, formatMinutes, parseDuration, type TimeEntry } from '@/lib/lawyer';
 import { useLawyer } from '../lawyer/LawyerGate';
 import { ghostBtn, inputCls, primaryBtn, type TabProps } from './caseUi';
+import BudgetCard from './BudgetCard';
 
 const dateCz = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString('cs-CZ');
 const TONE: Record<string, string> = { draft: 'bg-slate-100 text-slate-700', paid: 'bg-emerald-100 text-emerald-900', overdue: 'bg-rose-100 text-rose-900', due_soon: 'bg-amber-100 text-amber-900', partial: 'bg-sky-100 text-sky-900', open: 'bg-indigo-100 text-indigo-900', cancelled: 'bg-slate-100 text-slate-500' };
 
 // Peníze ve věci: odpracovaný čas, vyúčtování a platby k této věci na jednom místě, propojené s výkazy, fakturací a kalkulačkami
-export default function CaseFinanceTab({ item, userId, fail }: TabProps) {
+export default function CaseFinanceTab({ item, userId, fail, patchItem }: TabProps) {
     const { access } = useLawyer();
     const router = useRouter();
     const [entries, setEntries] = useState<TimeEntry[] | null>(null);
@@ -52,6 +53,8 @@ export default function CaseFinanceTab({ item, userId, fail }: TabProps) {
     const outstanding = round2(live.reduce((s, i) => s + i.outstanding, 0));
     const prof = profitOf(entries, invoices.map((i) => ({ case_id: i.case_id ?? null, status: i.status, state: i.state, base: i.base, total: i.total, paid: i.paid, currency: i.currency })));
     const paid = round2(live.reduce((s, i) => s + i.paid, 0));
+    const worked = round2(entries.reduce((s, e) => s + entryAmount(e), 0));
+    const billedNet = round2(live.reduce((s, i) => s + i.base, 0));
 
     async function addTime(e: React.FormEvent) {
         e.preventDefault();
@@ -78,6 +81,7 @@ export default function CaseFinanceTab({ item, userId, fail }: TabProps) {
     return (
         <div className="space-y-5">
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
+            <BudgetCard budget={item.budget_czk ?? null} warnPct={item.budget_warn_pct ?? 80} worked={worked} billed={billedNet} onSave={(b, p) => patchItem({ budget_czk: b, budget_warn_pct: p })} />
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {tile('K vyfakturování', money(openAmount), `${formatMinutes(openMin)} h nevyfakturované práce`)}
                 {tile('Čeká na zaplacení', money(outstanding), `${live.length} vyúčtování`)}

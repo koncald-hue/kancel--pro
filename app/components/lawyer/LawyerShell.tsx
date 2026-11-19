@@ -5,7 +5,7 @@ import { OfflineSync, clearOffline } from './OfflineDeadlines';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel, Eye, ListChecks, FileSpreadsheet, ChevronDown, Puzzle, Plus, BookOpen, Archive, CalendarDays, ListTodo, EyeOff } from 'lucide-react';
+import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel, Eye, ListChecks, FileSpreadsheet, ChevronDown, Puzzle, Plus, BookOpen, Archive, CalendarDays, ListTodo, EyeOff, Contact, ScrollText } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
 import QuickAdd from './QuickAdd';
@@ -16,7 +16,7 @@ import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
 
-export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'sablony' | 'epr' | 'stret' | 'uschovy' | 'doplnky' | 'denik' | 'anonymizer' | 'archiv' | 'kalendar' | 'ukoly' | 'nastaveni';
+export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'sablony' | 'epr' | 'stret' | 'uschovy' | 'doplnky' | 'denik' | 'anonymizer' | 'plne-moci' | 'subjekty' | 'archiv' | 'kalendar' | 'ukoly' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
 
 // Menu: nahoře to, co advokát potřebuje každý den; odborné nástroje a nastavení jsou ve sbalitelných skupinách
@@ -28,7 +28,7 @@ const GROUPS: Group[] = [
     { title: 'Peníze', items: [['penize', '/kancelar/penize', 'Peníze', Wallet]] },
     { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound]] },
     // Odborné a méně časté nástroje
-    { title: 'Nástroje', fold: 'tools', items: [['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['archiv', '/kancelar/archiv', 'Archiv spisů', Archive], ['anonymizer', '/kancelar/anonymizer', 'Anonymizér', EyeOff], ['stret', '/kancelar/stret-zajmu', 'Střet zájmů', Scale], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel], ['epr', '/kancelar/epr', 'Platební rozkazy', FileSpreadsheet], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert]] },
+    { title: 'Nástroje', fold: 'tools', items: [['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['archiv', '/kancelar/archiv', 'Archiv spisů', Archive], ['subjekty', '/kancelar/subjekty', 'Subjekty', Contact], ['plne-moci', '/kancelar/plne-moci', 'Plné moci', ScrollText], ['anonymizer', '/kancelar/anonymizer', 'Anonymizér', EyeOff], ['stret', '/kancelar/stret-zajmu', 'Střet zájmů', Scale], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel], ['epr', '/kancelar/epr', 'Platební rozkazy', FileSpreadsheet], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert]] },
     { title: 'Přizpůsobit', fold: 'setup', items: [['sablony', '/kancelar/sablony', 'Šablony úkolů', ListChecks], ['import', '/kancelar/import', 'Import dat', FileUp], ['doplnky', '/kancelar/doplnky', 'Word a Outlook', Puzzle]] },
 ];
 const FOLD_KEY = 'kancelar-menu-otevreno';

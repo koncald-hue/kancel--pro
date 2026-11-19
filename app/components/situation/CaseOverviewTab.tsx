@@ -15,6 +15,7 @@ import { caseCheck } from '@/lib/caseCheck';
 import ArchiveCard from '../lawyer/ArchiveCard';
 import { isCourt, parseFileNumber } from '@/lib/infosoud';
 import { upsertAresClient } from '@/lib/aresClients';
+import CaseSubcases from './CaseSubcases';
 
 // Chytré rady podle toho, co ve spisu chybí
 export function caseHints(item: TabProps['item'], bundle: TabProps['bundle']): { tone: 'warn' | 'tip'; text: string }[] {
@@ -58,6 +59,7 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
 
     return (
         <div className="space-y-6">
+            {lawyer && <CaseSubcases item={item} userId={userId} fail={fail} />}
             {hints.length > 0 && (
                 <section aria-label="Doporučení pro spis" className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 sm:p-5">
                     <p className="text-sm font-bold text-slate-900">Co by stálo za doplnění</p>

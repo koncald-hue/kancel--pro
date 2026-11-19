@@ -11,6 +11,8 @@ import { buildIcs, collectDeadlines, describeCaseError, downloadTextFile, loadAl
 import { BLANK_CASE, createCase, daysUntil, loadCases, type LegalCase } from '@/lib/cases';
 import { deadlineText, deadlineTone } from './CaseDeadlinesTab';
 import { inputCls, primaryBtn } from './caseUi';
+import SavedViews from './SavedViews';
+import { DEFAULT_FILTER, matchesFilter, type CaseFilter } from '@/lib/savedViews';
 import { limitsFor, useLawyerTier } from '@/lib/tiers';
 import UpgradeNote from './UpgradeNote';
 import { addStarterTemplates, applyTemplate, defaultTemplate, loadTemplates } from '@/lib/templateApply';
@@ -30,8 +32,10 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
     const [customs, setCustoms] = useState<CaseDeadline[]>([]);
     const [error, setError] = useState('');
     const [title, setTitle] = useState('');
-    const [query, setQuery] = useState('');
-    const [filter, setFilter] = useState<'open' | 'done'>('open');
+    const [fx, setFx] = useState<CaseFilter>(DEFAULT_FILTER);
+    const query = fx.q, filter = fx.status;
+    const setQuery = (q: string) => setFx((f) => ({ ...f, q }));
+    const setFilter = (status: 'open' | 'done') => setFx((f) => ({ ...f, status }));
     const [creating, setCreating] = useState(false);
     const [templates, setTemplates] = useState<CaseTemplate[]>([]);
     const [tplId, setTplId] = useState('');
@@ -90,9 +94,9 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
         const next = collectDeadlines(c, customs.filter((d) => d.case_id === c.id)).filter((d) => !d.done && daysUntil(d.date) >= 0)[0] ?? null;
         return { c, next };
     });
-    const q = query.trim().toLowerCase();
+    const clientNames = [...new Set((cases ?? []).map((c) => c.client_name ?? '').filter(Boolean))].sort((a, b) => a.localeCompare(b, 'cs'));
     const shown = enriched
-        .filter(({ c }) => c.status === filter && (!q || `${c.title} ${c.summary} ${c.situation} ${c.client_name ?? ''} ${c.reference ?? ''} ${c.authority ?? ''}`.toLowerCase().includes(q)))
+        .filter(({ c, next }) => matchesFilter(c, next ? daysUntil(next.date) : null, { ...fx, q: fx.q.trim() }))
         .sort((a, b) => Number(b.c.pinned) - Number(a.c.pinned) || (a.next ? a.next.date.getTime() : Infinity) - (b.next ? b.next.date.getTime() : Infinity));
     const upcoming = enriched.filter(({ c, next }) => c.status === 'open' && next).map(({ c, next }) => ({ c, d: next! })).sort((a, b) => a.d.date.getTime() - b.d.date.getTime()).slice(0, 4);
 
@@ -154,6 +158,17 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                 )}
             </div>
 
+            {isOffice && account && (
+                <>
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                        <select value={fx.client} onChange={(e) => setFx((f) => ({ ...f, client: e.target.value }))} aria-label="Klient" className={`${inputCls} w-auto py-1 text-xs`}><option value="">Všichni klienti</option>{clientNames.map((n) => <option key={n} value={n}>{n}</option>)}</select>
+                        <select value={fx.within} onChange={(e) => setFx((f) => ({ ...f, within: Number(e.target.value) as CaseFilter['within'] }))} aria-label="Nejbližší lhůta" className={`${inputCls} w-auto py-1 text-xs`}><option value={0}>Lhůta kdykoli</option><option value={7}>Lhůta do 7 dní</option><option value={30}>Lhůta do 30 dní</option></select>
+                        <select value={fx.kind} onChange={(e) => setFx((f) => ({ ...f, kind: e.target.value as CaseFilter['kind'] }))} aria-label="Druh" className={`${inputCls} w-auto py-1 text-xs`}><option value="all">Věci i podspisy</option><option value="main">Jen hlavní věci</option><option value="sub">Jen podspisy</option></select>
+                    </div>
+                    <SavedViews userId={account.id} filter={fx} onApply={setFx} />
+                </>
+            )}
+
             {cases === null && !error && <p className="mt-6 text-sm text-slate-500" role="status">Načítám případy…</p>}
             {cases && shown.length === 0 && (
                 <div className="mt-6 rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600">
@@ -189,7 +204,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                         <li key={c.id}>
                             <Link href={casePath(c.id)} className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-indigo-400 sm:p-5">
                                 <div className="flex items-start justify-between gap-3">
-                                    <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">{c.pinned && <Pin size={14} className="text-indigo-700" aria-label="Připnuto" />}{c.title}{c.user_id && c.user_id !== accountId && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold uppercase text-indigo-900">Sdíleno s vámi</span>}</h2>
+                                    <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">{c.pinned && <Pin size={14} className="text-indigo-700" aria-label="Připnuto" />}{c.title}{c.parent_id && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-700">Podspis</span>}{c.user_id && c.user_id !== accountId && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold uppercase text-indigo-900">Sdíleno s vámi</span>}</h2>
                                     {next && <span className={`shrink-0 text-xs font-bold ${deadlineTone(daysUntil(next.date), false)}`}>{deadlineText(daysUntil(next.date))}</span>}
                                 </div>
                                 {(c.client_name || c.reference || c.authority) && <p className="mt-1 text-xs font-semibold text-slate-500">{[c.client_name, c.reference, c.authority].filter(Boolean).join(' · ')}</p>}
