@@ -3,7 +3,7 @@ import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import LawyerCalendar from '@/app/components/lawyer/LawyerCalendar';
 
 export const metadata: Metadata = {
-    title: 'Kalendář | Kancelář',
+    title: 'Kalendář | Kancelář Pro',
     robots: { index: false },
 };
 

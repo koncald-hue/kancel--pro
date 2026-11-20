@@ -22,7 +22,7 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
     let d = {};
     try { d = event.data ? event.data.json() : {}; } catch { /* nic */ }
-    const title = typeof d.title === 'string' ? d.title.slice(0, 80) : 'Kancelář';
+    const title = typeof d.title === 'string' ? d.title.slice(0, 80) : 'Kancelář Pro';
     event.waitUntil(self.registration.showNotification(title, {
         body: typeof d.body === 'string' ? d.body.slice(0, 200) : '', tag: typeof d.tag === 'string' ? d.tag.slice(0, 60) : 'kancelar',
         icon: '/pwa-icon/any-192', badge: '/pwa-icon/any-192', data: { url: typeof d.url === 'string' && d.url.startsWith('/') ? d.url : '/kancelar' },

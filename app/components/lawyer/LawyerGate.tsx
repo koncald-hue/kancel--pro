@@ -32,7 +32,7 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
         return (
             <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white">
                 <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-5 sm:px-6">
-                    <Link href="/" className="flex items-center gap-2.5 font-bold text-slate-900"><span className="rounded-lg bg-indigo-600 p-1.5 text-white"><Scale size={18} aria-hidden="true" /></span> Kancelář</Link>
+                    <Link href="/" className="flex items-center gap-2.5 font-bold text-slate-900"><span className="rounded-lg bg-indigo-600 p-1.5 text-white"><Scale size={18} aria-hidden="true" /></span> Kancelář Pro</Link>
                     <Link href="/" className="text-sm font-semibold text-slate-600 hover:text-slate-900">← Zpět na úvodní stránku</Link>
                 </header>
                 <main className="mx-auto grid max-w-5xl items-center gap-10 px-4 pb-16 pt-6 sm:px-6 md:grid-cols-2 md:pt-14">
@@ -81,7 +81,7 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
     return (
         <Box>
             <Briefcase size={30} className="mx-auto text-indigo-800" aria-hidden="true" />
-            <h1 className="mt-3 text-3xl font-bold text-slate-900">Kancelář</h1>
+            <h1 className="mt-3 text-3xl font-bold text-slate-900">Kancelář Pro</h1>
             {access?.status === 'requested' ? (
                 <p className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm leading-relaxed text-slate-700">Vaše žádost o přístup je přijata. Jakmile ji potvrdíme, kancelář se vám otevře. Stav uvidíte po obnovení stránky.</p>
             ) : (

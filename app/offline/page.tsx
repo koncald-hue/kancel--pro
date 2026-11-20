@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Scale } from 'lucide-react';
 import { OFFLINE_KEY } from '@/lib/offlineDeadlines';
 
-export const metadata: Metadata = { title: 'Jste offline | Kancelář', robots: { index: false } };
+export const metadata: Metadata = { title: 'Jste offline | Kancelář Pro', robots: { index: false } };
 
 // Zobrazí se, když zařízení nemá připojení. Stránka musí fungovat bez dalších souborů, proto lhůty (pokud je uživatel povolil v Nastavení)
 // vykreslí malý vložený skript z úložiště prohlížeče. Text se vkládá přes textContent, takže se z uložených dat nikdy nespustí HTML.

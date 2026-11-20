@@ -3,7 +3,7 @@ import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import LawyerSettings from '@/app/components/lawyer/LawyerSettings';
 
 export const metadata: Metadata = {
-    title: 'Kancelář | Kancelář',
+    title: 'Kancelář | Kancelář Pro',
     robots: { index: false },
 };
 

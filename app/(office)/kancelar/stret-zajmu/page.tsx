@@ -3,7 +3,7 @@ import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import LawyerConflicts from '@/app/components/lawyer/LawyerConflicts';
 
 export const metadata: Metadata = {
-    title: 'Střet zájmů | Kancelář',
+    title: 'Střet zájmů | Kancelář Pro',
     robots: { index: false },
 };
 

@@ -4,7 +4,7 @@ import MoneyTabs from '@/app/components/lawyer/MoneyTabs';
 import LawyerManagement from '@/app/components/lawyer/LawyerManagement';
 
 export const metadata: Metadata = {
-    title: 'Přehled pro vedení | Kancelář',
+    title: 'Přehled pro vedení | Kancelář Pro',
     robots: { index: false },
 };
 

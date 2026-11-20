@@ -15,11 +15,11 @@ const origin = getSiteOrigin();
 
 export const metadata: Metadata = {
   ...(origin ? { metadataBase: new URL(origin) } : {}),
-  title: 'Kancelář | software pro advokáty a právníky',
+  title: 'Kancelář Pro | software pro advokáty a právníky',
   description: 'Spisy, lhůty, klienti, výkazy práce a bezpečná komunikace s klientem na jednom místě.',
-  applicationName: 'Kancelář',
-  openGraph: { type: 'website', locale: 'cs_CZ', siteName: 'Kancelář', title: 'Kancelář | software pro advokáty a právníky', description: 'Spisy, lhůty, klienti, výkazy práce a bezpečná komunikace s klientem na jednom místě.' },
-  appleWebApp: { capable: true, title: 'Kancelář', statusBarStyle: 'default' },
+  applicationName: 'Kancelář Pro',
+  openGraph: { type: 'website', locale: 'cs_CZ', siteName: 'Kancelář Pro', title: 'Kancelář Pro | software pro advokáty a právníky', description: 'Spisy, lhůty, klienti, výkazy práce a bezpečná komunikace s klientem na jednom místě.' },
+  appleWebApp: { capable: true, title: 'Kancelář Pro', statusBarStyle: 'default' },
   icons: { apple: '/pwa-icon/apple-180' },
 };
 

@@ -3,7 +3,7 @@ import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import LawyerMailLog from '@/app/components/lawyer/LawyerMailLog';
 
 export const metadata: Metadata = {
-    title: 'Podací deník | Kancelář',
+    title: 'Podací deník | Kancelář Pro',
     robots: { index: false },
 };
 

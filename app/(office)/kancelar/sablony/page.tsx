@@ -3,7 +3,7 @@ import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import LawyerTemplates from '@/app/components/lawyer/LawyerTemplates';
 
 export const metadata: Metadata = {
-    title: 'Šablony úkolů | Kancelář',
+    title: 'Šablony úkolů | Kancelář Pro',
     robots: { index: false },
 };
 

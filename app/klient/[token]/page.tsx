@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import ClientPortal from '@/app/components/portal/ClientPortal';
 
 export const metadata: Metadata = {
-    title: 'Vaše věc | Kancelář',
+    title: 'Vaše věc | Kancelář Pro',
     robots: { index: false, follow: false },
     referrer: 'no-referrer',
 };

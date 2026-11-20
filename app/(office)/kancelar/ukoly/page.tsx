@@ -3,7 +3,7 @@ import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import LawyerTeamTasks from '@/app/components/lawyer/LawyerTeamTasks';
 
 export const metadata: Metadata = {
-    title: 'Úkoly | Kancelář',
+    title: 'Úkoly | Kancelář Pro',
     robots: { index: false },
 };
 

@@ -21,5 +21,5 @@ export function buildAdminDigest(d: DigestInput, adminUrl: string): { subject: s
     if (d.failedRenewals) lines.push(`Selhalo automatické obnovení předplatného (za posledních 24 h): ${d.failedRenewals}`, '');
     if (d.newRegistrations) lines.push(`Nových registrací za posledních 24 h: ${d.newRegistrations}`, '');
     lines.push(adminUrl);
-    return { subject: needsAction ? 'Kancelář: vyžaduje vaši akci' : 'Kancelář: denní shrnutí', lines };
+    return { subject: needsAction ? 'Kancelář Pro: vyžaduje vaši akci' : 'Kancelář Pro: denní shrnutí', lines };
 }

@@ -22,7 +22,7 @@ export function hasAnything(d: DigestInput): boolean {
 export function buildDigest(d: DigestInput): { subject: string; text: string } {
     const L: string[] = [];
     const head = d.overdue.length ? `${plural(d.overdue.length, 'lhůta nebo úkol', 'lhůty nebo úkoly', 'lhůt nebo úkolů')} po termínu` : d.upcoming.length ? `${plural(d.upcoming.length, 'termín', 'termíny', 'termínů')} na příštích 7 dní` : 'přehled týdne';
-    const subject = `Kancelář: ${head}`;
+    const subject = `Kancelář Pro: ${head}`;
     L.push(`Dobrý den${d.name ? `, ${d.name}` : ''},`, '', `přehled k ${dmy(d.today)} ${d.today.slice(0, 4)}:`, '');
     const list = (items: DigestDeadline[]) => items.slice(0, 15).map((x) => `  • ${dmy(x.due_date)} ${x.kind === 'ukol' ? 'úkol' : 'lhůta'}: ${x.title} (${x.case_title})`).concat(items.length > 15 ? [`  • … a dalších ${items.length - 15}`] : []);
     if (d.overdue.length) { L.push(`PO TERMÍNU: ${d.overdue.length}`); if (d.details) L.push(...list(d.overdue)); L.push(''); }

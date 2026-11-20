@@ -15,7 +15,7 @@ export function AddinFrame({ title, children }: { title: string; children: React
             <Script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" strategy="afterInteractive" />
             <LawyerGate>
                 <div className="mx-auto max-w-md space-y-3 p-3 text-sm">
-                    <h1 className="flex items-center gap-2 text-base font-bold text-slate-900"><span className="rounded-md bg-indigo-600 p-1 text-white"><Scale size={14} aria-hidden="true" /></span> Kancelář · {title}</h1>
+                    <h1 className="flex items-center gap-2 text-base font-bold text-slate-900"><span className="rounded-md bg-indigo-600 p-1 text-white"><Scale size={14} aria-hidden="true" /></span> Kancelář Pro · {title}</h1>
                     {children}
                 </div>
             </LawyerGate>

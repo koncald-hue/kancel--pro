@@ -27,7 +27,7 @@ export function DashboardMock() {
         ['za 19 dní', 'Odvolání proti rozsudku', 'Svobodová, dědické řízení', 'text-emerald-700 bg-emerald-50'],
     ];
     return (
-        <Window title="Kancelář · Přehled">
+        <Window title="Kancelář Pro · Přehled">
             <div className="grid min-w-0 gap-3 bg-slate-50/60 p-4">
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                     <Stat label="Otevřené věci" value="24" />

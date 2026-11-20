@@ -3,7 +3,7 @@ import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import LawyerAddins from '@/app/components/lawyer/LawyerAddins';
 
 export const metadata: Metadata = {
-    title: 'Doplňky Word a Outlook | Kancelář',
+    title: 'Doplňky Word a Outlook | Kancelář Pro',
     robots: { index: false },
 };
 

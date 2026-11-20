@@ -4,7 +4,7 @@ import MoneyTabs from '@/app/components/lawyer/MoneyTabs';
 import LawyerEscrow from '@/app/components/lawyer/LawyerEscrow';
 
 export const metadata: Metadata = {
-    title: 'Úschovy | Kancelář',
+    title: 'Úschovy | Kancelář Pro',
     robots: { index: false },
 };
 

@@ -7,13 +7,13 @@ const dl = (t: string, d: string) => ({ title: t, due_date: d, case_title: 'Nov�
 describe('digest', () => {
     it('bez detailů neobsahuje názvy věcí ani lhůt', () => {
         const r = buildDigest({ ...base, overdue: [dl('Odvolání', '2026-11-20')], upcoming: [dl('Vyjádření', '2026-11-25')], caseEvents: [{ case_title: 'Novák v. Dvořák', count: 3 }] });
-        expect(r.subject).toBe('Kancelář: 1 lhůta nebo úkol po termínu');
+        expect(r.subject).toBe('Kancelář Pro: 1 lhůta nebo úkol po termínu');
         expect(r.text).not.toContain('Novák'); expect(r.text).not.toContain('Odvolání');
         expect(r.text).toContain('PO TERMÍNU: 1'); expect(r.text).toContain('Termíny na příštích 7 dní: 1'); expect(r.text).toContain('https://k.cz/kancelar');
     });
     it('s detaily vypíše termíny a věci', () => {
         const r = buildDigest({ ...base, details: true, upcoming: [dl('Vyjádření', '2026-11-25')], caseEvents: [{ case_title: 'Novák v. Dvořák', count: 3 }], unbilledMinutes: 95, unbilledAmount: 3958.3 });
-        expect(r.subject).toBe('Kancelář: 1 termín na příštích 7 dní');
+        expect(r.subject).toBe('Kancelář Pro: 1 termín na příštích 7 dní');
         expect(r.text).toContain('25. 11. lhůta: Vyjádření (Novák v. Dvořák)'); expect(r.text).toContain('Novák v. Dvořák: 3'); expect(r.text).toMatch(/1:35 h \(3\s958 Kč\)/);
     });
     it('zastupování, pošta a archiv', () => {

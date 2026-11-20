@@ -14,7 +14,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro?: s
         <div className="min-h-screen bg-white text-slate-800">
             <header className="border-b border-slate-100">
                 <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3 sm:px-6">
-                    <Link href="/" className="flex items-center gap-2.5 font-bold text-slate-900"><span className="rounded-lg bg-indigo-600 p-1.5 text-white"><Scale size={18} aria-hidden="true" /></span> Kancelář</Link>
+                    <Link href="/" className="flex items-center gap-2.5 font-bold text-slate-900"><span className="rounded-lg bg-indigo-600 p-1.5 text-white"><Scale size={18} aria-hidden="true" /></span> Kancelář Pro</Link>
                     <nav className="flex gap-4 text-xs font-semibold text-slate-600" aria-label="Právní dokumenty">
                         <Link href="/obchodni-podminky" className="hover:text-slate-900">Obchodní podmínky</Link>
                         <Link href="/zpracovani-osobnich-udaju" className="hover:text-slate-900">Zpracování údajů</Link>

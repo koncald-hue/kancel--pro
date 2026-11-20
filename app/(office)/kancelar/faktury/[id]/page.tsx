@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import LawyerInvoiceEditor from '@/app/components/lawyer/LawyerInvoiceEditor';
 
-export const metadata: Metadata = { title: 'Vyúčtování | Kancelář', robots: { index: false } };
+export const metadata: Metadata = { title: 'Vyúčtování | Kancelář Pro', robots: { index: false } };
 
 export default function Page() {
     // Suspense: komponenta čte adresu stránky, kterou server předem nezná

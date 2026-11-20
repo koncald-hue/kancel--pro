@@ -1,4 +1,4 @@
-# Kancelář
+# Kancelář Pro
 
 Samostatná aplikace pro advokáty a právníky (spisy, lhůty, klienti, výkazy práce, klientský portál s end-to-end šifrováním, ověřování advokátů a předplatné). Vznikla oddělením od veřejného webu „Právo srozumitelně“; s ním je propojená jen odkazy.
 

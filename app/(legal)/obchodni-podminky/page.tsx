@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Cl, Fill, LegalPage, Section } from '@/app/components/legal/Legal';
 import { RETENTION_MONTHS, TERMS_VERSION, TRIAL_DAYS } from '@/lib/company';
 
-export const metadata: Metadata = { title: 'Obchodní podmínky | Kancelář' };
+export const metadata: Metadata = { title: 'Obchodní podmínky | Kancelář Pro' };
 
 export default function Page() {
     return (

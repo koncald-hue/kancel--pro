@@ -3,8 +3,8 @@ import type { MetadataRoute } from 'next';
 // Instalovatelná aplikace (PWA): otevře se bez adresního řádku, s vlastní ikonou. Data se nikdy neukládají do zařízení (viz public/sw.js).
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Kancelář',
-        short_name: 'Kancelář',
+        name: 'Kancelář Pro',
+        short_name: 'Kancelář Pro',
         description: 'Spisy, lhůty, klienti a výkazy práce pro advokáty a právníky.',
         lang: 'cs',
         start_url: '/kancelar',

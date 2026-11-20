@@ -19,7 +19,7 @@ export default function MfaCard() {
 
     async function start() {
         setBusy(true); setError(''); setNote('');
-        try { setSetup(await enrollTotp('Kancelář')); setCode(''); }
+        try { setSetup(await enrollTotp('Kancelář Pro')); setCode(''); }
         catch (e) { setError(/disabled|not enabled|mfa/i.test(String(e)) ? 'Dvoufázové přihlášení není na straně Supabase zapnuté (Authentication → Multi-Factor → TOTP).' : e instanceof Error ? e.message : 'Nepodařilo se zahájit.'); }
         finally { setBusy(false); }
     }

@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import IntakeForm from '@/app/components/portal/IntakeForm';
 
 export const metadata: Metadata = {
-    title: 'Poptávka | Kancelář',
+    title: 'Poptávka | Kancelář Pro',
     robots: { index: false, follow: false },
     referrer: 'no-referrer',
 };

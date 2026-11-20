@@ -3,7 +3,7 @@ import { Check, Minus } from 'lucide-react';
 import { FinalCta, SiteFooter, SiteHeader } from '@/app/components/lawyer/LandingChrome';
 
 export const metadata: Metadata = {
-    title: 'Zabezpečení a architektura | Kancelář',
+    title: 'Zabezpečení a architektura | Kancelář Pro',
     description: 'Co je v Kanceláři end-to-end šifrované, co chrání přístupová práva v databázi, co zatím chybí a jak si to můžete ověřit.',
 };
 

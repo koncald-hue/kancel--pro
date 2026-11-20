@@ -3,7 +3,7 @@ import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import LawyerArchive from '@/app/components/lawyer/LawyerArchive';
 
 export const metadata: Metadata = {
-    title: 'Archiv spisů | Kancelář',
+    title: 'Archiv spisů | Kancelář Pro',
     robots: { index: false },
 };
 
