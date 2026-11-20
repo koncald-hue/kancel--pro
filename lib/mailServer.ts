@@ -16,12 +16,12 @@ const ALLOWED_PORTS = new Set([993, 143, 465, 587]);
 export function isPrivateIp(ip: string): boolean {
     if (net.isIPv4(ip)) {
         const [a, b] = ip.split('.').map(Number);
-        return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224;
+        return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || (a === 198 && (b === 18 || b === 19)) || (a === 192 && b === 0) || a >= 224;
     }
     if (net.isIPv6(ip)) {
         const l = ip.toLowerCase();
         if (l.startsWith('::ffff:')) return isPrivateIp(l.slice(7));
-        return l === '::1' || l === '::' || l.startsWith('fc') || l.startsWith('fd') || l.startsWith('fe8') || l.startsWith('fe9') || l.startsWith('fea') || l.startsWith('feb');
+        return l === '::1' || l === '::' || l.startsWith('fc') || l.startsWith('fd') || l.startsWith('fe8') || l.startsWith('fe9') || l.startsWith('fea') || l.startsWith('feb') || l.startsWith('fec') || l.startsWith('fed') || l.startsWith('fee') || l.startsWith('fef');
     }
     return true;
 }
