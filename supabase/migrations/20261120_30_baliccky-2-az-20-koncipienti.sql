@@ -34,7 +34,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare f public.firms; v_email text := lower(btrim(coalesce(p_email, ''))); v_name text := btrim(coalesce(p_name, '')); v_used integer; v_token text; v_trainee boolean := coalesce(p_trainee, false);
+declare f public.firms; v_email text := lower(btrim(coalesce(p_email, ''))); v_name text := btrim(coalesce(p_name, '')); v_used integer; v_token text; v_cap integer; v_trainee boolean := coalesce(p_trainee, false);
 begin
   select fi.* into f from public.firms fi join public.firm_members m on m.firm_id = fi.id and m.role in ('owner', 'admin') where m.user_id = auth.uid() for update of fi;
   if not found then raise exception 'Pozvánky smí posílat jen vedoucí nebo správce kanceláře.'; end if;
@@ -45,8 +45,10 @@ begin
   update public.firm_invites set revoked = true where firm_id = f.id and lower(email) = v_email and accepted_at is null and not revoked;
   select (select count(*) from public.firm_members where firm_id = f.id and trainee = v_trainee)
        + (select count(*) from public.firm_invites where firm_id = f.id and trainee = v_trainee and accepted_at is null and not revoked and expires_at > now()) into v_used;
-  if v_used >= case when v_trainee then public.trainee_seats(f.seats) else f.seats end then
-    raise exception '%', case when v_trainee then 'Všechna místa pro koncipienty jsou obsazená nebo rezervovaná pozvánkou.' else 'Všechna místa v balíčku jsou obsazená nebo rezervovaná pozvánkou.' end;
+  v_cap := case when v_trainee then public.trainee_seats(f.seats) else f.seats end;
+  if v_used >= v_cap then
+    if v_trainee then raise exception 'Všechna místa pro koncipienty jsou obsazená nebo rezervovaná pozvánkou.'; end if;
+    raise exception 'Všechna místa v balíčku jsou obsazená nebo rezervovaná pozvánkou.';
   end if;
   v_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
   insert into public.firm_invites (firm_id, email, name, token, trainee) values (f.id, v_email, v_name, v_token, v_trainee);
@@ -63,7 +65,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare i public.firm_invites; f public.firms; v_email text := lower(coalesce(auth.jwt() ->> 'email', ''));
+declare i public.firm_invites; f public.firms; v_cap integer; v_email text := lower(coalesce(auth.jwt() ->> 'email', ''));
 begin
   if auth.uid() is null then raise exception 'Přihlaste se.'; end if;
   select * into i from public.firm_invites where token = coalesce(p_token, '') for update;
@@ -72,7 +74,8 @@ begin
   if exists (select 1 from public.firm_members where user_id = auth.uid()) then raise exception 'Už jste členem kanceláře.'; end if;
   select * into f from public.firms where id = i.firm_id for update;
   if f.until is null or f.until < current_date then raise exception 'Předplatné kanceláře vypršelo. Požádejte vedoucího o obnovení.'; end if;
-  if (select count(*) from public.firm_members where firm_id = f.id and trainee = i.trainee) >= case when i.trainee then public.trainee_seats(f.seats) else f.seats end then raise exception 'V kanceláři už není volné místo.'; end if;
+  v_cap := case when i.trainee then public.trainee_seats(f.seats) else f.seats end;
+  if (select count(*) from public.firm_members where firm_id = f.id and trainee = i.trainee) >= v_cap then raise exception 'V kanceláři už není volné místo.'; end if;
   insert into public.firm_members (user_id, firm_id, role, trainee) values (auth.uid(), f.id, 'member', i.trainee);
   update public.firm_invites set accepted_at = now() where id = i.id;
   insert into public.lawyer_access (user_id, email, status, until, firm_id, display_name) values (auth.uid(), v_email, 'active', f.until, f.id, i.name)
