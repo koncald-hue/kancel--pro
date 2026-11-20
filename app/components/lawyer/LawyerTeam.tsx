@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { startComgatePayment } from '@/lib/payStart';
 import { czk } from '@/lib/lawyer';
 import { PLANS, type PlanId } from '@/lib/plans';
-import { EMPTY_FIRM_PRICES, FIRM_SIZES, ROLE_HELP, ROLE_LABELS, VERIFICATION_LABEL, canManageFirm, inviteUrl, type FirmRole, type FirmOverview, type FirmPrices, type FirmSize } from '@/lib/firm';
+import { EMPTY_FIRM_PRICES, FIRM_SIZES, traineeSeats, ROLE_HELP, ROLE_LABELS, VERIFICATION_LABEL, canManageFirm, inviteUrl, type FirmRole, type FirmOverview, type FirmPrices, type FirmSize } from '@/lib/firm';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 
@@ -25,6 +25,7 @@ export default function LawyerTeam() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [inviteName, setInviteName] = useState('');
+    const [inviteTrainee, setInviteTrainee] = useState(false);
     const [size, setSize] = useState<FirmSize>(3);
     const [colleagues, setColleagues] = useState<{ user_id: string; name: string; email: string; role: FirmRole }[]>([]);
     const [copied, setCopied] = useState('');
@@ -56,7 +57,7 @@ export default function LawyerTeam() {
     }
 
     async function createFirm() { if (await run(() => supabase.rpc('create_firm', { p_name: name }))) setName(''); }
-    async function invite() { if (await run(() => supabase.rpc('invite_firm_member', { p_email: email, p_name: inviteName }), 'Pozvánka je vytvořena. Pošlete kolegovi odkaz níže.')) { setEmail(''); setInviteName(''); } }
+    async function invite() { if (await run(() => supabase.rpc('invite_firm_member', { p_email: email, p_name: inviteName, p_trainee: inviteTrainee }), 'Pozvánka je vytvořena. Pošlete kolegovi odkaz níže.')) { setEmail(''); setInviteName(''); } }
 
     async function buy(plan: PlanId) {
         setBusy(true); setMsg('');
@@ -79,7 +80,9 @@ export default function LawyerTeam() {
     const isOwner = f?.role === 'owner';
     const canManage = canManageFirm(f?.role);
     const active = !!f && f.seats > 0 && !!f.until && f.until >= new Date().toISOString().slice(0, 10);
-    const used = (overview?.members?.length ?? 0) + (overview?.invites?.length ?? 0);
+    const usedBy = (trainee: boolean) => (overview?.members ?? []).filter((m) => !!m.trainee === trainee).length + (overview?.invites ?? []).filter((i) => !!i.trainee === trainee).length;
+    const used = usedBy(inviteTrainee);
+    const capacity = inviteTrainee ? (f?.trainee_seats ?? traineeSeats(f?.seats ?? 0)) : (f?.seats ?? 0);
 
     return (
         <div className="space-y-5">
@@ -89,7 +92,7 @@ export default function LawyerTeam() {
             {!error && !f && (
                 <section className="rounded-2xl border border-slate-200 bg-white p-6">
                     <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Users size={18} className="text-indigo-700" /> Založit kancelář</h2>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-700">Chcete, aby Kancelář používalo více advokátů najednou? Založte kancelář, pořiďte balíček pro 3, 5 nebo 10 advokátů a pozvěte kolegy. <strong>Každý advokát má vlastní účet, heslo a vlastní data.</strong> Vedoucí kanceláře jeho věci, klienty ani zprávy nevidí.</p>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-700">Chcete, aby Kancelář používalo více advokátů najednou? Založte kancelář, pořiďte balíček pro 2, 3, 5, 10 nebo 20 advokátů (k tomu místa pro koncipienty zdarma) a pozvěte kolegy. <strong>Každý advokát má vlastní účet, heslo a vlastní data.</strong> Vedoucí kanceláře jeho věci, klienty ani zprávy nevidí.</p>
                     <div className="mt-4 flex flex-wrap gap-2">
                         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Název kanceláře" maxLength={120} className={`${inputCls} max-w-sm`} aria-label="Název kanceláře" />
                         <button type="button" onClick={() => void createFirm()} disabled={busy || name.trim().length < 2} className={primaryBtn}>Založit kancelář</button>
@@ -127,7 +130,7 @@ export default function LawyerTeam() {
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><CreditCard size={18} className="text-indigo-700" /> Balíček pro kancelář</h2>
                         <p className="mt-1 text-sm text-slate-600">Platí za celou kancelář. Po zaplacení se přístup aktivuje všem členům. Objednat může vedoucí s vyplněným profilem.</p>
                         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Počet advokátů">
-                            {FIRM_SIZES.map((n) => <button key={n} type="button" aria-pressed={size === n} onClick={() => setSize(n)} className={`rounded-full border px-4 py-1.5 text-sm font-semibold ${size === n ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700'}`}>Do {n} advokátů</button>)}
+                            {FIRM_SIZES.map((n) => <button key={n} type="button" aria-pressed={size === n} onClick={() => setSize(n)} className={`rounded-full border px-4 py-1.5 text-sm font-semibold ${size === n ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700'}`}>Do {n} advokátů (+{traineeSeats(n)} koncipient{traineeSeats(n) === 1 ? '' : traineeSeats(n) < 5 ? 'i' : 'ů'} zdarma)</button>)}
                         </div>
                         <div className="mt-4 flex flex-wrap gap-3">
                             {PLANS.filter((pl) => prices[size][pl.id] > 0).map((pl, i) => <button key={pl.id} type="button" onClick={() => void buy(pl.id)} disabled={busy} className={i === 0 ? primaryBtn : ghostBtn}>{pl.name} · {czk(prices[size][pl.id])}</button>)}
@@ -136,12 +139,12 @@ export default function LawyerTeam() {
                     </section>}
 
                     <section className="rounded-2xl border border-slate-200 bg-white p-6">
-                        <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><UserPlus size={18} className="text-indigo-700" /> Členové ({overview?.members?.length ?? 0} z {f?.seats || 0})</h2>
+                        <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><UserPlus size={18} className="text-indigo-700" /> Členové ({overview?.members?.length ?? 0}, z toho {(overview?.members ?? []).filter((m) => m.trainee).length} koncipientů)</h2>
                         <p className="mt-1 text-xs text-slate-500">Vidíte jen jméno, e-mail, stav profilu a stav přístupu. Věci, klienty, soubory ani zprávy členů nevidíte. Členové spolu mohou šifrovaně chatovat a sdílet věci v záložce Chat.</p>
                         <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
                             {(overview?.members ?? []).map((m) => (
                                 <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
-                                    <span><strong className="text-slate-900">{m.name || m.email || 'Člen'}</strong><span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-bold ${m.role === 'owner' ? 'bg-indigo-100 text-indigo-900' : m.role === 'admin' ? 'bg-sky-100 text-sky-900' : 'bg-slate-100 text-slate-600'}`}>{ROLE_LABELS[m.role]}</span><span className="block text-xs text-slate-500">{m.email} · {VERIFICATION_LABEL[m.verification]}{m.until ? ` · přístup do ${dateCz(m.until)}` : ''}</span></span>
+                                    <span><strong className="text-slate-900">{m.name || m.email || 'Člen'}</strong><span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-bold ${m.role === 'owner' ? 'bg-indigo-100 text-indigo-900' : m.role === 'admin' ? 'bg-sky-100 text-sky-900' : 'bg-slate-100 text-slate-600'}`}>{ROLE_LABELS[m.role]}</span>{m.trainee && <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">Koncipient</span>}<span className="block text-xs text-slate-500">{m.email} · {VERIFICATION_LABEL[m.verification]}{m.until ? ` · přístup do ${dateCz(m.until)}` : ''}</span></span>
                                     {isOwner && m.role !== 'owner' && <select value={m.role} onChange={(e) => void run(() => supabase.rpc('set_member_role', { p_user: m.user_id, p_role: e.target.value }), 'Role byla změněna.')} aria-label={`Role: ${m.name || m.email}`} className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"><option value="member">Člen</option><option value="admin">Správce</option></select>}
                                     {m.user_id !== userId && m.role !== 'owner' && (isOwner || m.role === 'member') && <button type="button" onClick={async () => { if (await confirmAction('Odebrat člena? Ztratí přístup z balíčku kanceláře, jeho data zůstanou jeho.')) void run(() => supabase.rpc('remove_firm_member', { p_user: m.user_id })); }} disabled={busy} aria-label={`Odebrat ${m.name || m.email}`} className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><Trash2 size={15} /></button>}
                                 </li>
@@ -150,11 +153,15 @@ export default function LawyerTeam() {
 
                         {active ? (
                             <div className="mt-5">
-                                <p className="text-sm font-semibold text-slate-900">Pozvat advokáta {used >= (f?.seats ?? 0) && <span className="font-normal text-slate-500">(všechna místa jsou obsazená)</span>}</p>
+                                <p className="text-sm font-semibold text-slate-900">Pozvat {inviteTrainee ? 'koncipienta' : 'advokáta'} {used >= capacity && <span className="font-normal text-slate-500">(všechna místa jsou obsazená)</span>}</p>
+                                <div className="mt-2 flex gap-2" role="group" aria-label="Koho zvete">
+                                    <button type="button" aria-pressed={!inviteTrainee} onClick={() => setInviteTrainee(false)} className={`rounded-full border px-3 py-1 text-xs font-semibold ${!inviteTrainee ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700'}`}>Advokát ({usedBy(false)} z {f?.seats ?? 0})</button>
+                                    <button type="button" aria-pressed={inviteTrainee} onClick={() => setInviteTrainee(true)} className={`rounded-full border px-3 py-1 text-xs font-semibold ${inviteTrainee ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700'}`}>Koncipient zdarma ({usedBy(true)} z {f?.trainee_seats ?? traineeSeats(f?.seats ?? 0)})</button>
+                                </div>
                                 <div className="mt-2 flex flex-wrap gap-2">
                                     <input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="Jméno a příjmení kolegy" maxLength={120} className={`${inputCls} max-w-xs`} aria-label="Jméno kolegy" />
                                     <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="e-mail kolegy" className={`${inputCls} max-w-xs`} aria-label="E-mail kolegy" />
-                                    <button type="button" onClick={() => void invite()} disabled={busy || inviteName.trim().length < 3 || !email.includes('@') || used >= (f?.seats ?? 0)} className={primaryBtn}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />} Vytvořit pozvánku</button>
+                                    <button type="button" onClick={() => void invite()} disabled={busy || inviteName.trim().length < 3 || !email.includes('@') || used >= capacity} className={primaryBtn}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />} Vytvořit pozvánku</button>
                                 </div>
                                 <p className="mt-2 text-xs text-slate-500">Pozvánka je odkaz, který kolegovi pošlete sami (e-mailem nebo zprávou). Platí 14 dní, jen pro tento e-mail a jen jednou. Kolega si pod ním vytvoří vlastní účet a heslo.</p>
                             </div>

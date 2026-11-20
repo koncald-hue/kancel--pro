@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { czk } from '@/lib/lawyer';
 import { EMPTY_PRICES, PLANS, saving, type Prices } from '@/lib/plans';
-import { EMPTY_FIRM_PRICES, FIRM_SIZES, type FirmPrices, type FirmSize } from '@/lib/firm';
+import { EMPTY_FIRM_PRICES, FIRM_SIZES, traineeSeats, type FirmPrices, type FirmSize } from '@/lib/firm';
 import { useAuth } from '../site/AuthContext';
 import Link from 'next/link';
 
@@ -56,7 +56,7 @@ export default function LawyerPricing({ bare = false }: { bare?: boolean } = {})
                     return (
                         <div key={plan.id} className={`relative flex flex-col rounded-3xl bg-white p-7 ${featured ? 'border-2 border-indigo-600 shadow-xl shadow-indigo-100' : 'border border-slate-200'}`}>
                             {featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">Nejčastější volba</span>}
-                            <h3 className="text-lg font-bold text-slate-900">{plan.name}{mode === 'firm' ? ` · do ${size} advokátů` : ''}</h3>
+                            <h3 className="text-lg font-bold text-slate-900">{plan.name}{mode === 'firm' ? ` · do ${size} advokátů + ${traineeSeats(size)} koncipient${traineeSeats(size) === 1 ? '' : traineeSeats(size) < 5 ? 'i' : 'ů'}` : ''}</h3>
                             <p className="mt-4 flex items-baseline gap-1.5">
                                 <span className="text-4xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>
                                 {price > 0 && <span className="text-sm text-slate-500">{plan.unit}</span>}

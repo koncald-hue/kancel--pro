@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { BadgeCheck, Banknote, CalendarClock, Check, ChevronDown, FolderOpen, Landmark, Lock, ShieldAlert, Users } from 'lucide-react';
 import { czk } from '@/lib/lawyer';
 import { EMPTY_PRICES, PLANS, saving, type PlanId, type Prices } from '@/lib/plans';
-import { EMPTY_FIRM_PRICES, FIRM_SIZES, type FirmPrices, type FirmSize } from '@/lib/firm';
+import { EMPTY_FIRM_PRICES, FIRM_SIZES, traineeSeats, type FirmPrices, type FirmSize } from '@/lib/firm';
 import { useAuth } from '../site/AuthContext';
 import { FinalCta, SiteFooter, SiteHeader } from './LandingChrome';
 
@@ -24,7 +24,7 @@ const FAQ: [string, string][] = [
     ['Co se stane s daty, když přestanu platit?', 'Funkce se zamknou, ale vaše data zůstanou uložená k nahlížení a stažení. Po obnovení předplatného se zase odemknou.'],
     ['Liší se plány funkcemi?', 'Ne. Měsíční, půlroční i roční plán mají úplně stejné funkce. Delší období je jen levnější za měsíc.'],
     ['Je cena s DPH?', 'Zda a v jaké výši je DPH, uvidíte u objednávky a na daňovém dokladu, který po zaplacení dostanete.'],
-    ['Jak funguje balíček pro kancelář?', 'Jedna platba za celou kancelář (3, 5 nebo 10 advokátů). Každý člen má vlastní účet, heslo a vlastní data, která vedoucí kanceláře nevidí. Věc může člen nasdílet kolegovi.'],
+    ['Jak funguje balíček pro kancelář?', 'Jedna platba za celou kancelář (2, 3, 5, 10 nebo 20 advokátů, k tomu místa pro koncipienty zdarma). Každý člen má vlastní účet, heslo a vlastní data, která vedoucí kanceláře nevidí. Věc může člen nasdílet kolegovi.'],
 ];
 
 // Samostatná stránka s ceníkem: plány, co je v ceně, jak platba funguje a časté otázky
@@ -73,7 +73,7 @@ export default function PricingPage() {
                                 <p className="mt-2 h-5 text-sm text-slate-500">{pm > 0 && plan.months > 1 ? `tedy ${czk(pm)} měsíčně` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>
                                 <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Ušetříte ${czk(save)}` : ' '}</p>
                                 <ul className="mt-5 flex-1 space-y-2 text-sm text-slate-700">
-                                    {['Všechny funkce', 'Neomezený počet věcí a klientů', mode === 'firm' ? `Až ${size} advokátů v ceně` : 'Zkušební období 14 dní zdarma', 'Zrušíte kdykoli jedním tlačítkem'].map((f) => <li key={f} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}
+                                    {['Všechny funkce', 'Neomezený počet věcí a klientů', mode === 'firm' ? `Až ${size} advokátů a ${traineeSeats(size)} koncipientů v ceně` : 'Zkušební období 14 dní zdarma', 'Zrušíte kdykoli jedním tlačítkem'].map((f) => <li key={f} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}
                                 </ul>
                                 {account
                                     ? <Link href={mode === 'firm' ? '/kancelar/tym' : '/kancelar/nastaveni'} className={`mt-7 inline-flex justify-center rounded-xl px-4 py-3 text-sm font-bold ${featured ? 'bg-indigo-700 text-white hover:bg-indigo-800' : 'border border-slate-300 text-slate-800 hover:bg-slate-50'}`}>{mode === 'firm' ? 'Otevřít tým' : 'Otevřít předplatné'}</Link>
