@@ -80,8 +80,8 @@ export default function LawyerLanding() {
 
             {/* Ukázka v pohybu */}
             <section className="px-4 py-16 sm:px-6" aria-labelledby="flow-title">
-                <div className="mx-auto max-w-xl">
-                    <h2 id="flow-title" className="text-center text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Od datové zprávy ke klientovi</h2>
+                <div className="mx-auto max-w-6xl">
+                    <h2 id="flow-title" className="max-w-2xl text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Jak to funguje v praxi</h2>
                     <div className="mt-8"><LandingFlow /></div>
                 </div>
             </section>
