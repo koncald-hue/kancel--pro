@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
 import { czk } from '@/lib/lawyer';
-import { EMPTY_PRICES, PLANS, saving, type Prices } from '@/lib/plans';
+import { EMPTY_PRICES, PLANS, saving, savingPct, type Prices } from '@/lib/plans';
 import { useAuth } from '../site/AuthContext';
 
 // Stručný ceník pro hlavní stránku: tři plány a odkaz na podrobný ceník
@@ -31,7 +31,7 @@ export default function PricingTeaser() {
                                 {featured && <span className="absolute -top-3 left-6 rounded-full bg-indigo-600 px-3 py-0.5 text-xs font-bold text-white">Nejčastější volba</span>}
                                 <h3 className="font-bold text-slate-900">{plan.name}</h3>
                                 <p className="mt-3 flex items-baseline gap-2"><span className="text-3xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>{price > 0 && <span className="text-sm text-slate-500">{plan.unit}</span>}</p>
-                                <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Ušetříte ${czk(save)}` : ' '}</p>
+                                <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Sleva ${savingPct(prices, plan.id)} % (${czk(save)})` : ' '}</p>
                             </div>
                         );
                     })}

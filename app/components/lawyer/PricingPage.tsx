@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BadgeCheck, Banknote, CalendarClock, Check, ChevronDown, FolderOpen, Landmark, Lock, ShieldAlert, Users } from 'lucide-react';
 import { czk } from '@/lib/lawyer';
-import { EMPTY_PRICES, PLANS, saving, type PlanId, type Prices } from '@/lib/plans';
+import { EMPTY_PRICES, PLANS, saving, savingPct, type PlanId, type Prices } from '@/lib/plans';
 import { EMPTY_FIRM_PRICES, FIRM_SIZES, traineeSeats, type FirmPrices, type FirmSize } from '@/lib/firm';
 import { useAuth } from '../site/AuthContext';
 import { FinalCta, SiteFooter, SiteHeader } from './LandingChrome';
@@ -71,7 +71,7 @@ export default function PricingPage() {
                                 <h2 className="text-lg font-bold text-slate-900">{plan.name}</h2>
                                 <p className="mt-4 flex flex-col"><span className="shrink-0 whitespace-nowrap text-5xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>{price > 0 && <span className="mt-1 whitespace-nowrap text-sm text-slate-500">{plan.unit}</span>}</p>
                                 <p className="mt-2 h-5 text-sm text-slate-500">{pm > 0 && plan.months > 1 ? `tedy ${czk(pm)} měsíčně` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>
-                                <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Ušetříte ${czk(save)}` : ' '}</p>
+                                <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Sleva ${savingPct(table, plan.id)} % (${czk(save)})` : ' '}</p>
                                 <ul className="mt-5 flex-1 space-y-2 text-sm text-slate-700">
                                     {['Všechny funkce', 'Neomezený počet věcí a klientů', mode === 'firm' ? `Až ${size} advokátů a ${traineeSeats(size)} koncipientů v ceně` : 'Zkušební období 14 dní zdarma', 'Zrušíte kdykoli jedním tlačítkem'].map((f) => <li key={f} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}
                                 </ul>

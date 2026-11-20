@@ -16,3 +16,9 @@ export const saving = (prices: Prices, id: PlanId) => {
     const plan = PLANS.find((p) => p.id === id);
     return plan && prices.month > 0 && prices[id] > 0 ? Math.max(0, prices.month * plan.months - prices[id]) : 0;
 };
+
+// Sleva v procentech oproti měsíčnímu placení (zaokrouhleno)
+export const savingPct = (prices: Prices, id: PlanId) => {
+    const plan = PLANS.find((p) => p.id === id);
+    return plan && prices.month > 0 && prices[id] > 0 ? Math.max(0, Math.round((1 - prices[id] / (prices.month * plan.months)) * 100)) : 0;
+};

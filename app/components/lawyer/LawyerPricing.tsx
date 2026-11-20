@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { czk } from '@/lib/lawyer';
-import { EMPTY_PRICES, PLANS, saving, type Prices } from '@/lib/plans';
+import { EMPTY_PRICES, PLANS, saving, savingPct, type Prices } from '@/lib/plans';
 import { EMPTY_FIRM_PRICES, FIRM_SIZES, traineeSeats, type FirmPrices, type FirmSize } from '@/lib/firm';
 import { useAuth } from '../site/AuthContext';
 import Link from 'next/link';
@@ -61,7 +61,7 @@ export default function LawyerPricing({ bare = false }: { bare?: boolean } = {})
                                 <span className="shrink-0 whitespace-nowrap text-4xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>
                                 {price > 0 && <span className="mt-1 whitespace-nowrap text-sm text-slate-500">{plan.unit}</span>}
                             </p>
-                            <p className="mt-1 h-5 text-xs font-semibold text-emerald-700">{save > 0 ? `Ušetříte ${czk(save)} oproti měsíčnímu placení` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>
+                            <p className="mt-1 h-5 text-xs font-semibold text-emerald-700">{save > 0 ? `Sleva ${savingPct(table, plan.id)} % oproti měsíčnímu placení (${czk(save)})` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>
                             <ul className="mt-5 flex-1 space-y-2.5 text-sm text-slate-700">
                                 {INCLUDED.map((f) => <li key={f} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}
                                 {mode === 'firm' && <li className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />Každý člen s vlastním účtem a vlastními daty</li>}

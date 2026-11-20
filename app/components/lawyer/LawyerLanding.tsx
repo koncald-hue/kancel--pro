@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, CalendarClock, Check, FolderOpen, Lock, Receipt, Scale, Smartphone, Users } from 'lucide-react';
+import { ArrowRight, CalendarClock, Check, FolderOpen, Lock, Receipt, Scale, ShieldCheck, Smartphone, Undo2, Users, X } from 'lucide-react';
 import PricingTeaser from './PricingTeaser';
 import { FinalCta, SiteFooter, SiteHeader, StartButton } from './LandingChrome';
 import { CaseMock, ClientMock } from './LandingMockups';
@@ -12,6 +12,13 @@ const FOUR: { icon: typeof Scale; tone: string; title: string; text: string }[] 
     { icon: CalendarClock, tone: 'bg-amber-100 text-amber-700', title: 'Hlídáte lhůty', text: 'Lhůty se spočítají a posunou na pracovní den. Včas víte, co hoří.' },
     { icon: Users, tone: 'bg-sky-100 text-sky-700', title: 'Komunikujete s klientem', text: 'Klient nahraje podklady a píše zprávy přes soukromý odkaz, bez registrace.' },
     { icon: Receipt, tone: 'bg-emerald-100 text-emerald-700', title: 'Účtujete práci', text: 'Výkazy, faktury s QR platbou a kontrola, kdo už zaplatil.' },
+];
+
+const CMP: [string, string, string][] = [
+    ['Lhůty', 'Počítáte ručně a hlídáte v kalendáři', 'Spočítají se a posunou na pracovní den'],
+    ['Podklady od klienta', 'Přílohy v e-mailu', 'Klient je nahraje přes soukromý odkaz'],
+    ['Čas a faktury', 'Tabulka a ruční fakturace', 'Výkazy, faktura s QR platbou, kontrola plateb'],
+    ['Data o klientech', 'Rozeseta po složkách a schránkách', 'Na jednom místě, šifrovaná'],
 ];
 
 const ALSO = ['Datové schránky', 'E-mail ve spisu', 'Podpis dokumentů', 'Vzory ve Wordu', 'Insolvenční rejstřík', 'ARES a katastr', 'Import z Excelu', 'Práce v týmu'];
@@ -41,6 +48,15 @@ export default function LawyerLanding() {
                 </div>
             </section>
 
+            {/* Pruh důvěry */}
+            <section className="border-y border-slate-200 bg-white" aria-label="Proč nám věřit">
+                <ul className="mx-auto flex max-w-6xl flex-wrap justify-center gap-x-10 gap-y-3 px-4 py-5 text-sm font-semibold text-slate-700 sm:px-6">
+                    <li className="flex items-center gap-2"><Lock size={16} className="text-indigo-700" aria-hidden="true" /> Šifrovaná data</li>
+                    <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-indigo-700" aria-hidden="true" /> Vyrobeno v ČR</li>
+                    <li className="flex items-center gap-2"><Undo2 size={16} className="text-indigo-700" aria-hidden="true" /> Zrušíte kdykoli</li>
+                </ul>
+            </section>
+
             {/* 2. Čtyři věci, které za vás vyřeší */}
             <section className="px-4 py-20 sm:px-6 sm:py-24" aria-labelledby="co-title">
                 <div className="mx-auto max-w-6xl">
@@ -58,6 +74,27 @@ export default function LawyerLanding() {
                     <ul className="mt-3 flex flex-wrap gap-2">
                         {ALSO.map((t) => <li key={t} className="rounded-full border border-slate-200 px-3.5 py-1.5 text-sm text-slate-700">{t}</li>)}
                     </ul>
+                </div>
+            </section>
+
+            {/* Excel a papír proti Kanceláři */}
+            <section className="bg-slate-50 px-4 py-16 sm:px-6" aria-labelledby="cmp-title">
+                <div className="mx-auto max-w-3xl">
+                    <h2 id="cmp-title" className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Proti Excelu a papíru</h2>
+                    <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-slate-100 text-xs uppercase tracking-wide text-slate-600"><tr><th className="px-4 py-3"> </th><th className="px-4 py-3">Excel a e-mail</th><th className="px-4 py-3 text-indigo-800">Kancelář</th></tr></thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {CMP.map(([k, a, b]) => (
+                                    <tr key={k}>
+                                        <th scope="row" className="px-4 py-3 font-semibold text-slate-900">{k}</th>
+                                        <td className="px-4 py-3 text-slate-600"><X size={14} className="mr-1 inline text-rose-600" aria-hidden="true" />{a}</td>
+                                        <td className="px-4 py-3 text-slate-900"><Check size={14} className="mr-1 inline text-emerald-600" aria-hidden="true" />{b}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
