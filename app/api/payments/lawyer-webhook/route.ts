@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { serviceClient } from '@/lib/serverSupabase';
+import { notifyAdmin } from '@/lib/adminMail';
 
 // Webhook platební brány: potvrdí zaplacenou objednávku předplatného advokáta a automaticky mu prodlouží přístup.
 // Požadavek musí být podepsaný (HMAC-SHA256 z "<orderId>.<reference>" tajemstvím PAYMENT_WEBHOOK_SECRET, hlavička x-signature).
@@ -24,5 +25,7 @@ export async function POST(req: Request) {
     if (!db) return NextResponse.json({ error: 'unavailable' }, { status: 503 });
     const { data, error } = await db.rpc('apply_lawyer_payment', { p_order: orderId, p_ref: reference });
     if (error) { console.warn('[lawyer-webhook] failed:', error.message); return NextResponse.json({ error: 'failed' }, { status: 500 }); }
+    if (data === 'refund_due') await notifyAdmin('Kancelář: platba k VRÁCENÍ', [`Zaplatil někdo, kdo nemá ověřenou totožnost. Peníze je třeba vrátit (objednávka č. ${orderId}).`]);
+    else if (data === 'ok' || data === 'paid') await notifyAdmin('Kancelář: nová platba', [`Někdo zaplatil objednávku Kanceláře č. ${orderId}.`]);
     return NextResponse.json({ result: data });
 }

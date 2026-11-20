@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { serviceClient } from '@/lib/serverSupabase';
-import { mailConfigured, sendMail } from '@/lib/mail';
+import { notifyAdmin } from '@/lib/adminMail';
 import { comgateConfig, getStatus, isPaidFor } from '@/lib/comgate';
 
 // Oznámení o změně stavu platby od Comgate (adresu nastavte v klientském portálu Comgate).
@@ -32,10 +32,14 @@ export async function POST(req: Request) {
     if (error) { console.warn('[comgate] uplatnění selhalo:', error.message); return reply(false, 500); }
     // První platba s opakováním: uloží se její číslo, ze kterého se strhávají další období
     if (order.recurring_kind === 'init') await db.from('lawyer_recurring').update({ init_trans: transId, active: true, fails: 0, updated_at: new Date().toISOString() }).eq('user_id', order.user_id).eq('active', false);
-    // Oznámení správci o nové platbě (jen poprvé; opakované oznámení od Comgate už e-mail nespustí)
-    const to = process.env.ADMIN_NOTIFY_EMAIL?.trim();
-    if (to && mailConfigured() && order.status !== 'paid') {
-        await sendMail(to, `Kancelář: nová platba ${Number(order.price_czk)} Kč`, `Někdo zaplatil objednávku Kanceláře č. ${st.refId}.\nČástka: ${Number(order.price_czk)} Kč`).catch((e) => console.warn('[comgate] oznámení správci selhalo:', (e as Error).message));
+    // Oznámení správci o nové platbě (jen poprvé; opakované oznámení od Comgate už e-mail nespustí). Platba od neověřeného se musí vrátit.
+    if (order.status !== 'paid') {
+        const { data: after } = await db.from('lawyer_orders').select('status').eq('id', st.refId).maybeSingle();
+        const refund = after?.status === 'refund_due';
+        await notifyAdmin(refund ? `Kancelář: platba ${Number(order.price_czk)} Kč k VRÁCENÍ` : `Kancelář: nová platba ${Number(order.price_czk)} Kč`, [
+            refund ? `Zaplatil někdo, kdo nemá ověřenou totožnost. Peníze je třeba vrátit (objednávka č. ${st.refId}).` : `Někdo zaplatil objednávku Kanceláře č. ${st.refId}.`,
+            `Částka: ${Number(order.price_czk)} Kč`,
+        ]);
     }
     return reply(true);
 }
