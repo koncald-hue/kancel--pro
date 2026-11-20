@@ -5,15 +5,20 @@ import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import ThemeSync from '@/app/components/site/ThemeSync';
 import PwaRegister from '@/app/components/site/PwaRegister';
 import ConfirmHost from '@/app/components/site/ConfirmHost';
+import { getSiteOrigin } from '@/lib/siteUrl';
 import './globals.css';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin', 'latin-ext'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin', 'latin-ext'] });
 
+const origin = getSiteOrigin();
+
 export const metadata: Metadata = {
+  ...(origin ? { metadataBase: new URL(origin) } : {}),
   title: 'Kancelář | software pro advokáty a právníky',
   description: 'Spisy, lhůty, klienti, výkazy práce a bezpečná komunikace s klientem na jednom místě.',
   applicationName: 'Kancelář',
+  openGraph: { type: 'website', locale: 'cs_CZ', siteName: 'Kancelář', title: 'Kancelář | software pro advokáty a právníky', description: 'Spisy, lhůty, klienti, výkazy práce a bezpečná komunikace s klientem na jednom místě.' },
   appleWebApp: { capable: true, title: 'Kancelář', statusBarStyle: 'default' },
   icons: { apple: '/pwa-icon/apple-180' },
 };
