@@ -23,7 +23,7 @@ export default function LawyerLanding() {
 
             {/* 1. Co to je: jedna věta a jeden obrázek */}
             <section className="overflow-hidden bg-gradient-to-b from-indigo-50/70 to-white">
-                <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-20 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.1fr] lg:pb-28">
+                <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pb-20 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.1fr] lg:pb-28">
                     <div>
                         <p className="text-sm font-semibold text-indigo-700">Pracovní prostor pro advokáty</p>
                         <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">Všechna vaše práce na jednom místě.</h1>
