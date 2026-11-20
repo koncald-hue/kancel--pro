@@ -5,6 +5,7 @@ import { ArrowRight, CalendarClock, Check, FolderOpen, Lock, Receipt, Scale, Shi
 import PricingTeaser from './PricingTeaser';
 import { FinalCta, SiteFooter, SiteHeader, StartButton } from './LandingChrome';
 import { CaseMock, ClientMock } from './LandingMockups';
+import LandingFlow from './LandingFlow';
 
 // Co aplikace dělá, v lidské řeči. Čtyři věci, které advokát denně řeší.
 const FOUR: { icon: typeof Scale; tone: string; title: string; text: string }[] = [
@@ -74,6 +75,14 @@ export default function LawyerLanding() {
                     <ul className="mt-3 flex flex-wrap gap-2">
                         {ALSO.map((t) => <li key={t} className="rounded-full border border-slate-200 px-3.5 py-1.5 text-sm text-slate-700">{t}</li>)}
                     </ul>
+                </div>
+            </section>
+
+            {/* Ukázka v pohybu */}
+            <section className="px-4 py-16 sm:px-6" aria-labelledby="flow-title">
+                <div className="mx-auto max-w-xl">
+                    <h2 id="flow-title" className="text-center text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Od datové zprávy ke klientovi</h2>
+                    <div className="mt-8"><LandingFlow /></div>
                 </div>
             </section>
 

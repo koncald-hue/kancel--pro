@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { BadgeCheck, Banknote, CalendarClock, Check, ChevronDown, FolderOpen, Landmark, Lock, ShieldAlert, Users } from 'lucide-react';
 import { czk } from '@/lib/lawyer';
 import { EMPTY_PRICES, PLANS, saving, savingPct, type PlanId, type Prices } from '@/lib/plans';
+import PriceCompare from './PriceCompare';
 import { EMPTY_FIRM_PRICES, FIRM_SIZES, traineeSeats, type FirmPrices, type FirmSize } from '@/lib/firm';
 import { useAuth } from '../site/AuthContext';
 import { FinalCta, SiteFooter, SiteHeader } from './LandingChrome';
@@ -104,6 +105,8 @@ export default function PricingPage() {
                     </div>
                 </div>
             </section>
+
+            <PriceCompare solo={prices} firms={firmPrices} />
 
             <section className="border-y border-slate-100 bg-slate-50 px-4 py-20 sm:px-6 sm:py-24" aria-labelledby="jak-title">
                 <div className="mx-auto max-w-6xl">
