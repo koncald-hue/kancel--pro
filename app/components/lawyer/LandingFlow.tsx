@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarClock, Check, FileSignature, Link2, Mail, QrCode, Timer, Upload, Wallet } from 'lucide-react';
+import { CalendarClock, Check, FileText, Link2, Mail, QrCode, Timer, Wallet } from 'lucide-react';
 import { Window } from './LandingMockups';
 
 // Krátké ukázky v pohybu: tři postupy o třech krocích. Jména a údaje jsou smyšlené.
@@ -17,16 +17,6 @@ const FLOWS: Flow[] = [
             { icon: Mail, title: 'Přišla datová zpráva', text: 'Rozsudek, Okresní soud Plzeň-město, 12 C 345/2026.' },
             { icon: CalendarClock, title: 'Lhůta se spočítala sama', text: 'Odvolání do 15 dní od doručení. Poslední den: 24. 11. 2026.' },
             { icon: Link2, title: 'Klient má odkaz', text: 'Petr Novák si otevře svou věc v telefonu. Bez registrace.' },
-        ],
-    },
-    {
-        heading: 'Klient si vše vyřídí sám',
-        lead: 'Vy nic nepřeposíláte.',
-        window: 'Klientský odkaz',
-        steps: [
-            { icon: Upload, title: 'Nahrál podklady', text: 'Fotky zboží a fakturu. Soubory jsou šifrované.' },
-            { icon: FileSignature, title: 'Podepsal smlouvu', text: 'Přímo v telefonu, podpis se uloží do věci.' },
-            { icon: Check, title: 'Věc je připravená', text: 'Zpráva od klienta čeká ve věci, nic jste nehledali v e-mailu.' },
         ],
     },
     {
@@ -72,6 +62,42 @@ function FlowCard({ flow }: { flow: Flow }) {
     );
 }
 
+
+// Jiná ukázka: telefon klienta. Zpráva, nahrání souboru, odpověď a podpis, vše v jednom okně.
+function PhoneDemo() {
+    const [tick, setTick] = useState(0);
+    const [still, setStill] = useState(false);
+    useEffect(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { Promise.resolve().then(() => setStill(true)); return; }
+        const t = setInterval(() => setTick((n) => n + 1), 1800);
+        return () => clearInterval(t);
+    }, []);
+    const p = still ? 5 : (tick % 6) + 1; // 1 zpráva, 2 nahrávání, 3 odpověď, 4 podpis, 5-6 hotovo
+    const show = (n: number) => `transition-all duration-500 ${p >= n ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`;
+    return (
+        <div>
+            <h3 className="text-lg font-bold text-slate-900">Klient si vše vyřídí sám</h3>
+            <p className="mb-4 text-sm text-slate-600">Vy nic nepřeposíláte.</p>
+            <div className="mx-auto w-full max-w-[260px] rounded-[2rem] border-4 border-slate-800 bg-white p-3 shadow-xl" role="img" aria-label="Ukázka telefonu klienta: zpráva od advokáta, nahrání souboru, odpověď a podpis smlouvy">
+                <div className="mx-auto mb-3 h-1.5 w-16 rounded-full bg-slate-300" />
+                <div className="flex h-[300px] flex-col gap-2 overflow-hidden text-xs">
+                    <div className={`max-w-[85%] rounded-2xl rounded-bl-sm bg-slate-100 px-3 py-2 text-slate-800 ${show(1)}`}>Dobrý den, nahrajte prosím fakturu a fotky.</div>
+                    <div className={`rounded-xl border border-slate-200 p-2 ${show(2)}`}>
+                        <div className="flex items-center gap-2 text-slate-800"><FileText size={14} className="text-indigo-700" aria-hidden="true" /> faktura.pdf <span className="ml-auto text-emerald-700">{p >= 3 ? 'nahráno' : '…'}</span></div>
+                        <div className="mt-1.5 h-1.5 rounded-full bg-slate-200"><div className="h-1.5 rounded-full bg-indigo-600 transition-all duration-[1400ms]" style={{ width: p >= 3 || still ? '100%' : p === 2 ? '70%' : '0%' }} /></div>
+                    </div>
+                    <div className={`ml-auto max-w-[75%] rounded-2xl rounded-br-sm bg-indigo-600 px-3 py-2 text-white ${show(3)}`}>Posílám, díky.</div>
+                    <div className={`rounded-xl border border-slate-200 p-2 ${show(4)}`}>
+                        <p className="text-slate-800">Smlouva o právních službách</p>
+                        <svg viewBox="0 0 120 30" className="mt-1 h-8 w-full text-slate-900" aria-hidden="true"><path d="M4 22 C 14 4, 22 4, 26 18 S 40 28, 48 10 S 62 6, 70 20 S 90 24, 116 8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" pathLength="1" strokeDasharray="1" style={{ strokeDashoffset: p >= 5 || still ? 0 : 1, transition: 'stroke-dashoffset 1.2s ease' }} /></svg>
+                        <p className={`flex items-center gap-1 text-emerald-700 transition-opacity duration-500 ${p >= 5 ? 'opacity-100' : 'opacity-0'}`}><Check size={13} aria-hidden="true" /> Podepsáno</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function LandingFlow() {
-    return <div className="grid gap-10 md:grid-cols-3 md:gap-6">{FLOWS.map((f) => <FlowCard key={f.heading} flow={f} />)}</div>;
+    return <div className="grid gap-10 md:grid-cols-3 md:gap-6"><FlowCard flow={FLOWS[0]} /><PhoneDemo /><FlowCard flow={FLOWS[1]} /></div>;
 }
