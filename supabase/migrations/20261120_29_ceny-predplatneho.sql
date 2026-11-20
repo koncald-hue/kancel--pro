@@ -6,5 +6,5 @@ insert into public.app_settings (key, value) values
   ('firm_price_3_month', '1690'), ('firm_price_3_half', '9100'), ('firm_price_3_year', '16200'),
   ('firm_price_5_month', '2790'), ('firm_price_5_half', '15000'), ('firm_price_5_year', '26800'),
   ('firm_price_10_month', '5490'), ('firm_price_10_half', '29600'), ('firm_price_10_year', '52700'),
-  ('firm_price_20_month', '10490'), ('firm_price_20_half', '56600'), ('firm_price_20_year', '100700')
+  ('firm_price_20_month', '7990'), ('firm_price_20_half', '43100'), ('firm_price_20_year', '76700')
 on conflict (key) do update set value = excluded.value;
