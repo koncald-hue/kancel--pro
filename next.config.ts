@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['imapflow', 'mailparser', 'nodemailer', 'web-push'],
   async headers() {
     return [
-      { source: '/((?!doplnek).*)', headers: [
+      { source: '/((?!doplnek|pwa-icon).*)', headers: [
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'X-Frame-Options', value: 'DENY' },
         { key: 'Referrer-Policy', value: 'no-referrer' },
@@ -51,6 +51,11 @@ const nextConfig: NextConfig = {
         { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
         { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
         { key: 'X-DNS-Prefetch-Control', value: 'off' },
+      ] },
+      // Logo se vkládá do e-mailů (potvrzení registrace, obnova hesla), proto smí být načtené z jiných webů a poštovních klientů
+      { source: '/pwa-icon/:path*', headers: [
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
       ] },
       { source: '/doplnek/:path*', headers: [
         { key: 'X-Content-Type-Options', value: 'nosniff' },
