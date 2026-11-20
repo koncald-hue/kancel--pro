@@ -69,7 +69,7 @@ export default function PricingPage() {
                             <div key={plan.id} className={`relative flex flex-col rounded-3xl bg-white p-7 ${featured ? 'border-2 border-indigo-600 shadow-xl shadow-indigo-100' : 'border border-slate-200'}`}>
                                 {featured && <span className="absolute -top-3 left-7 rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">Nejčastější volba</span>}
                                 <h2 className="text-lg font-bold text-slate-900">{plan.name}</h2>
-                                <p className="mt-4 flex items-baseline gap-2"><span className="text-5xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>{price > 0 && <span className="text-sm text-slate-500">{plan.unit}</span>}</p>
+                                <p className="mt-4 flex flex-wrap items-baseline gap-x-2"><span className="shrink-0 whitespace-nowrap text-5xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>{price > 0 && <span className="whitespace-nowrap text-sm text-slate-500">{plan.unit}</span>}</p>
                                 <p className="mt-2 h-5 text-sm text-slate-500">{pm > 0 && plan.months > 1 ? `tedy ${czk(pm)} měsíčně` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>
                                 <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Ušetříte ${czk(save)}` : ' '}</p>
                                 <ul className="mt-5 flex-1 space-y-2 text-sm text-slate-700">
