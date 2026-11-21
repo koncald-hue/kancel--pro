@@ -79,7 +79,7 @@ export const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').to
 export type FieldDef = { key: string; label: string; required?: boolean; synonyms: string[] };
 export const FIELDS: Record<Entity, FieldDef[]> = {
     klienti: [
-        { key: 'name', label: 'Jméno / název klienta', required: true, synonyms: ['jmeno klienta', 'nazev', 'nazev klienta', 'klient', 'cele jmeno', 'jmeno a prijmeni', 'jmeno prijmeni', 'name', 'full name', 'display name', 'subjekt', 'zakaznik'] },
+        { key: 'name', label: 'Jméno / název klienta', required: true, synonyms: ['jmeno klienta', 'nazev', 'nazev klienta', 'klient', 'cele jmeno', 'jmeno a prijmeni', 'jmeno prijmeni', 'name', 'full name', 'display name', 'subjekt', 'zakaznik', 'jmeno nazev', 'nazev jmeno', 'jmeno nazev klienta'] },
         { key: 'first', label: 'Jméno (křestní)', synonyms: ['jmeno', 'krestni jmeno', 'first name', 'given name'] },
         { key: 'last', label: 'Příjmení', synonyms: ['prijmeni', 'last name', 'family name', 'surname'] },
         { key: 'company', label: 'Firma', synonyms: ['firma', 'organizace', 'spolecnost', 'company', 'organization', 'obchodni firma'] },
@@ -98,7 +98,7 @@ export const FIELDS: Record<Entity, FieldDef[]> = {
     veci: [
         { key: 'title', label: 'Název věci', required: true, synonyms: ['nazev', 'nazev veci', 'vec', 'predmet', 'title', 'case', 'spis', 'nazev spisu', 'predmet sporu', 'kauza'] },
         { key: 'reference', label: 'Spisová značka / č. j.', synonyms: ['spisova znacka', 'sp zn', 'spzn', 'cislo jednaci', 'c j', 'cj', 'znacka', 'reference', 'cislo spisu', 'cislo veci'] },
-        { key: 'authority', label: 'Soud nebo úřad', synonyms: ['soud', 'urad', 'soud urad', 'instituce', 'authority', 'court', 'orgn', 'organ'] },
+        { key: 'authority', label: 'Soud nebo úřad', synonyms: ['soud', 'urad', 'soud urad', 'instituce', 'authority', 'court', 'organ', 'soud organ'] },
         { key: 'client', label: 'Klient', synonyms: ['klient', 'jmeno klienta', 'zakaznik', 'client', 'strana', 'klient jmeno', 'dotcena osoba'] },
         { key: 'clientEmail', label: 'E-mail klienta', synonyms: ['email klienta', 'e mail klienta', 'client email'] },
         { key: 'clientPhone', label: 'Telefon klienta', synonyms: ['telefon klienta', 'tel klienta', 'client phone'] },
@@ -108,13 +108,13 @@ export const FIELDS: Record<Entity, FieldDef[]> = {
     ],
     lhuty: [
         { key: 'case', label: 'Věc (značka nebo název)', required: true, synonyms: ['vec', 'spis', 'spisova znacka', 'sp zn', 'cislo jednaci', 'case', 'nazev veci', 'znacka'] },
-        { key: 'title', label: 'Název lhůty / úkonu', required: true, synonyms: ['nazev', 'lhuta', 'ukon', 'popis', 'title', 'termin', 'co', 'predmet'] },
+        { key: 'title', label: 'Název lhůty / úkonu', required: true, synonyms: ['nazev', 'lhuta', 'nazev lhuty', 'ukon', 'nazev ukonu', 'ukol', 'nazev ukolu', 'popis', 'title', 'co', 'predmet', 'task', 'subject'] },
         { key: 'date', label: 'Datum', required: true, synonyms: ['datum', 'termin', 'konec lhuty', 'do', 'due date', 'date', 'splatnost', 'datum lhuty', 'koncove datum'] },
         { key: 'done', label: 'Splněno', synonyms: ['splneno', 'hotovo', 'done', 'vyrizeno', 'dokonceno'] },
     ],
     kontakty: [
         { key: 'case', label: 'Věc (značka nebo název)', required: true, synonyms: ['vec', 'spis', 'spisova znacka', 'sp zn', 'cislo jednaci', 'case', 'nazev veci', 'znacka'] },
-        { key: 'name', label: 'Jméno / název', required: true, synonyms: ['jmeno', 'nazev', 'name', 'kontakt', 'osoba', 'cele jmeno'] },
+        { key: 'name', label: 'Jméno / název', required: true, synonyms: ['jmeno', 'nazev', 'name', 'kontakt', 'osoba', 'cele jmeno', 'jmeno nazev', 'subjekt', 'ucastnik'] },
         { key: 'role', label: 'Role (soud, protistrana…)', synonyms: ['role', 'typ', 'vztah', 'funkce', 'postaveni', 'kategorie'] },
         { key: 'email', label: 'E-mail', synonyms: ['email', 'e mail', 'mail'] },
         { key: 'phone', label: 'Telefon', synonyms: ['telefon', 'tel', 'mobil', 'phone'] },
@@ -126,36 +126,110 @@ export const FIELDS: Record<Entity, FieldDef[]> = {
         { key: 'hours', label: 'Čas v hodinách (1,5)', required: false, synonyms: ['hodiny', 'hodin', 'hours', 'cas hodiny', 'pocet hodin', 'h'] },
         { key: 'minutes', label: 'Čas v minutách', synonyms: ['minuty', 'minut', 'minutes', 'cas minuty', 'min'] },
         { key: 'duration', label: 'Čas (1:30)', synonyms: ['cas', 'doba', 'delka', 'duration', 'trvani', 'odpracovano', 'cas hh mm'] },
-        { key: 'description', label: 'Popis činnosti', synonyms: ['popis', 'ukon', 'cinnost', 'description', 'poznamka', 'text', 'nazev ukonu'] },
+        { key: 'description', label: 'Popis činnosti', synonyms: ['popis', 'popis cinnosti', 'popis prace', 'ukon', 'cinnost', 'description', 'poznamka', 'text', 'nazev ukonu', 'narrative', 'activity'] },
         { key: 'rate', label: 'Sazba (Kč/hod)', synonyms: ['sazba', 'hodinova sazba', 'rate', 'kc hod'] },
         { key: 'billed', label: 'Vyfakturováno', synonyms: ['vyfakturovano', 'fakturovano', 'billed', 'uctovano', 'faktura'] },
     ],
 };
 
 export type Mapping = (string | '')[];
-export function suggestMapping(entity: Entity, headers: string[]): Mapping {
-    const defs = FIELDS[entity]; const used = new Set<string>();
-    const map: Mapping = headers.map((h) => {
-        const f = fold(h); if (!f) return '';
-        const d = defs.find((x) => !used.has(x.key) && x.synonyms.includes(f));
-        if (d) { used.add(d.key); return d.key; }
-        return '';
-    });
-    // „Jméno“ je jméno celé, pokud ve výpisu není zvlášť příjmení
-    if (entity === 'klienti') {
-        const hasLast = map.includes('last'); const hasName = map.includes('name');
-        if (!hasLast && map.includes('first') && !hasName) { const i = map.indexOf('first'); map[i] = 'name'; }
-    }
-    return map;
+
+// ---------- chytré přiřazení sloupců ----------
+// Každý sloupec se porovná s každým polem: podle celých slov názvu (i ve skloňování: „lhůty“ = „lhůta“), podle popisku pole
+// a když název nic neřekne, i podle obsahu buněk (e-mail, telefon, IČO, spisová značka, datum, ano/ne).
+// Pak se páry přiřadí od nejjistějšího, takže jedno pole nikdy nedostanou dva sloupce.
+const STOP = new Set(['a', 'nebo', 'or', 'and', 'the', 'of', 'na', 'v', 've', 'k', 'ke', 's', 'se', 'z', 'ze', 'pro', 'u', 'do']);
+const tokens = (s: string) => fold(s).split(' ').filter((t) => t && !STOP.has(t));
+function tokEq(a: string, b: string) {
+    if (a === b) return true;
+    if (a.length < 4 || b.length < 4) return false;
+    let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++;
+    return i >= 4 && i >= Math.min(a.length, b.length) - 1;
+}
+function phraseScore(header: string[], phrase: string[]): number {
+    if (!header.length || !phrase.length) return 0;
+    if (header.length === phrase.length && header.every((t, i) => t === phrase[i])) return 100;
+    const inHeader = phrase.filter((p) => header.some((h) => tokEq(h, p))).length;
+    const inPhrase = header.filter((h) => phrase.some((p) => tokEq(h, p))).length;
+    if (inHeader === phrase.length && inPhrase === header.length) return 92;
+    if (inHeader === phrase.length) return 60 + Math.round(30 * phrase.length / header.length);
+    if (inPhrase === header.length) return 50 + Math.round(30 * header.length / phrase.length);
+    return 0;
 }
 
-export function detectEntity(headers: string[]): { entity: Entity; score: number } {
-    const f = headers.map(fold); let best: { entity: Entity; score: number } = { entity: 'klienti', score: 0 };
+const RE = {
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    phone: /^(\+|00)?[\d\s/-]{9,17}$/,
+    ico: /^\d{8}$/,
+    dic: /^[A-Z]{2}\d{8,10}$/i,
+    ref: /^\d+\s*[A-Za-z]{1,4}\s*\d+\s*\/\s*\d{2,4}$|^[A-ZÁ-Ž]{1,4}[\s-]*\d+\s*\/\s*\d{4}$/,
+    date: /^(\d{1,2}\s*[./]\s*\d{1,2}\s*[./]\s*\d{2,4}|\d{4}-\d{2}-\d{2})/,
+    bool: /^(ano|ne|a|n|x|1|0|true|false|yes|no|splneno|nesplneno|hotovo)$/i,
+    hours: /^\d{1,2}([,.]\d{1,2})?$/,
+};
+// Co obsah sloupce prozrazuje: [klíč pole, skóre] pro dané pole
+function contentHints(entity: Entity, values: string[]): Record<string, number> {
+    const v = values.map((x) => x.trim()).filter(Boolean).slice(0, 30); if (!v.length) return {};
+    const share = (re: RegExp) => v.filter((x) => re.test(x)).length / v.length;
+    const out: Record<string, number> = {};
+    const put = (key: string, score: number) => { if (FIELDS[entity].some((f) => f.key === key)) out[key] = Math.max(out[key] ?? 0, score); };
+    if (share(RE.email) >= 0.6) { put('email', 70); put('clientEmail', 70); }
+    else if (share(RE.dic) >= 0.6) put('dic', 70);
+    else if (share(RE.ref) >= 0.6) { put('reference', 68); put('case', 68); }
+    else if (share(RE.ico) >= 0.6) put('ico', 64);
+    else if (share(RE.date) >= 0.6) { put('date', 64); put('birth', 62); }
+    else if (share(RE.phone) >= 0.6) { put('phone', 64); put('clientPhone', 64); }
+    else if (share(RE.bool) >= 0.8) { put('done', 62); put('billed', 62); }
+    else if (share(RE.hours) >= 0.8) put('hours', 61);
+    return out;
+}
+
+const MIN_SCORE = 60;
+export function scoreMapping(entity: Entity, headers: string[], rows: string[][] = [], extra: Record<string, string[]> = {}): { mapping: Mapping; scores: number[] } {
+    const defs = FIELDS[entity];
+    const cand: { s: number; h: number; k: string; o: number }[] = [];
+    headers.forEach((h, hi) => {
+        const ht = tokens(h); const f = fold(h);
+        const hints = contentHints(entity, rows.map((r) => r[hi] ?? ''));
+        defs.forEach((d, o) => {
+            let s = (extra[d.key] ?? []).includes(f) ? 110 : 0;
+            if (d.synonyms.includes(f) || fold(d.label) === f) s = Math.max(s, 100);
+            for (const p of d.synonyms) s = Math.max(s, phraseScore(ht, tokens(p)));
+            // Popisek pole jen při úplné shodě (popisky obsahují i příklady, např. „Role (soud, protistrana…)“)
+            const ls = phraseScore(ht, tokens(d.label)); if (ls >= 92) s = Math.max(s, ls);
+            if (!ht.length || s < MIN_SCORE) s = Math.max(s, hints[d.key] ?? 0);
+            else if (hints[d.key]) s += 5; // název i obsah ukazují na totéž pole
+            if (s >= MIN_SCORE) cand.push({ s, h: hi, k: d.key, o });
+        });
+    });
+    cand.sort((a, b) => b.s - a.s || a.o - b.o || a.h - b.h);
+    const mapping: Mapping = headers.map(() => ''); const scores = headers.map(() => 0); const used = new Set<string>();
+    for (const c of cand) { if (mapping[c.h] || used.has(c.k)) continue; mapping[c.h] = c.k; scores[c.h] = c.s; used.add(c.k); }
+    // „Jméno“ je jméno celé, pokud ve výpisu není zvlášť příjmení
+    if (entity === 'klienti' && !mapping.includes('last') && mapping.includes('first') && !mapping.includes('name')) mapping[mapping.indexOf('first')] = 'name';
+    return { mapping, scores };
+}
+
+export function suggestMapping(entity: Entity, headers: string[], rows: string[][] = []): Mapping {
+    return scoreMapping(entity, headers, rows).mapping;
+}
+
+const ENTITY_FROM_NAME: [RegExp, Entity][] = [[/kontakt|protistran|ucastni/, 'kontakty'], [/klient|adresar|zakaznik/, 'klienti'], [/lhut|termin|ukol/, 'lhuty'], [/\bcas\b|vykaz|vykon|hodin|odpracov|timesheet/, 'cas'], [/\bvec|spis|kauz|matter/, 'veci']];
+export function detectEntity(headers: string[], sheetName = '', rows: string[][] = []): { entity: Entity; score: number } {
+    const f = headers.map(fold);
+    let best: { entity: Entity; score: number } = { entity: 'klienti', score: -1 };
     for (const e of Object.keys(FIELDS) as Entity[]) {
-        const score = FIELDS[e].filter((d) => f.some((h) => d.synonyms.includes(h))).length / Math.max(3, FIELDS[e].length) * 10 + FIELDS[e].filter((d) => d.required && f.some((h) => d.synonyms.includes(h))).length;
+        const { mapping, scores } = scoreMapping(e, headers, rows);
+        const req = FIELDS[e].filter((d) => d.required);
+        const reqHit = req.filter((d) => mapping.includes(d.key) || (e === 'klienti' && d.key === 'name' && mapping.some((m) => m === 'first' || m === 'company'))).length;
+        const score = scores.reduce((n, x) => n + Math.min(x, 100) / 100, 0) + reqHit * 2 + (reqHit === req.length ? 3 : 0) - mapping.filter((m) => !m).length * 0.5;
         if (score > best.score) best = { entity: e, score };
     }
-    // Rozlišení: lhůty mají datum a název, čas má hodiny, věci mají spisovou značku a soud
+    // Název listu („Klienti“, „Lhůty“…) je nejsilnější vodítko
+    const n = fold(sheetName);
+    const byName = n ? ENTITY_FROM_NAME.find(([re]) => re.test(n))?.[1] : undefined;
+    if (byName) return { entity: byName, score: best.score };
+    // Rozlišení: čas má hodiny, lhůty mají konec lhůty nebo termín
     const has = (...keys: string[]) => keys.some((k) => f.includes(k));
     if (has('hodiny', 'hours', 'minuty', 'minutes', 'odpracovano')) return { entity: 'cas', score: best.score };
     if (has('konec lhuty', 'lhuta', 'termin')) return { entity: 'lhuty', score: best.score };
@@ -236,26 +310,36 @@ export function buildRecords(entity: Entity, table: Table, mapping: Mapping): Ro
 export type ExistingClient = { id: string; name: string; email: string; phone: string; address?: string; ico?: string; dic?: string; birth?: string | null; note?: string; hourly_rate?: number | null };
 export type ExistingCase = { id: string; title: string; reference?: string; client_id?: string | null };
 export type Existing = { clients: ExistingClient[]; cases: ExistingCase[] };
-export type Planned = { row: Row; action: 'create' | 'update' | 'skip' | 'error'; note: string; clientId?: string | null; caseId?: string | null; newClient?: Rec | null; patch?: Record<string, string | number> };
+export type NewCase = { title: string; reference: string };
+export type Planned = { row: Row; action: 'create' | 'update' | 'skip' | 'error'; note: string; clientId?: string | null; caseId?: string | null; newClient?: Rec | null; newCase?: NewCase | null; selfId?: string; patch?: Record<string, string | number> };
+export type PlanOptions = { createMissingClients: boolean; fillExisting: boolean; createMissingCases?: boolean };
 
 const clientKeys = (c: { name: string; ico?: string; email?: string }) => [c.ico ? `i:${cleanIco(c.ico)}` : '', c.email ? `e:${c.email.toLowerCase()}` : '', c.name ? `n:${fold(c.name)}` : ''].filter(Boolean);
+const looksLikeReference = (s: string) => RE.ref.test(s.trim());
 
-export function planImport(entity: Entity, rows: Row[], existing: Existing, opt: { createMissingClients: boolean; fillExisting: boolean }): Planned[] {
-    const out: Planned[] = [];
+// Společný stav plánování: co už v kanceláři je a co založí dřívější listy téhož souboru (dočasná id „new:…“)
+export type PlanContext = ReturnType<typeof createPlanContext>;
+export function createPlanContext(existing: Existing) {
     const clientIndex = new Map<string, ExistingClient>();
     const addClient = (c: ExistingClient) => clientKeys(c).forEach((k) => { if (!clientIndex.has(k)) clientIndex.set(k, c); });
     existing.clients.forEach(addClient);
     const caseByRef = new Map<string, ExistingCase>(); const caseByTitle = new Map<string, ExistingCase[]>();
-    const addCase = (c: ExistingCase) => { if (c.reference) caseByRef.set(fold(c.reference), c); const k = fold(c.title); caseByTitle.set(k, [...(caseByTitle.get(k) ?? []), c]); };
+    const addCase = (c: ExistingCase) => { if (c.reference) caseByRef.set(fold(c.reference), c); const k = fold(c.title); if (k) caseByTitle.set(k, [...(caseByTitle.get(k) ?? []), c]); };
     existing.cases.forEach(addCase);
-    const findCase = (key: string): { c?: ExistingCase; note: string } => {
+    let n = 0;
+    return { clientIndex, addClient, caseByRef, caseByTitle, addCase, nextId: () => `new:${n++}` };
+}
+
+export function planImport(entity: Entity, rows: Row[], existing: Existing, opt: PlanOptions, ctx: PlanContext = createPlanContext(existing)): Planned[] {
+    const out: Planned[] = [];
+    const { clientIndex, addClient, caseByRef, caseByTitle, addCase } = ctx;
+    const findCase = (key: string): { c?: ExistingCase; note: string; ambiguous?: boolean } => {
         const f = fold(key); if (!f) return { note: 'Nezadaná věc.' };
         const r = caseByRef.get(f); if (r) return { c: r, note: '' };
         const t = caseByTitle.get(f); if (t?.length === 1) return { c: t[0], note: '' };
-        if (t && t.length > 1) return { note: `Název „${key}“ má víc věcí, použijte spisovou značku.` };
+        if (t && t.length > 1) return { note: `Název „${key}“ má víc věcí, použijte spisovou značku.`, ambiguous: true };
         return { note: `Věc „${key}“ nebyla nalezena.` };
     };
-    let virtual = 0;
     for (const row of rows) {
         const errs = row.issues.filter((i) => i.level === 'error');
         if (errs.length) { out.push({ row, action: 'error', note: errs[0].text }); continue; }
@@ -264,12 +348,12 @@ export function planImport(entity: Entity, rows: Row[], existing: Existing, opt:
             const found = clientKeys({ name: r.name, ico: r.ico, email: r.email }).map((k) => clientIndex.get(k)).find(Boolean);
             if (found) {
                 const patch: Record<string, string | number> = {};
-                if (opt.fillExisting) {
+                if (opt.fillExisting && !found.id.startsWith('new:')) {
                     if (!found.email && r.email) patch.email = r.email; if (!found.phone && r.phone) patch.phone = r.phone; if (!found.address && r.address) patch.address = r.address;
                     if (!found.ico && r.ico) patch.ico = r.ico; if (!found.dic && r.dic) patch.dic = r.dic; if (!found.birth && r.birth) patch.birth = r.birth; if (!found.note && r.note) patch.note = r.note;
                 }
                 out.push(Object.keys(patch).length ? { row, action: 'update', note: `Už existuje, doplní se: ${Object.keys(patch).length} údajů.`, clientId: found.id, patch } : { row, action: 'skip', note: 'Klient už existuje.', clientId: found.id });
-            } else { const v: ExistingClient = { id: `new:${virtual++}`, name: r.name, email: r.email ?? '', phone: r.phone ?? '', ico: r.ico }; addClient(v); out.push({ row, action: 'create', note: '' }); }
+            } else { const v: ExistingClient = { id: ctx.nextId(), name: r.name, email: r.email ?? '', phone: r.phone ?? '', ico: r.ico }; addClient(v); out.push({ row, action: 'create', note: '', selfId: v.id }); }
         } else if (entity === 'veci') {
             const ref = r.reference ? caseByRef.get(fold(r.reference)) : undefined;
             if (ref) { out.push({ row, action: 'skip', note: 'Věc s touto spisovou značkou už existuje.', caseId: ref.id }); continue; }
@@ -277,22 +361,44 @@ export function planImport(entity: Entity, rows: Row[], existing: Existing, opt:
             if (r.client) {
                 const c = clientKeys({ name: r.client, email: r.clientEmail }).map((k) => clientIndex.get(k)).find(Boolean);
                 if (c) clientId = c.id;
-                else if (opt.createMissingClients) { const v: ExistingClient = { id: `new:${virtual++}`, name: r.client, email: r.clientEmail ?? '', phone: r.clientPhone ?? '' }; addClient(v); clientId = v.id; newClient = { name: r.client, email: r.clientEmail ?? '', phone: r.clientPhone ?? '' }; note = 'Založí se i nový klient.'; }
+                else if (opt.createMissingClients) { const v: ExistingClient = { id: ctx.nextId(), name: r.client, email: r.clientEmail ?? '', phone: r.clientPhone ?? '' }; addClient(v); clientId = v.id; newClient = { name: r.client, email: r.clientEmail ?? '', phone: r.clientPhone ?? '' }; note = 'Založí se i nový klient.'; }
                 else note = `Klient „${r.client}“ není v adresáři, věc se uloží bez propojení.`;
             }
             const dup = !r.reference && (caseByTitle.get(fold(r.title))?.length ?? 0) > 0;
-            out.push(dup ? { row, action: 'skip', note: 'Věc se stejným názvem už existuje.' } : { row, action: 'create', note, clientId, newClient });
-            if (!dup) addCase({ id: `new:${virtual++}`, title: r.title, reference: r.reference });
+            if (dup) { out.push({ row, action: 'skip', note: 'Věc se stejným názvem už existuje.' }); continue; }
+            const selfId = ctx.nextId();
+            addCase({ id: selfId, title: r.title, reference: r.reference, client_id: clientId });
+            out.push({ row, action: 'create', note, clientId, newClient, selfId });
         } else {
-            const { c, note } = findCase(r.case ?? '');
-            if (!c && (entity !== 'cas' || r.case)) { out.push({ row, action: 'error', note }); continue; }
-            out.push({ row, action: 'create', note: c ? '' : 'Čas bez věci.', caseId: c?.id ?? null });
+            const key = (r.case ?? '').trim();
+            const { c, note, ambiguous } = findCase(key);
+            if (c) { out.push({ row, action: 'create', note: '', caseId: c.id }); continue; }
+            if (entity === 'cas' && !key) { out.push({ row, action: 'create', note: 'Čas bez věci.', caseId: null }); continue; }
+            if (key && !ambiguous && opt.createMissingCases) {
+                // Věc v kanceláři není: založí se (jednou) a řádek se k ní připojí
+                const isRef = looksLikeReference(key);
+                const nc: NewCase = { title: key, reference: isRef ? key : '' };
+                const id = ctx.nextId(); addCase({ id, title: nc.title, reference: nc.reference });
+                out.push({ row, action: 'create', note: `Založí se i nová věc „${key}“.`, caseId: id, newCase: nc });
+                continue;
+            }
+            out.push({ row, action: 'error', note });
         }
     }
     return out;
 }
 
+// Celý sešit najednou: listy se plánují v pořadí klienti → věci → lhůty, kontakty, čas, aby se další listy mohly připojit k tomu, co založí předchozí
+export const ENTITY_ORDER: Entity[] = ['klienti', 'veci', 'lhuty', 'kontakty', 'cas'];
+export function planWorkbook(parts: { entity: Entity; rows: Row[] }[], existing: Existing, opt: PlanOptions): Planned[][] {
+    const ctx = createPlanContext(existing);
+    const out: Planned[][] = parts.map(() => []);
+    const order = parts.map((p, i) => i).sort((a, b) => ENTITY_ORDER.indexOf(parts[a].entity) - ENTITY_ORDER.indexOf(parts[b].entity) || a - b);
+    for (const i of order) out[i] = planImport(parts[i].entity, parts[i].rows, existing, opt, ctx);
+    return out;
+}
+
 export function summarize(plan: Planned[]) {
     const n = (a: Planned['action']) => plan.filter((p) => p.action === a).length;
-    return { create: n('create'), update: n('update'), skip: n('skip'), error: n('error'), warnings: plan.filter((p) => p.row.issues.some((i) => i.level === 'warn')).length, newClients: plan.filter((p) => p.newClient).length };
+    return { create: n('create'), update: n('update'), skip: n('skip'), error: n('error'), warnings: plan.filter((p) => p.row.issues.some((i) => i.level === 'warn')).length, newClients: plan.filter((p) => p.newClient).length, newCases: plan.filter((p) => p.newCase).length };
 }

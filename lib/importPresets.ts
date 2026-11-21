@@ -1,4 +1,4 @@
-import { FIELDS, fold, type Entity, type Mapping } from './importer';
+import { FIELDS, fold, scoreMapping, type Entity, type Mapping } from './importer';
 
 // Předvolby mapování sloupců pro přechod z jiných advokátních systémů.
 // POZOR: názvy sloupců vycházejí z běžné terminologie a z veřejně dostupných popisů, NE z ověřených exportů těchto systémů.
@@ -33,25 +33,9 @@ export const PRESETS: Preset[] = [
 
 export const presetById = (id: PresetId) => PRESETS.find((p) => p.id === id) ?? PRESETS[0];
 
-// Návrh mapování: nejdřív přesné názvy z předvolby, potom obecné synonyma
-export function suggestWithPreset(entity: Entity, headers: string[], presetId: PresetId): Mapping {
-    const preset = presetById(presetId); const extra = preset.extra[entity] ?? {};
-    const defs = FIELDS[entity]; const used = new Set<string>();
-    const map: Mapping = headers.map((h) => {
-        const f = fold(h); if (!f) return '';
-        const key = defs.find((d) => !used.has(d.key) && (extra[d.key] ?? []).includes(f))?.key;
-        if (key) { used.add(key); return key; }
-        return '';
-    });
-    // Zbytek podle obecných synonym
-    const general = defs.reduce<Record<string, string[]>>((a, d) => ({ ...a, [d.key]: d.synonyms }), {});
-    headers.forEach((h, i) => {
-        if (map[i]) return; const f = fold(h); if (!f) return;
-        const d = defs.find((x) => !used.has(x.key) && general[x.key].includes(f));
-        if (d) { used.add(d.key); map[i] = d.key; }
-    });
-    if (entity === 'klienti' && !map.includes('last') && map.includes('first') && !map.includes('name')) map[map.indexOf('first')] = 'name';
-    return map;
+// Návrh mapování: přesné názvy z předvolby mají přednost, potom obecné rozpoznání podle slov a obsahu sloupců
+export function suggestWithPreset(entity: Entity, headers: string[], presetId: PresetId, rows: string[][] = []): Mapping {
+    return scoreMapping(entity, headers, rows, presetById(presetId).extra[entity] ?? {}).mapping;
 }
 
 // Nabídne předvolbu, pokud aspoň 3 sloupce souboru odpovídají jejím specifickým názvům (ne obecným synonymům)

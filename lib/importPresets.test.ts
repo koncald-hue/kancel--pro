@@ -2,12 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { guessPreset, suggestWithPreset } from './importPresets';
 
 describe('import presets', () => {
-    it('maps preset-specific column names that generic synonyms miss', () => {
+    it('maps Evolio-style column names (the preset and the word-based matching agree)', () => {
         const h = ['Spis nazev', 'Cislo spisu soudu', 'Soud organ', 'Klient spisu', 'Stav spisu'];
-        const auto = suggestWithPreset('veci', h, 'auto');
-        const evolio = suggestWithPreset('veci', h, 'evolio');
-        expect(evolio).toEqual(['title', 'reference', 'authority', 'client', 'status']);
-        expect(auto.filter(Boolean).length).toBeLessThan(evolio.filter(Boolean).length);
+        expect(suggestWithPreset('veci', h, 'evolio')).toEqual(['title', 'reference', 'authority', 'client', 'status']);
+        expect(suggestWithPreset('veci', h, 'auto').filter(Boolean).length).toBeGreaterThanOrEqual(4);
     });
     it('maps English SingleCase-style time columns', () => {
         expect(suggestWithPreset('cas', ['Matter', 'Date', 'Hours', 'Narrative', 'Hourly rate', 'Invoiced'], 'singlecase')).toEqual(['case', 'date', 'hours', 'description', 'rate', 'billed']);

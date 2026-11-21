@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { buildRecords, decodeText, detectEntity, minutesFrom, normPhone, parseAnyDate, parseVcf, parseXlsx, planImport, readFile, suggestMapping, summarize, type Existing } from './importer';
+import { buildRecords, decodeText, detectEntity, minutesFrom, normPhone, parseAnyDate, parseVcf, parseXlsx, planImport, planWorkbook, readFile, suggestMapping, summarize, type Existing } from './importer';
 
 const csv = `Jméno;Příjmení;E-mail;Telefon;Ulice;Město;PSČ;IČO;Datum narození;Poznámka
 Jan;Novák;JAN@Example.cz;777123456;Dlouhá 12;Plzeň;30100;27082440;2.3.1985;VIP
@@ -83,5 +83,55 @@ describe('import: linking and planning', () => {
         const t = { headers: ['Název'], rows: [['Firma A'], ['firma a']] };
         const plan = planImport('klienti', buildRecords('klienti', t, suggestMapping('klienti', t.headers)), { clients: [], cases: [] }, { createMissingClients: false, fillExisting: false });
         expect(plan.map((p) => p.action)).toEqual(['create', 'skip']);
+    });
+});
+
+describe('import: whole workbook', () => {
+    const sheets = {
+        Klienti: { headers: ['Jméno / název', 'E-mail', 'Telefon', 'Adresa', 'IČO', 'DIČ', 'Datum narození', 'Hodinová sazba', 'Poznámka'], rows: [['Jan Novotný', 'jan.novotny@example.cz', '603111222', 'Vinohradská 12, Praha', '', '', '12. 4. 1981', '2 500', ''], ['Stavby Dvořák s.r.o.', 'info@dvorak.cz', '224555666', 'Plzeň', '27082440', 'CZ27082440', '', '3 000', '']] },
+        'Věci': { headers: ['Název věci', 'Spisová značka', 'Soud nebo úřad', 'Klient', 'Stav', 'Popis věci', 'Poznámka'], rows: [['Rozvod', '12 C 45/2026', 'OS Praha 2', 'Jan Novotný', 'Otevřená', 'Rozvod', ''], ['Spor o dílo', '31 C 77/2025', 'OS Plzeň', 'Stavby Dvořák s.r.o.', 'Otevřená', '', ''], ['Revize smlouvy', '', '', 'Nový Klient', 'Uzavřená', '', '']] },
+        'Lhůty': { headers: ['Věc', 'Název lhůty', 'Datum', 'Splněno'], rows: [['12 C 45/2026', 'Vyjádření', '15. 1. 2027', 'ne'], ['31 C 77/2025', 'Poplatek', '2. 11. 2026', 'ano'], ['99 C 1/2026', 'Odvolání', '1. 2. 2027', 'ne']] },
+        'Kontakty ve věcech': { headers: ['Věc', 'Jméno / název', 'Role', 'E-mail', 'Telefon', 'Poznámka'], rows: [['12 C 45/2026', 'Lucie Novotná', 'protistrana', 'lucie@example.cz', '604123456', '']] },
+        'Čas': { headers: ['Věc', 'Datum', 'Hodiny', 'Popis činnosti', 'Sazba', 'Vyfakturováno'], rows: [['Revize smlouvy', '4. 11. 2026', '1,5', 'Porada', '2500', 'ano'], ['Spor o dluh', '5. 11. 2026', '2', 'Studium', '3000', 'ne']] },
+    };
+    it('recognises every sheet and maps every column', () => {
+        const want: Record<string, string> = { Klienti: 'klienti', 'Věci': 'veci', 'Lhůty': 'lhuty', 'Kontakty ve věcech': 'kontakty', 'Čas': 'cas' };
+        for (const [name, t] of Object.entries(sheets)) {
+            const { entity } = detectEntity(t.headers, name, t.rows);
+            expect(entity).toBe(want[name]);
+            expect(suggestMapping(entity, t.headers, t.rows).filter((m) => !m)).toEqual([]);
+        }
+        expect(suggestMapping('veci', sheets['Věci'].headers)).toEqual(['title', 'reference', 'authority', 'client', 'status', 'description', 'note']);
+        expect(suggestMapping('lhuty', sheets['Lhůty'].headers)).toEqual(['case', 'title', 'date', 'done']);
+        expect(suggestMapping('cas', sheets['Čas'].headers)).toEqual(['case', 'date', 'hours', 'description', 'rate', 'billed']);
+    });
+    it('detects sheets by headers alone, without a sheet name', () => {
+        expect(detectEntity(sheets['Věci'].headers).entity).toBe('veci');
+        expect(detectEntity(sheets['Čas'].headers).entity).toBe('cas');
+    });
+    it('recognises unnamed columns by their content', () => {
+        const t = { headers: ['A', 'B', 'C'], rows: [['Jan Novák', 'jan@novak.cz', '27082440'], ['Eva Malá', 'eva@mala.cz', '45274649']] };
+        expect(suggestMapping('klienti', t.headers, t.rows).slice(1)).toEqual(['email', 'ico']);
+    });
+    it('links later sheets to clients and cases created by earlier ones and creates missing cases once', () => {
+        const parts = (Object.entries(sheets) as [string, { headers: string[]; rows: string[][] }][]).map(([name, t]) => { const e = detectEntity(t.headers, name, t.rows).entity; return { entity: e, rows: buildRecords(e, t, suggestMapping(e, t.headers, t.rows)) }; });
+        const plans = planWorkbook(parts, existing, { createMissingClients: true, fillExisting: true, createMissingCases: true });
+        const [kl, ve, lh, ko, ca] = plans;
+        expect(kl.map((p) => p.action)).toEqual(['create', 'create']);
+        // věc se připojí ke klientovi, který vznikne o list dřív (žádný duplicitní klient)
+        expect(ve[0]).toMatchObject({ action: 'create', clientId: kl[0].selfId, newClient: null });
+        expect(ve[2]).toMatchObject({ action: 'create', newClient: { name: 'Nový Klient' } });
+        // lhůty a kontakty se připojí k věcem z listu Věci podle spisové značky
+        expect(lh[0].caseId).toBe(ve[0].selfId); expect(lh[1].caseId).toBe(ve[1].selfId);
+        expect(lh[2]).toMatchObject({ action: 'create', newCase: { title: '99 C 1/2026', reference: '99 C 1/2026' } });
+        expect(ko[0].caseId).toBe(ve[0].selfId);
+        // čas: podle názvu věci z listu i podle stávající věci v kanceláři
+        expect(ca[0].caseId).toBe(ve[2].selfId); expect(ca[1].caseId).toBe('k1');
+        expect(summarize(lh)).toMatchObject({ create: 3, newCases: 1 });
+    });
+    it('reports a missing case as an error when creating cases is switched off', () => {
+        const t = sheets['Lhůty'];
+        const plan = planImport('lhuty', buildRecords('lhuty', t, suggestMapping('lhuty', t.headers)), existing, { createMissingClients: false, fillExisting: false, createMissingCases: false });
+        expect(plan.map((p) => p.action)).toEqual(['error', 'error', 'error']);
     });
 });
