@@ -2,7 +2,7 @@
 
 import { confirmAction } from '@/lib/confirm';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BadgeCheck, Download, FileSignature, KeyRound, Loader2, Plus, ShieldCheck, X } from 'lucide-react';
+import { BadgeCheck, Download, FileSignature, FileText, KeyRound, Loader2, Plus, ShieldCheck, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { encryptFile } from '@/lib/e2ee';
 import { fetchDecrypted } from '@/lib/e2eeFiles';
@@ -10,11 +10,14 @@ import { insertRow, safeFileName, updateRow, uploadCaseFile, type CaseFile } fro
 import { isAllowedUpload } from '@/lib/portal';
 import { KINDS, LEVEL_LABEL, STATUS_LABEL, defaultLevel, normalizePhone, sha256Hex, type Evidence, type IdentityMethod, type SignKind, type SignLevel, type SignStatus } from '@/lib/signing';
 import { isEmail } from '@/lib/mail';
+import { useLawyerAccess, type LawyerClient } from '@/lib/lawyer';
+import { buildContract, missingContractData } from '@/lib/contractTemplate';
+import { buildContractPdf } from '@/lib/contractPdf';
 import { buildSignedPdf } from '@/lib/signedPdf';
 import { ghostBtn, inputCls, primaryBtn, type TabProps } from './caseUi';
 import { useChannelKey, useDecryptedNames } from './useChannelKey';
 
-type Req = { id: string; file_id: string | null; title: string; kind: SignKind; level: SignLevel; identity_method: IdentityMethod; identity_note: string; doc_sha256: string; signer_name: string; signer_phone: string; status: SignStatus; expires_at: string | null; signed_at: string | null; evidence: Evidence | null; evidence_seal: string | null; external_file_id: string | null; decline_reason: string; created_at: string };
+type Req = { package_id?: string | null; id: string; file_id: string | null; title: string; kind: SignKind; level: SignLevel; identity_method: IdentityMethod; identity_note: string; doc_sha256: string; signer_name: string; signer_phone: string; status: SignStatus; expires_at: string | null; signed_at: string | null; evidence: Evidence | null; evidence_seal: string | null; external_file_id: string | null; decline_reason: string; created_at: string };
 type LinkInfo = { id: string; e2ee: boolean; client_name: string; client_phone: string };
 const fmt = (iso: string) => new Date(iso).toLocaleString('cs-CZ');
 
@@ -29,8 +32,18 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
     const [msg, setMsg] = useState('');
     const [open, setOpen] = useState(false);
     const [f, setF] = useState({ kind: 'smlouva' as SignKind, title: '', name: item.client_name ?? '', phone: item.client_phone ?? '', email: item.client_email ?? '', identity: 'lawyer' as IdentityMethod, note: '', days: 14 });
-    const [file, setFile] = useState<File | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
+    const [gen, setGen] = useState(false);
+    const [client, setClient] = useState<LawyerClient | null>(null);
+    const lawyer = useLawyerAccess(userId);
     const picker = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (!item.client_id) return;
+        let off = false;
+        void supabase.from('lawyer_clients').select('*').eq('id', item.client_id).maybeSingle().then(({ data }) => { if (!off && data) setClient(data as LawyerClient); });
+        return () => { off = true; };
+    }, [item.client_id]);
 
     const load = useCallback(async () => {
         const [l, r] = await Promise.all([
@@ -54,33 +67,61 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
     const save = (bytes: Uint8Array, name: string, type: string) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 10_000); };
     async function run(key: string, fn: () => Promise<void>) { setBusy(key); setMsg(''); try { await fn(); } catch (e) { fail(e); } setBusy(''); }
 
+    // Uloží dokument do spisu (šifrovaně, je-li zapnuté šifrování) a vrátí řádek souboru
+    async function storeFile(file: File): Promise<{ row: CaseFile; hash: string }> {
+        if (!link) throw new Error('Chybí klientská stránka.');
+        const problem = isAllowedUpload(file.name, file.size); if (problem) throw new Error(problem);
+        const hash = await sha256Hex(new Uint8Array(await file.arrayBuffer()));
+        let row: CaseFile;
+        if (link.e2ee) {
+            if (!channel.key) throw new Error('Nejdřív odemkněte šifrování v záložce Klient.');
+            const { blob, encName } = await encryptFile(channel.key, file);
+            const path = `${userId}/${item.id}/${crypto.randomUUID()}-${safeFileName('sifrovano')}.bin`;
+            const up = await supabase.storage.from('case-files').upload(path, blob, { contentType: 'application/octet-stream' });
+            if (up.error) throw new Error(up.error.message);
+            row = await insertRow<CaseFile>('case_files', { case_id: item.id, user_id: userId, name: encName, path, size: blob.size, mime: '', source: 'lawyer', client_visible: true, enc: true });
+        } else {
+            row = await uploadCaseFile(userId, item.id, null, file);
+            await updateRow('case_files', row.id, { client_visible: true, source: 'lawyer' }); row = { ...row, client_visible: true, source: 'lawyer' };
+        }
+        return { row, hash };
+    }
+
+    const contractInput = () => ({ lawyer: lawyer.access ?? {}, client: client ?? { name: f.name || item.client_name || '', email: f.email, phone: f.phone, hourly_rate: null }, item: { title: item.title, reference: item.reference, authority: item.authority, situation: item.situation } });
+    const missing = gen ? missingContractData({ ...contractInput(), client: { ...contractInput().client, name: f.name || contractInput().client.name } }) : [];
+    const docCount = files.length + (gen ? 1 : 0);
+
     async function create(e: React.FormEvent) {
         e.preventDefault();
-        if (!link || !file) return;
+        if (!link || !docCount) return;
         await run('create', async () => {
-            const problem = isAllowedUpload(file.name, file.size); if (problem) throw new Error(problem);
             if (f.phone.trim() && !normalizePhone(f.phone)) throw new Error('Telefon nevypadá správně.');
             if (f.email.trim() && !isEmail(f.email)) throw new Error('E-mail nevypadá správně.');
             if (f.identity === 'lawyer' && f.note.trim().length < 3) throw new Error('U osobního ověření uveďte, jak jste totožnost ověřili (např. doklad, datum).');
-            if (defaultLevel(f.kind) === 'advanced' && f.name.trim().length < 3) throw new Error('Vyplňte celé jméno osoby, která má podepsat. Klient bude podepisovat přesně pod tímto jménem.');
-            const hash = await sha256Hex(new Uint8Array(await file.arrayBuffer()));
-            let row: CaseFile;
-            if (link.e2ee) {
-                if (!channel.key) throw new Error('Nejdřív odemkněte šifrování v záložce Klient.');
-                const { blob, encName } = await encryptFile(channel.key, file);
-                const path = `${userId}/${item.id}/${crypto.randomUUID()}-${safeFileName('sifrovano')}.bin`;
-                const up = await supabase.storage.from('case-files').upload(path, blob, { contentType: 'application/octet-stream' });
-                if (up.error) throw new Error(up.error.message);
-                row = await insertRow<CaseFile>('case_files', { case_id: item.id, user_id: userId, name: encName, path, size: blob.size, mime: '', source: 'lawyer', client_visible: true, enc: true });
-            } else {
-                row = await uploadCaseFile(userId, item.id, null, file);
-                await updateRow('case_files', row.id, { client_visible: true, source: 'lawyer' }); row = { ...row, client_visible: true, source: 'lawyer' };
+            const level = gen ? 'advanced' : defaultLevel(f.kind);
+            if (level === 'advanced' && f.name.trim().length < 3) throw new Error('Vyplňte celé jméno osoby, která má podepsat. Klient bude podepisovat přesně pod tímto jménem.');
+            if (docCount > 1 && level !== 'advanced') throw new Error('Balíček k jednomu podpisu jde složit jen z dokumentů s podpisem s ověřením totožnosti.');
+            if (gen && missing.length) throw new Error(`Do smlouvy chybí: ${missing.join(', ')}.`);
+            const pkg = docCount > 1 ? crypto.randomUUID() : null;
+            const expires = new Date(Date.now() + f.days * 86_400_000).toISOString();
+            const docs: { file: File; kind: SignKind; title: string }[] = [];
+            if (gen) {
+                const { lines } = buildContract({ ...contractInput(), client: { ...contractInput().client, name: f.name.trim() } });
+                const pdf = await buildContractPdf(lines);
+                docs.push({ file: new File([pdf as BlobPart], 'smlouva-o-poskytovani-pravnich-sluzeb.pdf', { type: 'application/pdf' }), kind: 'smlouva', title: KINDS.smlouva.label });
             }
-            const level = defaultLevel(f.kind);
-            const { error } = await supabase.from('signature_requests').insert({ user_id: userId, case_id: item.id, file_id: row.id, title: f.title.trim() || KINDS[f.kind].label, kind: f.kind, level, identity_method: level === 'advanced' ? f.identity : 'none', identity_note: f.note.trim(), doc_sha256: hash, signer_name: f.name.trim(), signer_email: level === 'advanced' ? f.email.trim() : '', signer_phone: level === 'advanced' ? (normalizePhone(f.phone) ?? '') : '', expires_at: new Date(Date.now() + f.days * 86_400_000).toISOString() });
-            if (error) throw new Error(error.message);
-            setBundle((b) => ({ ...b, files: [row, ...b.files] }));
-            setFile(null); setOpen(false); setF((x) => ({ ...x, title: '' })); setMsg('Žádost je odeslána do klientské stránky. Klient ji uvidí v záložce Podpisy.');
+            for (const x of files) docs.push({ file: x, kind: gen ? 'jine' : f.kind, title: files.length === 1 && !gen ? (f.title.trim() || KINDS[f.kind].label) : x.name.replace(/\.[^.]+$/, '') });
+            const stored: CaseFile[] = [];
+            for (const d of docs) {
+                const { row, hash } = await storeFile(d.file);
+                const lv = d.kind === 'smlouva' ? 'advanced' : defaultLevel(d.kind);
+                const { error } = await supabase.from('signature_requests').insert({ user_id: userId, case_id: item.id, file_id: row.id, title: d.title, kind: d.kind, level: lv, identity_method: lv === 'advanced' ? f.identity : 'none', identity_note: f.note.trim(), doc_sha256: hash, signer_name: f.name.trim(), signer_email: lv === 'advanced' ? f.email.trim() : '', signer_phone: lv === 'advanced' ? (normalizePhone(f.phone) ?? '') : '', expires_at: expires, ...(pkg ? { package_id: pkg } : {}) });
+                if (error) throw new Error(/package_id/.test(error.message) ? 'Balíčky zatím nejsou v databázi zapnuté (chybí spuštění souboru podpisy-balicky.sql).' : error.message);
+                stored.push(row);
+            }
+            setBundle((b) => ({ ...b, files: [...stored, ...b.files] }));
+            setFiles([]); setGen(false); setOpen(false); setF((x) => ({ ...x, title: '' }));
+            setMsg(docs.length > 1 ? `Balíček ${docs.length} dokumentů je odeslán do klientské stránky. Klient je podepíše jedním kódem.` : 'Žádost je odeslána do klientské stránky. Klient ji uvidí v záložce Podpisy.');
             await load();
         });
     }
@@ -123,6 +164,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <div className="flex flex-wrap items-center gap-3">
                     <h2 className="flex flex-1 items-center gap-2 text-lg font-bold text-slate-900"><FileSignature size={18} className="text-indigo-700" aria-hidden="true" /> Podpisy dokumentů</h2>
+                    {link && <button type="button" onClick={() => { setGen(true); setF((x) => ({ ...x, kind: 'smlouva', name: x.name || client?.name || item.client_name || '', email: x.email || client?.email || '', phone: x.phone || client?.phone || '' })); setOpen(true); }} className={ghostBtn}><FileText size={15} /> Smlouva z karty klienta</button>}
                     {link && <button type="button" onClick={() => setOpen((v) => !v)} className={primaryBtn}><Plus size={15} /> Nová žádost o podpis</button>}
                 </div>
                 <p className="mt-1 text-sm text-slate-600">Klient dokument v portálu přečte, potvrdí jednorázovým kódem (e-mail, SMS, nebo kód od vás) a vznikne doklad o podpisu s časem, otiskem dokumentu a IP adresou.</p>
@@ -145,10 +187,13 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                                 {f.identity === 'lawyer' && <input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="Jak jste ověřili (např. OP č. …, dne …)" maxLength={400} className={inputCls} />}
                             </fieldset>)}
                         <div className="flex flex-wrap items-center gap-2">
-                            <input ref={picker} type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="sr-only" aria-label="Dokument k podpisu" />
-                            <button type="button" onClick={() => picker.current?.click()} className={ghostBtn}>{file ? file.name : 'Vybrat dokument (nejlépe PDF)'}</button>
-                            <button type="submit" disabled={!file || busy === 'create'} className={primaryBtn}>{busy === 'create' && <Loader2 size={15} className="animate-spin" />} Odeslat klientovi</button>
+                            <input ref={picker} type="file" multiple onChange={(e) => setFiles(Array.from(e.target.files ?? []))} className="sr-only" aria-label="Dokumenty k podpisu" />
+                            <button type="button" onClick={() => picker.current?.click()} className={ghostBtn}>{files.length ? (files.length === 1 ? files[0].name : `${files.length} dokumentů`) : 'Vybrat dokument (nejlépe PDF)'}</button>
+                            <button type="submit" disabled={!docCount || busy === 'create'} className={primaryBtn}>{busy === 'create' && <Loader2 size={15} className="animate-spin" />} {docCount > 1 ? `Odeslat balíček (${docCount})` : 'Odeslat klientovi'}</button>
                         </div>
+                        <label className="flex items-start gap-2 text-sm text-slate-700"><input type="checkbox" checked={gen} onChange={(e) => setGen(e.target.checked)} className="mt-0.5 accent-indigo-800" /> <span><strong>Přiložit smlouvu o poskytování právních služeb</strong>, vyplněnou z karty klienta a vašeho profilu (sazba, adresy, předmět z této věci).</span></label>
+                        {gen && missing.length > 0 && <p className="rounded-lg bg-amber-50 p-2.5 text-xs text-amber-950">Do smlouvy zatím chybí: {missing.join(', ')}. Doplňte to v profilu nebo na kartě klienta a otevřete formulář znovu.</p>}
+                        {docCount > 1 && <p className="rounded-lg bg-indigo-50 p-2.5 text-xs text-indigo-950"><strong>Balíček {docCount} dokumentů.</strong> Klient si je přečte a podepíše všechny najednou jedním kódem; každý dokument dostane vlastní doklad o podpisu. Plná moc pro soud nebo úřad může vyžadovat kvalifikovaný podpis, takovou pošlete zvlášť.</p>}
                         <p className="text-xs text-slate-500">Dokument se k žádosti uloží, klient ho uvidí jen ve svém portálu. Po odeslání se dokument nemění; případnou opravu pošlete jako novou žádost.</p>
                     </form>)}
             </section>
@@ -161,7 +206,7 @@ export default function CaseSignTab({ item, bundle, userId, setBundle, fail }: T
                                 <strong className="flex-1 text-slate-900">{r.title}</strong>
                                 <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${r.status === 'signed' ? 'bg-emerald-100 text-emerald-900' : r.status === 'pending' || r.status === 'awaiting_check' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}`}>{STATUS_LABEL[r.status]}</span>
                             </div>
-                            <p className="mt-1 text-xs text-slate-500">{LEVEL_LABEL[r.level]} · {r.signer_name || 'bez jména'} · vytvořeno {fmt(r.created_at)}{r.expires_at && r.status === 'pending' ? ` · platí do ${new Date(r.expires_at).toLocaleDateString('cs-CZ')}` : ''}</p>
+                            <p className="mt-1 text-xs text-slate-500">{LEVEL_LABEL[r.level]}{r.package_id ? ' · balíček (jeden kód)' : ''} · {r.signer_name || 'bez jména'} · vytvořeno {fmt(r.created_at)}{r.expires_at && r.status === 'pending' ? ` · platí do ${new Date(r.expires_at).toLocaleDateString('cs-CZ')}` : ''}</p>
                             {r.status === 'declined' && r.decline_reason && <p className="mt-1 text-xs text-slate-600">Důvod odmítnutí: {r.decline_reason}</p>}
                             {r.status === 'signed' && r.evidence && <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-900"><BadgeCheck size={14} aria-hidden="true" /> Podepsáno {r.signed_at ? fmt(r.signed_at) : ''}{r.evidence.identity.method === 'bankid' ? ` · ověřeno online, ${r.evidence.identity.provider ?? 'Bank iD'} (${r.evidence.signer.name})` : r.evidence.identity.method === 'lawyer' ? ' · totožnost ověřena advokátem' : ' · totožnost neověřována'} · IP {r.evidence.ip}</p>}
                             <div className="mt-3 flex flex-wrap gap-2">

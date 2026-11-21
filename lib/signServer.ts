@@ -8,8 +8,10 @@ export function sealSecret(): string {
     return process.env.SIGN_SEAL_SECRET || `seal:${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''}`;
 }
 
-export type SignRow = { id: string; user_id: string; case_id: string; file_id: string | null; title: string; kind: string; level: 'advanced' | 'qualified'; identity_method: 'bankid' | 'lawyer' | 'none'; identity_note: string; doc_sha256: string; signer_name: string; signer_phone: string; signer_email: string; status: SignStatus; expires_at: string | null; signed_at: string | null; created_at: string; decline_reason: string };
+export type SignRow = { id: string; user_id: string; case_id: string; file_id: string | null; title: string; kind: string; level: 'advanced' | 'qualified'; identity_method: 'bankid' | 'lawyer' | 'none'; identity_note: string; doc_sha256: string; signer_name: string; signer_phone: string; signer_email: string; status: SignStatus; expires_at: string | null; signed_at: string | null; created_at: string; decline_reason: string; package_id?: string | null };
 export const SIGN_COLS = 'id, user_id, case_id, file_id, title, kind, level, identity_method, identity_note, doc_sha256, signer_name, signer_phone, signer_email, status, expires_at, signed_at, created_at, decline_reason';
+// Sloupec package_id vzniká až spuštěním podpisy-balicky.sql; do té doby se čte bez něj
+export const SIGN_COLS_PKG = `${SIGN_COLS}, package_id`;
 
 // Žádost o podpis patří ke věci klientského odkazu
 export async function loadSignRequest(db: SupabaseClient, link: LinkRow, id: string): Promise<SignRow | null> {

@@ -6,7 +6,7 @@ import { decryptBytes, encryptFile } from '@/lib/e2ee';
 import { CONSENT_TEXT, LEVEL_LABEL, STATUS_LABEL, sha256Hex, type SignLevel, type SignStatus } from '@/lib/signing';
 import { isAllowedUpload } from '@/lib/portal';
 
-type Req = { id: string; signer_name: string; title: string; kind: string; level: SignLevel; status: SignStatus; file_id: string | null; doc_sha256: string; identity_method: 'bankid' | 'lawyer' | 'none'; identity_verified: boolean; phone: string; email: string; signed_at: string | null; expires_at: string | null; created_at: string; decline_reason: string };
+type Req = { package_id?: string | null; id: string; signer_name: string; title: string; kind: string; level: SignLevel; status: SignStatus; file_id: string | null; doc_sha256: string; identity_method: 'bankid' | 'lawyer' | 'none'; identity_verified: boolean; phone: string; email: string; signed_at: string | null; expires_at: string | null; created_at: string; decline_reason: string };
 type List = { requests: Req[]; enabled: boolean; bankid: boolean; idp?: string; sms: boolean; mail: boolean };
 const btn = 'inline-flex items-center gap-2 rounded-xl bg-indigo-800 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-900 disabled:opacity-60 cursor-pointer';
 const ghost = 'inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer';
@@ -29,8 +29,108 @@ export default function PortalSign({ token, e2ee, cryptoKey, focusId, notice }: 
     return (
         <div className="space-y-4">
             {notice && <p role="status" className="rounded-xl bg-indigo-50 p-3 text-sm text-indigo-950">{notice}</p>}
-            {list.requests.map((r) => <Card key={r.id} r={r} list={list} token={token} e2ee={e2ee} cryptoKey={cryptoKey} open={r.id === focusId} reload={load} />)}
+            {groups(list.requests).map((g) => Array.isArray(g)
+                ? <PackageCard key={g[0].package_id} docs={g} list={list} token={token} e2ee={e2ee} cryptoKey={cryptoKey} reload={load} />
+                : <Card key={g.id} r={g} list={list} token={token} e2ee={e2ee} cryptoKey={cryptoKey} open={g.id === focusId} reload={load} />)}
         </div>
+    );
+}
+
+// Nepodepsané dokumenty téhož balíčku (aspoň dva) se podepisují společně; ostatní žádosti zůstávají samostatné karty
+function groups(reqs: Req[]): (Req | Req[])[] {
+    const open = (r: Req) => r.status === 'pending' && r.level === 'advanced' && !!r.package_id;
+    const out: (Req | Req[])[] = []; const seen = new Set<string>();
+    for (const r of reqs) {
+        if (!open(r)) { out.push(r); continue; }
+        const same = reqs.filter((x) => open(x) && x.package_id === r.package_id);
+        if (same.length < 2) { out.push(r); continue; }
+        if (seen.has(r.package_id as string)) continue;
+        seen.add(r.package_id as string); out.push([...same].sort((x, y) => x.created_at.localeCompare(y.created_at) || x.id.localeCompare(y.id)));
+    }
+    return out;
+}
+
+// Balíček dokumentů k jednomu podpisu: přečtení všech, jedno ověření a jeden kód
+function PackageCard({ docs, list, token, e2ee, cryptoKey, reload }: { docs: Req[]; list: List; token: string; e2ee: boolean; cryptoKey: CryptoKey | null; reload: () => Promise<void> }) {
+    const lead = docs[0];
+    const [seen, setSeen] = useState<Record<string, { url: string; pdf: boolean }>>({});
+    const [busy, setBusy] = useState('');
+    const [error, setError] = useState('');
+    const [info, setInfo] = useState('');
+    const [code, setCode] = useState('');
+    const [agree, setAgree] = useState(false);
+    const [typed, setTyped] = useState('');
+    const [sent, setSent] = useState(false);
+    const allSeen = docs.every((d) => seen[d.id]);
+    const identityOk = lead.identity_method !== 'bankid' || lead.identity_verified;
+
+    async function view(r: Req) {
+        setBusy(`v-${r.id}`); setError('');
+        try {
+            if (!r.file_id) throw new Error('K žádosti chybí dokument. Napište advokátovi.');
+            if (e2ee && !cryptoKey) throw new Error('Chybí šifrovací klíč. Otevřete odkaz celý, tak jak jste ho dostali.');
+            const meta = await (await fetch(`/api/portal/${token}/file/${r.file_id}?json=1`)).json() as { url?: string; enc?: boolean };
+            if (!meta.url) throw new Error('Dokument se nepodařilo načíst.');
+            let bytes = new Uint8Array(await (await fetch(meta.url)).arrayBuffer());
+            if (meta.enc) { if (!cryptoKey) throw new Error('Chybí šifrovací klíč.'); bytes = new Uint8Array(await decryptBytes(cryptoKey, bytes)); }
+            if (await sha256Hex(bytes) !== r.doc_sha256) throw new Error(`Dokument „${r.title}“ neodpovídá tomu, co advokát vložil. Nepodepisujte a napište advokátovi.`);
+            const pdf = bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+            setSeen((x) => ({ ...x, [r.id]: { pdf, url: URL.createObjectURL(new Blob([bytes as BlobPart], { type: pdf ? 'application/pdf' : 'application/octet-stream' })) } }));
+        } catch (e) { setError(e instanceof Error ? e.message : 'Dokument se nepodařilo načíst.'); }
+        setBusy('');
+    }
+    async function post(path: string, body?: unknown) {
+        const res = await fetch(`/api/portal/${token}/sign/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}) });
+        const out = await res.json().catch(() => ({})) as { message?: string; url?: string; devCode?: string };
+        if (!res.ok) throw new Error(out.message ?? 'Nepodařilo se. Zkuste to prosím znovu.');
+        return out;
+    }
+    async function identity() { setBusy('id'); setError(''); try { const o = await post(`${lead.id}/identity`); if (o.url) window.location.href = o.url; } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); setBusy(''); } }
+    async function sendCode() { setBusy('otp'); setError(''); setInfo(''); try { const o = await post(`${lead.id}/otp`); setSent(true); setInfo(o.devCode ? `Zkušební režim: kód je ${o.devCode}` : list.sms && lead.phone ? `Kód jsme poslali SMS na číslo ${lead.phone}.` : `Kód jsme poslali e-mailem na ${lead.email}.`); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
+    async function sign() { setBusy('sign'); setError(''); try { await post(`package/${lead.package_id}/sign`, { code, agree, typedName: typed, hashes: Object.fromEntries(docs.map((d) => [d.id, d.doc_sha256])) }); await reload(); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se.'); } setBusy(''); }
+
+    return (
+        <section className="rounded-2xl border border-indigo-400 bg-white p-5 shadow-xs" aria-label="Balíček dokumentů k podpisu">
+            <div className="flex flex-wrap items-start gap-3">
+                <span className="rounded-xl bg-indigo-100 p-2.5 text-indigo-900"><FileSignature size={20} aria-hidden="true" /></span>
+                <div className="min-w-0 flex-1"><h2 className="text-lg font-bold text-slate-900">{docs.length} dokumenty k podpisu najednou</h2><p className="text-xs text-slate-500">Přečtete si je a podepíšete jedním kódem{lead.expires_at ? ` · platí do ${new Date(lead.expires_at).toLocaleDateString('cs-CZ')}` : ''}</p></div>
+                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900">Čeká na podpis</span>
+            </div>
+            <ol className="mt-4 space-y-4 text-sm">
+                <li><p className="font-semibold text-slate-900">1. Přečtěte si všechny dokumenty</p>
+                    <ul className="mt-2 space-y-2">
+                        {docs.map((d) => (
+                            <li key={d.id} className="rounded-xl border border-slate-200 p-3">
+                                <div className="flex flex-wrap items-center gap-2"><strong className="flex-1 text-slate-900">{d.title}</strong>
+                                    {seen[d.id] ? <span className="flex items-center gap-1 text-xs text-emerald-800"><ShieldCheck size={14} aria-hidden="true" /> Shodný s dokumentem advokáta</span> : <button type="button" onClick={() => void view(d)} disabled={busy === `v-${d.id}`} className={ghost}>{busy === `v-${d.id}` && <Loader2 size={15} className="animate-spin" />} Zobrazit</button>}
+                                </div>
+                                {seen[d.id] && (seen[d.id].pdf ? <iframe src={seen[d.id].url} title={d.title} className="mt-2 h-80 w-full rounded-xl border border-slate-200" /> : <a href={seen[d.id].url} download={d.title} className="mt-2 inline-block text-sm font-semibold text-indigo-800 hover:underline">Stáhnout a otevřít dokument</a>)}
+                            </li>))}
+                    </ul>
+                </li>
+                {lead.identity_method === 'bankid' && (
+                    <li><p className="font-semibold text-slate-900">2. Ověřte svou totožnost</p>
+                        {lead.identity_verified ? <p className="mt-2 flex items-center gap-1.5 text-emerald-800"><BadgeCheck size={16} aria-hidden="true" /> Totožnost je ověřená.</p> : list.bankid
+                            ? <button type="button" onClick={identity} disabled={busy === 'id' || !allSeen} className={`${btn} mt-2`}>{busy === 'id' && <Loader2 size={15} className="animate-spin" />} Ověřit totožnost online ({list.idp ?? 'Bank iD'})</button>
+                            : <p className="mt-2 text-amber-900">Online ověření zatím není zapnuté. Napište advokátovi.</p>}
+                    </li>)}
+                {lead.identity_method === 'lawyer' && <li><p className="font-semibold text-slate-900">2. Totožnost</p><p className="mt-1 text-slate-600">Vaši totožnost ověřil advokát osobně.</p></li>}
+                <li><p className="font-semibold text-slate-900">{lead.identity_method === 'none' ? '2' : '3'}. Potvrďte jedním kódem</p>
+                    {(list.sms || list.mail) && !lead.phone && !lead.email ? <p className="mt-2 text-amber-900">U žádosti chybí telefon i e-mail. Napište advokátovi.</p> : (
+                        <div className="mt-2 space-y-2">
+                            <label className="block text-slate-700">Podepisujete jako <strong>{lead.signer_name}</strong>. Pro potvrzení napište své celé jméno:<input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="name" className={`${field} mt-1`} /></label>
+                            <label className="flex items-start gap-2 text-slate-700"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-800" /> <span>{CONSENT_TEXT.replace('celého znění dokumentu a souhlasím s ním', 'celým zněním všech uvedených dokumentů a souhlasím s nimi').replace('tohoto dokumentu', 'všech uvedených dokumentů')}</span></label>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {(list.sms && lead.phone) || (list.mail && lead.email) ? <button type="button" onClick={sendCode} disabled={!allSeen || !identityOk || busy === 'otp'} className={ghost}>{busy === 'otp' && <Loader2 size={15} className="animate-spin" />} {sent ? 'Poslat kód znovu' : list.sms && lead.phone ? `Poslat SMS na ${lead.phone}` : `Poslat kód na ${lead.email}`}</button> : <p className="w-full text-slate-600">Kód vám sdělí váš advokát (telefonicky nebo osobně). Zadejte ho sem.</p>}
+                                <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="Kód" aria-label="Kód" className={`${field} max-w-40`} />
+                                <button type="button" onClick={sign} disabled={!allSeen || !identityOk || !agree || typed.trim().length < 3 || code.length !== 6 || busy === 'sign'} className={btn}>{busy === 'sign' && <Loader2 size={15} className="animate-spin" />} Podepsat vše ({docs.length})</button>
+                            </div>
+                            {info && <p role="status" className="text-xs text-slate-600">{info}</p>}
+                        </div>)}
+                </li>
+            </ol>
+            {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-2.5 text-sm text-rose-900">{error}</p>}
+        </section>
     );
 }
 

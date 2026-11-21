@@ -49,6 +49,8 @@ export type Evidence = {
     identity: { method: IdentityMethod; provider?: string; given?: string; family?: string; birthdate?: string; sub?: string; verifiedAt?: string; note?: string; phoneMatch?: boolean };
     otp: { channel: 'sms' | 'lawyer' | 'email'; verifiedAt: string };
     signedAt: string; ip: string; userAgent: string; consent: string;
+    // U balíčku: všechny dokumenty podepsané jedním kódem (každý doklad uvádí celý balíček)
+    package?: { id: string; documents: { requestId: string; title: string; docSha256: string }[] };
 };
 
 // Stabilní zápis JSON (seřazené klíče), aby šel doklad vždy stejně zapečetit i ověřit
@@ -77,3 +79,26 @@ export function isExpired(req: { expires_at: string | null }, now = new Date()):
 // Jména se porovnávají bez diakritiky, velikosti písmen a pořadí slov
 const fold = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(' ').filter(Boolean).sort().join(' ');
 export const sameName = (a: string, b: string) => !!fold(a) && fold(a) === fold(b);
+
+// Balíček = víc dokumentů téže osoby a téhož způsobu ověření, podepsaných jedním kódem
+export type PackageRow = { id: string; created_at: string; signer_name: string; signer_phone: string; signer_email: string; identity_method: string; level: string; status: string };
+export function packageProblem(rows: PackageRow[]): string | null {
+    if (rows.length < 1) return 'Balíček neexistuje nebo už nejde podepsat.';
+    const f = rows[0];
+    if (rows.some((r) => r.level !== 'advanced')) return 'Balíček smí obsahovat jen dokumenty s podpisem s ověřením totožnosti.';
+    if (rows.some((r) => !sameName(r.signer_name, f.signer_name) || r.identity_method !== f.identity_method)) return 'Dokumenty v balíčku musí podepisovat táž osoba se stejným ověřením.';
+    return null;
+}
+// Kód i ověření totožnosti se vážou na první dokument balíčku (nejstarší, při shodě podle id)
+export const leadOf = <T extends { id: string; created_at: string }>(rows: T[]): T => [...rows].sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id))[0];
+
+// Plán připomínek nepodepsaným žádostem: po 2. a po 5. dni od vytvoření; po vypršení platnosti se jednou upozorní advokát
+export type ReminderRow = { id: string; status: string; created_at: string; expires_at: string | null; reminder_count: number; expiry_notified: boolean; signer_email: string; level: string };
+export const REMINDER_DAYS = [2, 5] as const;
+export function planReminder(r: ReminderRow, now = new Date()): 'remind' | 'expire' | null {
+    if (r.status !== 'pending' || r.level !== 'advanced') return null;
+    if (isExpired(r, now)) return r.expiry_notified ? null : 'expire';
+    const days = (now.getTime() - new Date(r.created_at).getTime()) / 86_400_000;
+    const due = REMINDER_DAYS.filter((d) => days >= d).length;
+    return r.signer_email && r.reminder_count < due ? 'remind' : null;
+}
