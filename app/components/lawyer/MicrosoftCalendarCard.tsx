@@ -8,10 +8,11 @@ import { DETAIL_LABELS, type Detail } from '@/lib/googleCal';
 import { disconnectMicrosoft, microsoftConfig, loadMicrosoftConnection, saveMicrosoftOptions, startMicrosoftConnect, syncMicrosoft, type Loaded } from '@/lib/microsoftSync';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
+import E2eeBox from '../situation/E2eeBox';
 
 // Karta v Nastavení: propojení lhůt s kalendářem Microsoft 365 (vlastní kalendář „Kancelář – lhůty“, ostatní kalendáře aplikace nečte)
 export default function MicrosoftCalendarCard() {
-    const { userId } = useLawyer();
+    const { userId, access } = useLawyer();
     const master = useMasterKey();
     const [cfg, setCfg] = useState<{ configured: boolean } | null>(null);
     const [conn, setConn] = useState<Loaded | null | 'broken' | undefined>(undefined);
@@ -41,7 +42,7 @@ export default function MicrosoftCalendarCard() {
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><CalendarSync size={18} className="text-indigo-700" /> Kalendář Microsoft 365</h2>
             <p className="mt-1 text-sm leading-relaxed text-slate-600">Lhůty ze všech spisů se zapíšou do samostatného kalendáře „Kancelář – lhůty“ ve vašem Outlooku, včetně připomínky (3 dny předem v 9:00, u interního termínu den předem) a interního termínu pro podání. Aplikace zapisuje jen do tohoto kalendáře. Změny lhůt se propíšou samy.</p>
             {cfg && !cfg.configured && <p role="status" className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">Propojení zatím není na serveru nastavené. Správce musí doplnit klíče Microsoftu (MICROSOFT_CLIENT_ID a MICROSOFT_CLIENT_SECRET).</p>}
-            {!master ? <p className="mt-3 flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600"><KeyRound size={15} aria-hidden="true" /> Nejdřív odemkněte šifrovací heslo (výše). Přihlášení k Microsoftu se ukládá zašifrované jím.</p> : conn === undefined ? <p className="mt-3 text-sm text-slate-500" role="status">Načítám…</p> : (conn === null || conn === 'broken') ? (
+            {!master ? <div className="mt-3 space-y-3"><p className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600"><KeyRound size={15} aria-hidden="true" /> Nejdřív nastavte nebo odemkněte šifrovací heslo níže. Přihlášení k Microsoftu se ukládá zašifrované jím.</p><E2eeBox access={access} onChanged={() => window.location.reload()} /></div> : conn === undefined ? <p className="mt-3 text-sm text-slate-500" role="status">Načítám…</p> : (conn === null || conn === 'broken') ? (
                 <div className="mt-3">
                     {conn === 'broken' && <p role="alert" className="mb-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">Uložené přihlášení se nepodařilo dešifrovat. Odemkněte správné šifrovací heslo, nebo se připojte znovu.</p>}
                     <button type="button" onClick={() => void connect()} disabled={cfg?.configured === false} className={primaryBtn}><Link2 size={15} /> Připojit Kalendář Microsoft 365</button>

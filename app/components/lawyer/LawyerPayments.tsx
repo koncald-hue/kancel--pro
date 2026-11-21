@@ -14,6 +14,7 @@ import { assignTx, ignoreTx, openInvoices, recordPayment, restoreTx, storeTransa
 import { autoSyncBanks } from '@/lib/bankSync';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
+import E2eeBox from '../situation/E2eeBox';
 import RemindersPanel from './RemindersPanel';
 
 const dateCz = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString('cs-CZ');
@@ -154,6 +155,7 @@ function Unmatched({ todo, open, invoices, userId, vat, busy, run }: { todo: TxR
 
 function BankPanel({ accounts, master, userId, vat, busy, run, setMsg }: { accounts: Account[]; master: CryptoKey | null; userId: string; vat: boolean; busy: string; run: (k: string, fn: () => Promise<void>) => Promise<void>; setMsg: (m: string) => void }) {
     const [form, setForm] = useState({ label: '', token: '' });
+    const { access } = useLawyer();
     const [showFio, setShowFio] = useState(false);
     const [csv, setCsv] = useState<{ name: string; txs: BankTx[]; skipped: number; missing: string[]; accountId: string } | null>(null);
     const file = useRef<HTMLInputElement>(null);
@@ -213,7 +215,7 @@ function BankPanel({ accounts, master, userId, vat, busy, run, setMsg }: { accou
                     ))}
                 </ul>
             )}
-            {!master && <p className="mt-3 flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600"><KeyRound size={15} aria-hidden="true" /> Pro připojení a stahování odemkněte šifrovací heslo v Nastavení.</p>}
+            {!master && <div className="mt-3 space-y-3"><p className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600"><KeyRound size={15} aria-hidden="true" /> Pro připojení a stahování nastavte nebo odemkněte šifrovací heslo níže.</p><E2eeBox access={access} onChanged={() => window.location.reload()} /></div>}
             <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" onClick={() => setShowFio((v) => !v)} disabled={!master} className={primaryBtn}><Plus size={15} /> Připojit účet u Fio banky</button>
                 <button type="button" onClick={() => file.current?.click()} className={ghostBtn}><Upload size={14} /> Nahrát výpis z jakékoli banky (CSV nebo XML)</button>

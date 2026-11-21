@@ -32,7 +32,7 @@ export default function FeedbackButton() {
 
     return (
         <>
-            <button type="button" onClick={() => setOpen(true)} className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"><MessageCircleWarning size={17} aria-hidden="true" className="text-slate-400" /> Nahlásit problém nebo nápad</button>
+            <button type="button" onClick={() => setOpen(true)} className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"><MessageCircleWarning size={17} aria-hidden="true" className="text-slate-400" /> Nahlásit problém nebo nápad</button>
             {open && (
                 <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/50 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label="Nahlásit problém nebo nápad" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
                     <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
