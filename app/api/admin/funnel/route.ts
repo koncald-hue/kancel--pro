@@ -1,3 +1,4 @@
+import { DEMO_CASE_LIKE, DEMO_MARK_LIKE } from '@/lib/demoMarks';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { serviceClient } from '@/lib/serverSupabase';
@@ -22,13 +23,28 @@ export async function GET(req: Request) {
     const { data: la } = await db.from('lawyer_access').select('user_id, email, created_at, status, verification_status').gte('created_at', since).limit(5000);
     const users = (la ?? []) as { user_id: string; email: string; created_at: string; status: string; verification_status?: string }[];
     const ids = new Set(users.map((x) => x.user_id));
+    // Ukázková data se do trychtýře nepočítají (zakládají se sama při startu zkušební verze)
     const distinct = async (table: string): Promise<Set<string> | null> => {
-        const r = await db.from(table).select('user_id').in('user_id', [...ids]).limit(20000);
+        let q = db.from(table).select('user_id').in('user_id', [...ids]);
+        if (table === 'cases') q = q.not('title', 'like', DEMO_CASE_LIKE);
+        if (table === 'lawyer_clients') q = q.not('name', 'ilike', DEMO_MARK_LIKE);
+        if (table === 'time_entries') q = q.not('description', 'ilike', DEMO_MARK_LIKE);
+        const r = await q.limit(20000);
         if (r.error) return null;
         return new Set((r.data as { user_id: string }[]).map((x) => x.user_id));
     };
     const [cases, clients, links, time, signs] = await Promise.all(['cases', 'lawyer_clients', 'client_links', 'time_entries', 'signature_requests'].map(distinct));
     const n = (s: Set<string> | null) => (s ? s.size : null);
+    // Kdo si otevřel ukázkový spis (záznam „otevřeno“ v auditním záznamu)
+    const demoOpened = await (async (): Promise<Set<string> | null> => {
+        const dc = await db.from('cases').select('id, user_id').in('user_id', [...ids]).like('title', DEMO_CASE_LIKE).limit(5000);
+        if (dc.error) return null;
+        const demoIds = (dc.data as { id: string }[]).map((x) => x.id);
+        if (!demoIds.length) return new Set<string>();
+        const ev = await db.from('audit_log').select('owner_id').in('case_id', demoIds).eq('action', 'otevreno').limit(20000);
+        if (ev.error) return null;
+        return new Set((ev.data as { owner_id: string }[]).map((x) => x.owner_id));
+    })();
     // Kdo se zaregistroval před aspoň dvěma dny a zatím nezaložil spis ani klienta: komu stojí za to napsat
     const dayMs = 86_400_000;
     const stale = users
@@ -39,7 +55,8 @@ export async function GET(req: Request) {
         stages: [
             { key: 'registered', label: 'Zaregistrovali se', n: users.length },
             { key: 'profile', label: 'Vyplnili a ověřili profil', n: users.filter((x) => x.verification_status === 'verified').length },
-            { key: 'case', label: 'Založili spis', n: n(cases) },
+            { key: 'demo', label: 'Otevřeli ukázkový spis', n: n(demoOpened) },
+            { key: 'case', label: 'Založili vlastní spis', n: n(cases) },
             { key: 'client', label: 'Přidali klienta', n: n(clients) },
             { key: 'link', label: 'Poslali klientovi odkaz', n: n(links) },
             { key: 'time', label: 'Zapsali čas', n: n(time) },

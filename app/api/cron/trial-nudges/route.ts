@@ -1,3 +1,4 @@
+import { DEMO_CASE_LIKE, DEMO_MARK_LIKE } from '@/lib/demoMarks';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { serviceClient } from '@/lib/serverSupabase';
@@ -20,7 +21,14 @@ export async function GET(req: Request) {
     const { data, error } = await db.from('lawyer_access').select('user_id, email, status, until, created_at, display_name, nudge_day2_at, nudge_day5_at').eq('status', 'trial').gte('created_at', since).limit(1000);
     if (error) return NextResponse.json({ error: 'unavailable', hint: 'Chybí spuštění zkusebni-e-maily.sql.' }, { status: 503 });
     const now = new Date(); const origin = getSiteOrigin() ?? '';
-    const count = async (table: string, userId: string) => { const r = await db.from(table).select('id', { count: 'exact', head: true }).eq('user_id', userId); return r.error ? 1 : r.count ?? 0; };
+    // Ukázková data (spis, klient, čas) se nepočítají: kdo má jen ukázku, ještě nic sám nezaložil
+    const count = async (table: string, userId: string) => {
+        let q = db.from(table).select('id', { count: 'exact', head: true }).eq('user_id', userId);
+        if (table === 'cases') q = q.not('title', 'like', DEMO_CASE_LIKE);
+        if (table === 'lawyer_clients') q = q.not('name', 'ilike', DEMO_MARK_LIKE);
+        if (table === 'time_entries') q = q.not('description', 'ilike', DEMO_MARK_LIKE);
+        const r = await q; return r.error ? 1 : r.count ?? 0;
+    };
     let sent = 0, skipped = 0, failed = 0;
     for (const r of (data ?? []) as Row[]) {
         const kind: NudgeKind | null = planNudge(r, now);

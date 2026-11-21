@@ -8,6 +8,7 @@ import { firstStepsDone, type FirstStep } from '@/lib/firstSteps';
 import { useLawyer } from './LawyerGate';
 import { useRouter } from 'next/navigation';
 import { createDemoCase } from '@/lib/demoCase';
+import { DEMO_CASE_LIKE, DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 const HIDE_KEY = 'kancelar-prvni-kroky-skryto';
 // Na telefonu je průvodce sbalený (nezabírá první obrazovku), na velké obrazovce rozbalený; klepnutím jde přepnout
@@ -45,12 +46,12 @@ export default function FirstSteps() {
         (async () => {
             const n = async (q: PromiseLike<{ count: number | null; error: unknown }>) => { const r = await q; return r.error ? -1 : (r.count ?? 0); };
             const [clients, cases, mail, isds, tpl, time, team] = await Promise.all([
-                n(supabase.from('lawyer_clients').select('id', head)),
-                n(supabase.from('cases').select('id', head).eq('user_id', userId)),
+                n(supabase.from('lawyer_clients').select('id', head).not('name', 'ilike', DEMO_MARK_LIKE)),
+                n(supabase.from('cases').select('id', head).eq('user_id', userId).not('title', 'like', DEMO_CASE_LIKE)),
                 n(supabase.from('mail_accounts').select('id', head)),
                 n(supabase.from('isds_accounts').select('id', head)),
                 n(supabase.from('case_templates').select('id', head)),
-                n(supabase.from('time_entries').select('id', head)),
+                n(supabase.from('time_entries').select('id', head).not('description', 'ilike', DEMO_MARK_LIKE)),
                 supabase.rpc('firm_overview').then(({ data, error }) => { const d = data as { firm?: { role?: string }; members?: unknown[] } | null; return error || d?.firm?.role !== 'owner' ? -1 : (d.members ?? []).length; }),
             ]);
             if (!a) return;
