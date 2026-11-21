@@ -10,7 +10,10 @@ const VARIANTS: Record<string, { size: number; pad: number; radius: number }> = 
 };
 
 export async function GET(_req: Request, ctx: { params: Promise<{ variant: string }> }) {
-    const v = VARIANTS[(await ctx.params).variant];
+    const name = (await ctx.params).variant;
+    // Celé razítko se zlatým rámečkem pro e-maily a podobné místo, kde se nehodí jen písmeno
+    if (name === 'stamp-128') return new ImageResponse(<LogoSvg size={128} />, { width: 128, height: 128, headers: { 'Cache-Control': 'public, max-age=86400' } });
+    const v = VARIANTS[name];
     if (!v) return new Response('Not found', { status: 404 });
     const glyph = Math.round(v.size * (0.64 - v.pad));
     return new ImageResponse(
