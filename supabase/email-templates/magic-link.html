@@ -1,14 +1,17 @@
 <meta charset="utf-8">
 <!-- Supabase: Authentication -> Emails -> Magic link
      Předmět (Subject): Přihlášení do Kancelář Pro -->
-<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#16294a">
-  <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 22px"><tr>
-    <td style="padding-right:12px"><img src="https://kancelarpro.cz/pwa-icon/stamp-128" width="48" height="48" alt="Kancelář Pro" style="display:block;border:0"></td>
-    <td style="font-size:20px;font-weight:bold;color:#16294a">Kancelář Pro</td>
-  </tr></table>
-  <h1 style="font-size:22px;margin:0 0 14px;color:#16294a">Přihlášení</h1>
+<div style="background:#f3ead6;padding:28px 12px;font-family:Arial,Helvetica,sans-serif">
+<table role="presentation" width="560" cellspacing="0" cellpadding="0" style="width:100%;max-width:560px;margin:0 auto">
+<tr><td style="background:#16294a;padding:20px 26px;border-bottom:3px solid #c9a24a"><table role="presentation" cellspacing="0" cellpadding="0"><tr>
+<td style="padding-right:14px"><img src="https://kancelarpro.cz/pwa-icon/stamp-128" width="44" height="44" alt="" style="display:block;border:0"></td>
+<td style="font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:bold;letter-spacing:3px;color:#f3ead6">KANCELÁŘ PRO</td></tr></table></td></tr>
+<tr><td style="background:#ffffff;padding:30px 28px 14px;color:#1e293b">
+<h1 style="font-family:Georgia,serif;font-size:24px;margin:0 0 16px;color:#16294a">Přihlášení</h1>
   <p style="font-size:15px;line-height:1.6;margin:0 0 22px">Kliknutím na tlačítko se přihlásíte do Kancelář Pro. Odkaz je jednorázový.</p>
-  <p style="margin:0 0 26px"><a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#16294a;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:0">Přihlásit se</a></p>
+  <p style="margin:0 0 26px"><a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#16294a;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:13px 28px;border-radius:0;border-bottom:3px solid #c9a24a">Přihlásit se</a></p>
   <p style="font-size:12px;line-height:1.6;color:#64748b;margin:0 0 6px">Pokud tlačítko nefunguje, zkopírujte do prohlížeče tento odkaz:<br><span style="word-break:break-all">{{ .ConfirmationURL }}</span></p>
-  <p style="font-size:12px;color:#64748b;margin:18px 0 0">Kancelář Pro · pracovní prostor pro advokáty</p>
+</td></tr>
+<tr><td style="padding:18px 6px 0;font-size:12px;line-height:1.6;color:#64748b">Tuto zprávu vám odeslala Kancelář Pro, pracovní prostor pro advokáty. Pokud jste ji nečekali, můžete ji ignorovat.<br><a href="https://kancelarpro.cz" style="color:#64748b">kancelarpro.cz</a></td></tr>
+</table>
 </div>
