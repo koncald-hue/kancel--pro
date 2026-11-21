@@ -29,7 +29,7 @@ export function buildDigest(d: DigestInput): { subject: string; text: string } {
     L.push(`Termíny na příštích 7 dní: ${d.upcoming.length}`); if (d.details && d.upcoming.length) L.push(...list(d.upcoming)); L.push('');
     if (d.substituting.length) { L.push('Zastupujete:'); for (const s of d.substituting) L.push(`  • ${s.name} do ${dmy(s.to_on)}: ${plural(s.deadlines, 'termín', 'termíny', 'termínů')} na 7 dní`); L.push(''); }
     const ev = d.caseEvents.reduce((s, x) => s + x.count, 0);
-    L.push(`Nové záznamy ve věcech za týden: ${ev}${d.caseEvents.length ? ` (${plural(d.caseEvents.length, 'věc', 'věci', 'věcí')})` : ''}`);
+    L.push(`Nové záznamy ve spisech za týden: ${ev}${d.caseEvents.length ? ` (${plural(d.caseEvents.length, 'spis', 'spisu', 'spisů')})` : ''}`);
     if (d.details && d.caseEvents.length) L.push(...d.caseEvents.slice(0, 10).map((x) => `  • ${x.case_title}: ${x.count}`));
     L.push('');
     if (d.unbilledMinutes > 0) L.push(`Nevyfakturovaná práce: ${hm(d.unbilledMinutes)}${d.unbilledAmount ? ` (${czk(d.unbilledAmount)})` : ''}`);
@@ -45,5 +45,5 @@ export function buildDigest(d: DigestInput): { subject: string; text: string } {
 export function buildClientDigest(o: { who: string; news: number; tasks: number }): { subject: string; text: string } | null {
     if (o.news + o.tasks === 0) return null;
     const parts = [o.news ? plural(o.news, 'nová informace', 'nové informace', 'nových informací') : '', o.tasks ? plural(o.tasks, 'úkol pro Vás', 'úkoly pro Vás', 'úkolů pro Vás') : ''].filter(Boolean).join(' a ');
-    return { subject: 'Týdenní přehled Vaší věci', text: `Dobrý den,\n\nve Vaší věci je za poslední týden ${parts}. Podrobnosti najdete na své stránce přes soukromý odkaz, který Vám poslal(a) ${o.who}.\n\nTento e-mail neobsahuje žádné údaje o věci. Pokud ho nechcete dostávat, dejte vědět svému advokátovi.` };
+    return { subject: 'Týdenní přehled Vašeho spisu', text: `Dobrý den,\n\nve Vašem spisu je za poslední týden ${parts}. Podrobnosti najdete na své stránce přes soukromý odkaz, který Vám poslal(a) ${o.who}.\n\nTento e-mail neobsahuje žádné údaje o spisu. Pokud ho nechcete dostávat, dejte vědět svému advokátovi.` };
 }

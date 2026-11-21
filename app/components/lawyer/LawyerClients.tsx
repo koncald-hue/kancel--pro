@@ -78,7 +78,7 @@ export default function LawyerClients() {
     }
 
     async function remove(c: LawyerClient) {
-        if (!await confirmAction(`Smazat klienta „${c.name}“? Věci zůstanou zachované.`)) return;
+        if (!await confirmAction(`Smazat klienta „${c.name}“? Spisy zůstanou zachované.`)) return;
         const { error: err } = await supabase.from('lawyer_clients').delete().eq('id', c.id);
         if (err) setError(err.message); else setClients((list) => list.filter((x) => x.id !== c.id));
     }
@@ -136,10 +136,10 @@ export default function LawyerClients() {
                 return <p className={`flex flex-wrap items-center gap-2 rounded-xl p-3 text-sm ${bad.length ? 'bg-rose-50 text-rose-900' : 'bg-emerald-50 text-emerald-900'}`} role="status"><ShieldAlert size={15} aria-hidden="true" /><span><strong>Hlídání insolvence je aktivní.</strong> Klienti s IČO se hlídají automaticky ({watched} z {list.length}). {bad.length ? `V insolvenci: ${bad.length} (${bad.map((c) => clients.find((x) => x.id === c.client_id)?.name).filter(Boolean).join(', ')}).` : 'Nikdo z klientů není v insolvenci.'}{refreshing ? ' Právě kontroluji…' : ''}</span></p>;
             })()}
             {clients.length > 5 && <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Hledat klienta…" className={inputCls} aria-label="Hledat klienta" />}
-            {shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{clients.length ? 'Nic nenalezeno.' : 'Zatím žádní klienti. Přidejte prvního výše a pak ho vyberte u věci.'}</p> : (
+            {shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{clients.length ? 'Nic nenalezeno.' : 'Zatím žádní klienti. Přidejte prvního výše a pak ho vyberte u spisu.'}</p> : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                     <table className="w-full min-w-[640px] text-left text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-2.5">Klient</th><th className="px-3 py-2.5">Kontakt</th><th className="px-3 py-2.5">Věci</th><th className="px-3 py-2.5">Sazba Kč/h</th><th className="px-2 py-2.5"><span className="sr-only">Akce</span></th></tr></thead>
+                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-2.5">Klient</th><th className="px-3 py-2.5">Kontakt</th><th className="px-3 py-2.5">Spisy</th><th className="px-3 py-2.5">Sazba Kč/h</th><th className="px-2 py-2.5"><span className="sr-only">Akce</span></th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                             {shown.map((c) => {
                                 const mine = cases.filter((x) => x.client_id === c.id || (x.client_name ?? '').trim().toLowerCase() === c.name.toLowerCase());
@@ -176,7 +176,7 @@ export default function LawyerClients() {
                     </table>
                 </div>
             )}
-            <p className="text-xs text-slate-500">Klienta, kterého napíšete do věci (Přehled, pole Klient), sem přidáme sami. Sazba klienta se předvyplní ve výkazech práce a adresu a IČO použijete ve vyúčtování.</p>
+            <p className="text-xs text-slate-500">Klienta, kterého napíšete do spisu (Přehled, pole Klient), sem přidáme sami. Sazba klienta se předvyplní ve výkazech práce a adresu a IČO použijete ve vyúčtování.</p>
         </div>
     );
 }

@@ -18,7 +18,7 @@ export default function LawyerAddins() {
         <div className="max-w-3xl space-y-4">
             <section className={card}>
                 <h2 className="text-lg font-bold text-slate-900">Doplňky pro Word a Outlook</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Pracujte s Kanceláří přímo v programech, ve kterých trávíte den. Ve Wordu uložíte rozepsaný dokument do věci (při stejném názvu jako novou verzi), vložíte údaje věci do hlavičky podání a zapíšete čas. V Outlooku uložíte e-mail i s přílohami do správné věci jedním klepnutím, věc se navrhne podle klienta a spisové značky.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Pracujte s Kanceláří přímo v programech, ve kterých trávíte den. Ve Wordu uložíte rozepsaný dokument do spisu (při stejném názvu jako novou verzi), vložíte údaje spisu do hlavičky podání a zapíšete čas. V Outlooku uložíte e-mail i s přílohami do správného spisu jedním klepnutím, spis se navrhne podle klienta a spisové značky.</p>
                 <p className="mt-3 text-sm leading-relaxed text-slate-600">Jak na to: stáhněte si soubor (manifest) pro Word nebo Outlook a přidejte ho v daném programu v nabídce Doplňky, Moje doplňky, Nahrát můj doplněk. Stačí jednou, pak doplněk najdete na kartě Kancelář.</p>
                 {!okOrigin && (
                     <div className="mt-3">
@@ -41,7 +41,7 @@ export default function LawyerAddins() {
                     <li>V podokně se přihlaste svým účtem (i s druhým faktorem). Přihlášení platí jen v podokně Office.</li>
                     <li>Správce Microsoft 365 může doplněk nasadit celé kanceláři najednou stejným souborem.</li>
                 </ol>
-                <p className="mt-3 text-xs leading-relaxed text-slate-500">Soubory a zápisy se ukládají do stejné věci jako při práci v aplikaci. E-maily a dokumenty doplněk načítá jen na vaši výzvu klepnutím, nic se neodesílá samo. Pokud schránku v Kanceláři nemáte připojenou, doplněk Outlooku funguje i tak, protože čte zprávu přímo z Outlooku.</p>
+                <p className="mt-3 text-xs leading-relaxed text-slate-500">Soubory a zápisy se ukládají do stejného spisu jako při práci v aplikaci. E-maily a dokumenty doplněk načítá jen na vaši výzvu klepnutím, nic se neodesílá samo. Pokud schránku v Kanceláři nemáte připojenou, doplněk Outlooku funguje i tak, protože čte zprávu přímo z Outlooku.</p>
             </section>
         </div>
     );

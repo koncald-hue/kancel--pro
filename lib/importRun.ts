@@ -85,7 +85,7 @@ export async function runWorkbook(userId: string, steps: ImportStep[], opt: { so
                 const ids = await insertChunks('cases', items.map((p) => {
                     const r = p.row.rec; const cid = resolve(p.clientId); const c = cid ? byId.get(cid) : undefined; const v = p.clientId ? virtual.get(p.clientId) : undefined;
                     return caseRow(base, { title: r.title, reference: r.reference, authority: r.authority, description: r.description, note: r.note, status: r.status, clientId: cid, clientName: r.client ?? '', clientEmail: r.clientEmail || c?.email || v?.email || '', clientPhone: r.clientPhone || c?.phone || v?.phone || '' });
-                }), (k) => step(k, 'Věci'));
+                }), (k) => step(k, 'Spisy'));
                 items.forEach((p, i) => { if (p.selfId && ids[i]) real.set(p.selfId, ids[i].id); });
                 n = ids.length;
             } else {

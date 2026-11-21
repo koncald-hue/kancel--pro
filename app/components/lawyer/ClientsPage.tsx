@@ -4,9 +4,9 @@ import { SignMock } from './LandingDemo';
 import { FinalCta, SiteFooter, SiteHeader } from './LandingChrome';
 
 const STEPS = [
-    { icon: Smartphone, t: 'Pošlete klientovi odkaz', d: 'U každé věci jedním kliknutím vytvoříte soukromý odkaz. Pošlete ho e-mailem nebo zprávou.' },
+    { icon: Smartphone, t: 'Pošlete klientovi odkaz', d: 'U každého spisu jedním kliknutím vytvoříte soukromý odkaz. Pošlete ho e-mailem nebo zprávou.' },
     { icon: Upload, t: 'Klient nahraje podklady', d: 'Z telefonu vyfotí dokumenty nebo nahraje soubory. Vidíte je hned ve spisu, nic nepřeposíláte.' },
-    { icon: MessageSquare, t: 'Píšete si ve věci', d: 'Zprávy jsou na jednom místě u věci, ne roztroušené po e-mailech a chatech.' },
+    { icon: MessageSquare, t: 'Píšete si ve spisu', d: 'Zprávy jsou na jednom místě u spisu, ne roztroušené po e-mailech a chatech.' },
     { icon: FileSignature, t: 'Klient podepíše', d: 'Smlouvu nebo souhlas klient podepíše v portálu a vy dostanete PDF s dokladem o podpisu.' },
 ];
 
@@ -18,8 +18,8 @@ export default function ClientsPage() {
                 <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
                     <div>
                         <p className="text-sm font-semibold text-indigo-700">Pro vaše klienty</p>
-                        <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">Klient vidí svou věc v telefonu. Bez registrace a bez aplikace.</h1>
-                        <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">Stačí odkaz. Klient zjistí, v jakém je věc stavu, doplní podklady a napíše vám. Vy máte všechno pohromadě a klient méně důvodů volat.</p>
+                        <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">Klient vidí svůj spis v telefonu. Bez registrace a bez aplikace.</h1>
+                        <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">Stačí odkaz. Klient zjistí, v jakém je spis stavu, doplní podklady a napíše vám. Vy máte všechno pohromadě a klient méně důvodů volat.</p>
                     </div>
                     <div className="flex justify-center"><ClientMock /></div>
                 </div>
@@ -50,7 +50,7 @@ export default function ClientsPage() {
                 <div className="mx-auto max-w-6xl">
                     <h2 className="max-w-2xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">A co z toho máte vy</h2>
                     <div className="mt-10 grid items-start gap-10 lg:grid-cols-2">
-                        <ul className="space-y-4 text-lg text-slate-700">{['Žádné přeposílání příloh mezi e-maily', 'Zprávy klienta rovnou ve věci', 'Přehled, co ještě klient musí dodat', 'Klient nevolá s otázkou „jak to vypadá“'].map((t) => <li key={t} className="flex items-start gap-3"><Check size={20} className="mt-1 shrink-0 text-emerald-600" aria-hidden="true" />{t}</li>)}</ul>
+                        <ul className="space-y-4 text-lg text-slate-700">{['Žádné přeposílání příloh mezi e-maily', 'Zprávy klienta rovnou ve spisu', 'Přehled, co ještě klient musí dodat', 'Klient nevolá s otázkou „jak to vypadá“'].map((t) => <li key={t} className="flex items-start gap-3"><Check size={20} className="mt-1 shrink-0 text-emerald-600" aria-hidden="true" />{t}</li>)}</ul>
                         <div className="min-w-0"><DashboardMock /></div>
                     </div>
                 </div>

@@ -31,7 +31,7 @@ export function preflight(i: PreflightInput): Check[] {
     if (i.caseRef?.authority && i.recipientName) {
         const stop = new Set(['soud', 'urad', 'ceske', 'republiky', 'statni']); const words = (x: string) => fold(x).split(' ').filter((t) => t.length >= 4 && !stop.has(t));
         const want = new Set(words(i.caseRef.authority)); const got = words(i.recipientName);
-        if (want.size && !got.some((t) => want.has(t))) add('warn', `Věc je vedena u „${i.caseRef.authority}“, ale adresátem je „${i.recipientName}“. Je to záměr?`);
+        if (want.size && !got.some((t) => want.has(t))) add('warn', `Spis je veden u „${i.caseRef.authority}“, ale adresátem je „${i.recipientName}“. Je to záměr?`);
     }
 
     // Věc zprávy a spisová značka
@@ -42,8 +42,8 @@ export function preflight(i: PreflightInput): Check[] {
         const nums = [...ann.matchAll(FILE_NO)].map((m) => m[0]);
         const ref = i.caseRef?.reference?.trim();
         if (ref) {
-            if (nums.length === 0) add('warn', `Ve věci zprávy chybí spisová značka. Věc má značku ${ref}.`);
-            else if (!nums.some((n) => normNo(n).includes(normNo(ref)) || normNo(ref).includes(normNo(n)))) add('warn', `Ve věci zprávy je značka ${nums[0]}, ale věc má značku ${ref}. Zkontrolujte, že podání jde do správného řízení.`);
+            if (nums.length === 0) add('warn', `Ve věci zprávy chybí spisová značka. Spis má značku ${ref}.`);
+            else if (!nums.some((n) => normNo(n).includes(normNo(ref)) || normNo(ref).includes(normNo(n)))) add('warn', `Ve věci zprávy je značka ${nums[0]}, ale spis má značku ${ref}. Zkontrolujte, že podání jde do správného řízení.`);
             else add('ok', `Spisová značka ${ref} je uvedena.`);
         } else if (nums.length === 0 && /podan|žalob|zalob|odvol|vyjadren|vyjádření|návrh|navrh|odpor/i.test(ann)) add('info', 'Ve věci zprávy není spisová značka. U podání v už vedeném řízení ji uveďte.');
     }
@@ -72,7 +72,7 @@ export function preflight(i: PreflightInput): Check[] {
     // Lhůty ve věci
     const open = (i.deadlines ?? []).filter((d) => !d.done).sort((a, b) => a.due.localeCompare(b.due));
     const late = open.filter((d) => d.due < today);
-    if (late.length) add('warn', `Ve věci je lhůta po termínu: „${late[0].title}“ (${late[0].due.split('-').reverse().map(Number).join('. ')}). Podání mohlo být zmeškáno.`);
+    if (late.length) add('warn', `Ve spisu je lhůta po termínu: „${late[0].title}“ (${late[0].due.split('-').reverse().map(Number).join('. ')}). Podání mohlo být zmeškáno.`);
     const next = open.find((d) => d.due >= today);
     if (next) { const n = days(next.due, today); add(n <= 2 ? 'warn' : 'info', n === 0 ? `Lhůta „${next.title}“ končí DNES. Zpráva se musí do schránky adresáta doručit nejpozději dnes.` : `Nejbližší lhůta ve věci: „${next.title}“ za ${n} ${n === 1 ? 'den' : n < 5 ? 'dny' : 'dní'}.`); }
 

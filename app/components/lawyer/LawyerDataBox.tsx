@@ -80,7 +80,7 @@ function useCaller(accountId: string, env: IsdsEnv, cred: Cred): { call: Caller;
 const toBase64 = (file: File) => new Promise<string>((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(',')[1] ?? ''); r.onerror = () => reject(new Error('Soubor se nepodařilo načíst.')); r.readAsDataURL(file); });
 const fromBase64 = (b64: string, mime: string, name: string) => { const bin = atob(b64); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return new File([bytes], name, { type: mime || 'application/octet-stream' }); };
 
-// Datová schránka: příjem zpráv, uložení příloh do věci a odesílání. Přihlašovací údaje jsou zašifrované vaším šifrovacím heslem.
+// Datová schránka: příjem zpráv, uložení příloh do spisu a odesílání. Přihlašovací údaje jsou zašifrované vaším šifrovacím heslem.
 export default function LawyerDataBox() {
     const { userId } = useLawyer();
     const master = useMasterKey();
@@ -137,7 +137,7 @@ export default function LawyerDataBox() {
                         {account && cred && <Box key={account.id} account={account} cred={cred} userId={userId} onRemove={async () => { await supabase.from('isds_accounts').delete().eq('id', account.id); setActiveId(''); await load(); }} />}
                     </>
                 )}
-            <p className="text-xs leading-relaxed text-slate-500">Přihlášení: jméno a heslo do datové schránky (účet musí mít povolený přístup přes aplikace; u účtů s dvoufázovým přihlášením to nemusí fungovat). Zprávy se do Kanceláře neukládají, přenesou se jen přílohy, které sami uložíte do věci. Stažení zprávy, která ještě nebyla doručena, ji doručí a spustí zákonné lhůty.</p>
+            <p className="text-xs leading-relaxed text-slate-500">Přihlášení: jméno a heslo do datové schránky (účet musí mít povolený přístup přes aplikace; u účtů s dvoufázovým přihlášením to nemusí fungovat). Zprávy se do Kanceláře neukládají, přenesou se jen přílohy, které sami uložíte do spisu. Stažení zprávy, která ještě nebyla doručena, ji doručí a spustí zákonné lhůty.</p>
         </div>
     );
 }
@@ -268,7 +268,7 @@ function Box({ account, cred, userId, onRemove }: { account: Account; cred: Cred
                                     <span className="block truncate text-sm font-semibold text-slate-900">{tab === 'received' ? r.sender : r.recipient || r.recipientBox}</span>
                                     <span className="block truncate text-sm text-slate-600">{r.annotation || '(bez věci)'}</span>
                                     {tab === 'received' && ['5', '6', '7'].includes(r.status) && !checked.has(r.id) && <span className="mr-1.5 mt-0.5 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-950"><AlertTriangle size={11} aria-hidden="true" /> lhůty nezkontrolovány</span>}
-                                    {inCases[r.id]?.length ? <span className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-semibold text-emerald-900"><Check size={11} aria-hidden="true" /> ve věci: {inCases[r.id].join(', ')}</span> : null}
+                                    {inCases[r.id]?.length ? <span className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-semibold text-emerald-900"><Check size={11} aria-hidden="true" /> ve spisu: {inCases[r.id].join(', ')}</span> : null}
                                 </span>
                                 <span className="shrink-0 text-right text-xs text-slate-500">{fmtTime(r.delivered || r.accepted)}<span title={STATUS_LABELS[r.status] ?? r.status} className={`mt-1 block w-28 truncate rounded-full px-1.5 py-px text-center text-[11px] font-bold uppercase tracking-wide ${statusTone(r.status)}`}>{STATUS_LABELS[r.status] ?? r.status}</span></span>
                             </button>
@@ -316,7 +316,7 @@ function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Rec
             const r = await saveMessageToCase(userId, caseId, tab, record, files);
             assignActivity(`isds:${record.id}`, caseId);
             const title = cases.find((c) => c.id === caseId)?.title ?? 'věci';
-            setDone(`${r.recordNew ? 'Záznam o zprávě uložen' : 'Záznam o zprávě už ve věci byl'} (${title})${files.length ? `, přílohy: uloženo ${r.saved}${r.skipped ? `, přeskočeno ${r.skipped} (už tam jsou)` : ''}` : ''}.`);
+            setDone(`${r.recordNew ? 'Záznam o zprávě uložen' : 'Záznam o zprávě už ve spisu byl'} (${title})${files.length ? `, přílohy: uloženo ${r.saved}${r.skipped ? `, přeskočeno ${r.skipped} (už tam jsou)` : ''}` : ''}.`);
             onChanged();
         } catch (e) { setError(e instanceof Error ? e.message : 'Uložení se nepovedlo.'); }
         setBusy(false);
@@ -351,10 +351,10 @@ function Detail({ record, tab, call, userId, onClose, onChanged }: { record: Rec
                 <div className="mt-5 rounded-xl bg-slate-50 p-3">
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Přiřadit k věci</p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <select value={caseId} onChange={(e) => setCaseId(e.target.value)} aria-label="Věc, ke které zprávu přiřadit" className={`${inputCls} max-w-xs`}><option value="">Vyberte věc…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.reference ? ` · ${c.reference}` : ''}</option>)}</select>
+                        <select value={caseId} onChange={(e) => setCaseId(e.target.value)} aria-label="Spis, ke kterému zprávu přiřadit" className={`${inputCls} max-w-xs`}><option value="">Vyberte věc…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.reference ? ` · ${c.reference}` : ''}</option>)}</select>
                         <button type="button" onClick={() => void toCase()} disabled={!caseId || busy} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} {msg && msg.files.length ? 'Uložit zprávu a přílohy do věci' : 'Uložit zprávu do věci'}</button>
                     </div>
-                    <p className="mt-1.5 text-xs text-slate-500">{tab === 'received' && !msg && !isDeleted(record.status) ? 'Záznam o zprávě jde uložit hned. Přílohy se uloží, až zprávu stáhnete (stažení nedoručené zprávy ji doručí). ' : ''}Zapíše se i do chronologie věci. {caseId && cases.find((c) => c.id === caseId)?.reference && suggestCase(cases, record.annotation) === caseId ? 'Věc jsem navrhl podle spisové značky.' : ''}</p>
+                    <p className="mt-1.5 text-xs text-slate-500">{tab === 'received' && !msg && !isDeleted(record.status) ? 'Záznam o zprávě jde uložit hned. Přílohy se uloží, až zprávu stáhnete (stažení nedoručené zprávy ji doručí). ' : ''}Zapíše se i do chronologie spisu. {caseId && cases.find((c) => c.id === caseId)?.reference && suggestCase(cases, record.annotation) === caseId ? 'Spis jsem navrhl podle spisové značky.' : ''}</p>
                 </div>
                 {tab === 'received' && msg && <DeadlinesFromMessage key={record.id} record={record} msg={msg} downloadedNow={justDelivered} cases={cases} userId={userId} caseId={caseId} onSaved={onChanged} />}
                 {tab === 'received' && caseId && <div className="mt-4"><DocActions key={`${record.id}-${caseId}`} caseId={caseId} caseTitle={cases.find((c) => c.id === caseId)?.title ?? ''} reference={cases.find((c) => c.id === caseId)?.reference ?? ''} userId={userId} signature={access.display_name || access.firm_name || ''} subject={record.annotation || 'Datová zpráva'} text="" sender={record.sender ?? ''} dateIso={record.delivered ?? null} kind="datová zpráva" /></div>}
@@ -429,7 +429,7 @@ function Compose({ account, call, userId, onClose, onSent }: { account: Account;
             const r = await call({ action: 'send', recipient, annotation: annotation.trim(), files: payload, confirmSend: true });
             if (!r.ok) { setError(errText(r)); setBusy(false); setConfirm(false); return; }
             if (caseId) {
-                // Odeslaná zpráva s přílohami se uloží do věci (chyba tady odeslání nevrací zpět, zpráva už odešla)
+                // Odeslaná zpráva s přílohami se uloží do spisu (chyba tady odeslání nevrací zpět, zpráva už odešla)
                 try { await saveMessageToCase(userId, caseId, 'sent', { id: String(r.json.id ?? ''), sender: '', recipient: to?.name || recipient, annotation: annotation.trim(), delivered: new Date().toISOString(), accepted: '', status: '' }, files); } catch { /* uložení do věci není kritické */ }
             }
             onSent();
@@ -454,7 +454,7 @@ function Compose({ account, call, userId, onClose, onSent }: { account: Account;
                     {files.length > 0 && <ul className="mt-2 space-y-1">{files.map((f, i) => <li key={i} className="flex items-center gap-2 text-xs text-slate-700"><span className="min-w-0 flex-1 truncate">{f.name} <span className="text-slate-400">{fmtSize(f.size)}</span></span><button type="button" onClick={() => setFiles((l) => l.filter((_, j) => j !== i))} aria-label={`Odebrat ${f.name}`} className="rounded p-0.5 hover:bg-slate-100"><X size={14} /></button></li>)}</ul>}
                     <p className="mt-1 text-xs text-slate-500">Dohromady do 10 MB. První příloha je hlavní dokument. Dokumenty ze spisu si stáhněte a přiložte zde.</p>
                 </div>
-                <label className={label}>Uložit odeslanou zprávu a přílohy do věci (nepovinné)<select value={caseId} onChange={(e) => setCaseId(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">Neukládat</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
+                <label className={label}>Uložit odeslanou zprávu a přílohy do spisu (nepovinné)<select value={caseId} onChange={(e) => setCaseId(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">Neukládat</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
                 {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
                 {!confirm ? <button type="button" disabled={!valid || busy} onClick={() => void runCheck()} className={primaryBtn}><Send size={15} /> Zkontrolovat a odeslat</button> : (
                     <div className="rounded-xl border border-rose-300 bg-rose-50 p-4">

@@ -41,7 +41,7 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
                         <h1 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl">Vítejte v Kanceláři</h1>
                         <p className="mt-3 text-base leading-relaxed text-slate-600">Přihlaste se do svého pracovního prostoru, nebo si založte účet a vyzkoušejte ho 14 dní zdarma.</p>
                         <ul className="mt-7 space-y-4 text-sm text-slate-700">
-                            {([[CalendarClock, 'Lhůty a spisy', 'Hlídání lhůt, věci, klienti, výkazy a vyúčtování na jednom místě.'], [MessagesSquare, 'Šifrovaný chat kanceláře', 'Zprávy, soubory i celé věci mezi kolegy, čitelné jen pro vás.'], [ShieldCheck, 'Vaše data jsou jen vaše', 'Každý advokát vidí jen svá data, ani provozovatel je nepřečte.']] as const).map(([Icon, title, text]) => (
+                            {([[CalendarClock, 'Lhůty a spisy', 'Hlídání lhůt, spisů, klientů, výkazy a vyúčtování na jednom místě.'], [MessagesSquare, 'Šifrovaný chat kanceláře', 'Zprávy, soubory i celé spisy mezi kolegy, čitelné jen pro vás.'], [ShieldCheck, 'Vaše data jsou jen vaše', 'Každý advokát vidí jen svá data, ani provozovatel je nepřečte.']] as const).map(([Icon, title, text]) => (
                                 <li key={title} className="flex gap-3"><span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700"><Icon size={18} aria-hidden="true" /></span><span><strong className="block text-slate-900">{title}</strong>{text}</span></li>
                             ))}
                         </ul>

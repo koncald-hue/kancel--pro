@@ -85,7 +85,7 @@ export default function LawyerBulkMail() {
                     <h3 className="font-bold text-slate-900">Komu ({picked.size} vybráno z {list.length})</h3>
                     <div className="flex flex-wrap items-center gap-2">
                         <select value={audience} onChange={(e) => { setAudience(e.target.value as Audience); setPicked(new Set()); }} aria-label="Skupina klientů" className={`${inputCls} w-auto`}>
-                            <option value="all">Všichni klienti s e-mailem</option><option value="open">Klienti s otevřenou věcí</option><option value="overdue">Klienti s fakturou po splatnosti</option>
+                            <option value="all">Všichni klienti s e-mailem</option><option value="open">Klienti s otevřeným spisem</option><option value="overdue">Klienti s fakturou po splatnosti</option>
                         </select>
                         <button type="button" onClick={() => toggleAll(picked.size !== list.length)} className={ghostBtn}>{picked.size === list.length && list.length > 0 ? 'Zrušit výběr' : 'Vybrat všechny'}</button>
                     </div>
@@ -103,7 +103,7 @@ export default function LawyerBulkMail() {
                     <select value="" onChange={(e) => applyPreset(e.target.value)} aria-label="Vzor" className={`${inputCls} w-auto`}><option value="">Vložit vzor…</option>{BULK_PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select></div>
                 <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Předmět" aria-label="Předmět" className={`${inputCls} mt-3`} maxLength={200} />
                 <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={11} aria-label="Text e-mailu" className={`${inputCls} mt-2 font-mono text-[13px]`} />
-                <p className="mt-1 text-xs text-slate-500">Pole v textu: <code>{'{jmeno}'}</code> (jméno klienta), <code>{'{vec}'}</code> (jeho otevřená věc), <code>{'{kancelar}'}</code> (podpis).</p>
+                <p className="mt-1 text-xs text-slate-500">Pole v textu: <code>{'{jmeno}'}</code> (jméno klienta), <code>{'{vec}'}</code> (jeho otevřený spis), <code>{'{kancelar}'}</code> (podpis).</p>
                 {unknown.length > 0 && <p role="alert" className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-rose-800"><AlertTriangle size={14} aria-hidden="true" /> Neznámé pole: {unknown.map((u) => `{${u}}`).join(', ')}. Doplňte text místo pole (např. ______ jsou místa k vyplnění).</p>}
                 {/_{3,}/.test(subject + body) && <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-amber-900"><AlertTriangle size={14} aria-hidden="true" /> V textu zůstala nedoplněná místa (______).</p>}
             </section>
@@ -118,7 +118,7 @@ export default function LawyerBulkMail() {
 
             <section className={card}>
                 {tooMany && <p role="alert" className="mb-2 text-sm font-semibold text-rose-800">Najednou lze odeslat nejvýš {MAX_BULK} e-mailů. Vyberte méně příjemců.</p>}
-                <label className="flex items-center gap-2 text-sm text-slate-800"><input type="checkbox" checked={writeCase} onChange={(e) => setWriteCase(e.target.checked)} /> Zapsat odeslání do chronologie otevřené věci klienta</label>
+                <label className="flex items-center gap-2 text-sm text-slate-800"><input type="checkbox" checked={writeCase} onChange={(e) => setWriteCase(e.target.checked)} /> Zapsat odeslání do chronologie otevřené spisy klienta</label>
                 <label className="mt-2 flex items-start gap-2 text-sm font-semibold text-slate-900"><input type="checkbox" className="mt-0.5" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} /> Text jsem zkontroloval(a) a odešlu {sendable.length} {sendable.length === 1 ? 'e-mail' : 'e-mailů'}. Odeslání nejde vzít zpět.</label>
                 <button type="button" onClick={() => void send()} disabled={!canSend} className={`${primaryBtn} mt-3`}>{state?.sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} Odeslat {sendable.length || ''}</button>
                 {state && (

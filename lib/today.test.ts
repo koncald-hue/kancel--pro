@@ -6,7 +6,7 @@ import type { TimeEntry } from './lawyer';
 
 // Jen smyšlené údaje
 const NOW = new Date('2030-03-10T09:00:00');
-const mkCase = (id: string, over: Partial<LegalCase> = {}): LegalCase => ({ id, user_id: 'me', title: `Věc ${id}`, situation: '', summary: '', urgency: 'medium', steps: [], deadline_ids: [], offense_ids: [], template_keys: [], event_date: null, note: '', status: 'open', pinned: false, client_name: 'Jan Testovací', created_at: '2030-01-01T00:00:00Z', ...over });
+const mkCase = (id: string, over: Partial<LegalCase> = {}): LegalCase => ({ id, user_id: 'me', title: `Spis ${id}`, situation: '', summary: '', urgency: 'medium', steps: [], deadline_ids: [], offense_ids: [], template_keys: [], event_date: null, note: '', status: 'open', pinned: false, client_name: 'Jan Testovací', created_at: '2030-01-01T00:00:00Z', ...over });
 const dl = (id: string, case_id: string, due_date: string, over: Partial<CaseDeadline> = {}): CaseDeadline => ({ id, case_id, title: `Termín ${id}`, due_date, done: false, ...over });
 
 describe('buildAgenda', () => {
@@ -107,8 +107,8 @@ describe('buildUnbilled', () => {
         const e = (id: string, case_id: string | null, minutes: number, rate: number, billed = false): TimeEntry => ({ id, case_id, entry_date: '2030-03-0' + id, minutes, description: '', rate, billed });
         const list = buildUnbilled([e('1', 'a', 60, 2000), e('2', 'a', 30, 2000), e('3', null, 60, 0), e('4', 'a', 60, 2000, true)], [mkCase('a')]);
         expect(list).toEqual([
-            { caseId: 'a', caseTitle: 'Věc a', minutes: 90, amount: 3000, count: 2, oldest: '2030-03-01' },
-            { caseId: null, caseTitle: 'Bez věci', minutes: 60, amount: 0, count: 1, oldest: '2030-03-03' },
+            { caseId: 'a', caseTitle: 'Spis a', minutes: 90, amount: 3000, count: 2, oldest: '2030-03-01' },
+            { caseId: null, caseTitle: 'Bez spisu', minutes: 60, amount: 0, count: 1, oldest: '2030-03-03' },
         ]);
     });
 });

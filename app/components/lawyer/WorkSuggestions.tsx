@@ -37,7 +37,7 @@ export default function WorkSuggestions({ userId, cases, rateFor, onAdded }: { u
     useEffect(() => { const t = window.setTimeout(() => { setUnit(readUnit()); void reload(); }, 0); return () => window.clearTimeout(t); }, [reload]);
 
     const list = useMemo(() => (data ? suggest(data.acts, data.logged, { unit }) : []), [data, unit]);
-    const title = (id: string | null) => (id ? cases.find((c) => c.id === id)?.title ?? 'Věc' : 'Bez věci');
+    const title = (id: string | null) => (id ? cases.find((c) => c.id === id)?.title ?? 'Spis' : 'Bez spisu');
     const val = (s: Suggestion) => ({ minutes: edit[s.key]?.minutes ?? fmtMinutes(s.minutes), description: edit[s.key]?.description ?? s.description, caseId: edit[s.key]?.caseId ?? s.caseId ?? '', on: !edit[s.key]?.off });
     const set = (key: string, patch: Partial<{ minutes: string; description: string; caseId: string; off: boolean }>) => setEdit((e) => ({ ...e, [key]: { ...e[key], ...patch } }));
 
@@ -74,7 +74,7 @@ export default function WorkSuggestions({ userId, cases, rateFor, onAdded }: { u
                                         <div className="flex flex-wrap items-center gap-2">
                                             <input type="checkbox" checked={v.on} onChange={(e) => set(s.key, { off: !e.target.checked })} aria-label="Zapsat" className="h-4 w-4 accent-indigo-800" />
                                             {s.caseId ? <Link href={`/kancelar/veci/${s.caseId}`} className="min-w-0 flex-1 truncate font-semibold text-slate-900 hover:underline">{title(s.caseId)}</Link>
-                                                : <select value={v.caseId} onChange={(e) => set(s.key, { caseId: e.target.value })} className={`${inputCls} w-auto min-w-0 flex-1 py-1`} aria-label="Věc"><option value="">Bez věci</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>}
+                                                : <select value={v.caseId} onChange={(e) => set(s.key, { caseId: e.target.value })} className={`${inputCls} w-auto min-w-0 flex-1 py-1`} aria-label="Spis"><option value="">Bez spisu</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>}
                                             <input value={v.minutes} onChange={(e) => set(s.key, { minutes: e.target.value })} aria-label="Čas" className={`${inputCls} w-20 py-1 text-right font-semibold`} />
                                             <button type="button" onClick={() => void dismiss(s)} aria-label="Zahodit návrh" title="Zahodit návrh" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 cursor-pointer"><X size={15} /></button>
                                         </div>

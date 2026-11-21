@@ -52,13 +52,13 @@ function Panel() {
         const same = findSameName(bundle.files, null, name);
         await uploadCaseFile(userId, caseId, null, file, same ? nextVersionInfo(bundle.files, same) : {});
         await insertRow('case_entries', { case_id: caseId, user_id: userId, kind: 'event', title: `Dokument uložen z Wordu: ${name}`.slice(0, 200), body: same ? 'Nová verze souboru.' : '', happened_on: todayIso() });
-        return same ? `Uloženo jako nová verze souboru „${name}“.` : `Uloženo do věci: ${name}.`;
+        return same ? `Uloženo jako nová verze souboru „${name}“.` : `Uloženo do spisu: ${name}.`;
     });
-    const insert = () => run('insert', async () => { if (!item) throw new Error('Vyberte věc.'); await wordInsertText(clientBlock(item, access.firm_name || access.display_name || '')); return 'Údaje věci jsou vložené v dokumentu.'; });
+    const insert = () => run('insert', async () => { if (!item) throw new Error('Vyberte spis.'); await wordInsertText(clientBlock(item, access.firm_name || access.display_name || '')); return 'Údaje spisu jsou vložené v dokumentu.'; });
     const time = () => run('time', async () => {
         const { error } = await supabase.from('time_entries').insert({ case_id: caseId, user_id: userId, entry_date: todayIso(), minutes: 12, rate: access.default_rate || 0, description: 'Úprava dokumentu ve Wordu' });
         if (error) throw new Error(error.message);
-        return 'Zapsáno 12 minut práce na věci.';
+        return 'Zapsáno 12 minut práce na spisu.';
     });
 
     const insertTemplate = () => run('tpl', async () => {
@@ -69,19 +69,19 @@ function Panel() {
     });
     const insertDeadlines = () => run('dl', async () => {
         const text = deadlinesBlock(extras?.id === caseId ? extras.x.deadlines ?? [] : []);
-        if (!text) throw new Error('Věc nemá žádné nesplněné lhůty.');
-        await wordInsertText(text); return 'Lhůty věci vloženy.';
+        if (!text) throw new Error('Spis nemá žádné nesplněné lhůty.');
+        await wordInsertText(text); return 'Lhůty spisu vloženy.';
     });
 
     if (office === 'wait') return <p className="text-xs text-slate-500" role="status">Připojuji se k Wordu…</p>;
     if (office === 'none') return <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-950" role="alert">Rozhraní Wordu se nenačetlo. Doplněk se otevírá uvnitř Wordu (Vložit → Moje doplňky). V prohlížeči funguje jen přihlášení.</p>;
-    if (!cases) return <p className="text-xs text-slate-500" role="status">Načítám věci…</p>;
+    if (!cases) return <p className="text-xs text-slate-500" role="status">Načítám spisy…</p>;
     return (
         <div className="space-y-3">
             <CasePicker cases={cases} value={caseId} onChange={setCaseId} />
             <div className="grid gap-2">
-                <button type="button" disabled={!caseId || !!busy} onClick={() => void save()} className={`${primaryBtn} justify-center`}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" /> : <FilePlus2 size={14} />} Uložit tento dokument do věci</button>
-                <button type="button" disabled={!caseId || !!busy} onClick={() => void insert()} className={`${ghostBtn} justify-center`}>{busy === 'insert' ? <Loader2 size={14} className="animate-spin" /> : <TextCursorInput size={14} />} Vložit údaje věci do dokumentu</button>
+                <button type="button" disabled={!caseId || !!busy} onClick={() => void save()} className={`${primaryBtn} justify-center`}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" /> : <FilePlus2 size={14} />} Uložit tento dokument do spisu</button>
+                <button type="button" disabled={!caseId || !!busy} onClick={() => void insert()} className={`${ghostBtn} justify-center`}>{busy === 'insert' ? <Loader2 size={14} className="animate-spin" /> : <TextCursorInput size={14} />} Vložit údaje spisu do dokumentu</button>
                 <button type="button" disabled={!caseId || !!busy} onClick={() => void time()} className={`${ghostBtn} justify-center`}><Timer size={14} /> Zapsat 12 minut práce</button>
             </div>
             {caseId && (
@@ -99,12 +99,12 @@ function Panel() {
                     ))}
                     {customKeys.length > 12 && <p className="text-xs text-slate-500">Dalších {customKeys.length - 12} polí doplníte přímo ve Wordu.</p>}
                     <button type="button" disabled={!tpl || !!busy} onClick={() => void insertTemplate()} className={`${primaryBtn} w-full justify-center`}>{busy === 'tpl' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Vložit vzor do dokumentu</button>
-                    <button type="button" disabled={!!busy} onClick={() => void insertDeadlines()} className={`${ghostBtn} w-full justify-center`}>{busy === 'dl' ? <Loader2 size={14} className="animate-spin" /> : <ListChecks size={14} />} Vložit lhůty věci</button>
+                    <button type="button" disabled={!!busy} onClick={() => void insertDeadlines()} className={`${ghostBtn} w-full justify-center`}>{busy === 'dl' ? <Loader2 size={14} className="animate-spin" /> : <ListChecks size={14} />} Vložit lhůty spisu</button>
                 </div>
             )}
             {msg && <p role="status" className="flex items-start gap-1.5 text-xs font-semibold text-emerald-800"><CheckCircle2 size={14} className="mt-px shrink-0" aria-hidden="true" /> {msg}</p>}
             {err && <p role="alert" className="text-xs font-semibold text-rose-800">{err}</p>}
-            <p className="text-xs leading-relaxed text-slate-500">Dokument se uloží do souborů věci (stejná věc ve Vaší Kanceláři) a při stejném názvu vznikne nová verze.</p>
+            <p className="text-xs leading-relaxed text-slate-500">Dokument se uloží do souborů spisu (stejný spis ve Vaší Kanceláři) a při stejném názvu vznikne nová verze.</p>
         </div>
     );
 }

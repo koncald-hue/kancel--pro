@@ -7,8 +7,8 @@ export type RemedyRule = { lawKey: string; label: string; why: string };
 
 const has = (t: string, re: RegExp) => re.test(t);
 const NOT_ALLOWED = /není\s+(odvolání\s+|stížnost\s+|odpor\s+)?(přípustn)|nepřípustn|odvolání\s+se\s+nepřipouští|nelze\s+(se\s+)?(odvolat|podat\s+(odvolání|stížnost|odpor))|opravný\s+prostředek\s+není\s+přípustný/i;
-const CRIMINAL = /trestn[íý]\w*\s+(řád|stíhání|čin|věc)|obžalovan|obviněn|státní\s+zástup|\bpodle\s+§\s*\d+[a-z]?\s+tr\.\s*zákoníku|\b\d+\s*T\s*\d+\s*\/\s*\d{4}/i;
-const ADMIN_COURT = /soudní\s+řád\s+správní|s\.\s*ř\.\s*s\.|\b\d+\s*A[d]?\s*\d+\s*\/\s*\d{4}|ve\s+věci\s+žaloby\s+proti\s+rozhodnutí/i;
+const CRIMINAL = /trestn[íý]\w*\s+(řád|stíhání|čin|spis)|obžalovan|obviněn|státní\s+zástup|\bpodle\s+§\s*\d+[a-z]?\s+tr\.\s*zákoníku|\b\d+\s*T\s*\d+\s*\/\s*\d{4}/i;
+const ADMIN_COURT = /soudní\s+řád\s+správní|s\.\s*ř\.\s*s\.|\b\d+\s*A[d]?\s*\d+\s*\/\s*\d{4}|ve\s+spisu\s+žaloby\s+proti\s+rozhodnutí/i;
 const ADMIN_BODY = /správní(ho)?\s+řád|odbor\s+\w+|městsk[ýé]\s+úřad|magistrát|krajsk[ýé]\s+úřad|obecní\s+úřad|správní\s+orgán|č\.\s*j\.\s*[A-Z]{2,}/i;
 const APPEAL_COURT = /jako\s+soud\s+odvolací|odvolací\s+soud\s+(rozsudek|potvrzuje|mění)|rozsudek\s+soudu\s+prvního\s+stupně\s+se\s+(potvrzuje|mění)/i;
 

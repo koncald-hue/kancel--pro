@@ -11,9 +11,9 @@ import { insertRow } from '@/lib/caseFile';
 import { ghostBtn, inputCls, primaryBtn, type TabProps } from './caseUi';
 
 const TASKS: { id: AiTask; label: string; hint: string; needsText?: boolean }[] = [
-    { id: 'brief', label: 'Přehled věci před jednáním', hint: 'O co jde, průběh s daty, lhůty a co chybí. Z dat věci.' },
+    { id: 'brief', label: 'Přehled spisu před jednáním', hint: 'O co jde, průběh s daty, lhůty a co chybí. Z dat spisu.' },
     { id: 'client', label: 'Shrnutí pro klienta', hint: 'Srozumitelně, bez žargonu: co se stalo a co bude dál.' },
-    { id: 'draft', label: 'Koncept podání nebo dopisu', hint: 'Struktura a text z údajů věci, chybějící místa označí [DOPLNIT].' },
+    { id: 'draft', label: 'Koncept podání nebo dopisu', hint: 'Struktura a text z údajů spisu, chybějící místa označí [DOPLNIT].' },
     { id: 'ask', label: 'Zeptat se spisu', hint: 'Otázka nad chronologií a vybranými dokumenty, s odkazem na zdroj.' },
     { id: 'summary', label: 'Shrnout vložený text', hint: 'Datová zpráva, e-mail, rozhodnutí.', needsText: true },
     { id: 'reply', label: 'Navrhnout odpověď na text', hint: 'Koncept odpovědi na vloženou zprávu.', needsText: true },
@@ -109,7 +109,7 @@ export default function CaseAiTab({ item, bundle, userId }: TabProps) {
         <div className="max-w-3xl space-y-4">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Sparkles size={18} className="text-violet-700" aria-hidden="true" /> Asistent (AI)</h2>
-                <p className="mt-1 text-sm text-slate-600">Vyberte, co potřebujete. Podklad se složí z údajů věci, níže uvidíte přesně, co odejde, a nic se neodešle bez vašeho potvrzení.</p>
+                <p className="mt-1 text-sm text-slate-600">Vyberte, co potřebujete. Podklad se složí z údajů spisu, níže uvidíte přesně, co odejde, a nic se neodešle bez vašeho potvrzení.</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Co má asistent udělat">
                     {TASKS.map((t) => <button key={t.id} type="button" role="radio" aria-checked={task === t.id} onClick={() => { setTask(t.id); setAnswer(null); setConfirmed(false); }} className={`rounded-xl border p-3 text-left cursor-pointer ${task === t.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-violet-300'}`}><span className="block text-sm font-semibold text-slate-900">{t.label}</span><span className="block text-xs text-slate-600">{t.hint}</span></button>)}
                 </div>
@@ -135,7 +135,7 @@ export default function CaseAiTab({ item, bundle, userId }: TabProps) {
                     <summary className="cursor-pointer text-sm font-bold text-slate-900" id="ai-preview">Přesně tohle odejde poskytovateli AI ({prepared.text.length} znaků, zakryto údajů: {prepared.count})</summary>
                     <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-white p-3 text-xs leading-relaxed text-slate-800">{prepared.text || '(zatím nic)'}</pre>
                 </details>
-                <p className="mt-2 text-xs text-slate-600">Zakryjí se jména klienta a kontaktů věci, rodná čísla, účty, adresy, e-maily a telefony. Odpověď se vám zobrazí zpět se skutečnými jmény{tooLong ? <span className="font-semibold text-rose-800">. Podklad je delší než {AI_MAX_CHARS} znaků, odeberte některý dokument</span> : ''}.</p>
+                <p className="mt-2 text-xs text-slate-600">Zakryjí se jména klienta a kontaktů spisu, rodná čísla, účty, adresy, e-maily a telefony. Odpověď se vám zobrazí zpět se skutečnými jmény{tooLong ? <span className="font-semibold text-rose-800">. Podklad je delší než {AI_MAX_CHARS} znaků, odeberte některý dokument</span> : ''}.</p>
                 <div className="mt-2 text-xs text-slate-700">
                     <span className="font-semibold">Zakrývaná jména:</span>{' '}
                     {names.length === 0 && <span className="text-slate-500">zatím žádná. </span>}

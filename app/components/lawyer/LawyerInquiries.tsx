@@ -30,7 +30,7 @@ function NextSteps({ caseId, onTask, taskCreated }: { caseId: string; onTask: ()
                 <Link href={`/kancelar/veci/${caseId}?tab=klient&from=dnes`} className={ghostBtn}><Link2 size={15} /> Požádat klienta o podklady</Link>
                 <button type="button" onClick={onTask} className={ghostBtn}><ListTodo size={15} /> {taskCreated ? 'Úkol vytvořen · další' : 'Vytvořit úkol nebo lhůtu'}</button>
                 <Link href={`/kancelar/vykazy?case=${caseId}&popis=${encodeURIComponent('Posouzení poptávky')}`} className={ghostBtn}><Clock3 size={15} /> Zapsat čas</Link>
-                <Link href={`/kancelar/veci/${caseId}?from=dnes`} className={ghostBtn}>Otevřít věc</Link>
+                <Link href={`/kancelar/veci/${caseId}?from=dnes`} className={ghostBtn}>Otevřít spis</Link>
             </div>
         </div>
     );
@@ -63,7 +63,7 @@ export default function LawyerInquiries() {
     // Střet zájmů: stejný klient nebo e-mail už v kanceláři existuje
     const conflicts = (q: Inquiry) => [
         ...clients.filter((c) => c.name.toLowerCase() === q.name.toLowerCase() || (q.email && c.email.toLowerCase() === q.email.toLowerCase())).map((c) => `klient ${c.name}`),
-        ...cases.filter((c) => (c.client_name ?? '').toLowerCase() === q.name.toLowerCase()).map((c) => `věc „${c.title}“`),
+        ...cases.filter((c) => (c.client_name ?? '').toLowerCase() === q.name.toLowerCase()).map((c) => `spis „${c.title}“`),
     ];
 
     // Přijetí: věc se založí rovnou s kontaktem klienta (klient se najde nebo založí a doplní se mu e-mail a telefon),
@@ -71,7 +71,7 @@ export default function LawyerInquiries() {
     async function accept(q: Inquiry) {
         setError('');
         try {
-            const created = await createCase(userId, { ...BLANK_CASE, title: `Věc: ${q.name}`, situation: q.message });
+            const created = await createCase(userId, { ...BLANK_CASE, title: `Spis: ${q.name}`, situation: q.message });
             const { error: caseErr } = await supabase.from('cases').update({ client_name: q.name, client_email: q.email, client_phone: q.phone }).eq('id', created.id);
             if (caseErr) throw new Error(caseErr.message);
             void applyDefaultTo(created.id, userId); // výchozí šablona úkolů, pokud ji advokát má
@@ -130,7 +130,7 @@ export default function LawyerInquiries() {
         setTarget('');
     }
 
-    const inviteText = (q: Inquiry, url: string) => `Dobrý den, ${q.name},\n\nděkuji za vaši poptávku. Věc jsem převzal(a). Na tomto zabezpečeném odkazu mi můžete psát, posílat dokumenty a uvidíte stav věci:\n\n${url}\n\nOdkaz je osobní, nikomu ho prosím nepředávejte.`;
+    const inviteText = (q: Inquiry, url: string) => `Dobrý den, ${q.name},\n\nděkuji za vaši poptávku. Spis jsem převzal(a). Na tomto zabezpečeném odkazu mi můžete psát, posílat dokumenty a uvidíte stav spisu:\n\n${url}\n\nOdkaz je osobní, nikomu ho prosím nepředávejte.`;
     async function copy(id: string, text: string) { await navigator.clipboard?.writeText(text); setCopied(id); window.setTimeout(() => setCopied(''), 1500); }
 
     async function preview(f: InquiryFile) {
@@ -156,7 +156,7 @@ export default function LawyerInquiries() {
     return (
         <div className="space-y-5">
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
-            {items.length === 0 && !error && <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-600">Zatím žádné poptávky. Poptávka je zpráva od někoho, kdo se vám ozve přes váš veřejný formulář a ještě není klient. Odkaz na formulář najdete v <Link href="/kancelar/nastaveni" className="font-semibold underline">Nastavení</Link>, vložte ho na web nebo do podpisu e-mailu. Z přijaté poptávky pak založíte věc i klienta.</p>}
+            {items.length === 0 && !error && <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-600">Zatím žádné poptávky. Poptávka je zpráva od někoho, kdo se vám ozve přes váš veřejný formulář a ještě není klient. Odkaz na formulář najdete v <Link href="/kancelar/nastaveni" className="font-semibold underline">Nastavení</Link>, vložte ho na web nebo do podpisu e-mailu. Z přijaté poptávky pak založíte spis i klienta.</p>}
             {fresh.length > 0 && <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Nové ({fresh.length})</h2>}
             <ul className="space-y-2">
                 {fresh.map((q) => {
@@ -183,17 +183,17 @@ export default function LawyerInquiries() {
                 if (!q) return null;
                 return (
                     <section key={id} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5" aria-label={`Přijato: ${q.name}`}>
-                        <p className="flex items-center gap-2 font-bold text-emerald-900"><Check size={16} /> Věc „{q.name}“ je založená</p>
-                        <p className="mt-1 text-sm text-slate-700">Klient i jeho kontakt ({[q.phone, q.email].filter(Boolean).join(', ')}) jsou uložené u věci a v seznamu klientů, původní zpráva zájemce je v popisu věci.</p>
+                        <p className="flex items-center gap-2 font-bold text-emerald-900"><Check size={16} /> Spis „{q.name}“ je založená</p>
+                        <p className="mt-1 text-sm text-slate-700">Klient i jeho kontakt ({[q.phone, q.email].filter(Boolean).join(', ')}) jsou uložené u spisu a v seznamu klientů, původní zpráva zájemce je v popisu spisu.</p>
                         <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-900"><MessageSquare size={15} /> Zabezpečený chat a dokumenty s klientem</p>
-                        <p className="mt-1 text-xs leading-relaxed text-slate-600">Pošlete klientovi tento odkaz. Otevře si svou stránku věci, kde vám může psát a nahrávat dokumenty. {inv.secure ? <><Lock size={11} className="mb-0.5 inline" /> Zprávy a soubory jsou šifrované end-to-end, klíč je součástí odkazu.</> : 'Odemkněte šifrovací heslo (Nastavení) a odkaz si ve věci vytvořte znovu, ať jsou zprávy šifrované end-to-end.'}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-600">Pošlete klientovi tento odkaz. Otevře si svou stránku spisu, kde vám může psát a nahrávat dokumenty. {inv.secure ? <><Lock size={11} className="mb-0.5 inline" /> Zprávy a soubory jsou šifrované end-to-end, klíč je součástí odkazu.</> : 'Odemkněte šifrovací heslo (Nastavení) a odkaz si ve spisu vytvořte znovu, ať jsou zprávy šifrované end-to-end.'}</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                             <button type="button" onClick={() => void copy(id, inviteText(q, inv.url))} className={primaryBtn}><Copy size={15} /> {copied === id ? 'Zkopírováno' : 'Zkopírovat zprávu s odkazem'}</button>
-                            {q.email && <a href={`mailto:${q.email}?subject=${encodeURIComponent('Vaše věc – zabezpečený odkaz')}&body=${encodeURIComponent(inviteText(q, inv.url))}`} className={ghostBtn}><Mail size={15} /> Otevřít e-mail</a>}
-                            <Link href={`/kancelar/veci/${inv.caseId}`} className={ghostBtn}>Otevřít věc</Link>
+                            {q.email && <a href={`mailto:${q.email}?subject=${encodeURIComponent('Váš spis – zabezpečený odkaz')}&body=${encodeURIComponent(inviteText(q, inv.url))}`} className={ghostBtn}><Mail size={15} /> Otevřít e-mail</a>}
+                            <Link href={`/kancelar/veci/${inv.caseId}`} className={ghostBtn}>Otevřít spis</Link>
                         </div>
                         <NextSteps caseId={inv.caseId} taskCreated={!!taskDone[id]} onTask={() => setTask({ caseId: inv.caseId, caseTitle: q.name, title: `Vyřídit: ${q.name}`, inquiryId: q.id, kind: 'ukol' })} />
-                        <p className="mt-2 text-xs text-slate-500">Odkaz zůstává i ve věci v záložce Klient. Tady se ukazuje jen teď, protože klíč se po opuštění stránky už nezobrazí.</p>
+                        <p className="mt-2 text-xs text-slate-500">Odkaz zůstává i ve spisu v záložce Klient. Tady se ukazuje jen teď, protože klíč se po opuštění stránky už nezobrazí.</p>
                     </section>
                 );
             })}
@@ -201,7 +201,7 @@ export default function LawyerInquiries() {
                 <div>
                     <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Vyřízené</h2>
                     <ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
-                        {rest.map((q) => <li key={q.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"><button type="button" onClick={() => setOpenId(q.id)} className="font-semibold text-slate-800 hover:underline cursor-pointer">{q.name}</button><span className="text-xs text-slate-500">{q.status === 'accepted' ? <>přijato{(q.case_id ?? accepted[q.id]?.caseId) && <> · <Link href={`/kancelar/veci/${q.case_id ?? accepted[q.id]?.caseId}`} className="font-semibold text-indigo-900 underline">otevřít věc</Link></>}</> : 'odmítnuto'} · {shortDate(new Date(q.created_at))}</span></li>)}
+                        {rest.map((q) => <li key={q.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"><button type="button" onClick={() => setOpenId(q.id)} className="font-semibold text-slate-800 hover:underline cursor-pointer">{q.name}</button><span className="text-xs text-slate-500">{q.status === 'accepted' ? <>přijato{(q.case_id ?? accepted[q.id]?.caseId) && <> · <Link href={`/kancelar/veci/${q.case_id ?? accepted[q.id]?.caseId}`} className="font-semibold text-indigo-900 underline">otevřít spis</Link></>}</> : 'odmítnuto'} · {shortDate(new Date(q.created_at))}</span></li>)}
                     </ul>
                 </div>
             )}
@@ -214,7 +214,7 @@ export default function LawyerInquiries() {
                             <button type="button" onClick={() => setOpenId(null)} aria-label="Zavřít" className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 cursor-pointer"><X size={18} /></button>
                         </div>
                         <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-indigo-900">{opened.email && <a href={`mailto:${opened.email}`} className="inline-flex items-center gap-1.5 hover:underline"><Mail size={14} />{opened.email}</a>}{opened.phone && <a href={`tel:${opened.phone.replace(/\s+/g, '')}`} className="inline-flex items-center gap-1.5 hover:underline"><Phone size={14} />{opened.phone}</a>}</p>
-                        <p className="mt-4 text-xs font-bold uppercase tracking-wide text-slate-500">Popis věci</p>
+                        <p className="mt-4 text-xs font-bold uppercase tracking-wide text-slate-500">Popis spisu</p>
                         <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-800">{opened.message}</p>
                         {files.some((f) => f.inquiry_id === opened.id) && (
                             <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -223,13 +223,13 @@ export default function LawyerInquiries() {
                             </div>
                         )}
                         {conflicts(opened).length > 0 && <p className="mt-4 flex items-start gap-2 rounded-lg bg-rose-50 p-2.5 text-xs font-semibold text-rose-900"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Možný střet zájmů nebo stávající klient: {conflicts(opened).join(', ')}.</p>}
-                        {opened.status === 'new' && <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => { setOpenId(null); void accept(opened); }} className={primaryBtn}><Check size={16} /> Přijmout jako věc</button><button type="button" onClick={() => { setOpenId(null); void decline(opened); }} className={ghostBtn}><X size={15} /> Odmítnout</button></div>}
+                        {opened.status === 'new' && <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => { setOpenId(null); void accept(opened); }} className={primaryBtn}><Check size={16} /> Přijmout jako spis</button><button type="button" onClick={() => { setOpenId(null); void decline(opened); }} className={ghostBtn}><X size={15} /> Odmítnout</button></div>}
                         {opened.status === 'accepted' && (opened.case_id ?? accepted[opened.id]?.caseId) && <NextSteps caseId={(opened.case_id ?? accepted[opened.id]?.caseId)!} taskCreated={!!taskDone[opened.id]} onTask={() => setTask({ caseId: (opened.case_id ?? accepted[opened.id]?.caseId)!, caseTitle: opened.name, title: `Vyřídit: ${opened.name}`, inquiryId: opened.id, kind: 'ukol' })} />}
                         {(opened.status === 'new' || (opened.status === 'accepted' && !(opened.case_id ?? accepted[opened.id]?.caseId))) && cases.some((c) => c.status === 'open') && (
                             <form onSubmit={(e) => { e.preventDefault(); if (target) { void assign(opened, target); } }} className="mt-4 flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                <label className="min-w-0 flex-1 text-sm font-semibold text-slate-800">{opened.status === 'new' ? 'Nebo přiřadit k věci, kterou už vedete' : 'Přiřadit k věci'}
+                                <label className="min-w-0 flex-1 text-sm font-semibold text-slate-800">{opened.status === 'new' ? 'Nebo přiřadit ke spisu, který už vedete' : 'Přiřadit ke spisu'}
                                     <select value={target} onChange={(e) => setTarget(e.target.value)} className={`${inputCls} mt-1`}>
-                                        <option value="">Vyberte věc…</option>
+                                        <option value="">Vyberte spis…</option>
                                         {cases.filter((c) => c.status === 'open').map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}
                                     </select>
                                 </label>

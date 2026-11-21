@@ -49,14 +49,14 @@ export default function LawyerArchive() {
         <div className="space-y-4">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="text-lg font-bold text-slate-900">Archiv spisů</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Uzavřená věc se archivuje s datem, místem uložení a lhůtou. Kancelář hlídá, kdy lhůta uplyne, a každý úkon (archivace, prodloužení, vydání, skartace) zapíše do protokolu, který nejde měnit. Délku uložení určujete vy podle stavovských předpisů.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Uzavřený spis se archivuje s datem, místem uložení a lhůtou. Kancelář hlídá, kdy lhůta uplyne, a každý úkon (archivace, prodloužení, vydání, skartace) zapíše do protokolu, který nejde měnit. Délku uložení určujete vy podle stavovských předpisů.</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                     <button type="button" onClick={() => setFilter('')} className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer ${!filter ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-700'}`}>Vše ({withState.length})</button>
                     {ORDER.filter((s) => counts[s]).map((s) => <button key={s} type="button" onClick={() => setFilter(s)} className={`rounded-full px-3 py-1 text-xs font-semibold cursor-pointer ${filter === s ? 'bg-indigo-700 text-white' : TONE[s] ?? 'bg-slate-100 text-slate-700'}`}>{STATE_LABEL[s]} ({counts[s]})</button>)}
                 </div>
             </section>
 
-            {shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">Žádná uzavřená věc.</p> : (
+            {shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">Žádná uzavřený spis.</p> : (
                 <ul className="space-y-2">
                     {shown.map(({ r, s }) => (
                         <li key={r.id} className="rounded-2xl border border-slate-200 bg-white">
@@ -65,7 +65,7 @@ export default function LawyerArchive() {
                                 {r.archive_until && !r.disposal && <span className="text-xs text-slate-600">uložit do {dmy(r.archive_until)}</span>}
                                 <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${TONE[s] ?? 'bg-slate-100 text-slate-600'}`}>{STATE_LABEL[s]}</span>
                             </button>
-                            {open === r.id && <div className="border-t border-slate-100 p-3"><ArchiveCard item={r} onChanged={load} /><Link href={`/kancelar/veci/${r.id}`} className="mt-2 inline-block text-xs font-semibold text-indigo-800 hover:underline">Otevřít věc</Link></div>}
+                            {open === r.id && <div className="border-t border-slate-100 p-3"><ArchiveCard item={r} onChanged={load} /><Link href={`/kancelar/veci/${r.id}`} className="mt-2 inline-block text-xs font-semibold text-indigo-800 hover:underline">Otevřít spis</Link></div>}
                         </li>
                     ))}
                 </ul>

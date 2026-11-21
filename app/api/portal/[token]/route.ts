@@ -47,13 +47,13 @@ export async function GET(req: Request, ctx: { params: Promise<{ token: string }
     const linkAny = link as unknown as { onboarded_at?: string | null; client_name?: string; client_email?: string; client_phone?: string; client_verified_at?: string | null };
     // Druhý faktor: bez ověřeného kódu jen vizitka advokáta a výzva k zadání kódu, nic ze spisu
     if (await secondFactorBlock(db, link as FactorLink, req)) {
-        return NextResponse.json({ needsCode: true, email: maskEmail((link as FactorLink).code_email ?? ''), e2ee: Boolean(link.e2ee), lawyer, title: link.label || 'Vaše věc' });
+        return NextResponse.json({ needsCode: true, email: maskEmail((link as FactorLink).code_email ?? ''), e2ee: Boolean(link.e2ee), lawyer, title: link.label || 'Váš spis' });
     }
     if (!linkAny.onboarded_at) {
-        return NextResponse.json({ onboarded: false, e2ee: Boolean(link.e2ee), lawyer, title: link.label || 'Vaše věc', prefillName: linkAny.client_name || '' });
+        return NextResponse.json({ onboarded: false, e2ee: Boolean(link.e2ee), lawyer, title: link.label || 'Váš spis', prefillName: linkAny.client_name || '' });
     }
     const { data: caseRow } = await db.from('cases').select('title, client_name').eq('id', link.case_id).maybeSingle();
-    const title = link.label || (caseRow?.title as string | undefined) || 'Vaše věc';
+    const title = link.label || (caseRow?.title as string | undefined) || 'Váš spis';
 
     const [requests, files, entries, deadlines, messages] = await Promise.all([
         db.from('client_requests').select('id, title, done').eq('case_id', link.case_id).order('created_at'),

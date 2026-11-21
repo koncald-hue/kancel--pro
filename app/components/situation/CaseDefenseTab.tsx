@@ -114,7 +114,7 @@ export default function CaseDefenseTab({ item, bundle, lawyer, patchItem, fail }
                         <p className="mt-2 text-xs text-slate-500">K přípravě se odešle popis případu a chronologie, nikoli nahrané soubory. Čím úplnější spis, tím užitečnější výsledek.</p>
                         <div className="mt-3 flex flex-wrap items-center gap-3">
                             <button type="button" onClick={() => void generate()} disabled={loading || !hasFacts} className={primaryBtn}>{loading ? <><Loader2 size={16} className="animate-spin" /> Připravuji (asi 20 s)…</> : defense ? 'Připravit znovu' : 'Připravit strategii obrany'}</button>
-                            {!hasFacts && <span className="text-xs font-semibold text-indigo-900">Nejdřív doplňte popis věci nebo aspoň jednu událost v Chronologii.</span>}
+                            {!hasFacts && <span className="text-xs font-semibold text-indigo-900">Nejdřív doplňte popis spisu nebo aspoň jednu událost v Chronologii.</span>}
                             {savedAt && <span className="text-xs text-slate-500">Naposledy {new Date(savedAt).toLocaleString('cs-CZ')}</span>}
                         </div>
                     </div>
@@ -186,7 +186,7 @@ export default function CaseDefenseTab({ item, bundle, lawyer, patchItem, fail }
                     </Block>
 
                     {defense.when_lawyer && <p className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm leading-relaxed text-rose-950"><AlertTriangle size={17} className="mt-0.5 shrink-0" /> {defense.when_lawyer}</p>}
-                    <p className="text-xs leading-relaxed text-slate-500">Jde o automaticky vytvořený orientační podklad, nikoli právní radu ani záruku úspěchu. Zkontrolujte ho s dokumenty ve spisu a u vážných věcí (trestní řízení, soud, vyšší částky) se poraďte s advokátem nebo bezplatnou právní poradnou.</p>
+                    <p className="text-xs leading-relaxed text-slate-500">Jde o automaticky vytvořený orientační podklad, nikoli právní radu ani záruku úspěchu. Zkontrolujte ho s dokumenty ve spisu a u vážných spisů (trestní řízení, soud, vyšší částky) se poraďte s advokátem nebo bezplatnou právní poradnou.</p>
                 </>
             )}
         </div>

@@ -7,7 +7,7 @@ export type Table = { headers: string[]; rows: string[][] };
 export type Sheet = { name: string; table: Table };
 export type Entity = 'klienti' | 'veci' | 'lhuty' | 'kontakty' | 'cas';
 
-export const ENTITY_LABEL: Record<Entity, string> = { klienti: 'Klienti', veci: 'Věci (spisy)', lhuty: 'Lhůty a termíny', kontakty: 'Kontakty ve věcech (soud, protistrana)', cas: 'Odpracovaný čas' };
+export const ENTITY_LABEL: Record<Entity, string> = { klienti: 'Klienti', veci: 'Spisy', lhuty: 'Lhůty a termíny', kontakty: 'Kontakty ve spisech (soud, protistrana)', cas: 'Odpracovaný čas' };
 
 // ---------- načtení souboru ----------
 export function decodeText(bytes: Uint8Array): string {
@@ -96,24 +96,24 @@ export const FIELDS: Record<Entity, FieldDef[]> = {
         { key: 'note', label: 'Poznámka', synonyms: ['poznamka', 'pozn', 'note', 'notes', 'komentar', 'poznamky'] },
     ],
     veci: [
-        { key: 'title', label: 'Název věci', required: true, synonyms: ['nazev', 'nazev veci', 'vec', 'predmet', 'title', 'case', 'spis', 'nazev spisu', 'predmet sporu', 'kauza'] },
+        { key: 'title', label: 'Název spisu', required: true, synonyms: ['nazev', 'nazev veci', 'vec', 'predmet', 'title', 'case', 'spis', 'nazev spisu', 'predmet sporu', 'kauza'] },
         { key: 'reference', label: 'Spisová značka / č. j.', synonyms: ['spisova znacka', 'sp zn', 'spzn', 'cislo jednaci', 'c j', 'cj', 'znacka', 'reference', 'cislo spisu', 'cislo veci'] },
         { key: 'authority', label: 'Soud nebo úřad', synonyms: ['soud', 'urad', 'soud urad', 'instituce', 'authority', 'court', 'organ', 'soud organ'] },
         { key: 'client', label: 'Klient', synonyms: ['klient', 'jmeno klienta', 'zakaznik', 'client', 'strana', 'klient jmeno', 'dotcena osoba'] },
         { key: 'clientEmail', label: 'E-mail klienta', synonyms: ['email klienta', 'e mail klienta', 'client email'] },
         { key: 'clientPhone', label: 'Telefon klienta', synonyms: ['telefon klienta', 'tel klienta', 'client phone'] },
-        { key: 'description', label: 'Popis věci', synonyms: ['popis', 'popis veci', 'situation', 'obsah', 'description'] },
+        { key: 'description', label: 'Popis spisu', synonyms: ['popis', 'popis veci', 'situation', 'obsah', 'description'] },
         { key: 'status', label: 'Stav', synonyms: ['stav', 'status', 'stav veci'] },
         { key: 'note', label: 'Poznámka', synonyms: ['poznamka', 'pozn', 'note', 'notes', 'komentar'] },
     ],
     lhuty: [
-        { key: 'case', label: 'Věc (značka nebo název)', required: true, synonyms: ['vec', 'spis', 'spisova znacka', 'sp zn', 'cislo jednaci', 'case', 'nazev veci', 'znacka'] },
+        { key: 'case', label: 'Spis (značka nebo název)', required: true, synonyms: ['vec', 'spis', 'spisova znacka', 'sp zn', 'cislo jednaci', 'case', 'nazev veci', 'znacka'] },
         { key: 'title', label: 'Název lhůty / úkonu', required: true, synonyms: ['nazev', 'lhuta', 'nazev lhuty', 'ukon', 'nazev ukonu', 'ukol', 'nazev ukolu', 'popis', 'title', 'co', 'predmet', 'task', 'subject'] },
         { key: 'date', label: 'Datum', required: true, synonyms: ['datum', 'termin', 'konec lhuty', 'do', 'due date', 'date', 'splatnost', 'datum lhuty', 'koncove datum'] },
         { key: 'done', label: 'Splněno', synonyms: ['splneno', 'hotovo', 'done', 'vyrizeno', 'dokonceno'] },
     ],
     kontakty: [
-        { key: 'case', label: 'Věc (značka nebo název)', required: true, synonyms: ['vec', 'spis', 'spisova znacka', 'sp zn', 'cislo jednaci', 'case', 'nazev veci', 'znacka'] },
+        { key: 'case', label: 'Spis (značka nebo název)', required: true, synonyms: ['vec', 'spis', 'spisova znacka', 'sp zn', 'cislo jednaci', 'case', 'nazev veci', 'znacka'] },
         { key: 'name', label: 'Jméno / název', required: true, synonyms: ['jmeno', 'nazev', 'name', 'kontakt', 'osoba', 'cele jmeno', 'jmeno nazev', 'subjekt', 'ucastnik'] },
         { key: 'role', label: 'Role (soud, protistrana…)', synonyms: ['role', 'typ', 'vztah', 'funkce', 'postaveni', 'kategorie'] },
         { key: 'email', label: 'E-mail', synonyms: ['email', 'e mail', 'mail'] },
@@ -121,7 +121,7 @@ export const FIELDS: Record<Entity, FieldDef[]> = {
         { key: 'note', label: 'Poznámka', synonyms: ['poznamka', 'pozn', 'note', 'komentar'] },
     ],
     cas: [
-        { key: 'case', label: 'Věc (značka nebo název)', synonyms: ['vec', 'spis', 'spisova znacka', 'sp zn', 'cislo jednaci', 'case', 'nazev veci', 'znacka', 'projekt'] },
+        { key: 'case', label: 'Spis (značka nebo název)', synonyms: ['vec', 'spis', 'spisova znacka', 'sp zn', 'cislo jednaci', 'case', 'nazev veci', 'znacka', 'projekt'] },
         { key: 'date', label: 'Datum', required: true, synonyms: ['datum', 'date', 'den', 'datum ukonu'] },
         { key: 'hours', label: 'Čas v hodinách (1,5)', required: false, synonyms: ['hodiny', 'hodin', 'hours', 'cas hodiny', 'pocet hodin', 'h'] },
         { key: 'minutes', label: 'Čas v minutách', synonyms: ['minuty', 'minut', 'minutes', 'cas minuty', 'min'] },
@@ -334,11 +334,11 @@ export function planImport(entity: Entity, rows: Row[], existing: Existing, opt:
     const out: Planned[] = [];
     const { clientIndex, addClient, caseByRef, caseByTitle, addCase } = ctx;
     const findCase = (key: string): { c?: ExistingCase; note: string; ambiguous?: boolean } => {
-        const f = fold(key); if (!f) return { note: 'Nezadaná věc.' };
+        const f = fold(key); if (!f) return { note: 'Nezadaný spis.' };
         const r = caseByRef.get(f); if (r) return { c: r, note: '' };
         const t = caseByTitle.get(f); if (t?.length === 1) return { c: t[0], note: '' };
-        if (t && t.length > 1) return { note: `Název „${key}“ má víc věcí, použijte spisovou značku.`, ambiguous: true };
-        return { note: `Věc „${key}“ nebyla nalezena.` };
+        if (t && t.length > 1) return { note: `Název „${key}“ má víc spisů, použijte spisovou značku.`, ambiguous: true };
+        return { note: `Spis „${key}“ nebyla nalezena.` };
     };
     for (const row of rows) {
         const errs = row.issues.filter((i) => i.level === 'error');
@@ -356,16 +356,16 @@ export function planImport(entity: Entity, rows: Row[], existing: Existing, opt:
             } else { const v: ExistingClient = { id: ctx.nextId(), name: r.name, email: r.email ?? '', phone: r.phone ?? '', ico: r.ico }; addClient(v); out.push({ row, action: 'create', note: '', selfId: v.id }); }
         } else if (entity === 'veci') {
             const ref = r.reference ? caseByRef.get(fold(r.reference)) : undefined;
-            if (ref) { out.push({ row, action: 'skip', note: 'Věc s touto spisovou značkou už existuje.', caseId: ref.id }); continue; }
+            if (ref) { out.push({ row, action: 'skip', note: 'Spis s touto spisovou značkou už existuje.', caseId: ref.id }); continue; }
             let clientId: string | null = null; let note = ''; let newClient: Rec | null = null;
             if (r.client) {
                 const c = clientKeys({ name: r.client, email: r.clientEmail }).map((k) => clientIndex.get(k)).find(Boolean);
                 if (c) clientId = c.id;
                 else if (opt.createMissingClients) { const v: ExistingClient = { id: ctx.nextId(), name: r.client, email: r.clientEmail ?? '', phone: r.clientPhone ?? '' }; addClient(v); clientId = v.id; newClient = { name: r.client, email: r.clientEmail ?? '', phone: r.clientPhone ?? '' }; note = 'Založí se i nový klient.'; }
-                else note = `Klient „${r.client}“ není v adresáři, věc se uloží bez propojení.`;
+                else note = `Klient „${r.client}“ není v adresáři, spis se uloží bez propojení.`;
             }
             const dup = !r.reference && (caseByTitle.get(fold(r.title))?.length ?? 0) > 0;
-            if (dup) { out.push({ row, action: 'skip', note: 'Věc se stejným názvem už existuje.' }); continue; }
+            if (dup) { out.push({ row, action: 'skip', note: 'Spis se stejným názvem už existuje.' }); continue; }
             const selfId = ctx.nextId();
             addCase({ id: selfId, title: r.title, reference: r.reference, client_id: clientId });
             out.push({ row, action: 'create', note, clientId, newClient, selfId });
@@ -373,13 +373,13 @@ export function planImport(entity: Entity, rows: Row[], existing: Existing, opt:
             const key = (r.case ?? '').trim();
             const { c, note, ambiguous } = findCase(key);
             if (c) { out.push({ row, action: 'create', note: '', caseId: c.id }); continue; }
-            if (entity === 'cas' && !key) { out.push({ row, action: 'create', note: 'Čas bez věci.', caseId: null }); continue; }
+            if (entity === 'cas' && !key) { out.push({ row, action: 'create', note: 'Čas bez spisu.', caseId: null }); continue; }
             if (key && !ambiguous && opt.createMissingCases) {
                 // Věc v kanceláři není: založí se (jednou) a řádek se k ní připojí
                 const isRef = looksLikeReference(key);
                 const nc: NewCase = { title: key, reference: isRef ? key : '' };
                 const id = ctx.nextId(); addCase({ id, title: nc.title, reference: nc.reference });
-                out.push({ row, action: 'create', note: `Založí se i nová věc „${key}“.`, caseId: id, newCase: nc });
+                out.push({ row, action: 'create', note: `Založí se i nový spis „${key}“.`, caseId: id, newCase: nc });
                 continue;
             }
             out.push({ row, action: 'error', note });

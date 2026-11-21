@@ -11,7 +11,7 @@ export const NAV = [['/pro-klienty', 'Pro klienty'], ['/cenik', 'Ceník']] as co
 // Rozbalovací nabídka funkcí: ukáže hned, co aplikace umí
 const FUNCS: { id: string; icon: typeof Scale; title: string; text: string }[] = [
     { id: 'datovky', icon: MailCheck, title: 'Datové schránky a lhůty', text: 'Lhůta z rozhodnutí rovnou v kalendáři' },
-    { id: 'email', icon: Mail, title: 'E-mail ve spisu', text: 'Pošta uložená tam, kde je věc' },
+    { id: 'email', icon: Mail, title: 'E-mail ve spisu', text: 'Pošta uložená tam, kde je spis' },
     { id: 'vykaz', icon: Clock3, title: 'Výkaz práce', text: 'Navrhne se sám, vy potvrdíte' },
     { id: 'klient', icon: Users, title: 'Klient a podpisy', text: 'Soukromá stránka bez registrace' },
     { id: 'penize', icon: Receipt, title: 'Faktury a platby', text: 'QR platba a párování úhrad' },
@@ -101,7 +101,7 @@ export function SiteFooter() {
     );
 }
 
-export function FinalCta({ title = 'Vyzkoušejte to na své vlastní věci', text = '14 dní zdarma, bez karty a bez závazku.' }: { title?: string; text?: string }) {
+export function FinalCta({ title = 'Vyzkoušejte to na svých vlastních spisech', text = '14 dní zdarma, bez karty a bez závazku.' }: { title?: string; text?: string }) {
     return (
         <section className="px-4 pb-20 sm:px-6">
             <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 rounded-3xl bg-indigo-50 px-6 py-14 text-center">

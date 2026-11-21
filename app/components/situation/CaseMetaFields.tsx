@@ -19,7 +19,7 @@ export default function CaseMetaFields({ item, patchItem }: { item: LegalCase; p
                     {CASE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
             </label>
-            <label className="block text-xs font-semibold text-slate-600">Odpovídá (kdo věc vede)
+            <label className="block text-xs font-semibold text-slate-600">Odpovídá (kdo spis vede)
                 <input key={`${item.id}-resp`} defaultValue={item.responsible ?? ''} maxLength={120} placeholder="např. JUDr. Nováková" onBlur={(e) => { const v = e.target.value.trim(); if (v !== (item.responsible ?? '')) patchItem({ responsible: v }); }} className={`${inputCls} mt-1 font-normal`} />
             </label>
             <div className="text-xs font-semibold text-slate-600">Štítky
@@ -27,7 +27,7 @@ export default function CaseMetaFields({ item, patchItem }: { item: LegalCase; p
                     <input value={label} onChange={(e) => setLabel(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} maxLength={24} placeholder="Přidat štítek a Enter" aria-label="Nový štítek" disabled={labels.length >= MAX_LABELS} className={`${inputCls} font-normal`} />
                 </div>
             </div>
-            {labels.length > 0 && <ul className="flex flex-wrap gap-1.5 sm:col-span-3" aria-label="Štítky věci">{labels.map((l) => <li key={l} className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-950"><Tag size={11} aria-hidden="true" />{l}<button type="button" onClick={() => patchItem({ labels: labels.filter((x) => x !== l) })} aria-label={`Odebrat štítek ${l}`} className="cursor-pointer"><X size={11} /></button></li>)}</ul>}
+            {labels.length > 0 && <ul className="flex flex-wrap gap-1.5 sm:col-span-3" aria-label="Štítky spisu">{labels.map((l) => <li key={l} className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-950"><Tag size={11} aria-hidden="true" />{l}<button type="button" onClick={() => patchItem({ labels: labels.filter((x) => x !== l) })} aria-label={`Odebrat štítek ${l}`} className="cursor-pointer"><X size={11} /></button></li>)}</ul>}
         </div>
     );
 }

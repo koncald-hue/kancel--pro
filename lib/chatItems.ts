@@ -25,12 +25,12 @@ export const MAX_CASE_SHARE_FILES = 30;
 export const MAX_CASE_SHARE_BYTES = 60 * 1024 * 1024;
 export const MAX_TEXT = 4000;
 
-export const KIND_LABELS: Record<ChatKind, string> = { text: 'Zpráva', file: 'Soubor', case: 'Věc', client: 'Klient', property: 'Nemovitost' };
+export const KIND_LABELS: Record<ChatKind, string> = { text: 'Zpráva', file: 'Soubor', case: 'Spis', client: 'Klient', property: 'Nemovitost' };
 
 // Co se z věci pošle: údaje, chronologie, lhůty, kontakty, uložené nemovitosti a nahrané soubory (soubory šifrované klientským kanálem se přeskočí)
 export async function prepareCaseShare(caseId: string, note = ''): Promise<{ payload: Extract<ChatPayload, { kind: 'case' }>; files: CaseFile[]; totalBytes: number }> {
     const item = await loadCase(caseId);
-    if (!item) throw new Error('Věc nebyla nalezena.');
+    if (!item) throw new Error('Spis nebyla nalezena.');
     const bundle: CaseBundle = await loadBundle(caseId);
     const props = await supabase.from('case_properties').select('label, snapshot, data_as_of').eq('case_id', caseId);
     const usable = bundle.files.filter((f) => !(f as CaseFile & { enc?: boolean }).enc && f.size <= MAX_FILE_BYTES);
@@ -63,10 +63,10 @@ export async function fetchCaseFileBytes(file: Pick<CaseFile, 'path'>): Promise<
 // Převzetí věci od kolegy: vznikne nová věc u příjemce (včetně souborů, které se dešifrují a uloží znovu)
 export async function importCase(userId: string, payload: Extract<ChatPayload, { kind: 'case' }>, fromName: string, getFile: (i: number) => Promise<Uint8Array>, onProgress?: (done: number, total: number) => void): Promise<string> {
     const c = payload.case;
-    const created = await createCase(userId, { title: c.title.slice(0, 100) || 'Převzatá věc', situation: c.situation, summary: c.summary, urgency: c.urgency, steps: c.steps, deadline_ids: c.deadline_ids, offense_ids: c.offense_ids, template_keys: c.template_keys });
+    const created = await createCase(userId, { title: c.title.slice(0, 100) || 'Převzatý spis', situation: c.situation, summary: c.summary, urgency: c.urgency, steps: c.steps, deadline_ids: c.deadline_ids, offense_ids: c.offense_ids, template_keys: c.template_keys });
     await updateCase(created.id, { event_date: c.event_date, note: c.note, client_name: c.client_name, client_email: c.client_email, client_phone: c.client_phone, reference: c.reference, authority: c.authority });
     const row = { case_id: created.id, user_id: userId };
-    await insertRow('case_entries', { ...row, kind: 'note', title: 'Převzato od kolegy', body: `Věc převzata od ${fromName} dne ${new Date().toLocaleDateString('cs-CZ')}.${payload.note ? `\n\n${payload.note}` : ''}`, happened_on: null });
+    await insertRow('case_entries', { ...row, kind: 'note', title: 'Převzato od kolegy', body: `Spis převzata od ${fromName} dne ${new Date().toLocaleDateString('cs-CZ')}.${payload.note ? `\n\n${payload.note}` : ''}`, happened_on: null });
     for (const e of payload.entries) await insertRow('case_entries', { ...row, kind: e.kind, title: e.title.slice(0, 200), body: e.body, happened_on: e.happened_on });
     for (const d of payload.deadlines) await insertRow('case_deadlines', { ...row, title: d.title.slice(0, 200), due_date: d.due_date, done: d.done });
     for (const k of payload.contacts) await insertRow('case_contacts', { ...row, role: k.role, name: k.name, email: k.email, phone: k.phone, note: k.note });
@@ -107,7 +107,7 @@ export function previewText(p: ChatPayload): string {
     switch (p.kind) {
         case 'text': return p.text.slice(0, 80);
         case 'file': return `Soubor: ${p.files.map((f) => f.name).join(', ').slice(0, 70)}`;
-        case 'case': return `Věc: ${p.case.title}`;
+        case 'case': return `Spis: ${p.case.title}`;
         case 'client': return `Klient: ${p.client.name}`;
         case 'property': return `Nemovitost: ${p.label}`;
     }

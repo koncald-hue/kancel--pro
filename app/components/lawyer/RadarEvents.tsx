@@ -48,7 +48,7 @@ export function EventCard({ e, caseTitle, onChanged }: { e: RadarEvent; caseTitl
                 <strong className="min-w-0 flex-1 truncate text-slate-900">{e.title}</strong>
                 <span className="text-xs text-slate-400">{new Date(e.created_at).toLocaleDateString('cs-CZ')}</span>
             </div>
-            {caseTitle && <p className="mt-1 text-xs text-slate-500">Věc: <Link href={`/kancelar/veci/${e.case_id}`} className="font-semibold text-indigo-800 hover:underline">{caseTitle}</Link></p>}
+            {caseTitle && <p className="mt-1 text-xs text-slate-500">Spis: <Link href={`/kancelar/veci/${e.case_id}`} className="font-semibold text-indigo-800 hover:underline">{caseTitle}</Link></p>}
             {e.detail && <p className="mt-1 text-xs text-slate-600">{e.detail}</p>}
             <p className="mt-2 text-xs leading-relaxed text-slate-700">{info.action}</p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -61,7 +61,7 @@ export function EventCard({ e, caseTitle, onChanged }: { e: RadarEvent; caseTitl
                     <label className="block text-xs font-semibold text-slate-600">{info.months ? 'Datum zveřejnění rozhodnutí o úpadku (najdete v rejstříku)' : 'Konec lhůty podle zveřejněné výzvy'}<input type="date" value={date} onChange={(ev) => setDate(ev.target.value)} className={`${inputCls} mt-1 w-auto font-normal`} /></label>
                     {plan && <p className="text-xs text-slate-700"><strong>{plan.title}</strong>: konec {plan.weekday} {czDate(plan.end)}{plan.shiftedFrom ? ` (posunuto z ${czDate(plan.shiftedFrom)}: ${plan.reasons.join('; ')})` : ''}, doporučený interní termín {czDate(plan.internal)}.</p>}
                     <p className="text-xs text-amber-900">{info.months ? 'Lhůta je stanovena v rozhodnutí o úpadku. Výpočet je jen návrh, před přidáním ji v rozhodnutí ověřte.' : 'Lhůtu ověřte ve zveřejněné výzvě likvidátora.'}</p>
-                    <button type="button" onClick={() => void addDeadline()} disabled={!plan || busy} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <CalendarPlus size={15} />} Přidat lhůtu do věci</button>
+                    <button type="button" onClick={() => void addDeadline()} disabled={!plan || busy} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <CalendarPlus size={15} />} Přidat lhůtu do spisu</button>
                     {error && <p role="alert" className="text-xs text-rose-800">{error}</p>}
                 </div>
             )}
@@ -125,7 +125,7 @@ export function CaseRadarBanner({ caseId }: { caseId: string }) {
     if (!events.length) return null;
     return (
         <section className="mt-4 rounded-2xl border border-rose-200 bg-rose-50/60 p-4" aria-label="Radar">
-            <p className="flex items-center gap-2 text-sm font-bold text-rose-950"><Radar size={16} aria-hidden="true" /> Radar zjistil {events.length === 1 ? 'událost' : `${events.length} události`} u strany této věci</p>
+            <p className="flex items-center gap-2 text-sm font-bold text-rose-950"><Radar size={16} aria-hidden="true" /> Radar zjistil {events.length === 1 ? 'událost' : `${events.length} události`} u strany tohoto spisu</p>
             <ul className="mt-2 space-y-2">{events.map((e) => <EventCard key={e.id} e={e} onChanged={() => void reload()} />)}</ul>
         </section>
     );

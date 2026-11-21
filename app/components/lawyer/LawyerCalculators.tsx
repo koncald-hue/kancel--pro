@@ -46,7 +46,7 @@ export default function LawyerCalculators() {
 }
 
 function CaseSelect({ cases, value, onChange }: { cases: LegalCase[]; value: string; onChange: (id: string) => void }) {
-    return <label className={label}>Věc pro vyúčtování (nepovinné)<select value={value} onChange={(e) => onChange(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">Bez věci</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}</select></label>;
+    return <label className={label}>Spis pro vyúčtování (nepovinné)<select value={value} onChange={(e) => onChange(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">Bez spisu</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}</select></label>;
 }
 
 function useDraft(cases: LegalCase[]) {

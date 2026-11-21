@@ -38,7 +38,7 @@ export default function SubstituteBanner() {
             <Link key={s.id} href="/kancelar/veci" className={`flex flex-wrap items-center gap-3 rounded-2xl border p-4 text-sm hover:shadow-sm ${s.late ? 'border-rose-300 bg-rose-50 text-rose-950' : 'border-indigo-200 bg-indigo-50 text-indigo-950'}`}>
                 <UserRoundCheck size={18} aria-hidden="true" />
                 <span className="min-w-0 flex-1"><strong>Zastupujete {s.user_name}</strong> do {dmy(s.to_on)}. {s.late ? `Po termínu: ${s.late}. ` : ''}Na 7 dní: {s.soon} {s.soon === 1 ? 'termín' : s.soon >= 2 && s.soon <= 4 ? 'termíny' : 'termínů'}.</span>
-                <span className="font-semibold underline">Otevřít věci</span>
+                <span className="font-semibold underline">Otevřít spis</span>
             </Link>
         ))}</>
     );

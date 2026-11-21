@@ -54,7 +54,7 @@ export default function MoneyOverview() {
                 <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Co teď</h2>
                 <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {([
-                        ['/kancelar/vykazy', Clock3, 'Zapsat čas', 'Přidejte odpracované hodiny ke věci a klientovi.'],
+                        ['/kancelar/vykazy', Clock3, 'Zapsat čas', 'Přidejte odpracované hodiny ke spisu a klientovi.'],
                         ['/kancelar/faktury', FilePlus2, 'Vyfakturovat', 'Z výkazů práce a ceníku sestavte vyúčtování.'],
                         ['/kancelar/kalkulacky', Calculator, 'Odměna podle tarifu', 'Spočítejte odměnu a náklady řízení a pošlete je do vyúčtování.'],
                         ['/kancelar/kalkulacky', Percent, 'Úrok z prodlení', 'Zákonný úrok s podporou částečných úhrad.'],

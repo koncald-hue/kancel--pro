@@ -4,7 +4,7 @@ import { generateToken } from '@/lib/portal';
 const token = generateToken();
 type Row = Record<string, unknown>;
 const tables: Record<string, Row[]> = {
-    client_links: [{ id: 'l1', case_id: 'c1', user_id: 'secret-lawyer-id', token, label: 'Moje věc', status_text: 'Čekáme', expires_at: null, revoked: false, opens: 0, onboarded_at: '2026-11-01', client_name: 'Klient' }],
+    client_links: [{ id: 'l1', case_id: 'c1', user_id: 'secret-lawyer-id', token, label: 'Moje spisy', status_text: 'Čekáme', expires_at: null, revoked: false, opens: 0, onboarded_at: '2026-11-01', client_name: 'Klient' }],
     lawyer_access: [{ firm_name: 'AK Novák', display_name: 'JUDr. Novák', verification_status: 'verified', profession: 'advokat', verified_at: '2026-11-01', bar_number: '12345', status: 'active', until: '2999-01-01' }],
     cases: [{ title: 'Interní název' }],
     client_requests: [{ id: 'r1', title: 'Smlouva', done: false }],
@@ -32,7 +32,7 @@ describe('client portal API', () => {
         expect(res.status).toBe(200);
         const text = JSON.stringify(await res.json());
         expect(text).toContain('AK Novák');
-        expect(text).toContain('Moje věc');
+        expect(text).toContain('Moje spisy');
         expect(text).not.toContain('secret-lawyer-id');
         expect(text).not.toContain('Interní název');
     });
@@ -59,7 +59,7 @@ describe('client portal API', () => {
         const body = await res.json();
         (tables.lawyer_access[0] as Record<string, unknown>).verification_status = 'verified';
         expect(body.unverified).toBe(true);
-        expect(JSON.stringify(body)).not.toContain('Moje věc');
+        expect(JSON.stringify(body)).not.toContain('Moje spisy');
     });
 
     it('stops serving the client page when the subscription has expired', async () => {
@@ -68,6 +68,6 @@ describe('client portal API', () => {
         const body = await res.json();
         (tables.lawyer_access[0] as Record<string, unknown>).until = '2999-01-01';
         expect(body.inactive).toBe(true);
-        expect(JSON.stringify(body)).not.toContain('Moje věc');
+        expect(JSON.stringify(body)).not.toContain('Moje spisy');
     });
 });

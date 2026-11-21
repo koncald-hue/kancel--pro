@@ -21,7 +21,7 @@ const dateCz = (iso: string) => { const [y, m, d] = iso.slice(0, 10).split('-');
 
 export function caseHeader(c: Pick<LegalCase, 'title' | 'reference' | 'authority' | 'client_name' | 'status' | 'summary' | 'note'>): string {
     return [
-        `Věc: ${c.title}`,
+        `Spis: ${c.title}`,
         c.client_name ? `Klient: ${c.client_name}` : '',
         c.reference ? `Spisová značka: ${c.reference}` : '',
         c.authority ? `Soud / úřad: ${c.authority}` : '',

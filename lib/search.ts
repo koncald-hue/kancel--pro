@@ -7,10 +7,10 @@ const inCase = (r: SearchRow) => (r.case_id ? `/kancelar/veci/${r.case_id}` : '/
 
 // Kam vede který druh nálezu a jak se jmenuje skupina
 export const KINDS: Record<string, Meta> = {
-    vec: { label: 'Věci', icon: Briefcase, href: (r) => `/kancelar/veci/${r.id}` },
+    vec: { label: 'Spisy', icon: Briefcase, href: (r) => `/kancelar/veci/${r.id}` },
     klient: { label: 'Klienti', icon: Users, href: () => '/kancelar/klienti' },
     zapis: { label: 'Zápisy a poznámky', icon: NotebookText, href: inCase },
-    kontakt: { label: 'Kontakty ve věcech', icon: UserRound, href: inCase },
+    kontakt: { label: 'Kontakty ve spisech', icon: UserRound, href: inCase },
     soubor: { label: 'Soubory', icon: FileText, href: inCase },
     lhuta: { label: 'Lhůty', icon: CalendarClock, href: inCase },
     poptavka: { label: 'Poptávky', icon: Inbox, href: () => '/kancelar/poptavky' },

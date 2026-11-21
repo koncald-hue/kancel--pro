@@ -131,7 +131,7 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
                 <section className="rounded-2xl border border-slate-200 bg-white p-6">
                     <BookOpenCheck size={26} className="text-indigo-700" aria-hidden="true" />
                     <h2 className="mt-3 text-lg font-bold text-slate-900">Právní rešerše s judikaturou</h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">Kancelář vyhledá judikaturu Ústavního, Nejvyššího a dalších soudů a znění předpisů v právní databázi <strong>DirectCase</strong> a vyhodnotí je k vaší věci. Každý argument má odkaz na zdroj a citace se ověřují. Potřebujete vlastní účet DirectCase (část dotazů je zdarma, dál podle jejich ceníku).</p>
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">Kancelář vyhledá judikaturu Ústavního, Nejvyššího a dalších soudů a znění předpisů v právní databázi <strong>DirectCase</strong> a vyhodnotí je k vašemu spisu. Každý argument má odkaz na zdroj a citace se ověřují. Potřebujete vlastní účet DirectCase (část dotazů je zdarma, dál podle jejich ceníku).</p>
                     {conn === 'broken' && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">Uložené přihlášení se nepodařilo dešifrovat. Odemkněte správné šifrovací heslo, nebo se připojte znovu.</p>}
                     <button type="button" onClick={() => void connect()} className={`${primaryBtn} mt-4`}><Link2 size={15} /> Připojit účet DirectCase</button>
                     {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
@@ -143,10 +143,10 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
                     <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5" aria-label="Nová rešerše">
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Scale size={18} className="text-indigo-700" /> Nová rešerše</h2>
                         <label className="block text-xs font-semibold text-slate-600">Právní otázka *<textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={3} maxLength={1500} placeholder="např. Kdy začíná běžet subjektivní promlčecí lhůta u práva na vydání bezdůvodného obohacení, když ochuzený o plnění nevěděl?" className={`${inputCls} mt-1 font-normal`} /></label>
-                        <label className="block text-xs font-semibold text-slate-600">Skutkový popis (předvyplněno z věci, upravte)<textarea value={facts} onChange={(e) => setFacts(e.target.value)} rows={5} maxLength={6000} className={`${inputCls} mt-1 font-normal`} /></label>
+                        <label className="block text-xs font-semibold text-slate-600">Skutkový popis (předvyplněno ze spisu, upravte)<textarea value={facts} onChange={(e) => setFacts(e.target.value)} rows={5} maxLength={6000} className={`${inputCls} mt-1 font-normal`} /></label>
                         <fieldset className="rounded-xl border border-slate-200 p-3">
                             <legend className="px-1 text-xs font-semibold text-slate-600">Podklady ze spisu (nepovinné, vybrané dokumenty se zanalyzují a anonymizují)</legend>
-                            {bundle.entries.length === 0 && bundle.files.length === 0 ? <p className="text-xs text-slate-500">Ve věci zatím nejsou žádné zápisy ani soubory.</p> : (
+                            {bundle.entries.length === 0 && bundle.files.length === 0 ? <p className="text-xs text-slate-500">Ve spisu zatím nejsou žádné zápisy ani soubory.</p> : (
                                 <ul className="max-h-56 space-y-1 overflow-y-auto">
                                     {bundle.entries.map((e) => { const key = `e:${e.id}`; const p = picked[key]; return (
                                         <li key={key}><label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700"><input type="checkbox" checked={!!p} onChange={() => void toggleDoc(key, e.title, 'zápis', async () => ({ ok: true, text: `${e.title}\n${e.body}`.slice(0, 8000) }))} className="mt-1 h-4 w-4 accent-indigo-800" /><NotebookText size={14} className="mt-1 shrink-0 text-slate-400" aria-hidden="true" /><span className="min-w-0 flex-1 truncate">{e.title || '(zápis)'}<span className="ml-1.5 text-xs text-slate-400">zápis</span></span></label></li>
@@ -172,7 +172,7 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
                     </section>
 
                     {result && (
-                        <Report result={result} chip={(id) => sourceChip(id, result)} actions={<button type="button" onClick={() => void save()} className={primaryBtn}><Check size={15} /> Uložit rešerši do věci</button>} />
+                        <Report result={result} chip={(id) => sourceChip(id, result)} actions={<button type="button" onClick={() => void save()} className={primaryBtn}><Check size={15} /> Uložit rešerši do spisu</button>} />
                     )}
                 </>
             )}

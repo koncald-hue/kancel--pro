@@ -45,9 +45,9 @@ describe('import: values', () => {
         expect(minutesFrom({ duration: '1:30' })).toBe(90); expect(minutesFrom({ hours: '1,5' })).toBe(90); expect(minutesFrom({ minutes: '45' })).toBe(45); expect(minutesFrom({ duration: '0,5' })).toBe(30);
     });
     it('guesses what the file contains', () => {
-        expect(detectEntity(['Datum', 'Věc', 'Hodiny', 'Popis']).entity).toBe('cas');
-        expect(detectEntity(['Spisová značka', 'Soud', 'Klient', 'Název věci']).entity).toBe('veci');
-        expect(detectEntity(['Věc', 'Lhůta', 'Konec lhůty']).entity).toBe('lhuty');
+        expect(detectEntity(['Datum', 'Spis', 'Hodiny', 'Popis']).entity).toBe('cas');
+        expect(detectEntity(['Spisová značka', 'Soud', 'Klient', 'Název spisu']).entity).toBe('veci');
+        expect(detectEntity(['Spis', 'Lhůta', 'Konec lhůty']).entity).toBe('lhuty');
     });
 });
 
@@ -70,7 +70,7 @@ describe('import: linking and planning', () => {
         const lt = { headers: ['Spisová značka', 'Lhůta', 'Datum'], rows: [['12 C 34/2026', 'Vyjádření', '30.11.2026'], ['neexistuje', 'X', '1.1.2027'], ['12 C 34/2026', 'Špatné', 'xx']] };
         const plan = planImport('lhuty', buildRecords('lhuty', lt, suggestMapping('lhuty', lt.headers)), existing, { createMissingClients: false, fillExisting: false });
         expect(plan.map((p) => p.action)).toEqual(['create', 'error', 'error']); expect(plan[0].caseId).toBe('k1');
-        const tt = { headers: ['Datum', 'Věc', 'Hodiny', 'Popis'], rows: [['2.11.2026', 'Spor o dluh', '1,5', 'Porada']] };
+        const tt = { headers: ['Datum', 'Spis', 'Hodiny', 'Popis'], rows: [['2.11.2026', 'Spor o dluh', '1,5', 'Porada']] };
         const p = planImport('cas', buildRecords('cas', tt, suggestMapping('cas', tt.headers)), existing, { createMissingClients: false, fillExisting: false });
         expect(p[0]).toMatchObject({ action: 'create', caseId: 'k1' }); expect(p[0].row.rec.minutesOut).toBe('90');
     });
@@ -89,24 +89,24 @@ describe('import: linking and planning', () => {
 describe('import: whole workbook', () => {
     const sheets = {
         Klienti: { headers: ['Jméno / název', 'E-mail', 'Telefon', 'Adresa', 'IČO', 'DIČ', 'Datum narození', 'Hodinová sazba', 'Poznámka'], rows: [['Jan Novotný', 'jan.novotny@example.cz', '603111222', 'Vinohradská 12, Praha', '', '', '12. 4. 1981', '2 500', ''], ['Stavby Dvořák s.r.o.', 'info@dvorak.cz', '224555666', 'Plzeň', '27082440', 'CZ27082440', '', '3 000', '']] },
-        'Věci': { headers: ['Název věci', 'Spisová značka', 'Soud nebo úřad', 'Klient', 'Stav', 'Popis věci', 'Poznámka'], rows: [['Rozvod', '12 C 45/2026', 'OS Praha 2', 'Jan Novotný', 'Otevřená', 'Rozvod', ''], ['Spor o dílo', '31 C 77/2025', 'OS Plzeň', 'Stavby Dvořák s.r.o.', 'Otevřená', '', ''], ['Revize smlouvy', '', '', 'Nový Klient', 'Uzavřená', '', '']] },
-        'Lhůty': { headers: ['Věc', 'Název lhůty', 'Datum', 'Splněno'], rows: [['12 C 45/2026', 'Vyjádření', '15. 1. 2027', 'ne'], ['31 C 77/2025', 'Poplatek', '2. 11. 2026', 'ano'], ['99 C 1/2026', 'Odvolání', '1. 2. 2027', 'ne']] },
-        'Kontakty ve věcech': { headers: ['Věc', 'Jméno / název', 'Role', 'E-mail', 'Telefon', 'Poznámka'], rows: [['12 C 45/2026', 'Lucie Novotná', 'protistrana', 'lucie@example.cz', '604123456', '']] },
-        'Čas': { headers: ['Věc', 'Datum', 'Hodiny', 'Popis činnosti', 'Sazba', 'Vyfakturováno'], rows: [['Revize smlouvy', '4. 11. 2026', '1,5', 'Porada', '2500', 'ano'], ['Spor o dluh', '5. 11. 2026', '2', 'Studium', '3000', 'ne']] },
+        'Spisy': { headers: ['Název spisu', 'Spisová značka', 'Soud nebo úřad', 'Klient', 'Stav', 'Popis spisu', 'Poznámka'], rows: [['Rozvod', '12 C 45/2026', 'OS Praha 2', 'Jan Novotný', 'Otevřená', 'Rozvod', ''], ['Spor o dílo', '31 C 77/2025', 'OS Plzeň', 'Stavby Dvořák s.r.o.', 'Otevřená', '', ''], ['Revize smlouvy', '', '', 'Nový Klient', 'Uzavřená', '', '']] },
+        'Lhůty': { headers: ['Spis', 'Název lhůty', 'Datum', 'Splněno'], rows: [['12 C 45/2026', 'Vyjádření', '15. 1. 2027', 'ne'], ['31 C 77/2025', 'Poplatek', '2. 11. 2026', 'ano'], ['99 C 1/2026', 'Odvolání', '1. 2. 2027', 'ne']] },
+        'Kontakty ve spisech': { headers: ['Spis', 'Jméno / název', 'Role', 'E-mail', 'Telefon', 'Poznámka'], rows: [['12 C 45/2026', 'Lucie Novotná', 'protistrana', 'lucie@example.cz', '604123456', '']] },
+        'Čas': { headers: ['Spis', 'Datum', 'Hodiny', 'Popis činnosti', 'Sazba', 'Vyfakturováno'], rows: [['Revize smlouvy', '4. 11. 2026', '1,5', 'Porada', '2500', 'ano'], ['Spor o dluh', '5. 11. 2026', '2', 'Studium', '3000', 'ne']] },
     };
     it('recognises every sheet and maps every column', () => {
-        const want: Record<string, string> = { Klienti: 'klienti', 'Věci': 'veci', 'Lhůty': 'lhuty', 'Kontakty ve věcech': 'kontakty', 'Čas': 'cas' };
+        const want: Record<string, string> = { Klienti: 'klienti', 'Spisy': 'veci', 'Lhůty': 'lhuty', 'Kontakty ve spisech': 'kontakty', 'Čas': 'cas' };
         for (const [name, t] of Object.entries(sheets)) {
             const { entity } = detectEntity(t.headers, name, t.rows);
             expect(entity).toBe(want[name]);
             expect(suggestMapping(entity, t.headers, t.rows).filter((m) => !m)).toEqual([]);
         }
-        expect(suggestMapping('veci', sheets['Věci'].headers)).toEqual(['title', 'reference', 'authority', 'client', 'status', 'description', 'note']);
+        expect(suggestMapping('veci', sheets['Spisy'].headers)).toEqual(['title', 'reference', 'authority', 'client', 'status', 'description', 'note']);
         expect(suggestMapping('lhuty', sheets['Lhůty'].headers)).toEqual(['case', 'title', 'date', 'done']);
         expect(suggestMapping('cas', sheets['Čas'].headers)).toEqual(['case', 'date', 'hours', 'description', 'rate', 'billed']);
     });
     it('detects sheets by headers alone, without a sheet name', () => {
-        expect(detectEntity(sheets['Věci'].headers).entity).toBe('veci');
+        expect(detectEntity(sheets['Spisy'].headers).entity).toBe('veci');
         expect(detectEntity(sheets['Čas'].headers).entity).toBe('cas');
     });
     it('recognises unnamed columns by their content', () => {

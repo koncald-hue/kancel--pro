@@ -7,5 +7,5 @@ export const greetingOf = (v: unknown): string => (typeof v === 'string' ? v.rep
 // Text připomenutí podkladů: jen otevřené žádosti, ke kterým klient zatím nic nenahrál
 export function reminderText(openTitles: string[], url: string, name = ''): string {
     const list = openTitles.map((t) => `• ${t}`).join('\n');
-    return `Dobrý den${name ? `, ${name}` : ''},\n\nrád(a) bych vás požádal(a) o doplnění těchto podkladů k vaší věci:\n${list}\n\nNahrát je můžete na svém soukromém odkazu:\n${url}\n\nOdkaz otevřete celý, včetně části za znakem #, a nikomu ho nepředávejte. Děkuji.`;
+    return `Dobrý den${name ? `, ${name}` : ''},\n\nrád(a) bych vás požádal(a) o doplnění těchto podkladů k vašemu spisu:\n${list}\n\nNahrát je můžete na svém soukromém odkazu:\n${url}\n\nOdkaz otevřete celý, včetně části za znakem #, a nikomu ho nepředávejte. Děkuji.`;
 }

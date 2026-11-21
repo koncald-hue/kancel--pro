@@ -45,7 +45,7 @@ export function buildDossierHtml(item: LegalCase, bundle: CaseBundle, deadlines:
     const sections: { title: string; html: string }[] = [];
     const add = (title: string, html: string) => { if (html) sections.push({ title, html }); };
 
-    add('Popis věci', [item.situation && `<p>${esc(item.situation)}</p>`, item.summary && `<p>${esc(item.summary)}</p>`].filter(Boolean).join(''));
+    add('Popis spisu', [item.situation && `<p>${esc(item.situation)}</p>`, item.summary && `<p>${esc(item.summary)}</p>`].filter(Boolean).join(''));
     add('Související ustanovení', offenses.length ? `<ul>${offenses.map((o) => `<li><b>${esc(o.title)}</b>, ${esc(o.lawSection)}<br><small>${esc(o.sanction)}</small></li>`).join('')}</ul>` : '');
     add('Časová osa', events.length ? `<table>${events.map((e) => `<tr><td class="d">${cz(e.happened_on ?? e.created_at.slice(0, 10))}</td><td><b>${esc(e.title)}</b>${e.body ? `<br><small>${esc(e.body)}</small>` : ''}</td></tr>`).join('')}</table>` : '');
     add('Lhůty a termíny', deadlines.length ? `<table>${deadlines.map((d) => `<tr><td class="d">${cz(d.iso)}</td><td>${esc(d.title)}${d.done ? ' (splněno)' : ''}<br><small>${d.source === 'law' ? 'zákonná lhůta' : 'vlastní termín'}</small></td></tr>`).join('')}</table>` : '');

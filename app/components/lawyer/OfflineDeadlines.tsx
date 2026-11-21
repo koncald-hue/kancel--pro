@@ -34,7 +34,7 @@ export function OfflineCard() {
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="off-h">
             <h2 id="off-h" className="flex items-center gap-2 text-lg font-bold text-slate-900"><CloudOff size={18} className="text-indigo-700" aria-hidden="true" /> Lhůty bez připojení</h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">Když zapnete, uloží se do tohoto zařízení nesplněné lhůty na nejbližších {OFFLINE_DAYS} dní (jen název lhůty, datum a název věci) a uvidíte je i bez internetu. Nikdy se neukládá obsah spisů ani údaje klientů. Po odhlášení se uložené lhůty smažou.</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">Když zapnete, uloží se do tohoto zařízení nesplněné lhůty na nejbližších {OFFLINE_DAYS} dní (jen název lhůty, datum a název spisu) a uvidíte je i bez internetu. Nikdy se neukládá obsah spisů ani údaje klientů. Po odhlášení se uložené lhůty smažou.</p>
             <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><input type="checkbox" checked={enabled} onChange={(e) => toggle(e.target.checked)} /> Ukládat lhůty do tohoto zařízení</label>
             <p className="mt-2 text-xs text-slate-500">Zapínejte jen na zařízení, které používáte jen vy a které má zámek obrazovky. Je to nastavení pro každé zařízení zvlášť.</p>
         </section>

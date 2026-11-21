@@ -56,7 +56,7 @@ export default function PowersRegister() {
             <header className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900"><ScrollText size={22} className="text-indigo-800" /> Registr plných mocí</h1>
-                    <p className="mt-1 text-sm text-slate-600">Kdo vám dal plnou moc, k jaké věci a do kdy. Kdo brzy končí, je nahoře.</p>
+                    <p className="mt-1 text-sm text-slate-600">Kdo vám dal plnou moc, k jakému spisu a do kdy. Kdo brzy končí, je nahoře.</p>
                 </div>
                 {!adding && <button type="button" onClick={() => setAdding(true)} className={primaryBtn}><Plus size={15} /> Přidat plnou moc</button>}
             </header>
@@ -68,7 +68,7 @@ export default function PowersRegister() {
                     <label className="text-xs font-semibold text-slate-700">Zmocnitel (kdo plnou moc dal)<input required value={form.grantor} onChange={(e) => setForm({ ...form, grantor: e.target.value })} maxLength={200} className={`${inputCls} mt-1`} /></label>
                     <label className="text-xs font-semibold text-slate-700">Zmocněnec (komu)<input value={form.grantee} onChange={(e) => setForm({ ...form, grantee: e.target.value })} maxLength={200} placeholder="vy nebo kolega" className={`${inputCls} mt-1`} /></label>
                     <label className="text-xs font-semibold text-slate-700">Druh<select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as PowerKind })} className={`${inputCls} mt-1`}>{(Object.keys(KIND_LABEL) as PowerKind[]).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}</select></label>
-                    <label className="text-xs font-semibold text-slate-700">K věci (nepovinné)<select value={form.case_id} onChange={(e) => setForm({ ...form, case_id: e.target.value })} className={`${inputCls} mt-1`}><option value="">Bez věci</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
+                    <label className="text-xs font-semibold text-slate-700">Ke spisu (nepovinné)<select value={form.case_id} onChange={(e) => setForm({ ...form, case_id: e.target.value })} className={`${inputCls} mt-1`}><option value="">Bez spisu</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
                     <label className="text-xs font-semibold text-slate-700">Platí od<input type="date" value={form.valid_from} onChange={(e) => setForm({ ...form, valid_from: e.target.value })} className={`${inputCls} mt-1`} /></label>
                     <label className="text-xs font-semibold text-slate-700">Platí do (prázdné = bez omezení)<input type="date" value={form.valid_to} onChange={(e) => setForm({ ...form, valid_to: e.target.value })} className={`${inputCls} mt-1`} /></label>
                     <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Poznámka<input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} maxLength={1000} className={`${inputCls} mt-1`} /></label>

@@ -13,26 +13,26 @@ const E2EE = [
     ['Hlavní klíč advokáta', 'Vzniká v prohlížeči, zabalený šifrovacím heslem a záchranným kódem. Bez hesla nebo kódu ho nikdo neobnoví, ani provozovatel.'],
 ];
 const RIGHTS = [
-    ['Věci, lhůty, klienti, kontakty, faktury, výkazy, úschovy', 'Nejsou end-to-end šifrované. Chrání je přístupová práva přímo v databázi (každý advokát vidí jen svá data a věci, které mu kolega výslovně sdílel), šifrování přenosu a šifrování v klidu u poskytovatele databáze.'],
-    ['Obyčejné soubory ve spisu (nahrané advokátem)', 'Uložené v úložišti s právy podle věci. Provozovatel k nim má technicky přístup jako správce databáze; přístup omezuje organizace a auditní záznam.'],
+    ['Spisy, lhůty, klienti, kontakty, faktury, výkazy, úschovy', 'Nejsou end-to-end šifrované. Chrání je přístupová práva přímo v databázi (každý advokát vidí jen svá data a spisy, které mu kolega výslovně sdílel), šifrování přenosu a šifrování v klidu u poskytovatele databáze.'],
+    ['Obyčejné soubory ve spisu (nahrané advokátem)', 'Uložené v úložišti s právy podle spisu. Provozovatel k nim má technicky přístup jako správce databáze; přístup omezuje organizace a auditní záznam.'],
     ['Evidence úschov', 'Vidí je jen vlastník záznamu. Pohyby se jen přidávají a nejdou přepsat ani smazat.'],
 ];
 const CONTROLS = [
     'Dvoufázové přihlášení (TOTP) vynucené v samotné databázi, ne jen v aplikaci.',
-    'Auditní záznam otevření a změn ve věcech, který si advokát může projít.',
+    'Auditní záznam otevření a změn ve spisech, který si advokát může projít.',
     'Omezení počtu pokusů a ochrana proti hádání kódů klientského odkazu.',
     'Přísná Content-Security-Policy, zákaz vložení aplikace do cizí stránky a ochrana proti přesměrování.',
     'Hlídání lhůt a práv v databázi, ne jen v rozhraní: kolega ani vedoucí kanceláře nevidí data, která mu nebyla sdílena.',
-    'Kontrola střetu zájmů napříč kanceláří vrací jen to, že shoda existuje, nikdy jméno kolegy ani věc.',
+    'Kontrola střetu zájmů napříč kanceláří vrací jen to, že shoda existuje, nikdy jméno kolegy ani spis.',
     'AI asistent je vypnutý, dokud advokát neudělí souhlas. Odesílá se jen vybraný text a před odesláním se zakryjí jména klienta a kontaktů a identifikátory.',
     'Anonymizér v aplikaci zakryje jména, rodná čísla, účty, adresy a kontakty číslovanými značkami a po odpovědi AI je vrátí zpět. Probíhá jen ve vašem prohlížeči, text se neodesílá ani neukládá.',
-    'Přístupové tokeny ke kalendářům Google a Microsoft jsou uložené šifrovaně a do kalendáře se zapisují jen názvy a data lhůt, nikdy obsah věci. Push upozornění nesou jen počty lhůt, žádná jména.',
-    'Offline lhůty na zařízení jsou nepovinné, zapíná je advokát sám a jdou smazat jedním tlačítkem. Servisní skript aplikace do paměti neukládá žádná data věcí.',
+    'Přístupové tokeny ke kalendářům Google a Microsoft jsou uložené šifrovaně a do kalendáře se zapisují jen názvy a data lhůt, nikdy obsah spisu. Push upozornění nesou jen počty lhůt, žádná jména.',
+    'Offline lhůty na zařízení jsou nepovinné, zapíná je advokát sám a jdou smazat jedním tlačítkem. Servisní skript aplikace do paměti neukládá žádná data spisů.',
 ];
 // Kdo data zpracovává. Region u jednotlivých dodavatelů doplníme po ověření v jejich nastavení a ve zpracovatelských smlouvách.
 const PROCESSORS = [
-    ['Supabase', 'Databáze a úložiště souborů: věci, klienti, lhůty, faktury, nahrané soubory a zašifrované zprávy.'],
-    ['Vercel', 'Hosting aplikace a plánované úlohy. Trvale neukládá obsah věcí.'],
+    ['Supabase', 'Databáze a úložiště souborů: spisy, klienti, lhůty, faktury, nahrané soubory a zašifrované zprávy.'],
+    ['Vercel', 'Hosting aplikace a plánované úlohy. Trvale neukládá obsah spisů.'],
     ['OpenAI', 'Jen text, který advokát při použití AI potvrdí, a to po zakrytí jmen a identifikátorů. Jen se souhlasem.'],
     ['Comgate', 'Platby kartou a uložená karta pro automatické obnovování. Údaje o kartě Kancelář nevidí.'],
     ['Resend nebo Brevo', 'Odeslání e-mailů z aplikace (upozornění, pozvánky). Vidí adresu příjemce a text zprávy.'],

@@ -25,7 +25,7 @@ export function DatovkaMock() {
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-indigo-50 p-3">
                     <div><p className="font-semibold text-indigo-950">Odvolání</p><p className="text-xs text-indigo-900/70">Konec lhůty pondělí 7. 12. 2026 (posunuto z neděle)</p></div>
-                    <span className="rounded-lg bg-indigo-700 px-3 py-1.5 text-xs font-bold text-white">Uložit do věci</span>
+                    <span className="rounded-lg bg-indigo-700 px-3 py-1.5 text-xs font-bold text-white">Uložit do spisu</span>
                 </div>
             </div>
         </Window>
@@ -46,7 +46,7 @@ export function MailMock() {
                     <p className="text-xs text-slate-500">Od: Petr Novák</p>
                     <p className="mt-2 text-[13px] leading-relaxed text-slate-700">Dobrý den, posílám fotky, jak jste chtěla. Fakturu doložím v pátek.</p>
                     <div className="mt-2 flex flex-wrap gap-1.5"><span className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-600"><Paperclip size={10} /> foto-1.jpg</span><span className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-600"><Paperclip size={10} /> foto-2.jpg</span></div>
-                    <p className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 px-2.5 py-2 text-xs font-semibold text-emerald-900"><FolderInput size={13} /> Uložit do věci: Novák proti Dvořákovi</p>
+                    <p className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 px-2.5 py-2 text-xs font-semibold text-emerald-900"><FolderInput size={13} /> Uložit do spisu: Novák proti Dvořákovi</p>
                 </div>
             </div>
         </Window>
@@ -85,8 +85,8 @@ export function RadarMock() {
     return (
         <Window title="Přehled · Radar">
             <ul className="space-y-2 p-4 text-sm">
-                <li className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 p-3"><ShieldAlert size={16} className="mt-0.5 shrink-0 text-rose-700" /><span className="min-w-0"><span className="block font-semibold text-slate-900">Dlužník v insolvenci</span><span className="block text-xs text-slate-600">Stavby Horák s.r.o. · věc Novák proti Horákovi</span><span className="mt-1.5 inline-block rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-rose-800">Navržená lhůta: přihláška pohledávky</span></span></li>
-                <li className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3"><AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-700" /><span className="min-w-0"><span className="block font-semibold text-slate-900">Firma vstoupila do likvidace</span><span className="block text-xs text-slate-600">Obchod Jih a.s. · protistrana ve věci Svoboda</span></span></li>
+                <li className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/60 p-3"><ShieldAlert size={16} className="mt-0.5 shrink-0 text-rose-700" /><span className="min-w-0"><span className="block font-semibold text-slate-900">Dlužník v insolvenci</span><span className="block text-xs text-slate-600">Stavby Horák s.r.o. · spis Novák proti Horákovi</span><span className="mt-1.5 inline-block rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-rose-800">Navržená lhůta: přihláška pohledávky</span></span></li>
+                <li className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3"><AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-700" /><span className="min-w-0"><span className="block font-semibold text-slate-900">Firma vstoupila do likvidace</span><span className="block text-xs text-slate-600">Obchod Jih a.s. · protistrana ve spisu Svoboda</span></span></li>
                 <li className="flex items-start gap-3 rounded-xl border border-slate-200 p-3"><Briefcase size={16} className="mt-0.5 shrink-0 text-slate-500" /><span className="min-w-0"><span className="block font-semibold text-slate-900">Změna sídla</span><span className="block text-xs text-slate-600">Dvořák Trade s.r.o. · zkontrolujte doručovací adresu</span></span></li>
             </ul>
         </Window>
@@ -96,7 +96,7 @@ export function RadarMock() {
 // Podpis dokumentu klientem
 export function SignMock() {
     return (
-        <Window title="Věc · Podpisy">
+        <Window title="Spis · Podpisy">
             <div className="space-y-2 p-4 text-sm">
                 <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"><span className="min-w-0"><span className="block truncate font-semibold text-slate-900">Smlouva o poskytování právních služeb</span><span className="block text-xs text-slate-500">Petr Novák · ověřeno osobně + kód</span></span><Badge tone="bg-emerald-50 text-emerald-800">Podepsáno</Badge></div>
                 <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"><span className="min-w-0"><span className="block truncate font-semibold text-slate-900">Plná moc</span><span className="block text-xs text-slate-500">čeká na klienta · platí do 30. 11.</span></span><Badge tone="bg-amber-50 text-amber-800">Čeká</Badge></div>
@@ -109,7 +109,7 @@ export function SignMock() {
 // Klikatelný náhled aplikace v úvodu stránky
 const TABS = [
     { id: 'prehled', label: 'Přehled', icon: LayoutDashboard },
-    { id: 'vec', label: 'Věci', icon: Briefcase },
+    { id: 'vec', label: 'Spisy', icon: Briefcase },
     { id: 'datovky', label: 'Datové zprávy', icon: MailCheck },
     { id: 'email', label: 'E-mail', icon: Mail },
     { id: 'vykazy', label: 'Výkazy', icon: Clock3 },

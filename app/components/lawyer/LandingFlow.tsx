@@ -16,7 +16,7 @@ const FLOWS: Flow[] = [
         steps: [
             { icon: Mail, title: 'Přišla datová zpráva', text: 'Rozsudek, Okresní soud Plzeň-město, 12 C 345/2026.' },
             { icon: CalendarClock, title: 'Lhůta se spočítala sama', text: 'Odvolání do 15 dní od doručení. Poslední den: 24. 11. 2026.' },
-            { icon: Link2, title: 'Klient má odkaz', text: 'Petr Novák si otevře svou věc v telefonu. Bez registrace.' },
+            { icon: Link2, title: 'Klient má odkaz', text: 'Petr Novák si otevře svůj spis v telefonu. Bez registrace.' },
         ],
     },
     {
@@ -24,7 +24,7 @@ const FLOWS: Flow[] = [
         lead: 'Žádný Excel.',
         window: 'Výkazy a fakturace',
         steps: [
-            { icon: Timer, title: 'Zapsáno 2 h 30 min', text: 'Čas jde přímo do věci, s vaší hodinovou sazbou.' },
+            { icon: Timer, title: 'Zapsáno 2 h 30 min', text: 'Čas jde přímo do spisu, s vaší hodinovou sazbou.' },
             { icon: QrCode, title: 'Vyúčtování připraveno', text: 'Faktura s QR platbou. Pošlete ji jedním klepnutím.' },
             { icon: Wallet, title: 'Platba spárována', text: 'Kancelář pozná, že klient zaplatil, a faktura je uhrazená.' },
         ],

@@ -8,7 +8,7 @@ vi.mock('./useChannelKey', () => ({ useChannelKey: () => ({ key: null, hasEncryp
 
 afterEach(cleanup);
 
-const base = { item: { id: 'c1', title: 'Věc', steps: [], offense_ids: [], deadline_ids: [], template_keys: [], created_at: '2026-01-01' } as never, bundle: { folders: [], files: [], entries: [], deadlines: [], contacts: [] }, deadlines: [], onClose: vi.fn(), fail: vi.fn() };
+const base = { item: { id: 'c1', title: 'Spis', steps: [], offense_ids: [], deadline_ids: [], template_keys: [], created_at: '2026-01-01' } as never, bundle: { folders: [], files: [], entries: [], deadlines: [], contacts: [] }, deadlines: [], onClose: vi.fn(), fail: vi.fn() };
 
 describe('CaseExportPanel tiers', () => {
     it('offers only the printout to free users, with an upgrade note', () => {

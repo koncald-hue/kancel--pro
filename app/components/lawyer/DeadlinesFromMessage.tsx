@@ -91,7 +91,7 @@ export default function DeadlinesFromMessage({ record, msg, downloadedNow, cases
             }
             if (saved) { try { await insertRow('case_entries', { case_id: caseId, user_id: userId, kind: 'event', title: `Lhůty z datové zprávy: ${record.annotation || 'bez věci'}`.slice(0, 200), body: computed.map(({ r, e }) => `${r.title}: ${e ? czDate(e.end) : ''}`).join('; ').slice(0, 900), happened_on: today }); } catch { /* chronologie není kritická */ } }
             await supabase.from('data_message_checks').upsert({ user_id: userId, dm_id: record.id, deadlines: saved + dup, checked_at: new Date().toISOString(), note: '' }, { onConflict: 'user_id,dm_id' });
-            setDone(`Uloženo lhůt: ${saved}${dup ? `, ${dup} už ve věci bylo` : ''}. Najdete je v záložce Lhůty věci.`);
+            setDone(`Uloženo lhůt: ${saved}${dup ? `, ${dup} už ve spisu bylo` : ''}. Najdete je v záložce Lhůty věci.`);
             onSaved();
             scheduleGoogleSync();
         } catch (e) { setError(e instanceof Error ? e.message : 'Uložení se nepovedlo.'); }
@@ -165,7 +165,7 @@ export default function DeadlinesFromMessage({ record, msg, downloadedNow, cases
                         {!caseId && <p className="text-xs font-semibold text-rose-800">Nahoře vyberte věc, do které se lhůty uloží.</p>}
                         {!delivery.certain && !changed && <p className="text-xs font-semibold text-rose-800">Zpráva ještě není doručená. Lhůta zatím neběží. Zadejte datum doručení ručně, pokud je jisté.</p>}
                         <div className="flex flex-wrap gap-2">
-                            <button type="button" onClick={() => void save()} disabled={!canSave} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} Uložit vybrané lhůty{caseTitle ? ` do věci „${caseTitle}“` : ''} ({picked.length})</button>
+                            <button type="button" onClick={() => void save()} disabled={!canSave} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} Uložit vybrané lhůty{caseTitle ? ` do spisu „${caseTitle}“` : ''} ({picked.length})</button>
                             <button type="button" onClick={() => void markNone()} disabled={!confirm || busy || picked.length > 0 || (needManual && !manualRead)} className={ghostBtn} title={picked.length ? 'Zrušte výběr lhůt' : undefined}>Zpráva bez lhůty: označit jako zkontrolovanou</button>
                         </div>
                     </div>

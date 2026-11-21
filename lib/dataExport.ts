@@ -15,18 +15,18 @@ export function buildDataExport(d: DataExportInput): { files: ExportFile[]; coun
     const files: ExportFile[] = [
         csvFile('klienti.csv', ['Jméno', 'E-mail', 'Telefon', 'Adresa', 'IČO', 'DIČ', 'Datum narození', 'Hodinová sazba', 'Poznámka'],
             d.clients.map((c) => [s(c.name), s(c.email), s(c.phone), s(c.address), s(c.ico), s(c.dic), dmy(c.birth), s(c.hourly_rate), s(c.note)])),
-        csvFile('veci.csv', ['Název věci', 'Klient', 'Spisová značka', 'Soud nebo úřad', 'Stav', 'Popis', 'Poznámka', 'Založeno'],
+        csvFile('veci.csv', ['Název spisu', 'Klient', 'Spisová značka', 'Soud nebo úřad', 'Stav', 'Popis', 'Poznámka', 'Založeno'],
             d.cases.map((c) => [s(c.title), s(c.client_name), s(c.reference), s(c.authority), STATUS[s(c.status)] ?? s(c.status), s(c.situation), s(c.note), dmy(c.created_at)])),
-        csvFile('lhuty.csv', ['Věc', 'Úkol nebo lhůta', 'Termín', 'Splněno'],
+        csvFile('lhuty.csv', ['Spis', 'Úkol nebo lhůta', 'Termín', 'Splněno'],
             d.deadlines.map((r) => [caseTitle(r), s(r.title), dmy(r.due_date), r.done ? 'ano' : 'ne'])),
-        csvFile('kontakty-ve-vecech.csv', ['Věc', 'Role', 'Jméno', 'E-mail', 'Telefon', 'IČO', 'Poznámka'],
+        csvFile('kontakty-ve-vecech.csv', ['Spis', 'Role', 'Jméno', 'E-mail', 'Telefon', 'IČO', 'Poznámka'],
             d.contacts.map((r) => [caseTitle(r), s(r.role), s(r.name), s(r.email), s(r.phone), s(r.ico), s(r.note)])),
-        csvFile('zapisy-ve-vecech.csv', ['Věc', 'Datum', 'Druh', 'Nadpis', 'Text'],
+        csvFile('zapisy-ve-vecech.csv', ['Spis', 'Datum', 'Druh', 'Nadpis', 'Text'],
             d.entries.filter((r) => !r.enc).map((r) => [caseTitle(r), dmy(r.happened_on), s(r.kind), s(r.title), s(r.body)])),
-        csvFile('vykazy-casu.csv', ['Věc', 'Datum', 'Minuty', 'Popis', 'Sazba', 'Vyúčtováno'],
+        csvFile('vykazy-casu.csv', ['Spis', 'Datum', 'Minuty', 'Popis', 'Sazba', 'Vyúčtováno'],
             d.time.map((r) => [caseTitle(r), dmy(r.entry_date), s(r.minutes), s(r.description), s(r.rate), r.billed ? 'ano' : 'ne'])),
     ];
-    files.push({ name: 'CTI-ME.txt', content: 'Export dat z aplikace Kancelář. Soubory CSV (středník, UTF-8) otevřete v Excelu nebo je načtěte do jiného systému.\r\nNejsou v nich soubory ve spisech, šifrované zprávy klientů ani faktury: faktury jsou v Peníze → Export pro účetní, soubory ve spisu v kartě věci (Export spisu).\r\n' });
+    files.push({ name: 'CTI-ME.txt', content: 'Export dat z aplikace Kancelář. Soubory CSV (středník, UTF-8) otevřete v Excelu nebo je načtěte do jiného systému.\r\nNejsou v nich soubory ve spisech, šifrované zprávy klientů ani faktury: faktury jsou v Peníze → Export pro účetní, soubory ve spisu v kartě spisu (Export spisu).\r\n' });
     return { files, counts: { klienti: d.clients.length, veci: d.cases.length, lhuty: d.deadlines.length, kontakty: d.contacts.length, zapisy: d.entries.filter((r) => !r.enc).length, vykazy: d.time.length } };
 }
 export { zipFiles };

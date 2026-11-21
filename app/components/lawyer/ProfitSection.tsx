@@ -51,14 +51,14 @@ export default function ProfitSection() {
                 <div className="flex flex-wrap items-center gap-3">
                     <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} aria-label="Období" className={`${inputCls} w-auto py-1 text-xs`}>{PERIODS.map(([id, l]) => <option key={id} value={id}>{l}</option>)}</select>
                     <label className="flex items-center gap-1.5 text-xs text-slate-600">Moje náklady na hodinu <input value={cost} onChange={(e) => { setCost(e.target.value); try { localStorage.setItem(KEY, e.target.value); } catch { /* nic */ } }} inputMode="decimal" placeholder="nepovinné" aria-label="Náklady na hodinu (Kč)" className={`${inputCls} w-24 py-1`} /></label>
-                    <div className="flex gap-1 rounded-lg bg-slate-100 p-1" role="tablist">{([['case', 'Věci'], ['client', 'Klienti']] as const).map(([id, l]) => <button key={id} type="button" role="tab" aria-selected={by === id} onClick={() => setBy(id)} className={`rounded-md px-3 py-1 text-xs font-semibold cursor-pointer ${by === id ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600'}`}>{l}</button>)}</div>
+                    <div className="flex gap-1 rounded-lg bg-slate-100 p-1" role="tablist">{([['case', 'Spisy'], ['client', 'Klienti']] as const).map(([id, l]) => <button key={id} type="button" role="tab" aria-selected={by === id} onClick={() => setBy(id)} className={`rounded-md px-3 py-1 text-xs font-semibold cursor-pointer ${by === id ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600'}`}>{l}</button>)}</div>
                 </div>
             </div>
             {groups.length === 0 && <p className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">V tomto období není zapsaná práce ani faktura.</p>}
-            {groups.length > 0 && groups.some((g) => g.profit.unbilledValue > 0) && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">Nevyfakturovaná práce celkem: <strong>{money(groups.reduce((s, g) => s + g.profit.unbilledValue, 0))}</strong> (bez DPH). Nejvíc čeká ve {by === 'case' ? 'věci' : 'u klienta'} <strong>{[...groups].sort((a, b) => b.profit.unbilledValue - a.profit.unbilledValue)[0].name}</strong>.</p>}
+            {groups.length > 0 && groups.some((g) => g.profit.unbilledValue > 0) && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">Nevyfakturovaná práce celkem: <strong>{money(groups.reduce((s, g) => s + g.profit.unbilledValue, 0))}</strong> (bez DPH). Nejvíc čeká ve {by === 'case' ? 'spisu' : 'u klienta'} <strong>{[...groups].sort((a, b) => b.profit.unbilledValue - a.profit.unbilledValue)[0].name}</strong>.</p>}
             {groups.length > 0 && <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                 <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-2">{by === 'case' ? 'Věc' : 'Klient'}</th><th className="px-3 py-2 text-right">Hodin</th><th className="px-3 py-2 text-right">Hodnota práce</th><th className="px-3 py-2 text-right">K vyfakturování</th><th className="px-3 py-2 text-right">Vyfakturováno</th><th className="px-3 py-2 text-right">Zaplaceno</th><th className="px-3 py-2 text-right">Za hodinu</th><th className="px-3 py-2 text-right">Realizace</th><th className="px-3 py-2 text-right">Inkaso</th>{costNum && <th className="px-3 py-2 text-right">Zisk</th>}</tr></thead>
+                    <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-2">{by === 'case' ? 'Spis' : 'Klient'}</th><th className="px-3 py-2 text-right">Hodin</th><th className="px-3 py-2 text-right">Hodnota práce</th><th className="px-3 py-2 text-right">K vyfakturování</th><th className="px-3 py-2 text-right">Vyfakturováno</th><th className="px-3 py-2 text-right">Zaplaceno</th><th className="px-3 py-2 text-right">Za hodinu</th><th className="px-3 py-2 text-right">Realizace</th><th className="px-3 py-2 text-right">Inkaso</th>{costNum && <th className="px-3 py-2 text-right">Zisk</th>}</tr></thead>
                     <tbody className="divide-y divide-slate-100">
                         {groups.slice(0, 25).map((g) => (
                             <tr key={g.id}>
@@ -77,7 +77,7 @@ export default function ProfitSection() {
                     </tbody>
                 </table>
             </div>}
-            <p className="text-xs leading-relaxed text-slate-500"><strong>Za hodinu</strong> = zaplaceno bez DPH ÷ odpracované hodiny (skutečný výdělek). <strong>Realizace</strong> = vyfakturováno ÷ hodnota práce (kolik z odpracovaného jste dokázali vyúčtovat). <strong>Inkaso</strong> = zaplaceno ÷ vyfakturováno. Počítají se koruny bez DPH; koncepty a storno ne. Věci bez zapsaného času ukazují jen fakturaci.</p>
+            <p className="text-xs leading-relaxed text-slate-500"><strong>Za hodinu</strong> = zaplaceno bez DPH ÷ odpracované hodiny (skutečný výdělek). <strong>Realizace</strong> = vyfakturováno ÷ hodnota práce (kolik z odpracovaného jste dokázali vyúčtovat). <strong>Inkaso</strong> = zaplaceno ÷ vyfakturováno. Počítají se koruny bez DPH; koncepty a storno ne. Spisy bez zapsaného času ukazují jen fakturaci.</p>
         </section>
     );
 }

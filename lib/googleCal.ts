@@ -12,7 +12,7 @@ export const CALENDAR_NAME = 'Kancelář – lhůty';
 export const GOOGLE_CALLBACK_PATH = '/kancelar/google-pripojeni';
 
 export type Detail = 'minimal' | 'vec' | 'plne';
-export const DETAIL_LABELS: Record<Detail, string> = { minimal: 'Jen název lhůty (nejbezpečnější)', vec: 'Název lhůty a název věci', plne: 'Název lhůty, věc, klient a vysvětlení výpočtu' };
+export const DETAIL_LABELS: Record<Detail, string> = { minimal: 'Jen název lhůty (nejbezpečnější)', vec: 'Název lhůty a název spisu', plne: 'Název lhůty, spis, klient a vysvětlení výpočtu' };
 export type GoogleOptions = { detail: Detail; internal: boolean };
 export type GoogleTokens = { access_token: string; refresh_token?: string; expires_at: number };
 

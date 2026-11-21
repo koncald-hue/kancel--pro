@@ -56,12 +56,12 @@ export default function FirstSteps() {
             if (!a) return;
             setSteps([
                 { id: 'klient', label: 'Přidejte prvního klienta', hint: 'Nebo nahrajte celý seznam z Excelu či jiného programu.', href: '/kancelar/klienti', alt: ['/kancelar/import', 'Import dat'], done: clients !== 0 },
-                { id: 'vec', label: 'Založte první věc', hint: 'Stačí název, třeba „Novák proti Dvořákovi“. Hned se zkontroluje střet zájmů.', href: '/kancelar/veci', done: cases !== 0 },
-                { id: 'sablona', label: 'Nastavte úkoly pro nové věci', hint: 'Plná moc, AML, podklady: nová věc je dostane s termíny sama.', href: '/kancelar/sablony', done: tpl !== 0 },
-                { id: 'mail', label: 'Připojte e-mail', hint: 'E-maily se navrhnou ke správné věci a uložíte je jedním klepnutím.', href: '/kancelar/email', done: mail !== 0 },
-                { id: 'isds', label: 'Připojte datovou schránku', hint: 'Zprávy a lhůty z datovky přímo u věci.', href: '/kancelar/schranka', done: isds !== 0 },
+                { id: 'vec', label: 'Založte první spis', hint: 'Stačí název, třeba „Novák proti Dvořákovi“. Hned se zkontroluje střet zájmů.', href: '/kancelar/veci', done: cases !== 0 },
+                { id: 'sablona', label: 'Nastavte úkoly pro nové spisy', hint: 'Plná moc, AML, podklady: nový spis je dostane s termíny sám.', href: '/kancelar/sablony', done: tpl !== 0 },
+                { id: 'mail', label: 'Připojte e-mail', hint: 'E-maily se navrhnou ke správnému spisu a uložíte je jedním klepnutím.', href: '/kancelar/email', done: mail !== 0 },
+                { id: 'isds', label: 'Připojte datovou schránku', hint: 'Zprávy a lhůty z datovky přímo u spisu.', href: '/kancelar/schranka', done: isds !== 0 },
                 { id: 'cas', label: 'Zapište první čas', hint: 'Tlačítkem „Zapsat“ nahoře nebo klávesou N, odkudkoli.', done: time !== 0 },
-                ...(team >= 0 ? [{ id: 'tym', label: 'Pozvěte kolegy', hint: 'Sdílené věci, chat kanceláře a společné údaje na fakturách.', href: '/kancelar/tym', done: team > 1 }] : []),
+                ...(team >= 0 ? [{ id: 'tym', label: 'Pozvěte kolegy', hint: 'Sdílené spisy, chat kanceláře a společné údaje na fakturách.', href: '/kancelar/tym', done: team > 1 }] : []),
             ]);
         })().catch(() => { if (a) setSteps([]); });
         return () => { a = false; };

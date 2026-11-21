@@ -111,18 +111,18 @@ export default function CaseFinanceTab({ item, userId, fail, patchItem }: TabPro
                 <button type="submit" disabled={busy === 'time' || !form.duration.trim()} className={primaryBtn}>{busy === 'time' ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} Zapsat čas</button>
             </form>
 
-            <section aria-label="Výkazy práce ve věci">
+            <section aria-label="Výkazy práce ve spisu">
                 <div className="flex items-center justify-between"><h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500"><Clock3 size={13} /> Výkazy práce ({entries.length})</h2><Link href="/kancelar/vykazy" className="text-xs font-semibold text-indigo-800 hover:underline">Všechny výkazy</Link></div>
-                {entries.length === 0 ? <p className="mt-2 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">K věci zatím není zapsaný žádný čas.</p> : (
+                {entries.length === 0 ? <p className="mt-2 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">Ke spisu zatím není zapsaný žádný čas.</p> : (
                     <ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
                         {entries.slice(0, 15).map((e) => <li key={e.id} className="flex items-center gap-3 px-4 py-2.5 text-sm"><span className="w-20 shrink-0 text-xs text-slate-500">{dateCz(e.entry_date)}</span><span className="min-w-0 flex-1 truncate text-slate-800">{e.description || 'Právní služby'}</span><span className="shrink-0 text-xs text-slate-500">{formatMinutes(e.minutes)} h</span><span className="w-24 shrink-0 text-right font-semibold text-slate-900">{money(entryAmount(e))}</span><span className={`w-24 shrink-0 rounded-full px-2 py-0.5 text-center text-[11px] font-bold uppercase ${e.billed ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'}`}>{e.billed ? 'vyfakturováno' : 'k fakturaci'}</span></li>)}
                     </ul>
                 )}
             </section>
 
-            <section aria-label="Vyúčtování ke věci">
+            <section aria-label="Vyúčtování ke spisu">
                 <div className="flex items-center justify-between"><h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Vyúčtování ({invoices.length})</h2><Link href="/kancelar/faktury" className="text-xs font-semibold text-indigo-800 hover:underline">Fakturace</Link></div>
-                {invoices.length === 0 ? <p className="mt-2 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">K věci zatím není žádné vyúčtování.</p> : (
+                {invoices.length === 0 ? <p className="mt-2 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">Ke spisu zatím není žádné vyúčtování.</p> : (
                     <ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
                         {invoices.map((i) => (
                             <li key={i.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5 text-sm">

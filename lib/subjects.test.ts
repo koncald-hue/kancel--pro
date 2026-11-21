@@ -3,7 +3,7 @@ import { buildSubjects } from './subjects';
 
 const cases = [{ id: 'c1', title: 'Spis 1' }, { id: 'c2', title: 'Spis 2' }];
 describe('buildSubjects', () => {
-    it('sloučí stejnou osobu z různých věcí podle e-mailu a jména', () => {
+    it('sloučí stejnou osobu z různých spisů podle e-mailu a jména', () => {
         const s = buildSubjects([
             { id: 'a', case_id: 'c1', role: 'Protistrana', name: 'Jan Zoufalý', email: 'jan@x.cz', phone: '' },
             { id: 'b', case_id: 'c2', role: 'Svědek', name: 'Zoufalý Jan', email: 'JAN@x.cz', phone: '' },

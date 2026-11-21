@@ -29,7 +29,7 @@ export function caseHints(item: TabProps['item'], bundle: TabProps['bundle']): {
     if (item.deadline_ids.length > 0 && !item.event_date) hints.push({ tone: 'warn', text: 'Zadejte datum události v záložce Lhůty, jinak se zákonné lhůty nespočítají.' });
     if (bundle.files.length === 0) hints.push({ tone: 'tip', text: 'Nahrajte do spisu doručený dokument nebo jeho fotku, ať je vše na jednom místě.' });
     if (bundle.entries.filter((e) => e.kind === 'event').length === 0) hints.push({ tone: 'tip', text: 'Zapište do chronologie první událost, třeba kdy vám došlo oznámení.' });
-    if (bundle.contacts.length === 0) hints.push({ tone: 'tip', text: 'Přidejte kontakt na úřad nebo soud, který věc vyřizuje.' });
+    if (bundle.contacts.length === 0) hints.push({ tone: 'tip', text: 'Přidejte kontakt na úřad nebo soud, který spis vyřizuje.' });
     if (item.steps.length > 0 && item.steps.every((s) => s.done) && item.status === 'open') hints.push({ tone: 'tip', text: 'Všechny kroky jsou hotové. Můžete případ označit jako vyřešený.' });
     return hints;
 }
@@ -75,8 +75,8 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
                 </section>
             )}
 
-            {lawyer && <section aria-label="Údaje o věci" className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-                <h3 className="text-sm font-semibold text-slate-900">Údaje o věci a klient</h3>
+            {lawyer && <section aria-label="Údaje o spisu" className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                <h3 className="text-sm font-semibold text-slate-900">Údaje o spisu a klient</h3>
                 <AresPicker compact label="Klient je firma: najít v ARES" onPick={(c) => { void upsertAresClient(userId, c).then((name) => patchItem({ client_name: name })).catch(fail); }} />
                 <p className="text-xs text-slate-500">Klient, kterého sem zapíšete, se sám objeví v seznamu klientů (včetně e-mailu a telefonu) a půjde ho vybrat ve výkazech a ve vyúčtování.</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
@@ -88,7 +88,7 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
                     <datalist id="clients">{clients.map((c) => <option key={c.id} value={c.name} />)}</datalist>
                 </div>
                 <CaseMetaFields item={item} patchItem={patchItem} />
-                {lawyer && <Link href={`/kancelar/knihovna?case=${item.id}`} className="mt-3 mr-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><FileText size={13} aria-hidden="true" /> Vyplnit vzor dokumentu z údajů věci</Link>}
+                {lawyer && <Link href={`/kancelar/knihovna?case=${item.id}`} className="mt-3 mr-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><FileText size={13} aria-hidden="true" /> Vyplnit vzor dokumentu z údajů spisu</Link>}
                 {parseFileNumber(item.reference ?? '') && isCourt(item.authority ?? '') && <Link href="/kancelar/infosoud" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-800 hover:underline"><Gavel size={13} aria-hidden="true" /> Zjistit průběh řízení v InfoSoudu</Link>}
             </section>}
 
@@ -99,7 +99,7 @@ export default function CaseOverviewTab({ item, bundle, userId, lawyer, patchIte
                 const where: Record<string, string> = { prehled: 'Přehled', soubory: 'Dokumenty → Soubory', lhuty: 'Průběh → Lhůty', kontakty: 'Průběh → Kontakty' };
                 return (
                     <details className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5" open={todo.some((c) => c.level === 'error')}>
-                        <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-900"><ClipboardCheck size={16} className="text-indigo-700" aria-hidden="true" /> Kontrola věci před podáním nebo jednáním <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-bold ${todo.length ? (todo.some((c) => c.level === 'error') ? 'bg-rose-100 text-rose-900' : 'bg-amber-100 text-amber-900') : 'bg-emerald-100 text-emerald-900'}`}>{todo.length ? `${todo.length} k vyřešení` : 'vše v pořádku'}</span></summary>
+                        <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-900"><ClipboardCheck size={16} className="text-indigo-700" aria-hidden="true" /> Kontrola spisu před podáním nebo jednáním <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-bold ${todo.length ? (todo.some((c) => c.level === 'error') ? 'bg-rose-100 text-rose-900' : 'bg-amber-100 text-amber-900') : 'bg-emerald-100 text-emerald-900'}`}>{todo.length ? `${todo.length} k vyřešení` : 'vše v pořádku'}</span></summary>
                         <ul className="mt-3 space-y-1.5">{checks.map((c) => <li key={c.id} className={`flex items-start gap-2 text-sm ${c.level === 'error' ? 'font-semibold text-rose-800' : c.level === 'warn' ? 'text-amber-900' : 'text-slate-600'}`}>{c.level === 'ok' ? <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" /> : <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />}<span>{c.text}{c.tab && where[c.tab] ? <span className="font-normal text-slate-500"> ({where[c.tab]})</span> : null}</span></li>)}</ul>
                     </details>
                 );

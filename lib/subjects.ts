@@ -19,7 +19,7 @@ export function buildSubjects(contacts: SourceContact[], clients: SourceClient[]
     type Item = { name: string; email: string; phone: string; ico: string; clientId?: string; ap?: Appearance; contactId?: string };
     const items: Item[] = [
         ...clients.map((c) => ({ name: c.name, email: c.email, phone: c.phone, ico: c.ico ?? '', clientId: c.id })),
-        ...contacts.map((c) => ({ name: c.name, email: c.email, phone: c.phone, ico: c.ico ?? '', contactId: c.id, ap: { caseId: c.case_id, caseTitle: cases.find((x) => x.id === c.case_id)?.title ?? 'Věc', role: c.role, contactId: c.id } })),
+        ...contacts.map((c) => ({ name: c.name, email: c.email, phone: c.phone, ico: c.ico ?? '', contactId: c.id, ap: { caseId: c.case_id, caseTitle: cases.find((x) => x.id === c.case_id)?.title ?? 'Spis', role: c.role, contactId: c.id } })),
     ].filter((i) => i.name.trim());
     // Sloučení přes sdílené klíče (union-find)
     const parent = items.map((_, i) => i);

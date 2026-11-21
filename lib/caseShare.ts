@@ -5,7 +5,7 @@ export type ShareRole = 'editor' | 'viewer';
 export type ShareRow = { user_id: string; name: string; email: string; role: 'owner' | ShareRole; is_owner: boolean };
 export const ROLE_LABEL: Record<'owner' | ShareRole, string> = { owner: 'Vlastník', editor: 'Editor (čte a upravuje)', viewer: 'Čtenář (jen čte)' };
 
-const setup = (m: string) => (/case_members|case_share_info|schema cache|find the function|does not exist/i.test(m) ? 'Sdílení věcí zatím není v databázi zapnuté (chybí spuštění souboru sdilene-veci.sql).' : m);
+const setup = (m: string) => (/case_members|case_share_info|schema cache|find the function|does not exist/i.test(m) ? 'Sdílení spisů zatím není v databázi zapnuté (chybí spuštění souboru sdilene-veci.sql).' : m);
 
 export async function loadShare(caseId: string): Promise<ShareRow[]> {
     const { data, error } = await supabase.rpc('case_share_info', { p_case: caseId });

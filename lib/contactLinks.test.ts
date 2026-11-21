@@ -13,7 +13,7 @@ describe('contactLinks', () => {
         expect(telHref('777777777')).toBe('tel:+420777777777');
         expect(smsHref('777777777', 'Dobrý den')).toBe('sms:+420777777777?&body=Dobr%C3%BD%20den');
         expect(whatsappHref('+420 777 777 777')).toBe('https://wa.me/420777777777');
-        expect(mailtoHref('jan@firma.cz', 'Věc')).toBe('mailto:jan%40firma.cz?subject=V%C4%9Bc');
+        expect(mailtoHref('jan@firma.cz', 'Spis')).toBe('mailto:jan%40firma.cz?subject=Spis');
         expect(mailtoHref('neni-email')).toBeNull(); expect(telHref('abc')).toBeNull();
     });
     it('hezký zápis čísla', () => { expect(prettyPhone('777777777')).toBe('+420 777 777 777'); expect(prettyPhone('x')).toBe('x'); });

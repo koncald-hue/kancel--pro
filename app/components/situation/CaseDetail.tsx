@@ -173,7 +173,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
 
     return (
         <div className={isOffice ? '' : 'max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12'}>
-            <Link href={isOffice && fromToday ? '/kancelar' : listPath} className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-800 hover:underline"><ArrowLeft size={15} /> {isOffice ? (fromToday ? 'Dnes' : 'Věci') : 'Moje případy'}</Link>
+            <Link href={isOffice && fromToday ? '/kancelar' : listPath} className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-800 hover:underline"><ArrowLeft size={15} /> {isOffice ? (fromToday ? 'Dnes' : 'Spisy') : 'Moje případy'}</Link>
 
             <header className="mt-3 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -202,7 +202,7 @@ export default function CaseDetail({ variant = 'citizen' }: { variant?: 'citizen
                 )}
             </header>
 
-            {isLawyer && !isOwner && <p className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-950">Tuto věc vám sdílí {shareRows.find((r) => r.is_owner)?.name || 'kolega'}. Vaše role: <strong>{ROLE_LABEL[(myRole ?? 'viewer') as ShareRole]}</strong>.</p>}
+            {isLawyer && !isOwner && <p className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-950">Tento spis vám sdílí {shareRows.find((r) => r.is_owner)?.name || 'kolega'}. Vaše role: <strong>{ROLE_LABEL[(myRole ?? 'viewer') as ShareRole]}</strong>.</p>}
             {shareOpen && isLawyer && <CaseSharePanel item={item} userId={account.id} onClose={() => setShareOpen(false)} onLeft={() => router.push(listPath)} fail={fail} />}
             {exportOpen && <CaseExportPanel item={item} bundle={bundle} deadlines={deadlines} lawyer={isLawyer} onClose={() => setExportOpen(false)} fail={fail} />}
 

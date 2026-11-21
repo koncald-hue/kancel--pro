@@ -49,7 +49,7 @@ export default function CaseExportPanel({ item, bundle, deadlines, lawyer, onClo
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-lg font-bold text-slate-900">Předat spis úřadu nebo advokátovi</h2>
-                    <p className="mt-1 text-sm text-slate-600">Vše v jednom kuse: přehledný souhrn věci, časová osa, lhůty, seznam příloh a samotné soubory.</p>
+                    <p className="mt-1 text-sm text-slate-600">Vše v jednom kuse: přehledný souhrn spisu, časová osa, lhůty, seznam příloh a samotné soubory.</p>
                 </div>
                 <button type="button" onClick={onClose} aria-label="Zavřít" className="rounded-lg p-1.5 text-slate-500 hover:bg-white cursor-pointer"><X size={18} /></button>
             </div>

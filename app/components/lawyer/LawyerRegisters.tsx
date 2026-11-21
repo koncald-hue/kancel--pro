@@ -53,7 +53,7 @@ export default function LawyerRegisters() {
     async function addContact() {
         if (!pick || !caseId) return; setBusy('contact'); setMsg('');
         const { error: e } = await supabase.from('case_contacts').insert({ case_id: caseId, user_id: userId, role: 'Protistrana', name: pick.name.slice(0, 200), email: '', phone: '', note: `IČO ${pick.ico}${pick.address ? `, ${pick.address}` : ''}`.slice(0, 500) });
-        setMsg(e ? e.message : `Uloženo jako kontakt do věci „${cases.find((c) => c.id === caseId)?.title ?? ''}“.`); setBusy('');
+        setMsg(e ? e.message : `Uloženo jako kontakt do spisu „${cases.find((c) => c.id === caseId)?.title ?? ''}“.`); setBusy('');
     }
 
     const co = detail?.company; const vr = detail?.vr; const rzp = detail?.rzp;
@@ -81,7 +81,7 @@ export default function LawyerRegisters() {
                             <Row k="Vznik" v={dmy(detail.founded || vr?.founded || '')} />
                         </dl>
                         <div className="mt-3 flex flex-wrap items-center gap-2">
-                            <select value={caseId} onChange={(e) => setCaseId(e.target.value)} aria-label="Věc" className={`${inputCls} w-auto max-w-xs`}><option value="">Uložit jako kontakt do věci…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                            <select value={caseId} onChange={(e) => setCaseId(e.target.value)} aria-label="Spis" className={`${inputCls} w-auto max-w-xs`}><option value="">Uložit jako kontakt do spisu…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
                             <button type="button" onClick={() => void addContact()} disabled={!caseId || busy === 'contact'} className={ghostBtn}><Check size={14} /> Uložit</button>
                         </div>
                         {msg && <p role="status" className="mt-2 text-sm text-emerald-800">{msg}</p>}

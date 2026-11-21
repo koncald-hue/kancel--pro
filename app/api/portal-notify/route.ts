@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     const { data: la } = await user.from('lawyer_access').select('display_name, firm_name').eq('user_id', u.user.id).maybeSingle();
     const who = String(la?.display_name || la?.firm_name || 'váš advokát').replace(/[\r\n]+/g, ' ').slice(0, 120);
     try {
-        await sendMail(to, 'Nová informace ve vaší věci', `Dobrý den,\n\n${who} Vám ve Vaší věci zpřístupnil(a) novou informaci. Otevřete prosím svůj soukromý odkaz, který jste od advokáta dostali.\n\nTento e-mail záměrně neobsahuje žádné údaje o věci ani odkaz. Pokud odkaz už nemáte, požádejte advokáta o nový.\n`);
+        await sendMail(to, 'Nová informace ve vašem spisu', `Dobrý den,\n\n${who} Vám ve Vašem spisu zpřístupnil(a) novou informaci. Otevřete prosím svůj soukromý odkaz, který jste od advokáta dostali.\n\nTento e-mail záměrně neobsahuje žádné údaje o spisu ani odkaz. Pokud odkaz už nemáte, požádejte advokáta o nový.\n`);
     } catch { return NextResponse.json({ error: 'mail_failed' }, { status: 502 }); }
     return NextResponse.json({ sent: true, to: maskEmail(to) }, { headers: { 'Cache-Control': 'no-store' } });
 }

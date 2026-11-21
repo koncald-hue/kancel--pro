@@ -5,7 +5,7 @@ const item = { title: 'Novák proti Dvořákovi', reference: '12 C 5/2026', auth
 
 describe('caseContext', () => {
     it('hlavička vynechá prázdné údaje', () => {
-        expect(caseHeader({ ...item, reference: '', authority: '' })).toBe('Věc: Novák proti Dvořákovi\nKlient: Jan Novák\nStav: otevřená');
+        expect(caseHeader({ ...item, reference: '', authority: '' })).toBe('Spis: Novák proti Dvořákovi\nKlient: Jan Novák\nStav: otevřená');
     });
     it('lhůty: jen otevřené, seřazené a s označením prošlých', () => {
         const t = deadlinesText([{ title: 'B', due_date: '2026-12-01', done: false, kind: 'lhuta' }, { title: 'A', due_date: '2026-11-10', done: false, kind: 'ukol' }, { title: 'X', due_date: '2026-11-01', done: true }], '2026-11-18');

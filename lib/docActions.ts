@@ -13,7 +13,7 @@ export function replyDrafts(c: ReplyCtx): ReplyDraft[] {
     const bye = `\n\nS pozdravem\n${c.signature}`;
     return [
         { id: 'prijeti', label: 'Potvrzení přijetí', body: `${hello}\n\nděkuji za Vaši zprávu${ref}. Potvrzuji její přijetí a ozvu se Vám s dalším postupem co nejdříve, nejpozději do tří pracovních dnů.${bye}` },
-        { id: 'podklady', label: 'Vyžádání podkladů', body: `${hello}\n\nk věci „${c.caseTitle}“${ref} potřebuji pro další postup doplnit tyto podklady:\n\n- \n- \n\nProsím o jejich zaslání do ______. Bez nich nemohu postupovat dál.${bye}` },
-        { id: 'cas', label: 'Potřebuji čas', body: `${hello}\n\nděkuji za zprávu${ref}. Věc vyžaduje podrobnější prostudování, proto Vám odpovím až po jeho dokončení, nejpozději do ______.${bye}` },
+        { id: 'podklady', label: 'Vyžádání podkladů', body: `${hello}\n\nk spisu „${c.caseTitle}“${ref} potřebuji pro další postup doplnit tyto podklady:\n\n- \n- \n\nProsím o jejich zaslání do ______. Bez nich nemohu postupovat dál.${bye}` },
+        { id: 'cas', label: 'Potřebuji čas', body: `${hello}\n\nděkuji za zprávu${ref}. Spis vyžaduje podrobnější prostudování, proto Vám odpovím až po jeho dokončení, nejpozději do ______.${bye}` },
     ];
 }

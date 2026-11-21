@@ -8,9 +8,9 @@ const dl = (id: string, case_id: string, title: string, due_date: string, extra:
 const TODAY = '2026-11-16';
 
 describe('events wanted in the calendar', () => {
-    const cases = [c('c1', 'Spor o dodávku', { client_name: 'Jan Novák' }), c('c2', 'Hotová věc', { status: 'done' })];
+    const cases = [c('c1', 'Spor o dodávku', { client_name: 'Jan Novák' }), c('c2', 'Hotový spis', { status: 'done' })];
     it('includes open upcoming deadlines and an internal date, but not done, past or closed-case ones', () => {
-        const d = desiredEvents(cases, [dl('d1', 'c1', 'Odvolání (15 dnů) – datová zpráva', '2026-11-24'), dl('d2', 'c1', 'Splněno', '2026-11-30', { done: true }), dl('d3', 'c1', 'Prošlá', '2026-11-01'), dl('d4', 'c2', 'Ve hotové věci', '2026-12-01')], { detail: 'minimal', internal: true }, TODAY, 'https://app.cz');
+        const d = desiredEvents(cases, [dl('d1', 'c1', 'Odvolání (15 dnů) – datová zpráva', '2026-11-24'), dl('d2', 'c1', 'Splněno', '2026-11-30', { done: true }), dl('d3', 'c1', 'Prošlá', '2026-11-01'), dl('d4', 'c2', 'V hotovém spisu', '2026-12-01')], { detail: 'minimal', internal: true }, TODAY, 'https://app.cz');
         expect(d.map((x) => `${x.kind}:${x.date}`)).toEqual(['main:2026-11-24', 'internal:2026-11-23']);
     });
     it('keeps client names out of the event unless the full detail is chosen', () => {

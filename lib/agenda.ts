@@ -5,7 +5,7 @@ export type AgendaItem = { id: string; kind: ItemKind; date: string; start?: str
 export type TeamTask = { id: string; created_by: string; assignee_id: string; title: string; note: string; due_date: string; due_time: string | null; priority: 'normal' | 'high'; case_id: string | null; case_title: string; status: 'open' | 'done' | 'declined'; done_at: string | null; answer: string; seen_at: string | null; created_at: string };
 export type CalEvent = { id: string; user_id: string; title: string; kind: 'jednani' | 'schuzka' | 'telefon' | 'osobni' | 'jine'; starts_at: string; ends_at: string; all_day: boolean; place: string; note: string; case_id: string | null; case_title: string; attendees: string[] };
 export const EVENT_KIND: Record<CalEvent['kind'], string> = { jednani: 'Jednání', schuzka: 'Schůzka', telefon: 'Telefonát', osobni: 'Osobní', jine: 'Jiné' };
-export const KIND_LABEL: Record<ItemKind, string> = { lhuta: 'Lhůta', ukol: 'Úkol ve věci', tym: 'Úkol od kolegy', udalost: 'Událost' };
+export const KIND_LABEL: Record<ItemKind, string> = { lhuta: 'Lhůta', ukol: 'Úkol ve spisu', tym: 'Úkol od kolegy', udalost: 'Událost' };
 
 const TZ = 'Europe/Prague';
 const parts = (d: Date) => Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(d).map((p) => [p.type, p.value]));

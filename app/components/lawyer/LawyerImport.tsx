@@ -50,7 +50,7 @@ export default function LawyerImport() {
         const { data, error: e } = await supabase.from('import_batches').select('*').order('created_at', { ascending: false }).limit(10);
         if (!e) setBatches((data ?? []) as Batch[]);
     }, []);
-    useEffect(() => { const t = window.setTimeout(() => { void loadBatches(); loadExisting().then(setExisting).catch((e: unknown) => setError(`Nepodařilo se načíst stávající klienty a věci, import nelze spustit: ${e instanceof Error ? e.message : 'neznámá chyba'}`)); }, 0); return () => window.clearTimeout(t); }, [loadBatches]);
+    useEffect(() => { const t = window.setTimeout(() => { void loadBatches(); loadExisting().then(setExisting).catch((e: unknown) => setError(`Nepodařilo se načíst stávající klienty a spisy, import nelze spustit: ${e instanceof Error ? e.message : 'neznámá chyba'}`)); }, 0); return () => window.clearTimeout(t); }, [loadBatches]);
 
     async function load(bytes: Uint8Array, name: string) {
         setError(''); setResult(null);
@@ -105,7 +105,7 @@ export default function LawyerImport() {
         <div className="max-w-5xl space-y-5">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="text-lg font-bold text-slate-900">Import dat</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Přeneste si data z Excelu, jiného programu nebo kontaktů. Nahrajte soubor <strong>XLSX, CSV nebo vCard</strong> (nebo vložte buňky z Excelu). Aplikace sama pozná, co je na kterém listu, přiřadí sloupce a vše propojí: věci s klienty, lhůty, kontakty a čas s věcmi. Co v kanceláři chybí, založí. Před importem uvidíte, co se stane, a po něm ho můžete jedním krokem vrátit.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Přeneste si data z Excelu, jiného programu nebo kontaktů. Nahrajte soubor <strong>XLSX, CSV nebo vCard</strong> (nebo vložte buňky z Excelu). Aplikace sama pozná, co je na kterém listu, přiřadí sloupce a vše propojí: spisy s klienty, lhůty, kontakty a čas se spisy. Co v kanceláři chybí, založí. Před importem uvidíte, co se stane, a po něm ho můžete jedním krokem vrátit.</p>
                 <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void onFile(e.dataTransfer.files[0]); }} className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border-2 border-dashed border-slate-300 p-5">
                     <FileUp size={22} className="text-indigo-700" aria-hidden="true" />
                     <button type="button" onClick={() => file.current?.click()} className={primaryBtn}>Vybrat soubor</button>
@@ -116,7 +116,7 @@ export default function LawyerImport() {
                     <textarea value={paste} onChange={(e) => setPaste(e.target.value)} rows={4} placeholder="Označte v Excelu tabulku včetně hlavičky, zkopírujte a vložte sem." className={`${inputCls} mt-2 font-mono text-xs`} />
                     <button type="button" disabled={paste.trim().length < 5} onClick={() => void load(new TextEncoder().encode(paste), 'vložený text')} className={`${ghostBtn} mt-2`}>Načíst vložený text</button></details>
                 <details className="mt-3 text-sm text-slate-600"><summary className="cursor-pointer font-semibold text-slate-700">Jak získat data z jiného programu</summary>
-                    <ul className="mt-2 list-disc space-y-1 pl-5"><li>Excel nebo Google Tabulky: Soubor → Stáhnout/Uložit jako → XLSX (všechny listy najednou) nebo CSV.</li><li>Kontakty z telefonu, Googlu nebo Outlooku: export do vCard (.vcf) nebo CSV.</li><li>Jiný kancelářský program: v exportu zvolte Excel/CSV. Klienty, věci, lhůty, kontakty i čas můžete dát do jednoho sešitu, každé na vlastní list. Lhůty, kontakty a čas se k věcem připojí podle spisové značky nebo názvu věci.</li></ul></details>
+                    <ul className="mt-2 list-disc space-y-1 pl-5"><li>Excel nebo Google Tabulky: Soubor → Stáhnout/Uložit jako → XLSX (všechny listy najednou) nebo CSV.</li><li>Kontakty z telefonu, Googlu nebo Outlooku: export do vCard (.vcf) nebo CSV.</li><li>Jiný kancelářský program: v exportu zvolte Excel/CSV. Klienty, spisy, lhůty, kontakty i čas můžete dát do jednoho sešitu, každé na vlastní list. Lhůty, kontakty a čas se k spisům připojí podle spisové značky nebo názvu spisu.</li></ul></details>
                 {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
             </section>
 
@@ -156,14 +156,14 @@ export default function LawyerImport() {
                     <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-700">
                         {entities.has('klienti') && <label className="flex items-center gap-2"><input type="checkbox" checked={fillExisting} onChange={(e) => setFillExisting(e.target.checked)} className="accent-indigo-800" /> U stávajících klientů doplnit prázdné údaje</label>}
                         {entities.has('veci') && <label className="flex items-center gap-2"><input type="checkbox" checked={createMissing} onChange={(e) => setCreateMissing(e.target.checked)} className="accent-indigo-800" /> Klienty, které v adresáři nejsou, založit</label>}
-                        {(entities.has('lhuty') || entities.has('kontakty') || entities.has('cas')) && <label className="flex items-center gap-2"><input type="checkbox" checked={createMissingCases} onChange={(e) => setCreateMissingCases(e.target.checked)} className="accent-indigo-800" /> Věci, které v kanceláři nejsou, založit</label>}
+                        {(entities.has('lhuty') || entities.has('kontakty') || entities.has('cas')) && <label className="flex items-center gap-2"><input type="checkbox" checked={createMissingCases} onChange={(e) => setCreateMissingCases(e.target.checked)} className="accent-indigo-800" /> Spisy, které v kanceláři nejsou, založit</label>}
                     </div>
 
-                    {!existing && !error && <p className="flex items-center gap-2 text-sm text-slate-600"><Loader2 size={14} className="animate-spin" /> Načítám stávající klienty a věci…</p>}
+                    {!existing && !error && <p className="flex items-center gap-2 text-sm text-slate-600"><Loader2 size={14} className="animate-spin" /> Načítám stávající klienty a spisy…</p>}
                     <div className="grid gap-2 sm:grid-cols-5">
                         {([['Nových', sum.create, 'bg-emerald-50 text-emerald-900'], ['Doplnit', sum.update, 'bg-indigo-50 text-indigo-900'], ['Přeskočit (už existují)', sum.skip, 'bg-slate-50 text-slate-900'], ['Chyby', sum.error, 'bg-rose-50 text-rose-900'], ['Varování', sum.warnings, 'bg-amber-50 text-amber-900']] as const).map(([l, n, c]) => <div key={l} className={`rounded-xl p-3 ${c}`}><p className="text-xl font-bold">{n}</p><p className="text-xs text-slate-600">{l}</p></div>)}
                     </div>
-                    {(sum.newClients > 0 || sum.newCases > 0) && <p className="text-xs text-slate-600">{sum.newClients > 0 ? `Založí se také ${sum.newClients} nových klientů a věci se s nimi propojí. ` : ''}{sum.newCases > 0 ? `Založí se také ${sum.newCases} nových věcí a řádky se k nim připojí.` : ''}</p>}
+                    {(sum.newClients > 0 || sum.newCases > 0) && <p className="text-xs text-slate-600">{sum.newClients > 0 ? `Založí se také ${sum.newClients} nových klientů a spisy se s nimi propojí. ` : ''}{sum.newCases > 0 ? `Založí se také ${sum.newCases} nových spisů a řádky se k nim připojí.` : ''}</p>}
 
                     <div className="flex items-center gap-2 text-xs"><button type="button" onClick={() => setOnly('all')} aria-pressed={only === 'all'} className={`rounded-full px-3 py-1 font-semibold ${only === 'all' ? 'bg-indigo-800 text-white' : 'bg-slate-100 text-slate-700'}`}>Všechny</button><button type="button" onClick={() => setOnly('error')} aria-pressed={only === 'error'} className={`rounded-full px-3 py-1 font-semibold ${only === 'error' ? 'bg-indigo-800 text-white' : 'bg-slate-100 text-slate-700'}`}>Jen chyby</button><span className="text-slate-500">Zobrazeno prvních {Math.min(100, plan.length)}</span></div>
                     <ul className="max-h-96 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200 text-sm">
@@ -182,7 +182,7 @@ export default function LawyerImport() {
             {result && (
                 <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950" role="status">
                     <p className="flex items-center gap-2 text-base font-bold"><CheckCircle2 size={18} aria-hidden="true" /> Import je hotový</p>
-                    <p className="mt-1">Vytvořeno {result.created}{result.updated ? `, doplněno ${result.updated}` : ''}{result.clientsCreated ? `, k tomu nových klientů z věcí ${result.clientsCreated}` : ''}{result.casesCreated ? `, nových věcí ${result.casesCreated}` : ''}.</p>{Object.keys(result.byEntity).length > 1 && <p className="mt-1 text-xs">{(Object.entries(result.byEntity) as [Entity, number][]).map(([k, n]) => `${ENTITY_LABEL[k]}: ${n}`).join(' · ')}</p>}
+                    <p className="mt-1">Vytvořeno {result.created}{result.updated ? `, doplněno ${result.updated}` : ''}{result.clientsCreated ? `, k tomu nových klientů ze spisů ${result.clientsCreated}` : ''}{result.casesCreated ? `, nových spisů ${result.casesCreated}` : ''}.</p>{Object.keys(result.byEntity).length > 1 && <p className="mt-1 text-xs">{(Object.entries(result.byEntity) as [Entity, number][]).map(([k, n]) => `${ENTITY_LABEL[k]}: ${n}`).join(' · ')}</p>}
                     <div className="mt-3 flex flex-wrap gap-2"><Link href={LINKS[result.entity]} className={primaryBtn}>Zobrazit</Link><button type="button" onClick={() => void undo(result.batchId)} disabled={busy} className={ghostBtn}><Undo2 size={14} /> Vrátit import</button></div>
                 </section>
             )}

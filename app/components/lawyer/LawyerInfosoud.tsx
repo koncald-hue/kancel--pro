@@ -63,7 +63,7 @@ export default function LawyerInfosoud() {
     const [manual, setManual] = useState('');
     useEffect(() => {
         let alive = true;
-        loadCases().then((c) => { if (alive) setCases(c); }).catch(() => { if (alive) setError('Věci se nepodařilo načíst.'); });
+        loadCases().then((c) => { if (alive) setCases(c); }).catch(() => { if (alive) setError('Spisy se nepodařilo načíst.'); });
         return () => { alive = false; };
     }, []);
 
@@ -77,7 +77,7 @@ export default function LawyerInfosoud() {
         <div className="space-y-5">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Gavel size={18} className="text-indigo-700" aria-hidden="true" /> Průběh soudních řízení v InfoSoudu</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">InfoSoud ukazuje, v jakém stavu je řízení u soudu (jednání, rozhodnutí, odvolání). Kancelář z vašich věcí připraví údaje ze spisové značky. U okresních, krajských, městského a vrchních soudů otevře tlačítko přímo řízení, jinde údaje klepnutím zkopírujete a ve formuláři InfoSoudu vyplníte.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">InfoSoud ukazuje, v jakém stavu je řízení u soudu (jednání, rozhodnutí, odvolání). Kancelář z vašich spisů připraví údaje ze spisové značky. U okresních, krajských, městského a vrchních soudů otevře tlačítko přímo řízení, jinde údaje klepnutím zkopírujete a ve formuláři InfoSoudu vyplníte.</p>
                 <p className="mt-2 flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600"><Info size={14} className="mt-0.5 shrink-0 text-slate-400" aria-hidden="true" /> InfoSoud nemá veřejné rozhraní pro jiné aplikace, proto ho Kancelář sama nečte ani nehlídá. Místo toho vám po každé kontrole zapíše poznámku do chronologie a založí úkol na další kontrolu za 14 dní. Vyhledání proběhne na stránce ministerstva ve vašem prohlížeči a do Kanceláře se nic neukládá.</p>
                 <form onSubmit={(e) => e.preventDefault()} className="mt-4">
                     <label className="block text-sm font-semibold text-slate-800">Rozložit jinou spisovou značku
@@ -89,13 +89,13 @@ export default function LawyerInfosoud() {
             </section>
 
             {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
-            {cases === null && !error && <p className="text-sm text-slate-500" role="status">Načítám věci…</p>}
+            {cases === null && !error && <p className="text-sm text-slate-500" role="status">Načítám spisy…</p>}
 
             {cases !== null && (
                 <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="is-list">
-                    <h3 id="is-list" className="text-base font-bold text-slate-900">Věci se spisovou značkou soudu ({courts.length})</h3>
+                    <h3 id="is-list" className="text-base font-bold text-slate-900">Spisy se spisovou značkou soudu ({courts.length})</h3>
                     {courts.length === 0 ? (
-                        <p className="mt-3 text-sm text-slate-500">Žádná otevřená věc zatím nemá spisovou značku soudu. Doplníte ji ve věci na kartě Přehled (pole „Spisová značka / č. j.“ a „Úřad nebo soud“).</p>
+                        <p className="mt-3 text-sm text-slate-500">Žádný otevřený spis zatím nemá spisovou značku soudu. Doplníte ji ve spisu na kartě Přehled (pole „Spisová značka / č. j.“ a „Úřad nebo soud“).</p>
                     ) : (
                         <ul className="mt-3 divide-y divide-slate-100">
                             {courts.map(({ c, fn }) => (
@@ -113,7 +113,7 @@ export default function LawyerInfosoud() {
                     )}
                     {other.length > 0 && (
                         <details className="mt-4 rounded-xl bg-slate-50 p-3 text-sm">
-                            <summary className="cursor-pointer font-semibold text-slate-700">Další věci se značkou, která nevypadá jako soudní ({other.length})</summary>
+                            <summary className="cursor-pointer font-semibold text-slate-700">Další spisy se značkou, která nevypadá jako soudní ({other.length})</summary>
                             <ul className="mt-2 space-y-1 text-slate-600">{other.map(({ c }) => <li key={c.id}><Link href={`/kancelar/veci/${c.id}`} className="hover:underline">{c.title}</Link> · <span className="font-mono">{c.reference}</span>{c.authority ? ` · ${c.authority}` : ''}</li>)}</ul>
                         </details>
                     )}

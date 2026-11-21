@@ -9,7 +9,7 @@ import { useAuth } from '../site/AuthContext';
 import Link from 'next/link';
 
 const INCLUDED = [
-    'Spisy, lhůty, klienti a výkazy práce bez omezení počtu věcí',
+    'Spisy, lhůty, klienti a výkazy práce bez omezení počtu spisů',
     'Klientský odkaz s end-to-end šifrovanými zprávami a soubory',
     'Poptávkový formulář pro nové klienty',
     'Export spisu s číslovanými přílohami',

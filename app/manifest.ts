@@ -21,7 +21,7 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
         shortcuts: [
             { name: 'Lhůty a úkoly', url: '/kancelar/ukoly' },
-            { name: 'Věci', url: '/kancelar/veci' },
+            { name: 'Spisy', url: '/kancelar/veci' },
             { name: 'Výkazy', url: '/kancelar/vykazy' },
         ],
     };

@@ -29,7 +29,7 @@ export default function PortalBrandingCard() {
                 {(Object.keys(ACCENTS) as AccentKey[]).map((k) => <button key={k} type="button" aria-pressed={accent === k} onClick={() => setAccent(k)} className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold cursor-pointer ${accent === k ? 'border-slate-900 bg-slate-50' : 'border-slate-200'}`}><span className="h-3.5 w-3.5 rounded-full" style={{ background: ACCENTS[k].hex }} aria-hidden="true" />{ACCENTS[k].label}</button>)}
             </div>
             <label className="mt-3 block text-sm font-semibold text-slate-800">Uvítání (nejvýše 300 znaků)
-                <textarea value={greeting} onChange={(e) => setGreeting(e.target.value.slice(0, 300))} rows={3} className={`${inputCls} mt-1`} placeholder="Např. Dobrý den, tady uvidíte stav své věci a můžete mi posílat podklady. Odpovídám obvykle do dvou pracovních dnů." />
+                <textarea value={greeting} onChange={(e) => setGreeting(e.target.value.slice(0, 300))} rows={3} className={`${inputCls} mt-1`} placeholder="Např. Dobrý den, tady uvidíte stav svého spisu a můžete mi posílat podklady. Odpovídám obvykle do dvou pracovních dnů." />
             </label>
             <div className="mt-3 flex flex-wrap items-center gap-3"><button type="button" onClick={() => void save()} disabled={busy} className={primaryBtn}>{busy ? 'Ukládám…' : 'Uložit'}</button><button type="button" onClick={() => { setAccent('indigo'); setGreeting(''); }} className={ghostBtn}>Výchozí</button>{msg && <span role="status" className="text-sm text-slate-700">{msg}</span>}</div>
         </section>

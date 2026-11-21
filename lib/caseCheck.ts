@@ -17,7 +17,7 @@ const list = (xs: { title: string }[]) => `${xs.slice(0, 3).map((d) => d.title).
 
 export function caseCheck({ item, files, deadlines, contacts, today }: In): CaseCheck[] {
     const out: CaseCheck[] = [];
-    out.push(item.client_name?.trim() || item.client_id ? { id: 'klient', level: 'ok', text: 'Klient je přiřazený.' } : { id: 'klient', level: 'error', text: 'Věc nemá klienta. Bez něj nejde fakturovat ani vést klientskou stránku.', tab: 'prehled' });
+    out.push(item.client_name?.trim() || item.client_id ? { id: 'klient', level: 'ok', text: 'Klient je přiřazený.' } : { id: 'klient', level: 'error', text: 'Spis nemá klienta. Bez něj nejde fakturovat ani vést klientskou stránku.', tab: 'prehled' });
     out.push(files.some((f) => POA.test(fold(f.name))) ? { id: 'pm', level: 'ok', text: 'Plná moc je ve spisu.' } : { id: 'pm', level: 'warn', text: 'Ve spisu není soubor s plnou mocí (hledá se „plná moc“ v názvu souboru).', tab: 'soubory' });
     if (item.authority?.trim() || item.reference?.trim()) {
         if (!item.reference?.trim()) out.push({ id: 'sz', level: 'warn', text: 'Chybí spisová značka nebo číslo jednací.', tab: 'prehled' });

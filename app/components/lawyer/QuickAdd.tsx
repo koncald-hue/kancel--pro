@@ -16,7 +16,7 @@ import { useLawyer } from './LawyerGate';
 import { createTask, loadColleagues, type Colleague } from '@/lib/teamTasks';
 
 type Tab = 'cas' | 'ukol' | 'poznamka' | 'vec';
-const TABS: [Tab, string, typeof Clock][] = [['cas', 'Čas', Clock], ['ukol', 'Úkol', ListTodo], ['poznamka', 'Poznámka', StickyNote], ['vec', 'Nová věc', FolderPlus]];
+const TABS: [Tab, string, typeof Clock][] = [['cas', 'Čas', Clock], ['ukol', 'Úkol', ListTodo], ['poznamka', 'Poznámka', StickyNote], ['vec', 'Nový spis', FolderPlus]];
 const MINUTES = [6, 15, 30, 60, 90];
 const RECENT_KEY = 'kancelar-posledni-vec';
 
@@ -69,7 +69,7 @@ export default function QuickAdd({ open, onClose, initial = 'cas' }: { open: boo
         try { setDone(await fn()); } catch (e) { setErr(e instanceof Error ? e.message : 'Nepodařilo se uložit.'); } finally { setBusy(false); }
     }
     const saveTime = () => run(async () => {
-        if (!caseId) throw new Error('Vyberte věc.');
+        if (!caseId) throw new Error('Vyberte spis.');
         if (!desc.trim()) throw new Error('Napište, co jste dělali.');
         const rate = await rateFor(caseId);
         const { error } = await supabase.from('time_entries').insert({ case_id: caseId, user_id: userId, entry_date: date, minutes, rate, description: desc.trim().slice(0, 500) });
@@ -85,34 +85,34 @@ export default function QuickAdd({ open, onClose, initial = 'cas' }: { open: boo
             if (caseId) remember(caseId); setTitle('');
             return `Úkol zadán: ${colleagues.find((c) => c.user_id === assignee)?.name ?? 'kolega'} ho uvidí ve svých úkolech a kalendáři.`;
         }
-        if (!caseId) throw new Error('Vyberte věc.');
+        if (!caseId) throw new Error('Vyberte spis.');
         await insertRow('case_deadlines', { case_id: caseId, user_id: userId, title: title.trim().slice(0, 200), due_date: due, kind: 'ukol' });
         remember(caseId); setTitle('');
         return `Úkol přidán na ${new Date(`${due}T12:00:00`).toLocaleDateString('cs-CZ')}.`;
     });
     const saveNote = () => run(async () => {
-        if (!caseId) throw new Error('Vyberte věc.');
+        if (!caseId) throw new Error('Vyberte spis.');
         if (!note.trim()) throw new Error('Napište poznámku.');
         await insertRow('case_entries', { case_id: caseId, user_id: userId, kind: 'note', title: note.trim().split('\n')[0].slice(0, 120), body: note.trim().slice(0, 4000), happened_on: todayIso() });
         remember(caseId); setNote('');
-        return 'Poznámka je v chronologii věci.';
+        return 'Poznámka je v chronologii spisu.';
     });
     const saveCase = () => run(async () => {
-        if (!title.trim()) throw new Error('Napište název věci.');
+        if (!title.trim()) throw new Error('Napište název spisu.');
         const created = await createCase(userId, { ...BLANK_CASE, title: title.trim().slice(0, 100) });
         const n = await applyDefaultTo(created.id, userId).catch(() => 0);
         remember(created.id); setTitle(''); onClose();
         router.push(`/kancelar/veci/${created.id}`);
-        return n ? `Věc založena s ${n} úkoly ze šablony.` : 'Věc založena.';
+        return n ? `Spis založen s ${n} úkoly ze šablony.` : 'Spis založen.';
     });
 
     const chips = (vals: [string, string][], cur: string, set: (v: string) => void) => (
         <div className="flex flex-wrap gap-1.5">{vals.map(([v, l]) => <button key={v} type="button" onClick={() => set(v)} className={`rounded-full border px-3 py-1 text-xs font-semibold cursor-pointer ${cur === v ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-300'}`}>{l}</button>)}</div>
     );
     const caseSelect = (
-        <label className="block text-xs font-semibold text-slate-600">Věc
+        <label className="block text-xs font-semibold text-slate-600">Spis
             <select ref={(el) => { if (tab !== 'vec') first.current = el; }} value={caseId} onChange={(e) => setCaseId(e.target.value)} className={`${inputCls} mt-1 font-normal`}>
-                <option value="">{cases === null ? 'Načítám věci…' : 'Vyberte věc…'}</option>
+                <option value="">{cases === null ? 'Načítám spisy…' : 'Vyberte spis…'}</option>
                 {(cases ?? []).map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}
             </select>
         </label>
@@ -143,7 +143,7 @@ export default function QuickAdd({ open, onClose, initial = 'cas' }: { open: boo
                     )}
                     {tab === 'ukol' && (
                         <>
-                            {colleagues.length > 0 && <label className="block text-xs font-semibold text-slate-600">Pro koho<select value={assignee} onChange={(e) => setAssignee(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">Pro mě (úkol ve věci)</option>{colleagues.map((c) => <option key={c.user_id} value={c.user_id}>Pro kolegu: {c.name}</option>)}</select></label>}
+                            {colleagues.length > 0 && <label className="block text-xs font-semibold text-slate-600">Pro koho<select value={assignee} onChange={(e) => setAssignee(e.target.value)} className={`${inputCls} mt-1 font-normal`}><option value="">Pro mě (úkol ve spisu)</option>{colleagues.map((c) => <option key={c.user_id} value={c.user_id}>Pro kolegu: {c.name}</option>)}</select></label>}
                             <label className="block text-xs font-semibold text-slate-600">Co udělat<input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} placeholder="např. Zavolat klientovi kvůli podkladům" className={`${inputCls} mt-1 font-normal`} /></label>
                             <div><p className="mb-1 text-xs font-semibold text-slate-600">Do kdy</p>{chips([[shiftDays(today, 1, true), 'Další pracovní den'], [shiftDays(today, 3, true), 'Za 3 prac. dny'], [shiftDays(today, 7, false), 'Za týden'], [shiftDays(today, 14, false), 'Za 14 dní']], due, setDue)}
                                 <input type="date" value={due} min={today} onChange={(e) => setDue(e.target.value)} aria-label="Termín" className={`${inputCls} mt-2 w-auto`} /></div>
@@ -152,17 +152,17 @@ export default function QuickAdd({ open, onClose, initial = 'cas' }: { open: boo
                     {tab === 'poznamka' && <label className="block text-xs font-semibold text-slate-600">Poznámka do chronologie<textarea value={note} onChange={(e) => setNote(e.target.value)} rows={5} maxLength={4000} placeholder="První řádek bude nadpis záznamu." className={`${inputCls} mt-1 font-normal`} /></label>}
                     {tab === 'vec' && (
                         <>
-                            <label className="block text-xs font-semibold text-slate-600">Název věci<input ref={(el) => { if (tab === 'vec') first.current = el; }} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="např. Novák proti Dvořákovi" className={`${inputCls} mt-1 font-normal`} /></label>
+                            <label className="block text-xs font-semibold text-slate-600">Název spisu<input ref={(el) => { if (tab === 'vec') first.current = el; }} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="např. Novák proti Dvořákovi" className={`${inputCls} mt-1 font-normal`} /></label>
                             {sides.length === 2 && <div className="space-y-2"><ConflictPanel parties={[{ name: sides[1] }]} role="protistrana" compact /><ConflictPanel parties={[{ name: sides[0] }]} role="klient" compact /></div>}
-                            <p className="text-xs text-slate-500">Věc dostane úkoly z výchozí šablony (máte-li ji) a otevře se.</p>
+                            <p className="text-xs text-slate-500">Spis dostane úkoly z výchozí šablony (máte-li ji) a otevře se.</p>
                         </>
                     )}
-                    {chosen && tab !== 'vec' && <p className="text-xs text-slate-500">Ukládá se do věci „{chosen.title}“.</p>}
+                    {chosen && tab !== 'vec' && <p className="text-xs text-slate-500">Ukládá se do spisu „{chosen.title}“.</p>}
                     {err && <p role="alert" className="text-sm font-semibold text-rose-800">{err}</p>}
                     {done && <p role="status" className="flex items-center gap-1.5 text-sm font-semibold text-emerald-800"><CheckCircle2 size={15} aria-hidden="true" /> {done}</p>}
                     <div className="flex items-center justify-between gap-2 pt-1">
                         <span className="hidden text-xs text-slate-400 sm:inline">Otevřete kdykoli klávesou N, zavřete Esc.</span>
-                        <button type="submit" disabled={busy} className={primaryBtn}>{busy && <Loader2 size={14} className="animate-spin" />} {tab === 'vec' ? 'Založit věc' : 'Uložit'}</button>
+                        <button type="submit" disabled={busy} className={primaryBtn}>{busy && <Loader2 size={14} className="animate-spin" />} {tab === 'vec' ? 'Založit spis' : 'Uložit'}</button>
                     </div>
                 </form>
             </div>

@@ -129,11 +129,11 @@ export default function LawyerMail() {
                 const r = await mailApi<{ filename: string; contentType: string; base64: string }>('attachment', creds, { folder: path, uid: sel.uid, index: a.index });
                 await uploadCaseFile(userId, saveCase, folderId, new File([b64ToBytes(r.base64) as BlobPart], r.filename, { type: r.contentType })); n += 1;
             }
-            await insertRow('case_entries', { case_id: saveCase, user_id: userId, kind: 'event', title: `E-mail: ${sel.subject}`.slice(0, 200), body: `Od: ${sel.from}\nKomu: ${sel.to}\nDatum: ${sel.date ? new Date(sel.date).toLocaleString('cs-CZ') : ''}${n ? `\nPřílohy uloženy do souborů věci: ${n}` : ''}\n\n${sel.text.slice(0, 6000)}`, happened_on: sel.date ? sel.date.slice(0, 10) : null });
+            await insertRow('case_entries', { case_id: saveCase, user_id: userId, kind: 'event', title: `E-mail: ${sel.subject}`.slice(0, 200), body: `Od: ${sel.from}\nKomu: ${sel.to}\nDatum: ${sel.date ? new Date(sel.date).toLocaleString('cs-CZ') : ''}${n ? `\nPřílohy uloženy do souborů spisu: ${n}` : ''}\n\n${sel.text.slice(0, 6000)}`, happened_on: sel.date ? sel.date.slice(0, 10) : null });
             assignActivity(`mail:${folder}:${sel.uid}:${account?.id ?? ''}`, saveCase);
             // Pošta uložená do věci se zapíše i do podacího deníku (stejná zpráva jen jednou)
             await logMail({ user_id: userId, case_id: saveCase, direction: folder === 'SENT' ? 'out' : 'in', channel: 'email', event_on: (sel.date ?? new Date().toISOString()).slice(0, 10), counterparty: folder === 'SENT' ? sel.to : sel.from, subject: sel.subject, their_ref: findTheirRef(`${sel.subject}\n${sel.text.slice(0, 3000)}`), attachments: n, source_ref: sel.messageId ? `mail:${sel.messageId}` : `mail:${account?.id ?? ''}:${folder}:${sel.uid}` });
-            setInfo(`Uloženo do věci „${cases.find((c) => c.id === saveCase)?.title ?? ''}“: zápis v chronologii${n ? ` a ${n} příloh` : ''}.`);
+            setInfo(`Uloženo do spisu „${cases.find((c) => c.id === saveCase)?.title ?? ''}“: zápis v chronologii${n ? ` a ${n} příloh` : ''}.`);
         } catch (e) { setError(e instanceof Error ? e.message : 'Uložení se nepovedlo.'); }
         setBusy('');
     }
@@ -163,7 +163,7 @@ export default function LawyerMail() {
             logActivity('email_sent', { caseId: compose.caseId || null, label: compose.subject, words: wordCount(compose.body.split('\n').filter((l) => !l.startsWith('>')).join(' ')) });
             if (compose.caseId) await logMail({ user_id: userId, case_id: compose.caseId, direction: 'out', channel: 'email', event_on: new Date().toISOString().slice(0, 10), counterparty: compose.to, subject: compose.subject, their_ref: findTheirRef(compose.subject), attachments: compose.files.length });
             if (compose.caseId) await insertRow('case_entries', { case_id: compose.caseId, user_id: userId, kind: 'event', title: `Odeslán e-mail: ${compose.subject}`.slice(0, 200), body: `Komu: ${compose.to}\n\n${compose.body.slice(0, 6000)}`, happened_on: new Date().toISOString().slice(0, 10) });
-            setInfo(`E-mail je odeslaný${compose.caseId ? ' a zapsaný do věci' : ''}${r.saved ? '' : '. Kopii do složky Odeslané se uložit nepodařilo.'}`); setCompose(null);
+            setInfo(`E-mail je odeslaný${compose.caseId ? ' a zapsaný do spisu' : ''}${r.saved ? '' : '. Kopii do složky Odeslané se uložit nepodařilo.'}`); setCompose(null);
         } catch (e) { setError(e instanceof Error ? e.message : 'E-mail se nepodařilo odeslat.'); }
         setBusy('');
     }
@@ -211,16 +211,16 @@ export default function LawyerMail() {
                             <div><h2 className="text-lg font-bold text-slate-900">{sel.subject}</h2><p className="text-xs text-slate-500">Od: {sel.from} · Komu: {sel.to}{sel.cc ? ` · Kopie: ${sel.cc}` : ''} · {sel.date ? new Date(sel.date).toLocaleString('cs-CZ') : ''}</p></div>
                             <div className="flex flex-wrap items-center gap-2">
                                 <button type="button" onClick={reply} className={primaryBtn}><Reply size={15} /> Odpovědět</button>
-                                <select value={saveCase} onChange={(e) => setSaveCase(e.target.value)} className={`${inputCls} w-auto max-w-64`} aria-label="Věc"><option value="">Uložit do věci…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}</select>
-                                <button type="button" onClick={() => void saveToCase()} disabled={!saveCase || busy === 'save'} className={ghostBtn}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" /> : <FolderInput size={14} />} {saveCase ? 'Uložit e-mail a přílohy do věci' : 'Uložit'}</button>
+                                <select value={saveCase} onChange={(e) => setSaveCase(e.target.value)} className={`${inputCls} w-auto max-w-64`} aria-label="Spis"><option value="">Uložit do spisu…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}</select>
+                                <button type="button" onClick={() => void saveToCase()} disabled={!saveCase || busy === 'save'} className={ghostBtn}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" /> : <FolderInput size={14} />} {saveCase ? 'Uložit e-mail a přílohy do spisu' : 'Uložit'}</button>
                             </div>
                             {matches.length > 0 && (
                                 <div className="flex flex-wrap items-center gap-2 text-xs"><span className="font-semibold text-slate-600">Patří k:</span>
-                                    {matches.map((m) => <button key={m.caseId} type="button" onClick={() => setSaveCase(m.caseId)} className={`cursor-pointer rounded-full border px-3 py-1 font-semibold ${saveCase === m.caseId ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-400'}`}>{caseTitle.get(m.caseId) ?? 'Věc'} <span className={saveCase === m.caseId ? 'text-indigo-100' : 'font-normal text-slate-500'}>· {m.reason}</span></button>)}
+                                    {matches.map((m) => <button key={m.caseId} type="button" onClick={() => setSaveCase(m.caseId)} className={`cursor-pointer rounded-full border px-3 py-1 font-semibold ${saveCase === m.caseId ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-400'}`}>{caseTitle.get(m.caseId) ?? 'Spis'} <span className={saveCase === m.caseId ? 'text-indigo-100' : 'font-normal text-slate-500'}>· {m.reason}</span></button>)}
                                 </div>
                             )}
                             {!saveCase && <AiRouteSuggest key={sel.uid} mail={{ subject: sel.subject, text: sel.text }} cases={cases.filter((c) => c.status !== 'done').map((c) => ({ id: c.id, title: c.title }))} onPick={setSaveCase} />}
-                            {saveCase && <p className="text-xs text-slate-500">Uloží se zápis do chronologie věci „{caseTitle.get(saveCase)}“ a všechny přílohy do jejích souborů.</p>}
+                            {saveCase && <p className="text-xs text-slate-500">Uloží se zápis do chronologie spisu „{caseTitle.get(saveCase)}“ a všechny přílohy do jejích souborů.</p>}
                             {saveCase && <DocActions key={`${sel.uid}-${saveCase}`} caseId={saveCase} caseTitle={caseTitle.get(saveCase) ?? ''} reference={cases.find((c) => c.id === saveCase)?.reference ?? ''} userId={userId} signature={signature} subject={sel.subject} text={sel.text} sender={sel.from} dateIso={sel.date} kind="e-mail" onReply={(body) => setCompose({ to: sel.fromEmail, cc: '', subject: /^re:/i.test(sel.subject) ? sel.subject : `Re: ${sel.subject}`, body: `${body}${quoted(sel)}`, files: [], caseId: saveCase, inReplyTo: sel.messageId, references: [...sel.references, sel.messageId].filter(Boolean) })} />}
                             {sel.attachments.length > 0 && <ul className="flex flex-wrap gap-2">{sel.attachments.map((a) => <li key={a.index}><button type="button" onClick={() => void download(a.index)} disabled={busy === `att-${a.index}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"><Download size={12} /> {a.filename} ({size(a.size)})</button></li>)}</ul>}
                             {sel.html ? <iframe title="Obsah zprávy" sandbox="allow-popups allow-popups-to-escape-sandbox" srcDoc={safeHtml(sel.html)} className="h-[28rem] w-full rounded-xl border border-slate-200" /> : <pre className="max-h-[28rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-50 p-4 text-sm text-slate-800">{sel.text}</pre>}
@@ -242,7 +242,7 @@ export default function LawyerMail() {
                             <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50"><Paperclip size={14} /> Přidat přílohu<input type="file" multiple className="sr-only" onChange={(e) => { const f = [...(e.target.files ?? [])]; e.target.value = ''; setCompose((c) => (c ? { ...c, files: [...c.files, ...f] } : c)); }} /></label>
                             {compose.files.map((f, i) => <button key={`${f.name}-${i}`} type="button" onClick={() => setCompose({ ...compose, files: compose.files.filter((_, j) => j !== i) })} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-200 cursor-pointer" title="Odebrat">{f.name} ×</button>)}
                         </div>
-                        <select value={compose.caseId} onChange={(e) => setCompose({ ...compose, caseId: e.target.value })} className={inputCls} aria-label="Zapsat do věci"><option value="">Nezapisovat do věci</option>{cases.map((c) => <option key={c.id} value={c.id}>Zapsat do věci: {c.title}</option>)}</select>
+                        <select value={compose.caseId} onChange={(e) => setCompose({ ...compose, caseId: e.target.value })} className={inputCls} aria-label="Zapsat do spisu"><option value="">Nezapisovat do spisu</option>{cases.map((c) => <option key={c.id} value={c.id}>Zapsat do spisu: {c.title}</option>)}</select>
                         <div className="flex justify-end gap-2"><button type="button" onClick={() => setCompose(null)} className={ghostBtn}>Zrušit</button><button type="button" onClick={() => void send()} disabled={busy === 'send' || !compose.to.trim() || !compose.subject.trim()} className={primaryBtn}>{busy === 'send' && <Loader2 size={15} className="animate-spin" />} Odeslat</button></div>
                     </div>
                 </div>
@@ -272,7 +272,7 @@ function Connect({ master, userId, onDone }: { master: CryptoKey; userId: string
     return (
         <form onSubmit={save} className="max-w-2xl space-y-3 rounded-2xl border border-slate-200 bg-white p-5">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Mail size={18} className="text-indigo-700" aria-hidden="true" /> Připojit e-mailovou schránku</h2>
-            <p className="text-sm leading-relaxed text-slate-600">E-maily pak čtete a odpovídáte na ně přímo v aplikaci, zprávy uložíte do věci jedním kliknutím a nemusíte přepínat do Gmailu. Heslo se uloží zašifrované vaším šifrovacím heslem, server ho nezná a použije ho jen při načtení pošty.</p>
+            <p className="text-sm leading-relaxed text-slate-600">E-maily pak čtete a odpovídáte na ně přímo v aplikaci, zprávy uložíte do spisu jedním kliknutím a nemusíte přepínat do Gmailu. Heslo se uloží zašifrované vaším šifrovacím heslem, server ho nezná a použije ho jen při načtení pošty.</p>
             <label className="block text-xs font-semibold text-slate-600">Poskytovatel<select value={preset} onChange={(e) => setPreset(e.target.value)} className={`${inputCls} mt-1 font-normal`}>{Object.entries(PRESETS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></label>
             <p className="rounded-lg bg-indigo-50 p-3 text-xs leading-relaxed text-indigo-950">{p.help}</p>
             <div className="grid gap-3 sm:grid-cols-2">

@@ -17,7 +17,7 @@ export function deliveryState(r: Pick<MailLogRow, 'direction' | 'channel' | 'del
 
 export function logCsv(rows: MailLogRow[], caseTitle: (id: string | null) => string): string {
     const q = (s: string) => (/[;"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
-    const head = 'Č. j.;Datum;Směr;Způsob;Odesílatel / adresát;Jejich č. j.;Věc (předmět);Příloh;Spis;Doručeno;Poznámka k doručení;Poznámka';
+    const head = 'Č. j.;Datum;Směr;Způsob;Odesílatel / adresát;Jejich č. j.;Spis (předmět);Příloh;Spis;Doručeno;Poznámka k doručení;Poznámka';
     return '﻿' + [head, ...rows.map((r) => [refNo(r), dmy(r.event_on), DIRECTION_LABEL[r.direction], CHANNEL_LABEL[r.channel], q(r.counterparty), q(r.their_ref), q(r.subject), r.attachments, q(caseTitle(r.case_id)), dmy(r.delivered_on), q(r.delivery_note), q(r.note)].join(';'))].join('\r\n') + '\r\n';
 }
 

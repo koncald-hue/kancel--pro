@@ -167,7 +167,7 @@ export default function LawyerChat() {
                 const bytes = await Promise.all(files.map(async (f) => new Uint8Array(await f.arrayBuffer())));
                 await send('file', { v: 1, kind: 'file', note, files: files.map((f, i) => ({ name: f.name, size: f.size, mime: f.type, i, folder: '' })) }, bytes);
             } else if (attach === 'case') {
-                if (!pick) throw new Error('Vyberte věc.');
+                if (!pick) throw new Error('Vyberte spis.');
                 const prepared = await prepareCaseShare(pick, note);
                 const bytes: Uint8Array[] = [];
                 for (const f of prepared.files) bytes.push(await fetchCaseFileBytes(f));
@@ -212,7 +212,7 @@ export default function LawyerChat() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
             <Lock size={26} className="mx-auto text-indigo-700" aria-hidden="true" />
             <h2 className="mt-3 text-lg font-bold text-slate-900">Chat je pro členy kanceláře</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">Až se připojíte ke kanceláři (nebo ji založíte), budete si moct šifrovaně psát a posílat dokumenty i celé věci s kolegy. {keys.error}</p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">Až se připojíte ke kanceláři (nebo ji založíte), budete si moct šifrovaně psát a posílat dokumenty i celé spisy s kolegy. {keys.error}</p>
             <Link href="/kancelar/tym" className={`${primaryBtn} mt-4 inline-flex`}>Otevřít Tým</Link>
         </div>
     );
@@ -220,7 +220,7 @@ export default function LawyerChat() {
         <section className="rounded-2xl border border-slate-200 bg-white p-6">
             {nudges.length > 0 && <p role="status" className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-950"><strong>{nudges.map((n) => n.name).join(', ')}</strong> {nudges.length > 1 ? 'vás vyzývají' : 'vás vyzývá'} k zapnutí šifrovaného chatu, aby vám mohli psát. Stačí níže nastavit šifrování.</p>}
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><MessageSquare size={18} className="text-indigo-700" /> Šifrovaný chat kanceláře</h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">Zprávy, soubory i celé věci se šifrují ve vašem prohlížeči. Server, provozovatel ani vedoucí kanceláře je přečíst nemohou. Nejdřív odemkněte šifrování a zapněte sdílení.</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">Zprávy, soubory i celé spisy se šifrují ve vašem prohlížeči. Server, provozovatel ani vedoucí kanceláře je přečíst nemohou. Nejdřív odemkněte šifrování a zapněte sdílení.</p>
             {keys.error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{keys.error}</p>}
             {!master ? <div className="mt-4"><E2eeBox access={access} onChanged={() => window.location.reload()} /></div>
                 : !myRow ? <button type="button" onClick={() => void keys.enable()} disabled={keys.busy} className={`${primaryBtn} mt-4`}>{keys.busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />} Zapnout šifrovaný chat</button>
@@ -260,9 +260,9 @@ export default function LawyerChat() {
                     {info && <p role="status" className="mx-4 mt-3 rounded-lg bg-emerald-50 p-2.5 text-sm text-emerald-900">{info}</p>}
                     {attach && (
                         <div className="mx-4 mt-3 rounded-xl border border-indigo-200 bg-indigo-50/50 p-3 text-sm">
-                            <p className="font-semibold text-slate-900">Poslat: {{ file: 'soubory', case: 'celou věc (spis)', client: 'klienta', property: 'nemovitost' }[attach]}</p>
+                            <p className="font-semibold text-slate-900">Poslat: {{ file: 'soubory', case: 'celý spis (spis)', client: 'klienta', property: 'nemovitost' }[attach]}</p>
                             {attach === 'file' && <input ref={fileInput} type="file" multiple onChange={(e) => setFiles([...(e.target.files ?? [])])} className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border file:border-slate-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-semibold" />}
-                            {attach === 'case' && <><select value={pick} onChange={(e) => setPick(e.target.value)} className={`${inputCls} mt-2`} aria-label="Věc"><option value="">Vyberte věc…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}</select><p className="mt-2 text-xs text-slate-600">Pošle se vše ze spisu: údaje, postup, chronologie, lhůty, kontakty, uložené nemovitosti a nahrané soubory (do {formatSize(MAX_CASE_SHARE_BYTES)}). Kolega si věc převezme jako novou věc ve svém prostoru.</p></>}
+                            {attach === 'case' && <><select value={pick} onChange={(e) => setPick(e.target.value)} className={`${inputCls} mt-2`} aria-label="Spis"><option value="">Vyberte spis…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}</select><p className="mt-2 text-xs text-slate-600">Pošle se vše ze spisu: údaje, postup, chronologie, lhůty, kontakty, uložené nemovitosti a nahrané soubory (do {formatSize(MAX_CASE_SHARE_BYTES)}). Kolega si spis převezme jako nový spis ve svém prostoru.</p></>}
                             {attach === 'client' && <select value={pick} onChange={(e) => setPick(e.target.value)} className={`${inputCls} mt-2`} aria-label="Klient"><option value="">Vyberte klienta…</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>}
                             {attach === 'property' && <select value={pick} onChange={(e) => setPick(e.target.value)} className={`${inputCls} mt-2`} aria-label="Nemovitost"><option value="">Vyberte uloženou nemovitost…</option>{props.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select>}
                             <div className="mt-3 flex gap-2"><button type="button" onClick={() => void sendAttachment()} disabled={busy === 'attach' || !peerReady} className={primaryBtn}>{busy === 'attach' ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} Zašifrovat a odeslat</button><button type="button" onClick={() => setAttach(null)} className={ghostBtn}>Zrušit</button></div>
@@ -277,7 +277,7 @@ export default function LawyerChat() {
                     ) : (
                     <footer className="border-t border-slate-100 p-3">
                         <div className="mb-2 flex flex-wrap gap-1.5">
-                            {([['file', 'Soubor', Paperclip], ['case', 'Věc', Briefcase], ['client', 'Klient', User], ['property', 'Nemovitost', Landmark]] as const).map(([k, label, Icon]) => <button key={k} type="button" onClick={() => void openAttach(k)} disabled={!peerReady} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${attach === k ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700 hover:bg-slate-50'} disabled:opacity-40`}><Icon size={13} aria-hidden="true" /> {label}</button>)}
+                            {([['file', 'Soubor', Paperclip], ['case', 'Spis', Briefcase], ['client', 'Klient', User], ['property', 'Nemovitost', Landmark]] as const).map(([k, label, Icon]) => <button key={k} type="button" onClick={() => void openAttach(k)} disabled={!peerReady} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${attach === k ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-300 text-slate-700 hover:bg-slate-50'} disabled:opacity-40`}><Icon size={13} aria-hidden="true" /> {label}</button>)}
                         </div>
                         <form onSubmit={(e) => { e.preventDefault(); if (attach) void sendAttachment(); else void sendText(); }} className="flex gap-2">
                             <input value={text} onChange={(e) => setText(e.target.value)} placeholder={peerReady ? 'Napište zprávu…' : 'Kolega ještě nemá zapnutý chat'} disabled={!peerReady} maxLength={MAX_TEXT} className={inputCls} aria-label="Zpráva" />
@@ -345,7 +345,7 @@ function Bubble({ m, payload, k, mine, fromName, userId, cases, loadCases, onDow
                     if (error || !data) throw new Error(error?.message ?? 'Soubor se nepodařilo stáhnout.');
                     return decryptAttachment(k, new Uint8Array(await data.arrayBuffer()));
                 }, (done, total) => setState({ msg: `Soubory ${done}/${total}…`, working: true }));
-                setState({ msg: 'Věc je převzata.', caseId: id, done: true });
+                setState({ msg: 'Spis je převzata.', caseId: id, done: true });
             } catch (e) { setState({ msg: e instanceof Error ? e.message : 'Převzetí se nepovedlo.' }); }
         }
         return (
@@ -354,7 +354,7 @@ function Bubble({ m, payload, k, mine, fromName, userId, cases, loadCases, onDow
                 <p className={`text-xs ${sub}`}>{[c.client_name && `klient ${c.client_name}`, c.reference, c.authority].filter(Boolean).join(' · ') || 'bez údajů o klientovi'}</p>
                 {c.summary && <p className="mt-1.5 line-clamp-3 text-xs">{c.summary}</p>}
                 <p className={`mt-1.5 text-xs ${sub}`}>{payload.entries.length} záznamů, {payload.deadlines.length} lhůt, {payload.contacts.length} kontaktů, {payload.properties.length} nemovitostí, {payload.files.length} souborů{payload.skippedFiles ? ` (${payload.skippedFiles} nepřiloženo)` : ''}</p>
-                {!mine && (state.done ? <p className="mt-2 text-xs font-semibold">✓ {state.msg} {state.caseId && <Link href={`/kancelar/veci/${state.caseId}`} className="underline">Otevřít věc</Link>}</p> : <div className="mt-2"><button type="button" onClick={() => void take()} disabled={state.working} className={button}>{state.working ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Převzít do mých věcí</button>{state.msg && <p className="mt-1 text-xs">{state.msg}</p>}</div>)}
+                {!mine && (state.done ? <p className="mt-2 text-xs font-semibold">✓ {state.msg} {state.caseId && <Link href={`/kancelar/veci/${state.caseId}`} className="underline">Otevřít spis</Link>}</p> : <div className="mt-2"><button type="button" onClick={() => void take()} disabled={state.working} className={button}>{state.working ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Převzít do mých spisů</button>{state.msg && <p className="mt-1 text-xs">{state.msg}</p>}</div>)}
             </div>
         );
     }
@@ -376,8 +376,8 @@ function Bubble({ m, payload, k, mine, fromName, userId, cases, loadCases, onDow
             <div className="mt-2 overflow-hidden rounded-xl text-slate-900"><PropertyCard snap={payload.snapshot} dataAsOf={payload.data_as_of || null} /></div>
             {!mine && (state.done ? <p className="mt-2 text-xs font-semibold">✓ {state.msg}</p> : (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <select value={target} onFocus={() => void loadCases()} onChange={(e) => setTarget(e.target.value)} aria-label="Přidat do věci" className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800"><option value="">Přidat do věci…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
-                    <button type="button" disabled={!target} onClick={async () => { try { await addPropertyToCase(userId, target, { label: payload.label, snapshot: payload.snapshot, data_as_of: payload.data_as_of }); setState({ msg: 'Nemovitost přidána do věci.', done: true }); } catch (e) { setState({ msg: e instanceof Error ? e.message : 'Nepodařilo se.' }); } }} className={button}><Check size={12} /> Přidat</button>
+                    <select value={target} onFocus={() => void loadCases()} onChange={(e) => setTarget(e.target.value)} aria-label="Přidat do spisu" className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800"><option value="">Přidat do spisu…</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                    <button type="button" disabled={!target} onClick={async () => { try { await addPropertyToCase(userId, target, { label: payload.label, snapshot: payload.snapshot, data_as_of: payload.data_as_of }); setState({ msg: 'Nemovitost přidána do spisu.', done: true }); } catch (e) { setState({ msg: e instanceof Error ? e.message : 'Nepodařilo se.' }); } }} className={button}><Check size={12} /> Přidat</button>
                     {state.msg && <p className="w-full text-xs">{state.msg}</p>}
                 </div>
             ))}

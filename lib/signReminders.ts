@@ -32,7 +32,7 @@ export function buildExpiryNotice(i: { who: string; titles: string[] }): { subje
             `platnost žádosti o podpis vypršela a klient ${i.who || ''} dokumenty nepodepsal:`,
             ...i.titles.map((t) => `• ${t}`),
             '',
-            'V Kanceláři Pro ve věci otevřete záložku Podpisy a pošlete žádost znovu, případně klienta kontaktujte.',
+            'V Kanceláři Pro ve spisu otevřete záložku Podpisy a pošlete žádost znovu, případně klienta kontaktujte.',
         ].join('\n'),
     };
 }

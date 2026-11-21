@@ -33,7 +33,7 @@ export default function LawyerTemplates() {
         if (err) { setError('Šablonu se nepodařilo uložit.'); return; }
         setEditing(null); await reload();
     }
-    async function remove(id: string) { if (!(await confirmAction('Smazat šablonu úkolů? Úkoly, které už z ní vznikly ve věcech, zůstanou.'))) return; await supabase.from('case_templates').delete().eq('id', id); await reload(); }
+    async function remove(id: string) { if (!(await confirmAction('Smazat šablonu úkolů? Úkoly, které už z ní vznikly ve spisech, zůstanou.'))) return; await supabase.from('case_templates').delete().eq('id', id); await reload(); }
     async function addStarters() {
         try { setList(await addStarterTemplates(userId)); } catch { setError('Vzorové šablony se nepodařilo přidat.'); }
     }
@@ -43,7 +43,7 @@ export default function LawyerTemplates() {
         <div className="space-y-5">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><ListChecks size={18} className="text-indigo-700" aria-hidden="true" /> Šablony úkolů</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Šablonu vyberete při založení věci nebo ji použijete v kartě Lhůty existující věci. Úkoly dostanou termín podle posunu ode dne založení nebo od data události (např. jednání), případně jen v pracovních dnech. Jde o interní úkoly, ne o zákonné lhůty: ty zadávejte zvlášť a potvrzujte.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Šablonu vyberete při založení spisu nebo ji použijete v kartě Lhůty existující spisu. Úkoly dostanou termín podle posunu ode dne založení nebo od data události (např. jednání), případně jen v pracovních dnech. Jde o interní úkoly, ne o zákonné lhůty: ty zadávejte zvlášť a potvrzujte.</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" onClick={() => setEditing({ id: null, name: '', items: [blank()], isDefault: !list?.some((t) => t.isDefault) })} className={primaryBtn}><Plus size={15} /> Nová šablona</button>
                     {list?.length === 0 && <button type="button" onClick={() => void addStarters()} className={ghostBtn}>Přidat dvě vzorové šablony</button>}
@@ -57,13 +57,13 @@ export default function LawyerTemplates() {
                         <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} maxLength={120} className={`${inputCls} mt-1 max-w-md`} />
                     </label>
                     <p className="mt-4 hidden gap-2 px-3 text-xs font-semibold text-slate-500 sm:grid sm:grid-cols-[1fr_90px_150px_auto_auto]"><span>Úkol</span><span>Za kolik dní</span><span>Od čeho</span><span>Dny</span><span className="w-4" /></p>
-                    <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><input type="checkbox" checked={editing.isDefault} onChange={(e) => setEditing({ ...editing, isDefault: e.target.checked })} /> Použít automaticky u každé nové věci</label>
+                    <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><input type="checkbox" checked={editing.isDefault} onChange={(e) => setEditing({ ...editing, isDefault: e.target.checked })} /> Použít automaticky u každé nové spisy</label>
                     <ul className="mt-1 space-y-2">
                         {editing.items.map((it, i) => (
                             <li key={i} className="grid gap-2 rounded-xl bg-white p-3 sm:grid-cols-[1fr_90px_150px_auto_auto] sm:items-center">
                                 <input value={it.title} onChange={(e) => patch(i, { title: e.target.value })} placeholder="Úkol, např. Poslat klientovi shrnutí" maxLength={120} aria-label="Název úkolu" className={inputCls} />
                                 <input type="number" value={it.offset} onChange={(e) => patch(i, { offset: Math.trunc(Number(e.target.value)) || 0 })} aria-label="Posun ve dnech (záporný je před)" className={inputCls} />
-                                <select value={it.base} onChange={(e) => patch(i, { base: e.target.value === 'event' ? 'event' : 'start' })} aria-label="Od čeho se počítá" className={inputCls}><option value="start">od založení věci</option><option value="event">od data události</option></select>
+                                <select value={it.base} onChange={(e) => patch(i, { base: e.target.value === 'event' ? 'event' : 'start' })} aria-label="Od čeho se počítá" className={inputCls}><option value="start">od založení spisu</option><option value="event">od data události</option></select>
                                 <label className="flex items-center gap-1.5 text-xs text-slate-700"><input type="checkbox" checked={it.workdays} onChange={(e) => patch(i, { workdays: e.target.checked })} /> jen pracovní</label>
                                 <button type="button" onClick={() => setEditing({ ...editing, items: editing.items.filter((_, k) => k !== i) })} aria-label="Odebrat úkol" className="cursor-pointer text-slate-400 hover:text-rose-700"><Trash2 size={16} /></button>
                             </li>
@@ -74,7 +74,7 @@ export default function LawyerTemplates() {
                         <button type="button" onClick={() => void save()} className={primaryBtn}>Uložit šablonu</button>
                         <button type="button" onClick={() => setEditing(null)} className={ghostBtn}>Zrušit</button>
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">Záporný posun je před datem (např. −3 dny před jednáním). Úkoly navázané na datum události se při založení věci přeskočí, dokud ho věc nemá, a pak je doplníte tlačítkem v kartě Lhůty.</p>
+                    <p className="mt-2 text-xs text-slate-500">Záporný posun je před datem (např. −3 dny před jednáním). Úkoly navázané na datum události se při založení spisu přeskočí, dokud ho spis nemá, a pak je doplníte tlačítkem v kartě Lhůty.</p>
                 </section>
             )}
 

@@ -3,7 +3,7 @@ import LawyerShell from '@/app/components/lawyer/LawyerShell';
 import CaseDetail from '@/app/components/situation/CaseDetail';
 
 export const metadata: Metadata = {
-    title: 'Věc | Kancelář Pro',
+    title: 'Spis | Kancelář Pro',
     robots: { index: false },
 };
 

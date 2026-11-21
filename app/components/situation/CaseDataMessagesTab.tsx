@@ -21,19 +21,19 @@ export default function CaseDataMessagesTab({ item, bundle, fail }: TabProps) {
     useEffect(() => { let alive = true; Promise.resolve().then(() => { if (alive) void load(); }); return () => { alive = false; }; }, [load]);
 
     async function remove(r: SavedMessage) {
-        if (!await confirmAction('Odebrat záznam o zprávě z věci? Uložené přílohy zůstanou v souborech věci.')) return;
+        if (!await confirmAction('Odebrat záznam o zprávě ze spisu? Uložené přílohy zůstanou v souborech spisu.')) return;
         const { error } = await supabase.from('case_data_messages').delete().eq('id', r.id);
         if (error) fail(new Error(error.message)); else setRows((l) => (l ?? []).filter((x) => x.id !== r.id));
     }
 
     if (rows === undefined) return <p className="text-sm text-slate-500" role="status">Načítám…</p>;
-    if (rows === null) return <p className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-slate-700">Datové zprávy ve věci zatím nejsou v databázi zapnuté (chybí spuštění souboru datove-zpravy-ve-veci.sql).</p>;
+    if (rows === null) return <p className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-slate-700">Datové zprávy ve spisu zatím nejsou v databázi zapnuté (chybí spuštění souboru datove-zpravy-ve-veci.sql).</p>;
 
     return (
         <div className="space-y-4">
-            <p className="text-sm leading-relaxed text-slate-600">Sem se ukládají datové zprávy, které přiřadíte k věci v datové schránce (kulaté tlačítko vpravo dole). Přílohy najdete v záložce Soubory s poznámkou „Datová zpráva …“.</p>
+            <p className="text-sm leading-relaxed text-slate-600">Sem se ukládají datové zprávy, které přiřadíte ke spisu v datové schránce (kulaté tlačítko vpravo dole). Přílohy najdete v záložce Soubory s poznámkou „Datová zpráva …“.</p>
             {rows.length === 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center"><MailCheck size={26} className="mx-auto text-indigo-700" aria-hidden="true" /><p className="mt-2 text-sm text-slate-600">Ke věci zatím není přiřazená žádná datová zpráva.</p></div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center"><MailCheck size={26} className="mx-auto text-indigo-700" aria-hidden="true" /><p className="mt-2 text-sm text-slate-600">Ke spisu zatím není přiřazená žádná datová zpráva.</p></div>
             ) : (
                 <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
                     {rows.map((r) => {

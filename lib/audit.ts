@@ -5,7 +5,7 @@ export type AuditAction = 'vytvoreno' | 'zmeneno' | 'smazano' | 'otevreno' | 'st
 
 export const ACTION_LABEL: Record<AuditAction, string> = { vytvoreno: 'Vytvořeno', zmeneno: 'Změněno', smazano: 'Smazáno', otevreno: 'Otevřeno', stazeno: 'Staženo', exportovano: 'Exportováno' };
 export const ENTITY_LABEL: Record<string, string> = {
-    cases: 'Věc', case_files: 'Soubor', case_entries: 'Chronologie', case_deadlines: 'Lhůta / úkol', case_contacts: 'Kontakt', case_folders: 'Složka', case_members: 'Sdílení věci',
+    cases: 'Spis', case_files: 'Soubor', case_entries: 'Chronologie', case_deadlines: 'Lhůta / úkol', case_contacts: 'Kontakt', case_folders: 'Složka', case_members: 'Sdílení spisu',
     client_links: 'Klientský odkaz', client_requests: 'Požadavek na klienta', client_messages: 'Zpráva klienta', signature_requests: 'Podpis', client_identifications: 'Identifikace klienta',
     case_properties: 'Nemovitost', case_research: 'Rešerše', case_data_messages: 'Datová zpráva', time_entries: 'Výkaz času', invoices: 'Faktura', lawyer_clients: 'Klient',
 };
@@ -26,7 +26,7 @@ export function logCaseEvent(caseId: string, action: 'otevreno' | 'stazeno' | 'e
 // CSV pro Excel: oddělovač středník, UTF-8 s BOM, buňky začínající = + - @ se předsadí apostrofem (ochrana proti spuštění vzorce)
 const cell = (v: string) => { const t = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v; return /[;"\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
 export function auditCsv(rows: AuditRow[]): string {
-    const head = ['Čas', 'Kdo', 'Věc', 'Událost', 'Druh záznamu', 'Název', 'Změněno'];
+    const head = ['Čas', 'Kdo', 'Spis', 'Událost', 'Druh záznamu', 'Název', 'Změněno'];
     const lines = rows.map((r) => [new Date(r.at).toLocaleString('cs-CZ'), r.actor_name, r.case_title ?? '', ACTION_LABEL[r.action] ?? r.action, ENTITY_LABEL[r.entity] ?? r.entity, r.summary, r.changed.map((c) => COLUMN_LABEL[c] ?? c).join(', ')].map((x) => cell(String(x))).join(';'));
     return '﻿' + [head.join(';'), ...lines].join('\r\n') + '\r\n';
 }

@@ -23,7 +23,7 @@ const STARTER = `NÁZEV DOKUMENTU
 
 V {{misto}} dne {{datum}}
 
-Věc: {{vec.nazev}}
+Spis: {{vec.nazev}}
 Spisová značka: {{vec.spisova_znacka}}
 Klient: {{klient.jmeno}}
 
@@ -80,7 +80,7 @@ export default function LawyerLibrary() {
     return (
         <div className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="max-w-2xl text-sm leading-relaxed text-slate-600">Vlastní vzory podání, smluv a dopisů. Do textu vložíte pole a počítač je vyplní z věci, klienta a vašeho profilu.</p>
+                <p className="max-w-2xl text-sm leading-relaxed text-slate-600">Vlastní vzory podání, smluv a dopisů. Do textu vložíte pole a počítač je vyplní ze spisu, klienta a vašeho profilu.</p>
                 <button type="button" onClick={() => setView({ mode: 'edit', id: null })} className={primaryBtn}><Plus size={16} /> Nový vzor</button>
             </div>
             <StarterPack items={items} userId={userId} onAdded={reload} />
@@ -90,18 +90,18 @@ export default function LawyerLibrary() {
                     <li>Klikněte na <strong>Nový vzor</strong>, pojmenujte ho a případně zadejte kategorii (např. Dopisy, Podání, Smlouvy).</li>
                     <li>Do pole <strong>Text vzoru</strong> vložte hotový dokument, třeba zkopírovaný z Wordu. Jednoduché značení se do Wordu převede samo: řádek začínající <code className="rounded bg-white px-1">#</code> je nadpis dokumentu, <code className="rounded bg-white px-1">##</code> nadpis článku, <code className="rounded bg-white px-1">1.</code> číslovaný odstavec, <code className="rounded bg-white px-1">**text**</code> tučně, <code className="rounded bg-white px-1">| a | b |</code> tabulka a <code className="rounded bg-white px-1">::podpisy Klient | Advokát</code> místa pro podpis. Ostatní formátování si ve Wordu doupravíte.</li>
                     <li>Místa, která se u každého klienta mění, nahraďte <strong>poli</strong>. Klikněte na místo v textu a v pravém panelu zvolte pole, nebo ho napište rukou ve dvojitých složených závorkách, např. <code className="rounded bg-white px-1">{'{{klient.jmeno}}'}</code>.</li>
-                    <li><strong>Pole, která vyplní počítač sám</strong> (z věci, klienta a vašeho profilu): klient (jméno, e-mail, telefon, adresa, IČO, DIČ), věc (název, spisová značka, soud či úřad, popis), advokát (jméno, kancelář, číslo ČAK, adresa, telefon, e-mail) a dnešní datum. Údaje o věci a klientovi se berou z karty věci, vyplňte je tam.</li>
+                    <li><strong>Pole, která vyplní počítač sám</strong> (ze spisu, klienta a vašeho profilu): klient (jméno, e-mail, telefon, adresa, IČO, DIČ), spis (název, spisová značka, soud či úřad, popis), advokát (jméno, kancelář, číslo ČAK, adresa, telefon, e-mail) a dnešní datum. Údaje o spisu a klientovi se berou z karty spisu, vyplňte je tam.</li>
                     <li><strong>Vlastní pole</strong> pro cokoli jiného: napište např. <code className="rounded bg-white px-1">{'{{castka}}'}</code> nebo <code className="rounded bg-white px-1">{'{{datum_splatnosti}}'}</code>. Při vyplňování se na ně program zeptá. Název pište bez mezer (místo mezery podtržítko), stejné pole použité víckrát se zadává jen jednou.</li>
                     <li>Zaškrtněte <strong>Sdílet s kolegy</strong>, mají-li vzor používat i ostatní v kanceláři. Upravovat ho můžete jen vy.</li>
-                    <li><strong>Použití:</strong> u vzoru klikněte na Vyplnit, vyberte věc, doplňte vlastní pole a stáhněte hotový Word (.docx), nebo text zkopírujte či vytiskněte. Co zůstalo nevyplněné, je vidět jako <code className="rounded bg-white px-1">{'{{pole}}'}</code>, aby vám nic neuniklo.</li>
+                    <li><strong>Použití:</strong> u vzoru klikněte na Vyplnit, vyberte spis, doplňte vlastní pole a stáhněte hotový Word (.docx), nebo text zkopírujte či vytiskněte. Co zůstalo nevyplněné, je vidět jako <code className="rounded bg-white px-1">{'{{pole}}'}</code>, aby vám nic neuniklo.</li>
                 </ol>
-                <p className="mt-3 rounded-lg bg-white p-3 text-xs"><strong>Příklad:</strong> „Vážený pane {'{{klient.jmeno}}'}, vyzývám Vás k úhradě částky {'{{castka}}'} Kč do {'{{datum_splatnosti}}'}. Ve věci vedené pod sp. zn. {'{{vec.spisova_znacka}}'}. {'{{advokat.jmeno}}'}“. Po vyplnění: „Vážený pane Jan Novák, vyzývám Vás k úhradě částky 15 000 Kč do 30. 11. 2026…“ Dokument vždy před odesláním zkontrolujte, odpovídá za něj advokát.</p>
+                <p className="mt-3 rounded-lg bg-white p-3 text-xs"><strong>Příklad:</strong> „Vážený pane {'{{klient.jmeno}}'}, vyzývám Vás k úhradě částky {'{{castka}}'} Kč do {'{{datum_splatnosti}}'}. Ve spisu vedené pod sp. zn. {'{{vec.spisova_znacka}}'}. {'{{advokat.jmeno}}'}“. Po vyplnění: „Vážený pane Jan Novák, vyzývám Vás k úhradě částky 15 000 Kč do 30. 11. 2026…“ Dokument vždy před odesláním zkontrolujte, odpovídá za něj advokát.</p>
             </details>
             {mine.length === 0 && others.length === 0 && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
                     <Library size={28} className="mx-auto text-indigo-700" aria-hidden="true" />
                     <h2 className="mt-3 text-lg font-bold text-slate-900">Zatím tu nemáte žádný vzor</h2>
-                    <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-600">Vložte text svého oblíbeného podání a na místa, která se mění, dejte pole, třeba {'{{klient.jmeno}}'} nebo {'{{castka}}'}. Příště stačí vybrat věc a dokument je hotový.</p>
+                    <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-600">Vložte text svého oblíbeného podání a na místa, která se mění, dejte pole, třeba {'{{klient.jmeno}}'} nebo {'{{castka}}'}. Příště stačí vybrat spis a dokument je hotový.</p>
                     <button type="button" onClick={() => setView({ mode: 'edit', id: null })} className={`${primaryBtn} mt-4`}><Plus size={16} /> Vytvořit první vzor</button>
                 </div>
             )}
@@ -152,7 +152,7 @@ function Editor({ template, userId, onDone, onCancel }: { template: LawyerTempla
         await onDone();
     }
 
-    const groups = ['Klient', 'Věc', 'Advokát', 'Obecné'] as const;
+    const groups = ['Klient', 'Spis', 'Advokát', 'Obecné'] as const;
     return (
         <form onSubmit={save} className="space-y-4">
             <button type="button" onClick={onCancel} className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"><ArrowLeft size={15} /> Zpět do knihovny</button>
@@ -239,8 +239,8 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
             const name = `${template.title.replace(/[^\p{L}\p{N}]+/gu, '_')}.docx`;
             const file = new File([blob], name, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
             await uploadCaseFile(userId, chosen.id, null, file);
-            await insertRow('case_entries', { case_id: chosen.id, user_id: userId, kind: 'event', title: `Vytvořen dokument: ${template.title}`.slice(0, 200), body: remaining.length ? `Ve vzoru zbývá doplnit: ${remaining.join(', ')}.` : 'Dokument vygenerován ze vzoru a uložen do souborů věci.', happened_on: new Date().toISOString().slice(0, 10) });
-            setSaveMsg(`Uloženo do věci „${chosen.title}“ (soubor ${name}) a zapsáno do chronologie.`);
+            await insertRow('case_entries', { case_id: chosen.id, user_id: userId, kind: 'event', title: `Vytvořen dokument: ${template.title}`.slice(0, 200), body: remaining.length ? `Ve vzoru zbývá doplnit: ${remaining.join(', ')}.` : 'Dokument vygenerován ze vzoru a uložen do souborů spisu.', happened_on: new Date().toISOString().slice(0, 10) });
+            setSaveMsg(`Uloženo do spisu „${chosen.title}“ (soubor ${name}) a zapsáno do chronologie.`);
         } catch (e) { setSaveMsg(e instanceof Error ? e.message : 'Uložení se nepovedlo.'); }
         setSaving(false);
     }
@@ -258,9 +258,9 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
             <h2 className="text-xl font-bold text-slate-900">{template.title}</h2>
             <div className="grid gap-5 lg:grid-cols-[18rem_1fr]">
                 <div className="space-y-3">
-                    <label className="block text-xs font-semibold text-slate-600">Věc, ze které se vyplní údaje
+                    <label className="block text-xs font-semibold text-slate-600">Spis, ze které se vyplní údaje
                         <select value={caseId} onChange={(e) => { setCaseId(e.target.value); setOverride({}); }} className={`${inputCls} mt-1 font-normal`}>
-                            <option value="">Bez věci (jen údaje advokáta)</option>
+                            <option value="">Bez spisu (jen údaje advokáta)</option>
                             {cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}
                         </select>
                     </label>
@@ -268,7 +268,7 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
                         <label key={k} className="block text-xs font-semibold text-slate-600">{customLabel(k)}<input value={custom[k] ?? ''} onChange={(e) => setCustom((c) => ({ ...c, [k]: e.target.value }))} className={`${inputCls} mt-1 font-normal`} /></label>
                     ))}
                     {fields.auto.filter((k) => !auto[k]?.trim()).map((k) => (
-                        <label key={k} className="block text-xs font-semibold text-slate-600">{AUTO_FIELDS.find((f) => f.key === k)?.label ?? k}<span className="ml-1 font-normal text-slate-400">(není ve věci)</span><input value={override[k] ?? ''} onChange={(e) => setOverride((o) => ({ ...o, [k]: e.target.value }))} className={`${inputCls} mt-1 font-normal`} /></label>
+                        <label key={k} className="block text-xs font-semibold text-slate-600">{AUTO_FIELDS.find((f) => f.key === k)?.label ?? k}<span className="ml-1 font-normal text-slate-400">(není ve spisu)</span><input value={override[k] ?? ''} onChange={(e) => setOverride((o) => ({ ...o, [k]: e.target.value }))} className={`${inputCls} mt-1 font-normal`} /></label>
                     ))}
                 </div>
                 <div className="min-w-0">
@@ -279,10 +279,10 @@ function Fill({ template, access, userId, onBack }: { template: LawyerTemplate; 
                         <button type="button" onClick={() => void download()} className={primaryBtn}><Download size={15} /> Stáhnout Word (.docx)</button>
                         <button type="button" onClick={() => void copy()} className={ghostBtn}><Copy size={14} /> {copied ? 'Zkopírováno' : 'Kopírovat text'}</button>
                         <button type="button" onClick={print} className={ghostBtn}><Printer size={14} /> Tisk</button>
-                        {chosen && <button type="button" onClick={() => void saveToCase()} disabled={saving} className={ghostBtn}>{saving ? <Loader2 size={14} className="animate-spin" /> : <FilePlus2 size={14} />} Uložit do spisu věci</button>}
+                        {chosen && <button type="button" onClick={() => void saveToCase()} disabled={saving} className={ghostBtn}>{saving ? <Loader2 size={14} className="animate-spin" /> : <FilePlus2 size={14} />} Uložit do spisu</button>}
                     </div>
                     {saveMsg && <p role="status" className="mt-2 rounded-lg bg-emerald-50 p-2.5 text-xs text-emerald-900">{saveMsg}</p>}
-                    <p className="mt-2 text-xs text-slate-500">Dokument se ukládá, jen když zvolíte „Uložit do spisu věci“ (jde o vybranou věc výše). Před odesláním ho vždy zkontrolujte.</p>
+                    <p className="mt-2 text-xs text-slate-500">Dokument se ukládá, jen když zvolíte „Uložit do spisu“ (jde o vybraný spis výše). Před odesláním ho vždy zkontrolujte.</p>
                 </div>
             </div>
         </div>
@@ -306,9 +306,9 @@ function StarterPack({ items, userId, onAdded }: { items: LawyerTemplate[]; user
     return (
         <section className="rounded-2xl border border-indigo-200 bg-white p-5" aria-label="Základní sada vzorů">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Library size={18} className="text-indigo-700" aria-hidden="true" /> Základní sada vzorů ({missing.length})</h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">Hotové obecné vzory pro běžnou praxi: smlouva o právních službách, plné moci, informace o osobních údajích, souhlas s elektronickou komunikací, záznam o poradě, předávací protokol, předžalobní výzva, odstoupení od smlouvy, uznání dluhu a splátky, oznámení o zastoupení, žádost o informace a další. Pole se vyplní z věci a klienta a výstup je upravený Word s číslováním stránek a místy pro podpis.</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">Hotové obecné vzory pro běžnou praxi: smlouva o právních službách, plné moci, informace o osobních údajích, souhlas s elektronickou komunikací, záznam o poradě, předávací protokol, předžalobní výzva, odstoupení od smlouvy, uznání dluhu a splátky, oznámení o zastoupení, žádost o informace a další. Pole se vyplní ze spisu a klienta a výstup je upravený Word s číslováním stránek a místy pro podpis.</p>
             <ul className="mt-3 grid gap-x-6 gap-y-1 text-sm text-slate-700 sm:grid-cols-2">{missing.map((t) => <li key={t.id} className="truncate">• {t.title}</li>)}</ul>
-            <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">Vzory jsou obecné a slouží jako výchozí bod, nenahrazují právní posouzení konkrétní věci. U každého je poznámka „Co zkontrolovat před použitím“. Za použití vzoru a jeho obsah odpovídá advokát. Do vlastní knihovny se zkopírují a můžete je libovolně upravit.</p>
+            <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">Vzory jsou obecné a slouží jako výchozí bod, nenahrazují právní posouzení konkrétní spisu. U každého je poznámka „Co zkontrolovat před použitím“. Za použití vzoru a jeho obsah odpovídá advokát. Do vlastní knihovny se zkopírují a můžete je libovolně upravit.</p>
             <button type="button" onClick={() => void add()} disabled={busy} className={`${primaryBtn} mt-3`}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Přidat do mé knihovny</button>
             {msg && <p role="alert" className="mt-2 text-sm text-rose-800">{msg}</p>}
         </section>

@@ -61,7 +61,7 @@ export default function ClientSummary({ client }: { client: LawyerClient }) {
     return (
         <div className="mb-4 space-y-3">
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-                {stat(Briefcase, 'Věcí', String(data.cases.length))}
+                {stat(Briefcase, 'Spisů', String(data.cases.length))}
                 {stat(Clock3, 'K vyfakturování', `${money(openAmount)} · ${formatMinutes(open.reduce((s, e) => s + e.minutes, 0))} h`)}
                 {stat(Wallet, 'Čeká na zaplacení', money(outstanding), overdue.length ? 'text-rose-700' : undefined)}
                 {stat(Inbox, 'Poptávek', String(data.inquiries))}

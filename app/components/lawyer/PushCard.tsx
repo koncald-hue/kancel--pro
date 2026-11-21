@@ -54,7 +54,7 @@ export default function PushCard() {
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="push-h">
             <h2 id="push-h" className="flex items-center gap-2 text-lg font-bold text-slate-900"><BellRing size={18} className="text-indigo-700" aria-hidden="true" /> Upozornění na lhůty</h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">Každé ráno vám na tomto zařízení přijde krátká zpráva, když máte lhůty po termínu, dnes nebo do tří dnů. Upozornění obsahuje jen počty (třeba „Dnes končí: 2 lhůty“), nikdy názvy věcí ani klientů, protože se zobrazí i na zamčené obrazovce. Nenahrazuje kontrolu lhůt v aplikaci a v kalendáři.</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">Každé ráno vám na tomto zařízení přijde krátká zpráva, když máte lhůty po termínu, dnes nebo do tří dnů. Upozornění obsahuje jen počty (třeba „Dnes končí: 2 lhůty“), nikdy názvy spisů ani klientů, protože se zobrazí i na zamčené obrazovce. Nenahrazuje kontrolu lhůt v aplikaci a v kalendáři.</p>
             {state === 'unsupported' && <p className="mt-3 text-sm text-slate-500">Toto zařízení nebo prohlížeč upozornění nepodporuje, nebo je aplikace spuštěná bez instalace. Na iPhonu fungují jen u aplikace přidané na plochu (iOS 16.4 a novější).</p>}
             {state === 'blocked' && <p className="mt-3 text-sm text-amber-800">Upozornění jsou v prohlížeči zakázaná. Povolíte je v nastavení webu (ikona zámku vedle adresy).</p>}
             {state === 'off' && <button type="button" onClick={() => void enable()} disabled={busy} className={`${primaryBtn} mt-3`}>{busy ? 'Zapínám…' : 'Zapnout upozornění na tomto zařízení'}</button>}

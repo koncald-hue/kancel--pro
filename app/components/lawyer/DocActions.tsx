@@ -65,7 +65,7 @@ export default function DocActions({ caseId, caseTitle, reference, userId, signa
 
     return (
         <section className="space-y-3 rounded-2xl border-2 border-indigo-200 bg-indigo-50/40 p-4" aria-label="Další kroky">
-            <h3 className="flex items-center gap-2 text-base font-bold text-slate-900"><Sparkles size={16} className="text-indigo-700" aria-hidden="true" /> Další kroky k věci „{caseTitle}“</h3>
+            <h3 className="flex items-center gap-2 text-base font-bold text-slate-900"><Sparkles size={16} className="text-indigo-700" aria-hidden="true" /> Další kroky ke spisu „{caseTitle}“</h3>
             <div className="space-y-2 text-sm">
                 <label className="flex flex-wrap items-center gap-2"><input type="checkbox" checked={doTime} onChange={(e) => setDoTime(e.target.checked)} /><Clock3 size={14} className="text-slate-500" aria-hidden="true" /> Zapsat čas za prostudování
                     <input value={minutes} onChange={(e) => setMinutes(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" aria-label="Minuty" className={`${inputCls} w-20`} /> min <span className="text-xs text-slate-500">(odhad podle délky textu: {words} slov)</span></label>
@@ -90,7 +90,7 @@ export default function DocActions({ caseId, caseTitle, reference, userId, signa
                     {drafts.map((d) => <button key={d.id} type="button" onClick={() => onReply(d.body)} className="cursor-pointer rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:border-indigo-400">{d.label}</button>)}</div>
             )}
             <div className="flex flex-wrap items-center gap-3"><button type="button" onClick={() => void run()} disabled={busy || !valid || (!doTime && !doTask && chosenDl.length === 0)} className={primaryBtn}>{busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} Provést vybrané kroky</button>
-                <span className="text-xs text-slate-500">Odesílatel: {sender}. Nic se neodešle, jen se zapíše do věci.</span></div>
+                <span className="text-xs text-slate-500">Odesílatel: {sender}. Nic se neodešle, jen se zapíše do spisu.</span></div>
             {result && <p role="status" className="rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">{result}</p>}
             {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
         </section>

@@ -105,9 +105,9 @@ export default function DeadlineDialog({ target, userId, onSaved, onClose }: { t
                     </div>
                     <label className="block text-sm font-semibold text-slate-800">Kdo to má na starosti
                         {people === null ? <span className="mt-1 block text-xs font-normal text-slate-500">Načítám…</span>
-                            : people.length === 0 ? <span className="mt-1 block text-xs font-normal text-slate-500">Vlastník věci. (Přiřazení kolegovi je možné u sdílené věci.)</span>
+                            : people.length === 0 ? <span className="mt-1 block text-xs font-normal text-slate-500">Vlastník spisu. (Přiřazení kolegovi je možné u sdíleného spisu.)</span>
                                 : <select value={assignee} onChange={(e) => setAssignee(e.target.value)} className={`${inputCls} mt-1`}>
-                                    <option value="">Vlastník věci</option>
+                                    <option value="">Vlastník spisu</option>
                                     {people.map((p) => <option key={p.user_id} value={p.user_id}>{p.user_id === userId ? `Já (${p.name})` : p.name}{p.is_owner ? ' · vlastník' : ''}</option>)}
                                 </select>}
                     </label>

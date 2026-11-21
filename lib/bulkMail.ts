@@ -25,6 +25,6 @@ export function cleanRecipients<T extends { email: string }>(list: T[]): { ok: T
 
 export const BULK_PRESETS: { id: string; label: string; subject: string; body: string }[] = [
     { id: 'sazba', label: 'Změna sazby', subject: 'Změna hodinové sazby od ______', body: 'Dobrý den,\n\nchtěl(a) bych Vás předem informovat, že od ______ se mění hodinová sazba za právní služby na ______ Kč bez DPH. Na již sjednané paušální odměny se změna nevztahuje.\n\nPokud máte k čemukoli otázky, rád(a) je s Vámi proberu.\n\nS pozdravem\n{kancelar}' },
-    { id: 'podklady', label: 'Výzva k doplnění podkladů', subject: 'Doplnění podkladů ve věci {vec}', body: 'Dobrý den,\n\nk Vaší věci „{vec}“ stále potřebuji doplnit tyto podklady:\n\n- \n- \n\nProsím o jejich zaslání do ______, abychom mohli včas postupovat dál.\n\nS pozdravem\n{kancelar}' },
+    { id: 'podklady', label: 'Výzva k doplnění podkladů', subject: 'Doplnění podkladů ve spisu {vec}', body: 'Dobrý den,\n\nk Vašemu spisu „{vec}“ stále potřebuji doplnit tyto podklady:\n\n- \n- \n\nProsím o jejich zaslání do ______, abychom mohli včas postupovat dál.\n\nS pozdravem\n{kancelar}' },
     { id: 'info', label: 'Obecné sdělení', subject: '', body: 'Dobrý den,\n\n\n\nS pozdravem\n{kancelar}' },
 ];

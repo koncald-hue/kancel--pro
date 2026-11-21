@@ -7,7 +7,7 @@ describe('buildAdminDigest', () => {
     it('když není co hlásit, nic neposílá', () => {
         expect(buildAdminDigest(empty, 'https://x/admin')).toBeNull();
     });
-    it('věc k vyřízení dostane předmět „vyžaduje akci“ a vypíše e-maily', () => {
+    it('spis k vyřízení dostane předmět „vyžaduje akci“ a vypíše e-maily', () => {
         const r = buildAdminDigest({ ...empty, pendingVerifications: ['a@x.cz'], refundDue: [{ email: 'b@x.cz', price: 649 }] }, 'https://x/admin');
         expect(r?.subject).toBe('Kancelář Pro: vyžaduje vaši akci');
         expect(r?.lines.join('\n')).toContain('a@x.cz');

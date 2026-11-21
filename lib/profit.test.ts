@@ -31,10 +31,10 @@ describe('profitability', () => {
         expect(m.margin).toBe(2400);
     });
     it('groups by case and by client and sorts by hours', () => {
-        const cases = [{ id: 'a', title: 'Věc A', client_id: 'k1', client_name: 'Novák' }, { id: 'b', title: 'Věc B', client_id: 'k1', client_name: 'Novák' }, { id: 'c', title: 'Věc C', client_id: 'k2', client_name: 'Beta' }];
+        const cases = [{ id: 'a', title: 'Spis A', client_id: 'k1', client_name: 'Novák' }, { id: 'b', title: 'Spis B', client_id: 'k1', client_name: 'Novák' }, { id: 'c', title: 'Spis C', client_id: 'k2', client_name: 'Beta' }];
         const entries = [e('a', 60, 1000), e('b', 180, 1000), e('c', 30, 1000)];
         const byCase = groupProfit('case', cases, entries, [inv('c', 500, 605, 'paid')], null);
-        expect(byCase.map((g) => g.name)).toEqual(['Věc B', 'Věc A', 'Věc C']);
+        expect(byCase.map((g) => g.name)).toEqual(['Spis B', 'Spis A', 'Spis C']);
         const byClient = groupProfit('client', cases, entries, [], null);
         expect(byClient.map((g) => [g.name, g.profit.hours])).toEqual([['Novák', 4], ['Beta', 0.5]]);
     });

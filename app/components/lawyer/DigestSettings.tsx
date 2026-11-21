@@ -46,11 +46,11 @@ export default function DigestSettings() {
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Týdenní souhrn">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><MailCheck size={18} className="text-indigo-700" aria-hidden="true" /> Týdenní souhrn e-mailem</h2>
-            <p className="mt-1 text-sm text-slate-600">Každé pondělí ráno: lhůty a úkoly po termínu a na příštích 7 dní, novinky ve věcech, nevyfakturovaná práce, faktury po splatnosti, nové poptávky, pošta bez doručenky, spisy k vyřazení a koho zastupujete. Když není co hlásit, nic nepřijde.</p>
+            <p className="mt-1 text-sm text-slate-600">Každé pondělí ráno: lhůty a úkoly po termínu a na příštích 7 dní, novinky ve spisech, nevyfakturovaná práce, faktury po splatnosti, nové poptávky, pošta bez doručenky, spisy k vyřazení a koho zastupujete. Když není co hlásit, nic nepřijde.</p>
             {missing ? <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Zapne se po spuštění migrace 20261118_19.</p> : (
                 <>
                     <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><input type="checkbox" checked={s.weekly} onChange={(e) => void save({ ...s, weekly: e.target.checked })} /> Posílat mi týdenní souhrn</label>
-                    <label className="mt-2 flex items-start gap-2 text-sm text-slate-700"><input type="checkbox" className="mt-0.5" checked={s.details} onChange={(e) => void save({ ...s, details: e.target.checked })} /> <span>Uvádět i názvy věcí a lhůt. <span className="text-slate-500">Bez zaškrtnutí obsahuje e-mail jen počty, protože prochází přes poskytovatele rozesílky e-mailů.</span></span></label>
+                    <label className="mt-2 flex items-start gap-2 text-sm text-slate-700"><input type="checkbox" className="mt-0.5" checked={s.details} onChange={(e) => void save({ ...s, details: e.target.checked })} /> <span>Uvádět i názvy spisů a lhůt. <span className="text-slate-500">Bez zaškrtnutí obsahuje e-mail jen počty, protože prochází přes poskytovatele rozesílky e-mailů.</span></span></label>
                     <div className="mt-3 flex flex-wrap gap-2">
                         <button type="button" onClick={() => void call(false)} disabled={!!busy} className={ghostBtn}>{busy === 'preview' ? <Loader2 size={14} className="animate-spin" /> : <Eye size={14} />} Náhled</button>
                         <button type="button" onClick={() => void call(true)} disabled={!!busy} className={ghostBtn}>{busy === 'send' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Poslat zkušební souhrn mně</button>

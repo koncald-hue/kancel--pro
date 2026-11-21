@@ -34,7 +34,7 @@ export function buildFeed(events: FeedEvent[], opt: { includeTitles: boolean; or
         }
         const summary = `Lhůta: ${e.title}${opt.includeTitles && e.caseTitle ? ` · ${e.caseTitle}` : ''}`;
         L.push('BEGIN:VEVENT', `UID:${e.uid}@kancelar`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${e.iso.replace(/-/g, '')}`, `DTEND;VALUE=DATE:${nextDay(e.iso).replace(/-/g, '')}`, 'TRANSP:TRANSPARENT', `SUMMARY:${esc(summary)}`);
-        L.push(`DESCRIPTION:${esc(opt.includeTitles && e.caseTitle ? `Věc: ${e.caseTitle}. Podrobnosti najdete v Kanceláři.` : 'Podrobnosti najdete v Kanceláři.')}`);
+        L.push(`DESCRIPTION:${esc(opt.includeTitles && e.caseTitle ? `Spis: ${e.caseTitle}. Podrobnosti najdete v Kanceláři.` : 'Podrobnosti najdete v Kanceláři.')}`);
         if (opt.includeTitles && e.caseId) L.push(`URL:${opt.origin}/kancelar/veci/${e.caseId}`);
         // Upozornění v 8:00: sedm dní předem, den předem a v den lhůty
         for (const [trigger, text] of [['-P6DT16H', 'Lhůta za týden'], ['-PT16H', 'Lhůta končí zítra'], ['PT8H', 'Lhůta končí dnes']] as const) L.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(text)}`, `TRIGGER:${trigger}`, 'END:VALARM');

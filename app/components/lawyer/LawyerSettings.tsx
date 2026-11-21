@@ -158,7 +158,7 @@ export default function LawyerSettings() {
             <PortalBrandingCard />
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="text-lg font-bold text-slate-900">Poptávkový odkaz</h2>
-                <p className="mt-1 text-sm text-slate-600">Veřejný formulář, přes který vám zájemce popíše věc. Odkaz vložte na web nebo do podpisu e-mailu. Poptávky najdete v záložce Poptávky.</p>
+                <p className="mt-1 text-sm text-slate-600">Veřejný formulář, přes který vám zájemce popíše spis. Odkaz vložte na web nebo do podpisu e-mailu. Poptávky najdete v záložce Poptávky.</p>
                 <label className="mt-3 block text-sm font-semibold text-slate-700">Název v odkazu
                     <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="např. ak-novak" maxLength={40} className={`${inputCls} mt-1 font-normal`} />
                 </label>
@@ -215,7 +215,7 @@ export default function LawyerSettings() {
             </>)}
             {sec === 'zabezpeceni' && (<>
             <MfaCard />
-            <Link href="/kancelar/audit" className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 text-sm hover:border-indigo-300"><span><strong className="block text-base text-slate-900">Auditní záznam</strong><span className="text-slate-600">Kdo kdy co ve věcech otevřel nebo změnil, s exportem do CSV.</span></span><span className="font-semibold text-indigo-800">Otevřít →</span></Link>
+            <Link href="/kancelar/audit" className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 text-sm hover:border-indigo-300"><span><strong className="block text-base text-slate-900">Auditní záznam</strong><span className="text-slate-600">Kdo kdy co ve spisech otevřel nebo změnil, s exportem do CSV.</span></span><span className="font-semibold text-indigo-800">Otevřít →</span></Link>
             <section className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
                 <h2 className="text-lg font-bold text-slate-900">Zabezpečení</h2>
                 <p className="mt-2 text-xs leading-relaxed text-slate-600">{SECURITY_TEXT_LAWYER}</p>

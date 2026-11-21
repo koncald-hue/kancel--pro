@@ -188,7 +188,7 @@ export default function LawyerInsolvency() {
                     </div>
                 )}
                 <button type="submit" disabled={busy === 'add'} className={primaryBtn}>{busy === 'add' ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} Přidat a zkontrolovat</button>
-                <p className="text-xs text-slate-500">Fyzickou osobu rejstřík hledá podle jména, příjmení a data narození. Hlídejte jen klienty a protistrany ve svých věcech; osobní údaje zpracováváte jako správce vy.</p>
+                <p className="text-xs text-slate-500">Fyzickou osobu rejstřík hledá podle jména, příjmení a data narození. Hlídejte jen klienty a protistrany ve svých spisech; osobní údaje zpracováváte jako správce vy.</p>
             </form>
 
             <section aria-label="Hlídané osoby">

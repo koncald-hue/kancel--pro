@@ -13,8 +13,8 @@ export function buildAlerts(cases: BudgetCase[], work: WorkRow[], powers: Pick<P
     for (const c of cases) {
         if (!c.budget_czk) continue;
         const info = budgetInfo({ budget: c.budget_czk, warnPct: c.budget_warn_pct ?? 80, worked: byCase.get(c.id) ?? 0, billed: 0 });
-        if (info.state === 'over') out.push({ id: `b-${c.id}`, tone: 'bad', text: `Rozpočet věci „${c.title}“ je překročený (${String(info.usedPct).replace('.', ',')} %).`, href: `/kancelar/veci/${c.id}` });
-        else if (info.state === 'warn') out.push({ id: `b-${c.id}`, tone: 'warn', text: `Věc „${c.title}“ vyčerpala ${String(info.usedPct).replace('.', ',')} % rozpočtu.`, href: `/kancelar/veci/${c.id}` });
+        if (info.state === 'over') out.push({ id: `b-${c.id}`, tone: 'bad', text: `Rozpočet spisu „${c.title}“ je překročený (${String(info.usedPct).replace('.', ',')} %).`, href: `/kancelar/veci/${c.id}` });
+        else if (info.state === 'warn') out.push({ id: `b-${c.id}`, tone: 'warn', text: `Spis „${c.title}“ vyčerpala ${String(info.usedPct).replace('.', ',')} % rozpočtu.`, href: `/kancelar/veci/${c.id}` });
     }
     for (const p of powers) {
         const st = powerState(p, today);

@@ -25,7 +25,7 @@ type Group = { title: string; items: Item[]; fold?: string };
 const GROUPS: Group[] = [
     // „Dnes“ je pracovní plocha (adresa /kancelar zůstává)
     { title: '', items: [['prehled', '/kancelar', 'Dnes', LayoutDashboard]] },
-    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Věci', Briefcase], ['kalendar', '/kancelar/kalendar', 'Kalendář', CalendarDays], ['ukoly', '/kancelar/ukoly', 'Úkoly', ListTodo], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['email', '/kancelar/email', 'E-mail', Mail], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['denik', '/kancelar/podaci-denik', 'Podací deník', BookOpen], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library]] },
+    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Spisy', Briefcase], ['kalendar', '/kancelar/kalendar', 'Kalendář', CalendarDays], ['ukoly', '/kancelar/ukoly', 'Úkoly', ListTodo], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['email', '/kancelar/email', 'E-mail', Mail], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['denik', '/kancelar/podaci-denik', 'Podací deník', BookOpen], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library]] },
     { title: 'Peníze', items: [['penize', '/kancelar/penize', 'Peníze', Wallet]] },
     { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound]] },
     // Odborné a méně časté nástroje

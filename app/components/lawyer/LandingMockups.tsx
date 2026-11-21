@@ -30,7 +30,7 @@ export function DashboardMock() {
         <Window title="Kancelář Pro · Přehled">
             <div className="grid min-w-0 gap-3 bg-slate-50/60 p-4">
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                    <Stat label="Otevřené věci" value="24" />
+                    <Stat label="Otevřené spisy" value="24" />
                     <Stat label="Lhůty do 7 dní" value="3" note="2 kritické" />
                     <Stat label="Nevyfakturováno" value="31:30" note="hodin práce" />
                     <Stat label="K fakturaci" value="47 250 Kč" />
@@ -54,7 +54,7 @@ export function DashboardMock() {
 // Spis věci
 export function CaseMock() {
     return (
-        <Window title="Věc · Novák proti Dvořákovi">
+        <Window title="Spis · Novák proti Dvořákovi">
             <div className="p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <div><p className="text-sm font-bold text-slate-900">Novák proti Dvořákovi</p><p className="text-xs text-slate-500">Okresní soud Plzeň-město · 12 C 345/2026</p></div>
@@ -84,7 +84,7 @@ export function ClientMock() {
             <div aria-hidden="true" className="overflow-hidden rounded-[1.5rem] bg-slate-50">
                 <div className="bg-indigo-700 px-4 py-3 text-white">
                     <p className="flex items-center gap-1.5 text-xs font-semibold opacity-90"><Scale size={12} /> JUDr. Jana Králová</p>
-                    <p className="mt-0.5 text-sm font-bold">Vaše věc: Novák proti Dvořákovi</p>
+                    <p className="mt-0.5 text-sm font-bold">Váš spis: Novák proti Dvořákovi</p>
                 </div>
                 <div className="space-y-2.5 p-3">
                     <p className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-800"><Lock size={11} /> Zprávy jsou end-to-end šifrované</p>
@@ -120,7 +120,7 @@ export function WorkMock() {
     return (
         <Window title="Výkazy · Návrh výkazu">
             <div className="p-4">
-                <div className="flex items-center justify-between"><p className="text-sm font-bold text-slate-900">Dnes jste pracovali na 3 věcech</p><span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-800">2:00 h</span></div>
+                <div className="flex items-center justify-between"><p className="text-sm font-bold text-slate-900">Dnes jste pracovali na 3 spisech</p><span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-800">2:00 h</span></div>
                 <ul className="mt-3 space-y-2 text-sm">
                     {rows.map(([c, d, h]) => <li key={c} className="flex items-start gap-3 rounded-xl border border-slate-100 p-3"><span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-indigo-700 text-white"><Check size={11} /></span><span className="min-w-0 flex-1"><span className="block truncate font-semibold text-slate-800">{c}</span><span className="block truncate text-xs text-slate-500">{d}</span></span><span className="shrink-0 font-bold text-slate-900">{h}</span></li>)}
                 </ul>

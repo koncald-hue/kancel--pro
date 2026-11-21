@@ -11,7 +11,7 @@ export const RADAR_INFO: Record<RadarKind, { label: string; tone: 'bad' | 'warn'
     insolvence_konec: { label: 'Konec insolvence', tone: 'info', action: 'Insolvenční řízení skončilo. Ověřte způsob skončení a zda lze pokračovat ve vymáhání.' },
     likvidace: { label: 'Likvidace', tone: 'bad', action: 'Firma vstoupila do likvidace. Zjistěte likvidátora a lhůtu pro přihlášení pohledávek u likvidátora (bývá zveřejněna v Obchodním věstníku).', deadlineTitle: 'Přihlášení pohledávky u likvidátora' },
     zanik: { label: 'Zánik', tone: 'bad', action: 'Firma podle ARES zanikla. Ověřte v obchodním rejstříku, kdo je právním nástupcem, a dopad na řízení.' },
-    zmena_nazvu: { label: 'Změna názvu', tone: 'info', action: 'Upravte označení účastníka v podáních a kontaktech věci.' },
+    zmena_nazvu: { label: 'Změna názvu', tone: 'info', action: 'Upravte označení účastníka v podáních a kontaktech spisu.' },
     katastr_rizeni: { label: 'Katastr: změna řízení', tone: 'warn', action: 'Ověřte v katastru, zda je změna zapsána, a podle ní upravte další postup. Údaje z katastru jsou informativní.' },
     zmena_sidla: { label: 'Změna sídla', tone: 'warn', action: 'Zkontrolujte doručovací adresu a místní příslušnost, případně oznamte změnu soudu.' },
 };

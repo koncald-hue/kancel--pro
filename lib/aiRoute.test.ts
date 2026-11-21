@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { buildRoutePrompt, parseRoute, ROUTE_MAX_CASES } from './aiRoute';
 
 describe('aiRoute', () => {
-    it('sestaví text s očíslovanými věcmi a ořízne jejich počet', () => {
-        const cases = Array.from({ length: 60 }, (_, i) => ({ id: `c${i}`, title: `Věc ${i}` }));
+    it('sestaví text s očíslovanými spisy a ořízne jejich počet', () => {
+        const cases = Array.from({ length: 60 }, (_, i) => ({ id: `c${i}`, title: `Spis ${i}` }));
         const p = buildRoutePrompt({ subject: 'Dotaz', text: 'Dobrý den' }, cases);
-        expect(p.list).toHaveLength(ROUTE_MAX_CASES); expect(p.text).toContain('1. Věc 0'); expect(p.text).not.toContain('Věc 45');
+        expect(p.list).toHaveLength(ROUTE_MAX_CASES); expect(p.text).toContain('1. Spis 0'); expect(p.text).not.toContain('Spis 45');
     });
     it('parsuje odpověď a hlídá meze', () => {
         expect(parseRoute('{"vec": 2, "duvod": "stejné jméno"}', 3)).toEqual({ index: 1, reason: 'stejné jméno' });

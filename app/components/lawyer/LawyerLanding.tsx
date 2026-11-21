@@ -9,7 +9,7 @@ import LandingFlow from './LandingFlow';
 
 // Co aplikace dělá, v lidské řeči. Čtyři věci, které advokát denně řeší.
 const FOUR: { icon: typeof Scale; tone: string; title: string; text: string }[] = [
-    { icon: FolderOpen, tone: 'bg-slate-100 text-indigo-800', title: 'Vedete spisy', text: 'Každá věc má své místo: soubory, e-maily, datové zprávy, poznámky a kontakty.' },
+    { icon: FolderOpen, tone: 'bg-slate-100 text-indigo-800', title: 'Vedete spisy', text: 'Každý spis má své místo: soubory, e-maily, datové zprávy, poznámky a kontakty.' },
     { icon: CalendarClock, tone: 'bg-slate-100 text-indigo-800', title: 'Hlídáte lhůty', text: 'Lhůty se spočítají a posunou na pracovní den. Včas víte, co hoří.' },
     { icon: Users, tone: 'bg-slate-100 text-indigo-800', title: 'Komunikujete s klientem', text: 'Klient nahraje podklady a píše zprávy přes soukromý odkaz, bez registrace.' },
     { icon: Receipt, tone: 'bg-slate-100 text-indigo-800', title: 'Účtujete práci', text: 'Výkazy, faktury s QR platbou a kontrola, kdo už zaplatil.' },
@@ -112,7 +112,7 @@ export default function LawyerLanding() {
                 <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-2">
                     <div>
                         <p className="flex items-center gap-2 text-sm font-semibold text-indigo-200"><Smartphone size={16} aria-hidden="true" /> Pro vaše klienty</p>
-                        <h2 id="klient-title" className="mt-3 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Klient vidí svou věc v telefonu. Bez registrace.</h2>
+                        <h2 id="klient-title" className="mt-3 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Klient vidí svůj spis v telefonu. Bez registrace.</h2>
                         <ul className="mt-7 space-y-3 text-lg text-indigo-50">
                             {['Pošlete mu odkaz', 'Nahraje podklady a napíše zprávu', 'Podepíše smlouvu', 'Vy nic nepřeposíláte e-mailem'].map((t) => <li key={t} className="flex items-center gap-3"><Check size={20} className="shrink-0 text-indigo-300" aria-hidden="true" />{t}</li>)}
                         </ul>

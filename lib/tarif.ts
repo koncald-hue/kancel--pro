@@ -18,16 +18,16 @@ export type Ukon = { id: string; label: string; half: boolean; hint?: string };
 export const UKONY: Ukon[] = [
     { id: '1a', label: 'Převzetí a příprava zastoupení', half: false, hint: '§ 11 odst. 1 písm. a)' },
     { id: '1c', label: 'Další porada s klientem přesahující 1 hodinu', half: false, hint: '§ 11 odst. 1 písm. c)' },
-    { id: '1d', label: 'Písemné podání ve věci samé, výzva k plnění s rozborem', half: false, hint: '§ 11 odst. 1 písm. d)' },
+    { id: '1d', label: 'Písemné podání ve spisu samé, výzva k plnění s rozborem', half: false, hint: '§ 11 odst. 1 písm. d)' },
     { id: '1g', label: 'Účast na jednání před soudem nebo orgánem (každé započaté 2 hodiny)', half: false, hint: '§ 11 odst. 1 písm. g)' },
-    { id: '1h', label: 'Sepsání právního rozboru věci', half: false, hint: '§ 11 odst. 1 písm. h)' },
+    { id: '1h', label: 'Sepsání právního rozboru spisu', half: false, hint: '§ 11 odst. 1 písm. h)' },
     { id: '1i', label: 'Jednání s protistranou (každé započaté 2 hodiny)', half: false, hint: '§ 11 odst. 1 písm. i)' },
     { id: '1k', label: 'Odvolání, dovolání, návrh na obnovu řízení a vyjádření k nim', half: false, hint: '§ 11 odst. 1 písm. k)' },
     { id: '1m', label: 'Sepsání listiny o právním jednání', half: false, hint: '§ 11 odst. 1 písm. m)' },
     { id: '2h', label: 'Jednoduchá výzva k plnění', half: true, hint: '§ 11 odst. 2 písm. h)' },
     { id: '2f', label: 'Účast při jednání, při kterém došlo jen k vyhlášení rozhodnutí', half: true, hint: '§ 11 odst. 2 písm. f)' },
     { id: '2g', label: 'Účast při přípravě jednání', half: true, hint: '§ 11 odst. 2 písm. g)' },
-    { id: '2c', label: 'Odvolání proti rozhodnutí, které není ve věci samé, a vyjádření k němu', half: true, hint: '§ 11 odst. 2 písm. c)' },
+    { id: '2c', label: 'Odvolání proti rozhodnutí, které není ve spisu samé, a vyjádření k němu', half: true, hint: '§ 11 odst. 2 písm. c)' },
 ];
 
 export const PAUSAL_DEFAULT = 450; // § 13 odst. 4: paušální náhrada výdajů na jeden úkon, nedohodnuto-li jinak

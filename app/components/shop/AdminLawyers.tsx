@@ -73,7 +73,7 @@ export default function AdminLawyers({ rows, onSet }: { rows: LawyerAccess[]; on
     return (
         <section className="mt-6" aria-label="Přehled advokátů">
             <h2 className="text-xl font-bold text-slate-900">Přehled advokátů</h2>
-            <p className="mt-1 text-xs text-slate-600">Vidíte, kdo aplikaci používá: jména, kontakty, evidenční čísla, předplatné a platby. Obsah jejich věcí, souborů a zpráv nevidíte a vidět nemůžete.</p>
+            <p className="mt-1 text-xs text-slate-600">Vidíte, kdo aplikaci používá: jména, kontakty, evidenční čísla, předplatné a platby. Obsah jejich spisů, souborů a zpráv nevidíte a vidět nemůžete.</p>
             <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <Tile label="Advokátů celkem" value={String(rows.length)} note={`${rows.filter((r) => r.verification_status === 'verified').length} s vyplněným profilem`} />
                 <Tile label="Platící" value={String(data.filter((d) => d.activeSub).length)} note={`${data.filter((d) => d.expiring).length} brzy končí`} />

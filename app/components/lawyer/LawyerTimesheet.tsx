@@ -58,7 +58,7 @@ export default function LawyerTimesheet() {
         const client = clients.find((x) => x.name.toLowerCase() === (c?.client_name ?? '').trim().toLowerCase());
         return client?.hourly_rate ?? access.default_rate ?? 0;
     };
-    const caseTitle = (id: string | null) => cases.find((c) => c.id === id)?.title ?? 'Bez věci';
+    const caseTitle = (id: string | null) => cases.find((c) => c.id === id)?.title ?? 'Bez spisu';
 
     const startTimer = () => { const t = { caseId: form.caseId, startedAt: Date.now() }; setTimer(t); setNow(Date.now()); try { localStorage.setItem(TIMER_KEY, JSON.stringify(t)); } catch { /* ok */ } };
     const stopTimer = () => {
@@ -108,8 +108,8 @@ export default function LawyerTimesheet() {
             <form onSubmit={(e) => { e.preventDefault(); void add(); }} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                 <div className="grid gap-2 sm:grid-cols-[1.4fr_auto_auto_auto]">
                     {services.length > 0 && <select value="" onChange={(e) => { const p = services.find((x) => x.id === e.target.value); if (p) setForm((f) => ({ ...f, description: f.description || p.name, rate: String(p.unit_price) })); }} className={`${inputCls} sm:col-span-full`} aria-label="Hodinová služba z ceníku"><option value="">Služba z ceníku…</option>{services.map((p) => <option key={p.id} value={p.id}>{p.name} · {money(p.unit_price)}/h</option>)}</select>}
-                    <select value={form.caseId} onChange={(e) => setForm((f) => ({ ...f, caseId: e.target.value }))} className={inputCls} aria-label="Věc">
-                        <option value="">Bez věci</option>
+                    <select value={form.caseId} onChange={(e) => setForm((f) => ({ ...f, caseId: e.target.value }))} className={inputCls} aria-label="Spis">
+                        <option value="">Bez spisu</option>
                         {cases.filter((c) => c.status === 'open').map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}</option>)}
                     </select>
                     <input type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} className={inputCls} aria-label="Datum" />
@@ -139,7 +139,7 @@ export default function LawyerTimesheet() {
             {shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">Zatím žádné záznamy. Zapište první čas výše.</p> : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                     <table className="w-full min-w-[640px] text-left text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-2.5">Datum</th><th className="px-3 py-2.5">Věc a popis</th><th className="px-3 py-2.5">Čas</th><th className="px-3 py-2.5">Částka</th><th className="px-3 py-2.5">Faktura</th><th className="px-2 py-2.5"><span className="sr-only">Akce</span></th></tr></thead>
+                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-2.5">Datum</th><th className="px-3 py-2.5">Spis a popis</th><th className="px-3 py-2.5">Čas</th><th className="px-3 py-2.5">Částka</th><th className="px-3 py-2.5">Faktura</th><th className="px-2 py-2.5"><span className="sr-only">Akce</span></th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                             {shown.map((e) => (
                                 <tr key={e.id}>

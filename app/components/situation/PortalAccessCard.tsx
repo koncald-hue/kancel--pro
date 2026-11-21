@@ -42,7 +42,7 @@ export default function PortalAccessCard({ linkId, factor, codeEmail, suggestedE
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="pa-title">
             <h3 id="pa-title" className="flex items-center gap-2 text-sm font-semibold text-slate-900"><KeyRound size={16} className="text-indigo-800" aria-hidden="true" /> Přístup klienta</h3>
-            <p className="mt-1 text-sm text-slate-600">{on ? <>Ke stránce je potřeba <strong>odkaz a kód z e-mailu</strong>. Kód chodí na adresu, kterou jste zadali vy.</> : <>Teď stačí <strong>samotný odkaz</strong>: kdo ho má (třeba z přeposlaného e-mailu), vidí věc. Vyplněné jméno ani souhlas klienta totožnost neověřují.</>}</p>
+            <p className="mt-1 text-sm text-slate-600">{on ? <>Ke stránce je potřeba <strong>odkaz a kód z e-mailu</strong>. Kód chodí na adresu, kterou jste zadali vy.</> : <>Teď stačí <strong>samotný odkaz</strong>: kdo ho má (třeba z přeposlaného e-mailu), vidí spis. Vyplněné jméno ani souhlas klienta totožnost neověřují.</>}</p>
             {!migrated ? <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-950">Ověření kódem vyžaduje SQL migraci supabase/migrations/20261117_02_portal-kod-z-emailu.sql.</p>
                 : mail === false ? <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-950">Odesílání e-mailů není na serveru nastavené (MAIL_FROM a klíč Brevo/Resend), proto kód zapnout nejde.</p>
                     : (

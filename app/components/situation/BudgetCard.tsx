@@ -24,9 +24,9 @@ export default function BudgetCard({ budget, warnPct, worked, billed, onSave }: 
     }
 
     return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4" aria-label="Rozpočet věci">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4" aria-label="Rozpočet spisu">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500"><Wallet size={13} /> Rozpočet věci</h2>
+                <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500"><Wallet size={13} /> Rozpočet spisu</h2>
                 {!edit && <button type="button" onClick={() => { setValue(budget ? String(budget) : ''); setPct(String(warnPct)); setEdit(true); }} className="cursor-pointer text-xs font-semibold text-indigo-800 hover:underline">{budget ? 'Upravit' : 'Nastavit rozpočet'}</button>}
             </div>
             {edit ? (
@@ -38,7 +38,7 @@ export default function BudgetCard({ budget, warnPct, worked, billed, onSave }: 
                     <p className="w-full text-xs text-slate-500">Prázdné pole rozpočet zruší. Do využití se počítá všechna vykázaná práce podle sazby.</p>
                 </form>
             ) : !budget ? (
-                <p className="mt-2 text-sm text-slate-600">Dohodnutý rozpočet věci zatím není nastavený. Po nastavení uvidíte, kolik z něj práce spotřebovala, a upozorníme vás předem.</p>
+                <p className="mt-2 text-sm text-slate-600">Dohodnutý rozpočet spisu zatím není nastavený. Po nastavení uvidíte, kolik z něj práce spotřebovala, a upozorníme vás předem.</p>
             ) : (
                 <div className="mt-2">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">

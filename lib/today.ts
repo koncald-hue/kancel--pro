@@ -68,12 +68,12 @@ export type InboxItem = { key: string; kind: InboxKind; title: string; detail: s
 const caseHref = (id: string, tab?: string) => `/kancelar/veci/${id}?${tab ? `tab=${tab}&` : ''}from=dnes`;
 
 export function buildInbox(input: { cases: LegalCase[]; inquiries: InquiryRow[]; messages: MessageRow[]; requests: RequestRow[]; uploads: UploadRow[]; signatures: SignatureRow[] }): InboxItem[] {
-    const title = (id: string) => input.cases.find((c) => c.id === id)?.title ?? 'Věc';
+    const title = (id: string) => input.cases.find((c) => c.id === id)?.title ?? 'Spis';
     const items: InboxItem[] = [];
     for (const q of input.inquiries) {
         if (q.status === 'new') items.push({ key: `q-${q.id}`, kind: 'poptavka', title: `Poptávka: ${q.name}`, detail: q.message.slice(0, 140), at: q.created_at, href: `/kancelar/poptavky?open=${q.id}`, inquiryId: q.id, action: 'Rozhodnout' });
         // Přijatá poptávka bez spisu (např. když se spis nepodařilo navázat) je slepý konec: nabídneme dořešení
-        else if (q.status === 'accepted' && !q.case_id) items.push({ key: `q-${q.id}`, kind: 'poptavka', title: `Přijatá poptávka bez věci: ${q.name}`, detail: 'Poptávka nemá přiřazenou věc.', at: q.created_at, href: `/kancelar/poptavky?open=${q.id}`, inquiryId: q.id, action: 'Přiřadit k věci' });
+        else if (q.status === 'accepted' && !q.case_id) items.push({ key: `q-${q.id}`, kind: 'poptavka', title: `Přijatá poptávka bez spisu: ${q.name}`, detail: 'Poptávka nemá přiřazený spis.', at: q.created_at, href: `/kancelar/poptavky?open=${q.id}`, inquiryId: q.id, action: 'Přiřadit ke spisu' });
     }
     // Nepřečtené zprávy od klienta: jedna položka za věc
     const unread = new Map<string, { n: number; at: string }>();
@@ -136,7 +136,7 @@ export function buildUnbilled(entries: TimeEntry[], cases: LegalCase[]): Unbille
     for (const e of entries) {
         if (e.billed) continue;
         const k = e.case_id ?? '';
-        const cur = map.get(k) ?? { caseId: e.case_id, caseTitle: e.case_id ? cases.find((c) => c.id === e.case_id)?.title ?? 'Věc' : 'Bez věci', minutes: 0, amount: 0, count: 0, oldest: e.entry_date };
+        const cur = map.get(k) ?? { caseId: e.case_id, caseTitle: e.case_id ? cases.find((c) => c.id === e.case_id)?.title ?? 'Spis' : 'Bez spisu', minutes: 0, amount: 0, count: 0, oldest: e.entry_date };
         cur.minutes += e.minutes; cur.amount += entryAmount(e); cur.count += 1;
         if (e.entry_date < cur.oldest) cur.oldest = e.entry_date;
         map.set(k, cur);

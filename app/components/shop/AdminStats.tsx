@@ -142,7 +142,7 @@ export default function AdminStats() {
 
                     <Section title="Využití aplikace">
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <Tile label="Věci celkem" value={nf.format(stats.usage.cases)} note={`u ${stats.usage.lawyers_with_case} uživatelů`} />
+                            <Tile label="Spisy celkem" value={nf.format(stats.usage.cases)} note={`u ${stats.usage.lawyers_with_case} uživatelů`} />
                             <Tile label="Soubory" value={nf.format(stats.usage.files)} note={`${nf.format(stats.usage.files_mb)} MB celkem`} />
                             <Tile label="Aktivní klientské odkazy" value={nf.format(stats.usage.client_links)} />
                             <Tile label="Aktualizováno" value={new Date(stats.generated_at).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })} />

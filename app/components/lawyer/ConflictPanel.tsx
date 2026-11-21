@@ -36,14 +36,14 @@ export default function ConflictPanel({ parties, role, compact = false }: { part
     return (
         <section aria-label="Kontrola střetu zájmů" className="space-y-2">
             {hits.length === 0 && firmHits.length === 0 ? (
-                <p className="flex items-center gap-1.5 text-xs text-emerald-800"><CheckCircle2 size={13} aria-hidden="true" /> Ve vašich klientech, protistranách ani věcech nic nenalezeno{firm?.available === false ? '' : ' (včetně kolegů v kanceláři)'}.</p>
+                <p className="flex items-center gap-1.5 text-xs text-emerald-800"><CheckCircle2 size={13} aria-hidden="true" /> Ve vašich klientech, protistranách ani spisech nic nenalezeno{firm?.available === false ? '' : ' (včetně kolegů v kanceláři)'}.</p>
             ) : (
                 <>
-                    {worst === 'high' && <p role="alert" className="flex items-center gap-1.5 text-sm font-bold text-rose-800"><ShieldAlert size={15} aria-hidden="true" /> Pozor, možný střet zájmů. Před převzetím věci ho posuďte.</p>}
+                    {worst === 'high' && <p role="alert" className="flex items-center gap-1.5 text-sm font-bold text-rose-800"><ShieldAlert size={15} aria-hidden="true" /> Pozor, možný střet zájmů. Před převzetím spisu ho posuďte.</p>}
                     {hits.slice(0, compact ? 3 : 12).map(({ party, hit }, i) => (
                         <div key={i} className={`rounded-xl border p-3 text-sm ${TONE[hit.severity]}`}>
                             <p className="flex flex-wrap items-center gap-2"><AlertTriangle size={14} aria-hidden="true" /><strong>{SEVERITY_LABEL[hit.severity]}</strong><span>{party.name} ↔ <strong>{hit.entry.name}</strong> ({WHY[hit.why]}, {hit.score} %)</span></p>
-                            <p className="mt-0.5 text-xs">V kanceláři: {KIND_LABEL[hit.entry.kind]}{hit.entry.caseTitle ? <> ve věci <Link href={`/kancelar/veci/${hit.entry.caseId}`} className="underline">{hit.entry.caseTitle}</Link>{hit.entry.closed ? ' (uzavřená)' : ''}</> : ''}.</p>
+                            <p className="mt-0.5 text-xs">V kanceláři: {KIND_LABEL[hit.entry.kind]}{hit.entry.caseTitle ? <> ve spisu <Link href={`/kancelar/veci/${hit.entry.caseId}`} className="underline">{hit.entry.caseTitle}</Link>{hit.entry.closed ? ' (uzavřená)' : ''}</> : ''}.</p>
                         </div>
                     ))}
                     {firmHits.map((f, i) => (

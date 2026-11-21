@@ -32,11 +32,11 @@ export const intakeUrl = (origin: string, code: string) => `${origin}/poptavka/$
 
 // Stručné slovní šablony stavu věci pro advokáta
 export const STATUS_TEMPLATES = [
-    'Věc jsme převzali a připravujeme další postup.',
+    'Spis jsme převzali a připravujeme další postup.',
     'Podání jsme odeslali. Čekáme na vyjádření.',
     'Čekáme na rozhodnutí soudu nebo úřadu.',
     'Potřebujeme od vás doplnit podklady (viz níže).',
-    'Věc je vyřízena. Děkujeme za důvěru.',
+    'Spis je vyřízen. Děkujeme za důvěru.',
 ] as const;
 
 // Společná věta o zabezpečení: pravdivě, bez slibu end-to-end šifrování

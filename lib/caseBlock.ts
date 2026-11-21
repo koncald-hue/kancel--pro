@@ -6,7 +6,7 @@ export function clientBlock(c: Pick<LegalCase, 'title' | 'client_name' | 'refere
         c.reference ? `Spisová značka: ${c.reference}` : '',
         c.authority ? `Soud / úřad: ${c.authority}` : '',
         c.client_name ? `Klient: ${c.client_name}` : '',
-        `Věc: ${c.title}`,
+        `Spis: ${c.title}`,
         c.client_email ? `E-mail klienta: ${c.client_email}` : '',
         c.client_phone ? `Telefon klienta: ${c.client_phone}` : '',
         firm ? `Zastoupení: ${firm}` : '',

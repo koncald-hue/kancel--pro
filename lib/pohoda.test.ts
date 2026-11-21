@@ -3,7 +3,7 @@ import { buildPohodaXml, splitAccount, type PohodaInvoice } from './pohoda';
 
 // Jen smyšlené údaje
 const inv = (over: Partial<PohodaInvoice> = {}): PohodaInvoice => ({
-    id: 'i1', client_id: null, case_id: null, number: '2030001', title: 'Zastoupení ve věci', issue_date: '2030-03-01', due_date: '2030-03-15', status: 'issued', paid_at: null, note: 'Děkujeme & prosíme <o včasnou> úhradu', currency: 'CZK', created_at: '2030-03-01T00:00:00Z',
+    id: 'i1', client_id: null, case_id: null, number: '2030001', title: 'Zastoupení ve spisu', issue_date: '2030-03-01', due_date: '2030-03-15', status: 'issued', paid_at: null, note: 'Děkujeme & prosíme <o včasnou> úhradu', currency: 'CZK', created_at: '2030-03-01T00:00:00Z',
     supplier_snapshot: { name: 'JUDr. Test Vzorový', ico: '12345678', vat_payer: true, bank_account: '123456789/0100' },
     client_snapshot: { name: 'Firma "Test" s.r.o.', ico: '87654321', dic: 'CZ87654321', address: 'Hlavní 12, 301 00 Plzeň' },
     lines: [{ id: 'l1', invoice_id: 'i1', position: 0, description: 'Porada s klientem', qty: 1.5, unit: 'hod', unit_price: 2000, vat_rate: 21, price_item_id: null, time_entry_id: null }, { id: 'l2', invoice_id: 'i1', position: 1, description: 'Soudní poplatek', qty: 1, unit: 'ks', unit_price: 1000, vat_rate: 0, price_item_id: null, time_entry_id: null }],

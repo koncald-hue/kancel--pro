@@ -92,7 +92,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
             <div role="dialog" aria-modal="true" aria-label="Hledání" onClick={(e) => e.stopPropagation()} onKeyDown={onKey} className="flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
                 <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
                     {busy ? <Loader2 size={18} className="shrink-0 animate-spin text-slate-400" aria-hidden="true" /> : <Search size={18} className="shrink-0 text-slate-400" aria-hidden="true" />}
-                    <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hledat ve věcech, klientech, souborech, nebo co chcete udělat…" aria-label="Hledaný text" className="min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400" />
+                    <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hledat ve spisech, klientech, souborech, nebo co chcete udělat…" aria-label="Hledaný text" className="min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400" />
                     <button type="button" onClick={onClose} aria-label="Zavřít hledání" className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 cursor-pointer"><X size={18} /></button>
                 </div>
                 <div className="overflow-y-auto" role="listbox" aria-label="Výsledky">

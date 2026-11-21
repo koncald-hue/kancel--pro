@@ -106,27 +106,27 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
     return (
         <div className={isOffice ? '' : 'max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14'}>
             {isOffice ? (
-                <h2 className="text-2xl font-bold text-slate-900">Věci</h2>
+                <h2 className="text-2xl font-bold text-slate-900">Spisy</h2>
             ) : (
                 <>
                     <h1 className="text-3xl font-bold text-slate-900">Moje případy</h1>
-                    <p className="mt-1 text-sm text-slate-600">Kompletní spis ke každé věci: soubory, lhůty, chronologie a kontakty. Vidíte ho jen vy.</p>
+                    <p className="mt-1 text-sm text-slate-600">Kompletní spis ke každému spisu: soubory, lhůty, chronologie a kontakty. Vidíte ho jen vy.</p>
                 </>
             )}
 
             {error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
 
             <form onSubmit={(e) => { e.preventDefault(); void create(); }} className="mt-6 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row">
-                <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={isOffice ? 'Název nové věci (např. Novák proti Dvořákovi)' : 'Název nového spisu (např. Pokuta za rychlost, Spor s e-shopem)'} maxLength={100} className={inputCls} aria-label="Název nového spisu" />
+                <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={isOffice ? 'Název nového spisu (např. Novák proti Dvořákovi)' : 'Název nového spisu (např. Pokuta za rychlost, Spor s e-shopem)'} maxLength={100} className={inputCls} aria-label="Název nového spisu" />
                 {isOffice && templates.length > 0 && <select value={tplId} onChange={(e) => setTplId(e.target.value)} aria-label="Šablona úkolů" className={`${inputCls} sm:max-w-56`}><option value="">Bez šablony úkolů</option>{templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>}
-                <button type="submit" disabled={!title.trim() || creating || (cases?.length ?? 0) >= limits.cases} className={`${primaryBtn} justify-center whitespace-nowrap`}><FolderPlus size={16} /> {isOffice ? 'Založit věc' : 'Založit spis'}</button>
+                <button type="submit" disabled={!title.trim() || creating || (cases?.length ?? 0) >= limits.cases} className={`${primaryBtn} justify-center whitespace-nowrap`}><FolderPlus size={16} /> {isOffice ? 'Založit spis' : 'Založit spis'}</button>
             </form>
             {isOffice && (() => { const sides = partiesFromTitle(title); return sides.length === 2 ? <div className="mt-2 space-y-2"><ConflictPanel parties={[{ name: sides[1] }]} role="protistrana" compact /><ConflictPanel parties={[{ name: sides[0] }]} role="klient" compact /></div> : null; })()}
             {isOffice && account && (
                 <p className="mt-2 text-xs text-slate-500">Chcete si Kancelář prohlédnout na hotovém příkladu? <button type="button" disabled={demoBusy} onClick={() => { setDemoBusy(true); createDemoCase(account.id, 1500).then((id) => router.push(casePath(id))).catch((e) => { setError(describeCaseError(e)); setDemoBusy(false); }); }} className="cursor-pointer font-semibold text-indigo-800 underline disabled:opacity-60">{demoBusy ? 'Zakládám…' : 'Založit ukázkový spis'}</button></p>
             )}
-            {isOffice && templates.length === 0 && <p className="mt-2 text-xs text-slate-500">Tip: <button type="button" onClick={() => account && void addStarterTemplates(account.id).then((l) => { setTemplates(l); setTplId(defaultTemplate(l)?.id ?? ''); }).catch(() => undefined)} className="cursor-pointer font-semibold text-indigo-900 underline">Přidat vzorové šablony úkolů</button> a nová věc dostane úkoly s termíny sama (plná moc, podklady od klienta, příprava jednání). <Link href="/kancelar/sablony" className="underline">Upravit šablony</Link></p>}
-            {isOffice && templates.length > 0 && tplId && <p className="mt-2 text-xs text-slate-500">K nové věci se automaticky přidají úkoly ze šablony „{templates.find((t) => t.id === tplId)?.name}“. Jinou nebo žádnou vyberete v seznamu u názvu.</p>}
+            {isOffice && templates.length === 0 && <p className="mt-2 text-xs text-slate-500">Tip: <button type="button" onClick={() => account && void addStarterTemplates(account.id).then((l) => { setTemplates(l); setTplId(defaultTemplate(l)?.id ?? ''); }).catch(() => undefined)} className="cursor-pointer font-semibold text-indigo-900 underline">Přidat vzorové šablony úkolů</button> a nový spis dostane úkoly s termíny sama (plná moc, podklady od klienta, příprava jednání). <Link href="/kancelar/sablony" className="underline">Upravit šablony</Link></p>}
+            {isOffice && templates.length > 0 && tplId && <p className="mt-2 text-xs text-slate-500">K nové spisy se automaticky přidají úkoly ze šablony „{templates.find((t) => t.id === tplId)?.name}“. Jinou nebo žádnou vyberete v seznamu u názvu.</p>}
             {!isOffice && <p className="mt-2 text-xs text-slate-500">Nevíte, jak začít? <Link href="/situace" className="font-semibold text-indigo-900 underline">Popište situaci a spis se předvyplní</Link> kroky, lhůtami i vzory dokumentů.</p>}
 
             {!lawyer && (cases?.length ?? 0) >= limits.cases && <div className="mt-3"><UpgradeNote>Bezplatný účet má {limits.cases} případy. Smažte vyřešený případ, nebo využijte neomezené spisy v</UpgradeNote></div>}
@@ -170,7 +170,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                         <select value={fx.client} onChange={(e) => setFx((f) => ({ ...f, client: e.target.value }))} aria-label="Klient" className={`${inputCls} py-1 text-xs sm:!w-auto`}><option value="">Všichni klienti</option>{clientNames.map((n) => <option key={n} value={n}>{n}</option>)}</select>
                         <select value={fx.within} onChange={(e) => setFx((f) => ({ ...f, within: Number(e.target.value) as CaseFilter['within'] }))} aria-label="Nejbližší lhůta" className={`${inputCls} py-1 text-xs sm:!w-auto`}><option value={0}>Lhůta kdykoli</option><option value={7}>Lhůta do 7 dní</option><option value={30}>Lhůta do 30 dní</option></select>
                         <select value={fx.type} onChange={(e) => setFx((f) => ({ ...f, type: e.target.value }))} aria-label="Druh případu" className={`${inputCls} py-1 text-xs sm:!w-auto`}><option value="">Všechny druhy</option>{CASE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select>
-                        <select value={fx.kind} onChange={(e) => setFx((f) => ({ ...f, kind: e.target.value as CaseFilter['kind'] }))} aria-label="Druh" className={`${inputCls} py-1 text-xs sm:!w-auto`}><option value="all">Věci i podspisy</option><option value="main">Jen hlavní věci</option><option value="sub">Jen podspisy</option></select>
+                        <select value={fx.kind} onChange={(e) => setFx((f) => ({ ...f, kind: e.target.value as CaseFilter['kind'] }))} aria-label="Druh" className={`${inputCls} py-1 text-xs sm:!w-auto`}><option value="all">Spisy i podspisy</option><option value="main">Jen hlavní spisu</option><option value="sub">Jen podspisy</option></select>
                     </div>
                     <SavedViews userId={account.id} filter={fx} onApply={setFx} />
                 </>
@@ -187,7 +187,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
                 <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                     <table className="w-full min-w-[640px] text-left text-sm">
                         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                            <tr><th className="px-4 py-2.5">Věc</th><th className="px-3 py-2.5">Klient</th><th className="px-3 py-2.5">Sp. zn.</th><th className="px-3 py-2.5">Úřad / soud</th><th className="px-3 py-2.5">Lhůta</th></tr>
+                            <tr><th className="px-4 py-2.5">Spis</th><th className="px-3 py-2.5">Klient</th><th className="px-3 py-2.5">Sp. zn.</th><th className="px-3 py-2.5">Úřad / soud</th><th className="px-3 py-2.5">Lhůta</th></tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {shown.map(({ c, next }) => (

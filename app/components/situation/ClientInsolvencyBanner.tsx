@@ -17,7 +17,7 @@ export default function ClientInsolvencyBanner({ clientId }: { clientId: string 
     if (!ins) return null;
     return (
         <p role="alert" className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm font-semibold text-rose-950">
-            <ShieldAlert size={16} aria-hidden="true" /> Klient této věci je v insolvenci{ins.state ? ` (${ins.state}${ins.spis ? `, ${ins.spis}` : ''})` : ''}. Zvažte lhůtu pro přihlášku pohledávky.
+            <ShieldAlert size={16} aria-hidden="true" /> Klient tohoto spisu je v insolvenci{ins.state ? ` (${ins.state}${ins.spis ? `, ${ins.spis}` : ''})` : ''}. Zvažte lhůtu pro přihlášku pohledávky.
             {safeUrl(ins.url) && <a href={safeUrl(ins.url)} target="_blank" rel="noreferrer noopener" className="font-bold underline">Otevřít v rejstříku</a>}
             <Link href="/kancelar/insolvence" className="underline">Hlídání insolvence</Link>
         </p>

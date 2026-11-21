@@ -73,5 +73,5 @@ export function partiesFromTitle(title: string): string[] {
     return parts.length > 1 ? parts : [];
 }
 
-export const KIND_LABEL: Record<PoolKind, string> = { klient: 'náš klient', protistrana: 'protistrana ve věci', vec: 'věc' };
+export const KIND_LABEL: Record<PoolKind, string> = { klient: 'náš klient', protistrana: 'protistrana ve spisu', vec: 'spis' };
 export const SEVERITY_LABEL: Record<Hit['severity'], string> = { high: 'Možný střet zájmů', medium: 'Ke kontrole', low: 'Shoda stejné strany' };

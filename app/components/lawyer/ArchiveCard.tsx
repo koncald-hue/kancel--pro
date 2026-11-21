@@ -46,7 +46,7 @@ export default function ArchiveCard({ item, onChanged }: { item: CaseArch; onCha
     return (
         <section aria-label="Archiv spisu" className={`rounded-2xl border p-4 sm:p-5 ${tone}`}>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Archive size={16} className="text-indigo-700" aria-hidden="true" /> Archiv spisu <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200">{STATE_LABEL[state]}</span></h3>
-            {state === 'k-archivaci' && <p className="mt-1 text-sm text-slate-600">Věc je uzavřená. Archivujte spis: zapíše se datum, místo uložení a lhůta, po které ho lze vydat nebo skartovat.</p>}
+            {state === 'k-archivaci' && <p className="mt-1 text-sm text-slate-600">Spis je uzavřen. Archivujte spis: zapíše se datum, místo uložení a lhůta, po které ho lze vydat nebo skartovat.</p>}
             {item.archived_on && <p className="mt-1 text-sm text-slate-700">Archivováno {dmy(item.archived_on)}{item.archive_place ? `, uloženo: ${item.archive_place}` : ''}. Uložit do {dmy(item.archive_until)}.{item.disposed_on ? ` ${item.disposal === 'vydano' ? 'Vydáno' : 'Skartováno'} ${dmy(item.disposed_on)}.` : ''}</p>}
             {!open && !item.disposed_on && (
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -65,7 +65,7 @@ export default function ArchiveCard({ item, onChanged }: { item: CaseArch; onCha
                     <label className="text-xs font-semibold text-slate-600 sm:col-span-4">Poznámka do protokolu<input value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} placeholder={open === 'vydani' ? 'komu a jak předáno (např. klientovi osobně, předávací protokol)' : open === 'skartace' ? 'jak skartováno, kým' : ''} className={`${inputCls} mt-1 font-normal`} /></label>
                     {open === 'archivace' && <p className="text-xs text-slate-500 sm:col-span-4">Předvyplněno {DEFAULT_YEARS} let. Délku uložení určete podle stavovských předpisů a povahy věci.</p>}
                     {irreversible && <label className="flex items-start gap-2 text-sm font-semibold text-rose-900 sm:col-span-4"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} className="mt-0.5" /> {open === 'skartace' ? 'Potvrzuji, že listinný spis byl skartován. Úkon nejde vrátit.' : 'Potvrzuji, že spis byl vydán. Úkon nejde vrátit.'}</label>}
-                    {open === 'skartace' && <p className="text-xs text-slate-600 sm:col-span-4">Zapíše se jen skartace listinného spisu. Elektronický spis v Kanceláři zůstává, smazat ho můžete ve věci zvlášť.</p>}
+                    {open === 'skartace' && <p className="text-xs text-slate-600 sm:col-span-4">Zapíše se jen skartace listinného spisu. Elektronický spis v Kanceláři zůstává, smazat ho můžete ve spisu zvlášť.</p>}
                     {err && <p role="alert" className="text-sm font-semibold text-rose-800 sm:col-span-4">{err}</p>}
                     <div className="flex gap-2 sm:col-span-4"><button type="submit" disabled={busy || (irreversible && !confirm)} className={primaryBtn}>{busy && <Loader2 size={14} className="animate-spin" />} Zapsat</button><button type="button" onClick={() => setOpen(null)} className={ghostBtn}>Zrušit</button></div>
                 </form>

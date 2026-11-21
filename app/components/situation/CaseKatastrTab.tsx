@@ -49,7 +49,7 @@ export default function CaseKatastrTab({ item, userId, fail }: TabProps) {
             <KatastrSearch onSave={save} />
             <section aria-label="Nemovitosti ve spisu">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Uloženo ve spisu</h2>
-                {saved === null ? <p className="mt-3 text-sm text-slate-500" role="status">Načítám…</p> : saved.length === 0 ? <p className="mt-3 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">K této věci zatím není uložena žádná nemovitost.</p> : (
+                {saved === null ? <p className="mt-3 text-sm text-slate-500" role="status">Načítám…</p> : saved.length === 0 ? <p className="mt-3 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">K tomuto spisu zatím není uložena žádná nemovitost.</p> : (
                     <div className="mt-3 space-y-3">
                         {saved.map((s) => (
                             <PropertyCard key={s.id} snap={s.snapshot} dataAsOf={s.data_as_of || null}>

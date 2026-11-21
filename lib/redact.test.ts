@@ -10,7 +10,7 @@ describe('redact', () => {
         expect(r.count).toBeGreaterThanOrEqual(6);
     });
     it('keeps file numbers, dates, amounts and ordinary text', () => {
-        const t = 'Ve věci sp. zn. 10 C 123/2024 dne 15. 3. 2030 žalobce požaduje 125 000 Kč.';
+        const t = 'Ve spisu sp. zn. 10 C 123/2024 dne 15. 3. 2030 žalobce požaduje 125 000 Kč.';
         expect(redact(t)).toEqual({ text: t, count: 0 });
     });
     it('masks identity document numbers', () => { expect(redact('OP č. 123456789 platné do 2030').text).toContain('[DOKLAD]'); });

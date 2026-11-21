@@ -11,10 +11,10 @@ import { useAuth } from '../site/AuthContext';
 import { FinalCta, SiteFooter, SiteHeader } from './LandingChrome';
 
 const GROUPS: { icon: typeof Users; tone: string; title: string; items: string[] }[] = [
-    { icon: FolderOpen, tone: 'bg-indigo-100 text-indigo-700', title: 'Spisy a lhůty', items: ['Neomezený počet věcí a klientů', 'Lhůty s přesunem na pracovní den', 'Datové schránky přímo v aplikaci', 'Lhůty z rozhodnutí k potvrzení', 'Vzory dokumentů ve Wordu'] },
+    { icon: FolderOpen, tone: 'bg-indigo-100 text-indigo-700', title: 'Spisy a lhůty', items: ['Neomezený počet spisů a klientů', 'Lhůty s přesunem na pracovní den', 'Datové schránky přímo v aplikaci', 'Lhůty z rozhodnutí k potvrzení', 'Vzory dokumentů ve Wordu'] },
     { icon: Users, tone: 'bg-sky-100 text-sky-700', title: 'Klienti a komunikace', items: ['Soukromá stránka klienta bez registrace', 'Šifrované zprávy a soubory', 'Podpis dokumentů s dokladem', 'Identifikace klienta (AML)', 'E-mail ve spisu (Gmail, Seznam a další)'] },
-    { icon: Banknote, tone: 'bg-emerald-100 text-emerald-700', title: 'Peníze', items: ['Výkazy práce a automatický návrh výkazu', 'Faktury s QR platbou a ISDOC', 'Párování plateb z banky, upomínky', 'Rentabilita věcí a klientů', 'Export podkladů pro účetní'] },
-    { icon: Landmark, tone: 'bg-amber-100 text-amber-700', title: 'Přehled a rejstříky', items: ['Přehled dne s nejbližšími lhůtami', 'Právní novinky a změny zákonů', 'ARES a katastr nemovitostí', 'Import dat z Excelu a jiných programů', 'Sdílené věci pro kolegy v kanceláři'] },
+    { icon: Banknote, tone: 'bg-emerald-100 text-emerald-700', title: 'Peníze', items: ['Výkazy práce a automatický návrh výkazu', 'Faktury s QR platbou a ISDOC', 'Párování plateb z banky, upomínky', 'Rentabilita spisů a klientů', 'Export podkladů pro účetní'] },
+    { icon: Landmark, tone: 'bg-amber-100 text-amber-700', title: 'Přehled a rejstříky', items: ['Přehled dne s nejbližšími lhůtami', 'Právní novinky a změny zákonů', 'ARES a katastr nemovitostí', 'Import dat z Excelu a jiných programů', 'Sdílené spisy pro kolegy v kanceláři'] },
 ];
 
 const STEPS: [string, string][] = [['Vyzkoušíte 14 dní zdarma', 'Zaregistrujete se e-mailem. Žádná platební karta, žádný závazek.'], ['Vyplníte profil', 'Jméno, číslo ČAK, adresa kanceláře a údaje pro fakturaci. Jednou a na pár minut.'], ['Vyberete délku předplatného', 'Měsíční, půlroční nebo roční. Funkce jsou ve všech stejné, liší se cena za měsíc.'], ['Předplatné se samo obnovuje', 'Při platbě kartou je automatické obnovování předvolené a platba se zopakuje vždy na konci období. Zrušíte ho kdykoli v Nastavení jedním tlačítkem, nebo ho při platbě odškrtnete.']];
@@ -25,7 +25,7 @@ const FAQ: [string, string][] = [
     ['Co se stane s daty, když přestanu platit?', 'Funkce se zamknou, ale vaše data zůstanou uložená k nahlížení a stažení. Po obnovení předplatného se zase odemknou.'],
     ['Liší se plány funkcemi?', 'Ne. Měsíční, půlroční i roční plán mají úplně stejné funkce. Delší období je jen levnější za měsíc.'],
     ['Je cena s DPH?', 'Zda a v jaké výši je DPH, uvidíte u objednávky a na daňovém dokladu, který po zaplacení dostanete.'],
-    ['Jak funguje balíček pro kancelář?', 'Jedna platba za celou kancelář (2, 3, 5, 10 nebo 20 advokátů, k tomu místa pro koncipienty zdarma). Každý člen má vlastní účet, heslo a vlastní data, která vedoucí kanceláře nevidí. Věc může člen nasdílet kolegovi.'],
+    ['Jak funguje balíček pro kancelář?', 'Jedna platba za celou kancelář (2, 3, 5, 10 nebo 20 advokátů, k tomu místa pro koncipienty zdarma). Každý člen má vlastní účet, heslo a vlastní data, která vedoucí kanceláře nevidí. Spis může člen nasdílet kolegovi.'],
 ];
 
 // Samostatná stránka s ceníkem: plány, co je v ceně, jak platba funguje a časté otázky
@@ -75,7 +75,7 @@ export default function PricingPage() {
                                 <p className="mt-2 h-5 text-sm text-slate-500">{pm > 0 && plan.months > 1 ? `tedy ${czk(pm)} měsíčně` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>
                                 <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Sleva ${savingPct(table, plan.id)} % (${czk(save)})` : ' '}</p>
                                 <ul className="mt-5 flex-1 space-y-2 text-sm text-slate-700">
-                                    {['Všechny funkce', 'Neomezený počet věcí a klientů', mode === 'firm' ? `Až ${size} advokátů a ${traineeSeats(size)} koncipientů v ceně` : 'Zkušební období 14 dní zdarma', 'Zrušíte kdykoli jedním tlačítkem'].map((f) => <li key={f} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}
+                                    {['Všechny funkce', 'Neomezený počet spisů a klientů', mode === 'firm' ? `Až ${size} advokátů a ${traineeSeats(size)} koncipientů v ceně` : 'Zkušební období 14 dní zdarma', 'Zrušíte kdykoli jedním tlačítkem'].map((f) => <li key={f} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />{f}</li>)}
                                 </ul>
                                 {account
                                     ? <Link href={mode === 'firm' ? '/kancelar/tym' : '/kancelar/nastaveni'} className={`mt-7 inline-flex justify-center rounded-xl px-4 py-3 text-sm font-bold ${featured ? 'bg-indigo-700 text-white hover:bg-indigo-800' : 'border border-slate-300 text-slate-800 hover:bg-slate-50'}`}>{mode === 'firm' ? 'Otevřít tým' : 'Otevřít předplatné'}</Link>

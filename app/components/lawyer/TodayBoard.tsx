@@ -142,7 +142,7 @@ export default function TodayBoard() {
     return (
         <div className="space-y-4">
             {/* Zdroje: co skutečně funguje a co čeká na nastavení */}
-            <ul className="flex flex-wrap gap-2" aria-label="Zdroje nových věcí">
+            <ul className="flex flex-wrap gap-2" aria-label="Zdroje nových spisů">
                 {data.sources.map((s) => {
                     const Icon = SOURCE_ICON[s.state];
                     return <li key={s.id}><Link href={s.href} title={s.note} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold hover:brightness-95 ${SOURCE_TONE[s.state]}`}><Icon size={13} aria-hidden="true" /> {s.label}<span className="font-normal opacity-80">· {s.state === 'ok' ? 'funguje' : s.state === 'off' ? 'nenastaveno' : 'chybí SQL'}</span></Link></li>;
@@ -152,7 +152,7 @@ export default function TodayBoard() {
             {actionError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{actionError}</p>}
 
             <div className="grid items-start gap-4 lg:grid-cols-2">
-                {/* 1. Nové věci k vyřízení */}
+                {/* 1. Nové spisy k vyřízení */}
                 <Block id="dnes-nove" icon={Inbox} title="Nové k vyřízení" count={inbox.length}>
                     {inbox.length === 0 ? (
                         <Empty>Nic nového. Nové poptávky, zprávy a podklady od klientů se objeví tady.<span className="mt-2 block"><Link href="/kancelar/nastaveni" className="font-semibold text-indigo-800 hover:underline">Odkaz pro zájemce najdete v Nastavení →</Link></span></Empty>
@@ -181,12 +181,12 @@ export default function TodayBoard() {
                     {doneNote && (
                         <p className="m-1 flex flex-wrap items-center gap-2 rounded-xl bg-emerald-50 p-2.5 text-sm text-emerald-900" role="status">
                             <Check size={15} aria-hidden="true" /> Hotovo: {doneNote.title}.
-                            <Link href={`/kancelar/vykazy?case=${doneNote.caseId}&popis=${encodeURIComponent(doneNote.title.slice(0, 120))}`} className="font-semibold underline">Zapsat čas k věci</Link>
+                            <Link href={`/kancelar/vykazy?case=${doneNote.caseId}&popis=${encodeURIComponent(doneNote.title.slice(0, 120))}`} className="font-semibold underline">Zapsat čas ke spisu</Link>
                             <button type="button" onClick={() => setDoneNote(null)} className="ml-auto text-xs text-emerald-800 hover:underline cursor-pointer">Zavřít</button>
                         </p>
                     )}
                     {agenda.length === 0 ? (
-                        <Empty>{onlyMine && allCount > 0 ? <>Na vás teď nic nečeká. <button type="button" onClick={() => setOnlyMine(false)} className="font-semibold text-indigo-800 hover:underline cursor-pointer">Zobrazit všechny ({allCount})</button></> : 'Na 14 dní dopředu nic. Úkoly a lhůty přidáte ve věci, v záložce Lhůty.'}</Empty>
+                        <Empty>{onlyMine && allCount > 0 ? <>Na vás teď nic nečeká. <button type="button" onClick={() => setOnlyMine(false)} className="font-semibold text-indigo-800 hover:underline cursor-pointer">Zobrazit všechny ({allCount})</button></> : 'Na 14 dní dopředu nic. Úkoly a lhůty přidáte ve spisu, v záložce Lhůty.'}</Empty>
                     ) : (
                         <ul className="divide-y divide-slate-100">
                             {agenda.slice(0, 12).map((a, idx) => (
@@ -217,7 +217,7 @@ export default function TodayBoard() {
                                     </div>
                                 </li>
                             ))}
-                            {agenda.length > 12 && <li className="px-2 py-2 text-xs text-slate-500">a dalších {agenda.length - 12} ve věcech</li>}
+                            {agenda.length > 12 && <li className="px-2 py-2 text-xs text-slate-500">a dalších {agenda.length - 12} ve spisech</li>}
                         </ul>
                     )}
                     <p className="px-2 pb-1 pt-2 text-xs leading-relaxed text-slate-400">Upozornění na termíny je pomůcka. „Vypočteno orientačně“ znamená, že datum spočítala aplikace a nikdo ho neověřil.</p>
@@ -226,7 +226,7 @@ export default function TodayBoard() {
                 {/* 3. Čekání na klienta */}
                 <Block id="dnes-ceka" icon={Hourglass} title="Čeká se na klienta" count={waiting.length}>
                     {waiting.length === 0 ? (
-                        <Empty>Na nikoho nečekáte. Když klienta požádáte o podklady nebo podpis ve věci (záložka Klient), uvidíte tady, jak dlouho se čeká.</Empty>
+                        <Empty>Na nikoho nečekáte. Když klienta požádáte o podklady nebo podpis ve spisu (záložka Klient), uvidíte tady, jak dlouho se čeká.</Empty>
                     ) : (
                         <ul className="divide-y divide-slate-100">
                             {waiting.slice(0, 8).map((w) => (
@@ -256,7 +256,7 @@ export default function TodayBoard() {
                                     <li key={u.caseId ?? 'none'} className="flex items-center gap-3 px-2 py-2.5">
                                         <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-slate-900">{u.caseTitle}</span><span className="block text-xs text-slate-500">{u.count} {u.count === 1 ? 'záznam' : u.count < 5 ? 'záznamy' : 'záznamů'} · {formatMinutes(u.minutes)} h · {czk(u.amount)}</span></span>
                                         {u.caseId ? <Link href={`/kancelar/faktury?nove=1&case=${u.caseId}`} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-50"><Receipt size={13} aria-hidden="true" /> Vyúčtovat</Link>
-                                            : <Link href="/kancelar/vykazy" className="shrink-0 text-xs font-semibold text-indigo-800 hover:underline">Přiřadit k věci →</Link>}
+                                            : <Link href="/kancelar/vykazy" className="shrink-0 text-xs font-semibold text-indigo-800 hover:underline">Přiřadit ke spisu →</Link>}
                                     </li>
                                 ))}
                             </ul>
@@ -265,7 +265,7 @@ export default function TodayBoard() {
                 </Block>
             </div>
 
-            <p className="flex justify-end"><button type="button" onClick={reload} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"><RefreshCw size={12} aria-hidden="true" /> Obnovit přehled</button> <Link href="/kancelar/veci" className="ml-4 inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800">Všechny věci <ArrowRight size={12} aria-hidden="true" /></Link></p>
+            <p className="flex justify-end"><button type="button" onClick={reload} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"><RefreshCw size={12} aria-hidden="true" /> Obnovit přehled</button> <Link href="/kancelar/veci" className="ml-4 inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800">Všechny spisy <ArrowRight size={12} aria-hidden="true" /></Link></p>
 
             {dialog && <DeadlineDialog target={dialog} userId={userId} onSaved={onSaved} onClose={() => setDialog(null)} />}
         </div>

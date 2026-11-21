@@ -48,7 +48,7 @@ export default function CaseIdentityTab({ item, userId, fail }: TabProps) {
         <div className="space-y-5">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><ShieldCheck size={18} className="text-indigo-700" aria-hidden="true" /> Identifikace klienta</h2>
-                <p className="mt-1 text-sm text-slate-600">Záznam o ověření totožnosti klienta, posouzení politicky exponované osoby a rizika. Zákon č. 253/2008 Sb. se na advokáta vztahuje jen při některých činnostech, zda se týká této věci, posuďte sami.</p>
+                <p className="mt-1 text-sm text-slate-600">Záznam o ověření totožnosti klienta, posouzení politicky exponované osoby a rizika. Zákon č. 253/2008 Sb. se na advokáta vztahuje jen při některých činnostech, zda se týká tohoto spisu, posuďte sami.</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" onClick={() => void add('bankid')} disabled={!hasLink || busy === 'add-bankid'} className={primaryBtn} title={hasLink ? '' : 'Nejdřív vytvořte klientskou stránku v záložce Klient'}>{busy === 'add-bankid' ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />} Požádat klienta o online ověření</button>
                     <button type="button" onClick={() => void add('osobne')} disabled={busy === 'add-osobne'} className={ghostBtn}><Plus size={14} /> Zapsat osobní identifikaci</button>

@@ -37,14 +37,14 @@ export default function CaseSharePanel({ item, userId, onClose, onLeft, fail }: 
         return wrapForAdmin(keys[memberId].public_key, channel.key);
     }
     return (
-        <section className="mt-4 rounded-2xl border border-indigo-200 bg-white p-5" aria-label="Sdílení věci">
+        <section className="mt-4 rounded-2xl border border-indigo-200 bg-white p-5" aria-label="Sdílení spisu">
             <div className="flex items-start justify-between gap-3">
-                <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Users size={18} className="text-indigo-700" aria-hidden="true" /> Sdílení věci</h2>
+                <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Users size={18} className="text-indigo-700" aria-hidden="true" /> Sdílení spisu</h2>
                 <button type="button" onClick={onClose} aria-label="Zavřít" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 cursor-pointer"><X size={16} /></button>
             </div>
             {rows === null ? <p className="mt-3 text-sm text-slate-500" role="status">Načítám…</p> : problem ? <p role="alert" className="mt-3 rounded-lg bg-indigo-50 p-3 text-sm text-slate-700">{problem}</p> : (
                 <>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{isOwner ? 'Věc můžete nasdílet kolegům z kanceláře. Uvidí její soubory, lhůty, chronologii a kontakty. Klientskou stránku, podpisy, identifikaci, výkazy a vyúčtování mají jen vy.' : `Věc vám sdílí ${owner?.name || 'kolega'}. Vaše role: ${ROLE_LABEL[(members.find((m) => m.user_id === userId)?.role ?? 'viewer') as ShareRole]}.`}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{isOwner ? 'Spis můžete nasdílet kolegům z kanceláře. Uvidí její soubory, lhůty, chronologii a kontakty. Klientskou stránku, podpisy, identifikaci, výkazy a vyúčtování mají jen vy.' : `Spis vám sdílí ${owner?.name || 'kolega'}. Vaše role: ${ROLE_LABEL[(members.find((m) => m.user_id === userId)?.role ?? 'viewer') as ShareRole]}.`}</p>
                     <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
                         {owner && <li className="flex items-center gap-3 px-4 py-2.5"><span className="flex-1"><strong className="text-slate-900">{owner.name || owner.email}</strong><span className="block text-xs text-slate-500">{owner.email}</span></span><span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-900">Vlastník</span></li>}
                         {members.map((m) => (
@@ -56,7 +56,7 @@ export default function CaseSharePanel({ item, userId, onClose, onLeft, fail }: 
                                 </>) : <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700">{ROLE_LABEL[m.role]}</span>}
                             </li>
                         ))}
-                        {members.length === 0 && <li className="px-4 py-3 text-slate-500">Věc zatím nikomu nesdílíte.</li>}
+                        {members.length === 0 && <li className="px-4 py-3 text-slate-500">Spis zatím nikomu nesdílíte.</li>}
                     </ul>
 
                     {isOwner ? (

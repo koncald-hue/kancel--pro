@@ -82,7 +82,7 @@ export default function LawyerManagement() {
         return {
             cur, old, fc: forecast(entries, today),
             weeks: byWeek(inMonth(entries, ym)),
-            cases: byCase(inMonth(entries, ym)).slice(0, 8).map((r) => ({ ...r, title: r.caseId ? (titles.get(r.caseId) ?? 'Věc') : 'Čas bez přiřazené věci' })),
+            cases: byCase(inMonth(entries, ym)).slice(0, 8).map((r) => ({ ...r, title: r.caseId ? (titles.get(r.caseId) ?? 'Spis') : 'Čas bez přiřazeného spisu' })),
         };
     }, [entries, cases, ym, prev, today]);
 
@@ -93,7 +93,7 @@ export default function LawyerManagement() {
 
     return (
         <div className="space-y-5">
-            <p className="max-w-3xl text-sm leading-relaxed text-slate-600">Přehled, jak se vám daří tento měsíc. Vychází z času, který zapisujete u věcí (Výkazy práce): kolik jste odpracovali, jakou to má hodnotu podle vaší sazby a kolik z toho už je vyfakturováno. Prognóza odhaduje konec měsíce podle dosavadního tempa. Pokud pracujete sami, najdete tu jen své číslo, výkon kolegů uvidí vedoucí kanceláře.</p>
+            <p className="max-w-3xl text-sm leading-relaxed text-slate-600">Přehled, jak se vám daří tento měsíc. Vychází z času, který zapisujete u spisů (Výkazy práce): kolik jste odpracovali, jakou to má hodnotu podle vaší sazby a kolik z toho už je vyfakturováno. Prognóza odhaduje konec měsíce podle dosavadního tempa. Pokud pracujete sami, najdete tu jen své číslo, výkon kolegů uvidí vedoucí kanceláře.</p>
             <section className="grid gap-4 md:grid-cols-3">
                 <div className={card}><p className="text-sm text-slate-500">Hodiny, {monthName(ym)}</p><p className="mt-1 text-3xl font-extrabold text-slate-900">{formatMinutes(cur.minutes)}</p><p className="mt-1"><Change cur={cur.minutes} prev={old.minutes} /></p><p className="mt-1 text-xs text-slate-500">Minulý měsíc: {formatMinutes(old.minutes)}</p></div>
                 <div className={card}><p className="text-sm text-slate-500">Hodnota práce</p><p className="mt-1 text-3xl font-extrabold text-slate-900">{czk(cur.amount)}</p><p className="mt-1"><Change cur={cur.amount} prev={old.amount} /></p><p className="mt-1 text-xs text-slate-500">Z toho vyfakturováno {czk(cur.billedAmount)}, k vyfakturování {czk(cur.amount - cur.billedAmount)}</p></div>
@@ -111,7 +111,7 @@ export default function LawyerManagement() {
                         <div className="mt-3"><Bars rows={view.weeks.map((w) => ({ key: w.week, label: `týden od ${new Date(`${w.week}T12:00:00`).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' })}`, value: w.minutes, note: `${hours(w.minutes)} · ${czk(w.amount)}` }))} /></div>}
                 </div>
                 <div className={card}>
-                    <h2 className="text-base font-bold text-slate-900">Nejvíc práce podle věcí</h2>
+                    <h2 className="text-base font-bold text-slate-900">Nejvíc práce podle spisů</h2>
                     {view.cases.length === 0 ? <p className="mt-3 text-sm text-slate-500">Tento měsíc zatím nejsou žádné výkazy.</p> :
                         <div className="mt-3"><Bars rows={view.cases.map((c) => ({ key: c.caseId ?? 'none', label: c.title, value: c.amount, note: `${hours(c.minutes)} · ${czk(c.amount)}` }))} /></div>}
                 </div>
@@ -120,7 +120,7 @@ export default function LawyerManagement() {
             {role === 'owner' && members && (
                 <section className={card} aria-labelledby="mg-team">
                     <h2 id="mg-team" className="text-base font-bold text-slate-900">Výkon podle právníků ({monthName(ym)})</h2>
-                    <p className="mt-1 text-sm text-slate-600">Hodiny kolegy uvidíte jen tehdy, když je sám zapne ve svém Přehledu. Ostatní se tu zobrazí bez čísel. Sdílí se jen součty za měsíc, nikdy popisy ani věci.</p>
+                    <p className="mt-1 text-sm text-slate-600">Hodiny kolegy uvidíte jen tehdy, když je sám zapne ve svém Přehledu. Ostatní se tu zobrazí bez čísel. Sdílí se jen součty za měsíc, nikdy popisy ani spisy.</p>
                     {(() => {
                         const t = teamStats(members);
                         return (
@@ -154,7 +154,7 @@ export default function LawyerManagement() {
             {role === 'member' && share !== null && (
                 <section className={card}>
                     <h2 className="flex items-center gap-2 text-base font-bold text-slate-900"><Eye size={16} className="text-indigo-700" aria-hidden="true" /> Sdílení hodin s vedoucím kanceláře</h2>
-                    <p className="mt-1 text-sm text-slate-600">Ve výchozím stavu vedoucí vaše hodiny nevidí. Když sdílení zapnete, uvidí součet hodin a částek za měsíc, nikdy popisy ani věci. Vypnout ho můžete kdykoli.</p>
+                    <p className="mt-1 text-sm text-slate-600">Ve výchozím stavu vedoucí vaše hodiny nevidí. Když sdílení zapnete, uvidí součet hodin a částek za měsíc, nikdy popisy ani spisy. Vypnout ho můžete kdykoli.</p>
                     <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><input type="checkbox" checked={share} onChange={(e) => void toggleShare(e.target.checked)} /> Sdílet měsíční součty hodin</label>
                 </section>
             )}

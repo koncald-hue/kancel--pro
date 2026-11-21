@@ -24,14 +24,14 @@ describe('officeBridge', () => {
         await expect(wordFile(bad)).rejects.toThrow('nelze');
     });
     const mail = { CoercionType: { Text: 0 }, context: { mailbox: { item: {
-        subject: 'Věc 12 C 5/2026', from: { displayName: 'Jan Novák', emailAddress: 'jan@firma.cz' }, to: [{ emailAddress: 'ja@kancelar.cz' }], dateTimeCreated: '2026-11-18T10:00:00Z',
+        subject: 'Spis 12 C 5/2026', from: { displayName: 'Jan Novák', emailAddress: 'jan@firma.cz' }, to: [{ emailAddress: 'ja@kancelar.cz' }], dateTimeCreated: '2026-11-18T10:00:00Z',
         body: { getAsync: (_c: number, cb: (r: unknown) => void) => cb(ok('Text zprávy')) },
         attachments: [{ id: 'a1', name: 'smlouva.pdf', size: 3, contentType: 'application/pdf', isInline: false }, { id: 'a2', name: 'logo.png', size: 1, isInline: true }],
         getAttachmentContentAsync: (id: string, cb: (r: unknown) => void) => cb(ok(id === 'a1' ? { format: 'base64', content: btoa('abc') } : { format: 'url', content: 'x' })),
     } } } };
     it('Outlook: načte zprávu a přílohy', async () => {
         const m = await mailInfo(mail);
-        expect(m).toMatchObject({ subject: 'Věc 12 C 5/2026', fromEmail: 'jan@firma.cz', to: ['ja@kancelar.cz'], body: 'Text zprávy' });
+        expect(m).toMatchObject({ subject: 'Spis 12 C 5/2026', fromEmail: 'jan@firma.cz', to: ['ja@kancelar.cz'], body: 'Text zprávy' });
         expect(m.attachments).toHaveLength(2); expect(m.attachments[1].inline).toBe(true);
     });
     it('Outlook: příloha jako soubor, odkaz se přeskočí', async () => {

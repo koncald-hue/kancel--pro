@@ -95,7 +95,7 @@ export default function LawyerDashboard() {
             <RadarPanel />
             {isirNew > 0 && <Link href="/kancelar/insolvence" className="flex items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-950 hover:bg-amber-100"><ShieldAlert size={18} aria-hidden="true" /> Hlídání insolvence: {isirNew} {isirNew === 1 ? 'nový nález' : isirNew < 5 ? 'nové nálezy' : 'nových nálezů'}. Zobrazit →</Link>}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <Tile label="Otevřené věci" value={String(open.length)} />
+                <Tile label="Otevřené spisy" value={String(open.length)} />
                 <Tile label="Lhůty do 7 dní" value={String(week.length)} tone={week.some((w) => w.left <= 2) ? 'text-rose-700' : undefined} note={week[0] ? `nejbližší: ${deadlineText(week[0].left)}` : 'žádná nehrozí'} />
                 <Tile label="Nevyfakturováno" value={formatMinutes(minutes)} note="hodin práce" />
                 <Tile label="K fakturaci" value={czk(amount)} />
@@ -120,7 +120,7 @@ export default function LawyerDashboard() {
             )}
 
             <div className="flex flex-wrap gap-2">
-                <Link href="/kancelar/veci" className={ghostBtn}><Plus size={15} /> Nová věc</Link>
+                <Link href="/kancelar/veci" className={ghostBtn}><Plus size={15} /> Nový spis</Link>
                 <Link href="/kancelar/klienti" className={ghostBtn}><Users size={15} /> Klient</Link>
                 <Link href="/kancelar/vykazy" className={ghostBtn}><Clock3 size={15} /> Zapsat čas</Link>
             </div>
@@ -142,7 +142,7 @@ export default function LawyerDashboard() {
             <LegalNews />
 
             {open.length === 0 && (
-                <p className="flex items-center gap-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-600"><FolderOpen size={16} className="text-indigo-800" /> Začněte založením první věci v záložce Věci. Ke každé věci patří soubory, lhůty, chronologie a export spisu.</p>
+                <p className="flex items-center gap-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-600"><FolderOpen size={16} className="text-indigo-800" /> Začněte založením prvního spisu v záložce Spisy. Ke každému spisu patří soubory, lhůty, chronologie a export spisu.</p>
             )}
         </div>
     );

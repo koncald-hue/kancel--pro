@@ -33,7 +33,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
     } else {
         const problem = isAllowedUpload(file.name, file.size);
         if (problem) return NextResponse.json({ error: 'invalid', message: problem }, { status: 400 });
-        if (link.e2ee) return NextResponse.json({ error: 'invalid', message: 'Tato věc vyžaduje šifrované nahrávání.' }, { status: 400 });
+        if (link.e2ee) return NextResponse.json({ error: 'invalid', message: 'Tento spis vyžaduje šifrované nahrávání.' }, { status: 400 });
     }
 
     let requestId: string | null = null;

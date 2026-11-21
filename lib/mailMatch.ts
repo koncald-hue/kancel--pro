@@ -24,8 +24,8 @@ export function matchCases(msg: { counterparty: string; subject: string; text: s
         const name = c.client_name ? fold(c.client_name).trim() : '';
         if (name.length >= 5 && subj.includes(name)) bump(30, 'jméno klienta v předmětu');
         const title = fold(c.title).trim();
-        if (title.length >= 5 && subj.includes(title)) bump(25, 'název věci v předmětu');
-        if (score > 0) out.push({ caseId: c.id, score: c.status && c.status !== 'open' ? Math.round(score / 2) : score, reason: c.status && c.status !== 'open' ? `${reason} (věc je vyřešená)` : reason });
+        if (title.length >= 5 && subj.includes(title)) bump(25, 'název spisu v předmětu');
+        if (score > 0) out.push({ caseId: c.id, score: c.status && c.status !== 'open' ? Math.round(score / 2) : score, reason: c.status && c.status !== 'open' ? `${reason} (spis je vyřešená)` : reason });
     }
     return out.sort((a, b) => b.score - a.score).slice(0, 3);
 }

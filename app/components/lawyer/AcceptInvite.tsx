@@ -40,7 +40,7 @@ export default function AcceptInvite() {
             {firm ? (
                 <>
                     <p className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-800"><CheckCircle2 size={18} /> Jste členem kanceláře {firm}.</p>
-                    <p className="mt-2 text-sm text-slate-600">Vaše věci, klienty a zprávy vidíte jen vy. Před použitím aplikace ještě vyplňte svůj profil.</p>
+                    <p className="mt-2 text-sm text-slate-600">Vaše spisy, klienty a zprávy vidíte jen vy. Před použitím aplikace ještě vyplňte svůj profil.</p>
                     <Link href="/kancelar" className={`${primaryBtn} mt-6 inline-flex`}>Otevřít kancelář</Link>
                 </>
             ) : !authReady ? (
@@ -55,7 +55,7 @@ export default function AcceptInvite() {
                 </>
             ) : (
                 <>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-600">Přihlášen jako <strong>{account.email}</strong>. Po přijetí budete členem kanceláře a získáte přístup z jejího balíčku. Vedoucí kanceláře neuvidí vaše věci ani klienty.</p>
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600">Přihlášen jako <strong>{account.email}</strong>. Po přijetí budete členem kanceláře a získáte přístup z jejího balíčku. Vedoucí kanceláře neuvidí vaše spisy ani klienty.</p>
                     {error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
                     {error.includes('jiný e-mail') && <p className="mt-3 text-sm text-slate-600">Odhlaste se a přihlaste se (nebo zaregistrujte) účtem {info?.email_hint ?? 's e-mailem z pozvánky'}. <button type="button" onClick={logout} className="font-semibold text-indigo-700 underline">Odhlásit se</button></p>}
                     <button type="button" onClick={() => void accept()} disabled={busy} className={`${primaryBtn} mt-6`}>{busy ? <Loader2 size={16} className="animate-spin" /> : null} Přijmout pozvánku</button>

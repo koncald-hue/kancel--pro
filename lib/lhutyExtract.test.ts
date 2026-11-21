@@ -41,7 +41,7 @@ describe('finding deadlines in decisions', () => {
         expect(r[0].warnings.join(' ')).toContain('konec období');
     });
     it('ignores dates and numbers that are not deadlines and rejects invalid dates', () => {
-        expect(one('Dne 9. 11. 2026 bylo rozhodnuto ve věci vedené pod sp. zn. 12 C 34/2026 o částce 15 000 Kč.')).toEqual([]);
+        expect(one('Dne 9. 11. 2026 bylo rozhodnuto ve spisu vedené pod sp. zn. 12 C 34/2026 o částce 15 000 Kč.')).toEqual([]);
         expect(one('Splatnost je do 31. 2. 2026.')).toEqual([]);
     });
     it('does not duplicate the same deadline and reports when nothing is found', () => {
@@ -73,6 +73,6 @@ describe('false positives and tricky wording', () => {
         expect(a.map((c) => `${c.label}:${c.n}`)).toEqual(['Odvolání:15', 'Odvolání:8', 'Odpor proti platebnímu rozkazu:15']);
     });
     it('does not treat amounts, case numbers or ages as deadlines', () => {
-        expect(one('Žalovaný zaplatí 15 000 Kč. Věc vedená pod sp. zn. 12 C 15/2026. Žalobce je mu 15 let.')).toEqual([]);
+        expect(one('Žalovaný zaplatí 15 000 Kč. Spis vedený pod sp. zn. 12 C 15/2026. Žalobce je mu 15 let.')).toEqual([]);
     });
 });

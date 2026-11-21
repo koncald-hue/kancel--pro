@@ -16,7 +16,7 @@ describe('export všech dat', () => {
         expect(file('veci.csv')).toContain('uzavřená');
         expect(file('klienti.csv')).toContain('2. 3. 1985');
     });
-    it('propojí lhůty a čas s názvem věci a nevynáší šifrované zápisy', () => {
+    it('propojí lhůty a čas s názvem spisu a nevynáší šifrované zápisy', () => {
         expect(file('lhuty.csv')).toContain('"Spor; o ""dluh""";Odvolání;1. 12. 2026;ne');
         expect(file('zapisy-ve-vecech.csv')).not.toContain('tajné');
         expect(out.counts.zapisy).toBe(1);

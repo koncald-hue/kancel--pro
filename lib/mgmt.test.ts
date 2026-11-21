@@ -18,7 +18,7 @@ describe('přehled pro vedení', () => {
     });
     it('změna v procentech', () => { expect(changePct(150, 100)).toBe(50); expect(changePct(50, 100)).toBe(-50); expect(changePct(10, 0)).toBeNull(); });
     it('týdny začínají pondělím', () => { expect(weekStart('2026-11-15')).toBe('2026-11-09'); expect(weekStart('2026-11-16')).toBe('2026-11-16'); });
-    it('seskupení podle týdne a věci', () => {
+    it('seskupení podle týdne a spisy', () => {
         const rows = [e('2026-11-09', 60), e('2026-11-13', 60, 1200, false, 'b'), e('2026-11-16', 120, 2000, false, null)];
         expect(byWeek(rows).map((w) => [w.week, w.minutes])).toEqual([['2026-11-09', 120], ['2026-11-16', 120]]);
         expect(byCase(rows)[0].caseId).toBeNull();

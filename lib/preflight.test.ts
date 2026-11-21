@@ -21,7 +21,7 @@ describe('pre-send check', () => {
     it('warns about a missing or different file number and a different authority', () => {
         expect(texts({ annotation: 'Vyjádření k žalobě' }).some((x) => x.level === 'warn' && /chybí spisová značka/.test(x.text))).toBe(true);
         expect(texts({ annotation: 'Vyjádření, sp. zn. 5 C 1/2025' }).some((x) => x.level === 'warn' && /správného řízení/.test(x.text))).toBe(true);
-        expect(texts({ recipientName: 'Krajský soud v Praze' }).some((x) => x.level === 'warn' && /vedena u/.test(x.text))).toBe(true);
+        expect(texts({ recipientName: 'Krajský soud v Praze' }).some((x) => x.level === 'warn' && /veden u/.test(x.text))).toBe(true);
     });
     it('warns about draft-like names, duplicate files and unusual formats; informs about unsigned PDF', () => {
         expect(texts({ files: [{ name: 'vyjadreni-koncept.pdf', size: 5, type: '' }] }).some((x) => x.level === 'warn' && /koncept/.test(x.text))).toBe(true);

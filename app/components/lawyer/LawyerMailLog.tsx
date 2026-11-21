@@ -47,7 +47,7 @@ export default function LawyerMailLog() {
 
     async function add() {
         if (!form) return;
-        if (!form.subject.trim()) { setError('Vyplňte věc (předmět) zásilky.'); return; }
+        if (!form.subject.trim()) { setError('Vyplňte spis (předmět) zásilky.'); return; }
         setBusy(true); setError('');
         const { error: err } = await supabase.from('mail_log').insert({ user_id: userId, case_id: form.case_id || null, direction: form.direction, channel: form.channel, event_on: form.event_on || todayIso(), counterparty: form.counterparty.trim(), their_ref: form.their_ref.trim(), subject: form.subject.trim(), attachments: Math.max(0, Math.min(1000, Number(form.attachments) || 0)), note: form.note.trim() });
         setBusy(false);
@@ -66,7 +66,7 @@ export default function LawyerMailLog() {
     function print() {
         const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
         const w = window.open('', '_blank'); if (!w) return;
-        w.document.write(`<!doctype html><meta charset="utf-8"><title>Podací deník ${year}</title><style>body{font:11px/1.4 system-ui;margin:1.5rem}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:3px 5px;text-align:left;vertical-align:top}</style><h2>Podací deník ${year}</h2><table><tr><th>Č. j.</th><th>Datum</th><th>Směr</th><th>Způsob</th><th>Odesílatel / adresát</th><th>Jejich č. j.</th><th>Věc</th><th>Spis</th><th>Doručeno</th></tr>${shown.map((r) => `<tr><td>${refNo(r)}</td><td>${dmy(r.event_on)}</td><td>${DIRECTION_LABEL[r.direction]}</td><td>${CHANNEL_LABEL[r.channel]}</td><td>${esc(r.counterparty)}</td><td>${esc(r.their_ref)}</td><td>${esc(r.subject)}</td><td>${esc(title(r.case_id))}</td><td>${dmy(r.delivered_on)}</td></tr>`).join('')}</table>`);
+        w.document.write(`<!doctype html><meta charset="utf-8"><title>Podací deník ${year}</title><style>body{font:11px/1.4 system-ui;margin:1.5rem}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:3px 5px;text-align:left;vertical-align:top}</style><h2>Podací deník ${year}</h2><table><tr><th>Č. j.</th><th>Datum</th><th>Směr</th><th>Způsob</th><th>Odesílatel / adresát</th><th>Jejich č. j.</th><th>Spis</th><th>Spis</th><th>Doručeno</th></tr>${shown.map((r) => `<tr><td>${refNo(r)}</td><td>${dmy(r.event_on)}</td><td>${DIRECTION_LABEL[r.direction]}</td><td>${CHANNEL_LABEL[r.channel]}</td><td>${esc(r.counterparty)}</td><td>${esc(r.their_ref)}</td><td>${esc(r.subject)}</td><td>${esc(title(r.case_id))}</td><td>${dmy(r.delivered_on)}</td></tr>`).join('')}</table>`);
         w.document.close(); w.print();
     }
 
@@ -79,7 +79,7 @@ export default function LawyerMailLog() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                         <h2 className="text-lg font-bold text-slate-900">Podací deník</h2>
-                        <p className="mt-1 text-sm leading-relaxed text-slate-600">Přijatá a odeslaná pošta s číslem jednacím kanceláře (řada pro každý rok). Datové zprávy a e-maily uložené do věci se sem zapíšou samy, listinnou poštu přidáte ručně. U datové schránky a listinné pošty se hlídá doručení; datum doručení datové zprávy se doplní samo z dodejky.</p>
+                        <p className="mt-1 text-sm leading-relaxed text-slate-600">Přijatá a odeslaná pošta s číslem jednacím kanceláře (řada pro každý rok). Datové zprávy a e-maily uložené do spisu se sem zapíšou samy, listinnou poštu přidáte ručně. U datové schránky a listinné pošty se hlídá doručení; datum doručení datové zprávy se doplní samo z dodejky.</p>
                     </div>
                     <button type="button" onClick={() => setForm({ ...EMPTY, event_on: todayIso() })} className={primaryBtn}><Plus size={15} /> Zapsat zásilku</button>
                 </div>
@@ -92,10 +92,10 @@ export default function LawyerMailLog() {
                     <select value={form.channel} onChange={set('channel')} aria-label="Způsob" className={`${inputCls} sm:col-span-2`}>{(Object.keys(CHANNEL_LABEL) as Channel[]).map((c) => <option key={c} value={c}>{CHANNEL_LABEL[c]}</option>)}</select>
                     <input type="date" value={form.event_on} max={todayIso()} onChange={set('event_on')} aria-label="Datum" className={inputCls} />
                     <input value={form.attachments} onChange={set('attachments')} inputMode="numeric" aria-label="Počet příloh" placeholder="Příloh" className={inputCls} />
-                    <select value={form.case_id} onChange={set('case_id')} aria-label="Věc" className={inputCls}><option value="">Bez věci</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                    <select value={form.case_id} onChange={set('case_id')} aria-label="Spis" className={inputCls}><option value="">Bez spisu</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
                     <input value={form.counterparty} onChange={set('counterparty')} maxLength={300} placeholder={form.direction === 'in' ? 'Odesílatel' : 'Adresát'} aria-label="Odesílatel nebo adresát" className={`${inputCls} sm:col-span-3`} />
                     <input value={form.their_ref} onChange={set('their_ref')} maxLength={120} placeholder="Jejich č. j. / sp. zn." aria-label="Jejich číslo jednací" className={`${inputCls} sm:col-span-3`} />
-                    <input value={form.subject} onChange={set('subject')} maxLength={300} placeholder="Věc (např. Rozsudek, Odvolání, Výzva k zaplacení)" aria-label="Věc zásilky" required className={`${inputCls} sm:col-span-4`} />
+                    <input value={form.subject} onChange={set('subject')} maxLength={300} placeholder="Spis (např. Rozsudek, Odvolání, Výzva k zaplacení)" aria-label="Spis zásilky" required className={`${inputCls} sm:col-span-4`} />
                     <input value={form.note} onChange={set('note')} maxLength={1000} placeholder="Poznámka (např. doporučeně s dodejkou)" aria-label="Poznámka" className={`${inputCls} sm:col-span-2`} />
                     <div className="flex gap-2 sm:col-span-6"><button type="submit" disabled={busy} className={primaryBtn}>Zapsat a přidělit číslo jednací</button><button type="button" onClick={() => setForm(null)} className={ghostBtn}>Zrušit</button></div>
                 </form>
@@ -107,7 +107,7 @@ export default function LawyerMailLog() {
                 <select value={dir} onChange={(e) => setDir(e.target.value as '' | 'in' | 'out')} aria-label="Směr" className={`${inputCls} w-auto`}><option value="">Přijato i odesláno</option><option value="in">Jen přijato</option><option value="out">Jen odesláno</option></select>
                 <select value={channel} onChange={(e) => setChannel(e.target.value as '' | Channel)} aria-label="Způsob" className={`${inputCls} w-auto`}><option value="">Všechny způsoby</option>{(Object.keys(CHANNEL_LABEL) as Channel[]).map((c) => <option key={c} value={c}>{CHANNEL_LABEL[c]}</option>)}</select>
                 <label className="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" checked={pending} onChange={(e) => setPending(e.target.checked)} /> Jen čekající na doručení</label>
-                <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hledat (č. j., adresát, věc…)" aria-label="Hledat v deníku" className={`${inputCls} min-w-48 flex-1`} />
+                <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hledat (č. j., adresát, spis…)" aria-label="Hledat v deníku" className={`${inputCls} min-w-48 flex-1`} />
                 <button type="button" onClick={csv} disabled={!shown.length} className={ghostBtn}><Download size={14} /> CSV</button>
                 <button type="button" onClick={print} disabled={!shown.length} className={ghostBtn}><Printer size={14} /> Tisk</button>
             </div>
@@ -115,7 +115,7 @@ export default function LawyerMailLog() {
             {shown.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{rows.length ? 'Nic neodpovídá filtru.' : `V roce ${year} zatím žádná zásilka.`}</p> : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                     <table className="w-full min-w-[880px] text-left text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-2">Č. j.</th><th className="px-3 py-2">Datum</th><th className="px-3 py-2">Způsob</th><th className="px-3 py-2">Odesílatel / adresát</th><th className="px-3 py-2">Věc</th><th className="px-3 py-2">Spis</th><th className="px-3 py-2">Doručení</th></tr></thead>
+                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-2">Č. j.</th><th className="px-3 py-2">Datum</th><th className="px-3 py-2">Způsob</th><th className="px-3 py-2">Odesílatel / adresát</th><th className="px-3 py-2">Spis</th><th className="px-3 py-2">Spis</th><th className="px-3 py-2">Doručení</th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                             {shown.map((r) => {
                                 const st = deliveryState(r);
@@ -126,7 +126,7 @@ export default function LawyerMailLog() {
                                         <td className="px-3 py-2 text-slate-700">{CHANNEL_LABEL[r.channel]}{r.attachments ? <span className="block text-xs text-slate-500">příloh: {r.attachments}</span> : null}</td>
                                         <td className="px-3 py-2 text-slate-800">{r.counterparty || '–'}{r.their_ref && <span className="block font-mono text-xs text-slate-500">{r.their_ref}</span>}</td>
                                         <td className="px-3 py-2 text-slate-900">{r.subject}{r.note && <span className="block text-xs text-slate-500">{r.note}</span>}</td>
-                                        <td className="px-3 py-2">{r.case_id ? <Link href={`/kancelar/veci/${r.case_id}`} className="text-indigo-800 hover:underline">{title(r.case_id) || 'věc'}</Link> : <span className="text-slate-400">–</span>}</td>
+                                        <td className="px-3 py-2">{r.case_id ? <Link href={`/kancelar/veci/${r.case_id}`} className="text-indigo-800 hover:underline">{title(r.case_id) || 'spis'}</Link> : <span className="text-slate-400">–</span>}</td>
                                         <td className="px-3 py-2">
                                             {st === 'n/a' && <span className="text-xs text-slate-400">–</span>}
                                             {st === 'doruceno' && <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-800"><CheckCircle2 size={13} aria-hidden="true" /> {dmy(r.delivered_on)}{r.delivery_note && <span className="font-normal text-slate-500"> · {r.delivery_note}</span>}</span>}

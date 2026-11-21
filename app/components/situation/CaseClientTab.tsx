@@ -187,7 +187,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
         setSending(false);
     }
 
-    const mailto = `mailto:?subject=${encodeURIComponent(`Vaše věc: ${item.title}`)}&body=${encodeURIComponent(`Dobrý den,\n\nna tomto soukromém odkazu uvidíte stav vaší věci, můžete nahrát podklady a napsat mi zprávu:\n${url}\n\nOdkaz otevřete celý, včetně části za znakem #, a nikomu ho nepředávejte.`)}`;
+    const mailto = `mailto:?subject=${encodeURIComponent(`Váš spis: ${item.title}`)}&body=${encodeURIComponent(`Dobrý den,\n\nna tomto soukromém odkazu uvidíte stav vašeho spisu, můžete nahrát podklady a napsat mi zprávu:\n${url}\n\nOdkaz otevřete celý, včetně části za znakem #, a nikomu ho nepředávejte.`)}`;
     const waitingTitles = requests.filter((r) => !r.done && !bundle.files.some((f) => f.request_id === r.id)).map((r) => r.title);
     const reminder = waitingTitles.length && url ? `mailto:?subject=${encodeURIComponent(`Připomenutí podkladů: ${item.title}`)}&body=${encodeURIComponent(reminderText(waitingTitles, url, item.client_name ?? ''))}` : '';
     const ownFiles = bundle.files;
@@ -203,7 +203,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                     <span className="rounded-xl bg-indigo-100 p-2.5 text-indigo-900"><Link2 size={20} aria-hidden="true" /></span>
                     <div className="min-w-0 flex-1">
                         <h2 className="text-lg font-bold text-slate-900">Klientská stránka</h2>
-                        <p className="mt-1 text-sm text-slate-600">Soukromý odkaz, přes který klient bez registrace vidí stav věci, nahrává podklady a píše zprávy.</p>
+                        <p className="mt-1 text-sm text-slate-600">Soukromý odkaz, přes který klient bez registrace vidí stav spisu, nahrává podklady a píše zprávy.</p>
                         {!verified ? (
                             <p className="mt-3 rounded-xl border border-indigo-300 bg-white p-3 text-sm text-indigo-950">Klientský odkaz se zapne po vyplnění vašeho profilu. <a href="/kancelar/nastaveni" className="font-semibold underline">Vyplnit profil</a></p>
                         ) : !link || !active ? (
@@ -223,7 +223,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                                         <a href={mailto} className={ghostBtn}><Mail size={14} /> E-mailem</a>
                                     </div>
                                 )}
-                                {link.e2ee ? <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800"><Lock size={13} aria-hidden="true" /> End-to-end šifrováno: klíč je jen v odkazu za znakem #. Poslat musíte odkaz celý.</p> : master ? <button type="button" onClick={() => void enableE2ee()} className="text-xs font-semibold text-indigo-900 underline cursor-pointer">Zapnout end-to-end šifrování pro tuto věc (pošlete klientovi nový odkaz)</button> : null}
+                                {link.e2ee ? <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800"><Lock size={13} aria-hidden="true" /> End-to-end šifrováno: klíč je jen v odkazu za znakem #. Poslat musíte odkaz celý.</p> : master ? <button type="button" onClick={() => void enableE2ee()} className="text-xs font-semibold text-indigo-900 underline cursor-pointer">Zapnout end-to-end šifrování pro tento spis (pošlete klientovi nový odkaz)</button> : null}
                                 <p className="text-xs text-slate-500">Otevřen {link.opens}× {link.last_opened_at && <>· naposledy {shortDate(new Date(link.last_opened_at))}</>} · platí {link.expires_at ? `do ${shortDate(new Date(link.expires_at))}` : 'bez omezení'}</p>
                                 <div className="flex flex-wrap gap-3 text-xs">
                                     <button type="button" onClick={() => void patchLink({ expires_at: plusDays(90) })} className="font-semibold text-indigo-900 underline cursor-pointer">Prodloužit o 90 dní</button>
@@ -254,7 +254,7 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                                     {!link.client_verified_at && <button type="button" onClick={async () => { if (await confirmAction('Potvrdit, že jste totožnost klienta ověřili (např. při osobním setkání nebo hovoru)? Klient uvidí potvrzení na své stránce.')) void patchLink({ client_verified_at: new Date().toISOString() }); }} className={`${ghostBtn} mt-3`}><BadgeCheck size={15} /> Potvrdit totožnost klienta</button>}
                                 </div>
                             ) : (
-                                <p className="mt-1 text-sm text-slate-600">Klient zatím nevyplnil své údaje. Po otevření odkazu se nejdřív představí a potvrdí souhlas, teprve potom uvidí věc.</p>
+                                <p className="mt-1 text-sm text-slate-600">Klient zatím nevyplnil své údaje. Po otevření odkazu se nejdřív představí a potvrdí souhlas, teprve potom uvidí spis.</p>
                             )}
                         </div>
                     </div>
@@ -267,9 +267,9 @@ export default function CaseClientTab({ item, bundle, userId, setBundle, fail, v
                     <PortalAccessCard linkId={link.id} factor={link.second_factor} codeEmail={link.code_email} suggestedEmail={item.client_email || link.client_email || ''} onChange={(c) => patchLink(c)} />
                     <section className="rounded-2xl border border-slate-200 bg-white p-5">
                         <h3 className="text-sm font-semibold text-slate-900">Aktuální stav pro klienta</h3>
-                        <textarea value={status} onChange={(e) => setStatus(e.target.value)} onBlur={() => { if (status !== link.status_text) void patchLink({ status_text: status.trim().slice(0, 400) }); }} rows={2} maxLength={400} placeholder="Jednou větou: co se s věcí děje" className={`${inputCls} mt-2`} aria-label="Aktuální stav pro klienta" />
+                        <textarea value={status} onChange={(e) => setStatus(e.target.value)} onBlur={() => { if (status !== link.status_text) void patchLink({ status_text: status.trim().slice(0, 400) }); }} rows={2} maxLength={400} placeholder="Jednou větou: co se se spisem děje" className={`${inputCls} mt-2`} aria-label="Aktuální stav pro klienta" />
                         <div className="mt-2 flex flex-wrap gap-2">{STATUS_TEMPLATES.map((t) => <button key={t} type="button" onClick={() => { setStatus(t); void patchLink({ status_text: t }); }} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700 hover:border-indigo-400 cursor-pointer">{t}</button>)}</div>
-                        {link.e2ee && <p className="mt-2 text-xs text-slate-500">Stav věci není end-to-end šifrovaný. Nepište do něj důvěrné podrobnosti, ty patří do zpráv.</p>}
+                        {link.e2ee && <p className="mt-2 text-xs text-slate-500">Stav spisu není end-to-end šifrovaný. Nepište do něj důvěrné podrobnosti, ty patří do zpráv.</p>}
                     </section>
 
                     <section className="rounded-2xl border border-slate-200 bg-white p-5">

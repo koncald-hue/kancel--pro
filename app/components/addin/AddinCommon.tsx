@@ -46,9 +46,9 @@ export function useOpenCases(): LegalCase[] | null {
 
 export function CasePicker({ cases, value, onChange, hint }: { cases: LegalCase[]; value: string; onChange: (id: string) => void; hint?: Record<string, string> }) {
     return (
-        <label className="block text-xs font-semibold text-slate-600">Věc
+        <label className="block text-xs font-semibold text-slate-600">Spis
             <select value={value} onChange={(e) => onChange(e.target.value)} className={`${inputCls} mt-1 font-normal`}>
-                <option value="">Vyberte věc…</option>
+                <option value="">Vyberte spis…</option>
                 {cases.map((c) => <option key={c.id} value={c.id}>{c.title}{c.client_name ? ` · ${c.client_name}` : ''}{hint?.[c.id] ? ` (${hint[c.id]})` : ''}</option>)}
             </select>
         </label>

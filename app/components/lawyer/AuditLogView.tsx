@@ -30,9 +30,9 @@ export default function AuditLogView() {
         <div className="space-y-4">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><History size={18} className="text-indigo-800" aria-hidden="true" /> Auditní záznam</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Kdo, kdy a co ve věcech vytvořil, změnil, smazal, otevřel, stáhl nebo exportoval. Zapisuje se jen název záznamu a názvy změněných polí, nikdy obsah zpráv ani souborů. Záznam nejde upravit ani smazat. Vidíte události ve svých věcech a ve věcech, které s vámi kolegové sdílejí.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Kdo, kdy a co ve spisech vytvořil, změnil, smazal, otevřel, stáhl nebo exportoval. Zapisuje se jen název záznamu a názvy změněných polí, nikdy obsah zpráv ani souborů. Záznam nejde upravit ani smazat. Vidíte události ve svých spisech a ve spisech, které s vámi kolegové sdílejí.</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <label className="text-xs font-semibold text-slate-600">Věc<select value={caseId} onChange={(e) => setCaseId(e.target.value)} className={`${inputCls} mt-1`}><option value="">Všechny věci</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
+                    <label className="text-xs font-semibold text-slate-600">Spis<select value={caseId} onChange={(e) => setCaseId(e.target.value)} className={`${inputCls} mt-1`}><option value="">Všechny spisy</option>{cases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
                     <label className="text-xs font-semibold text-slate-600">Od<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={`${inputCls} mt-1`} /></label>
                     <label className="text-xs font-semibold text-slate-600">Do<input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={`${inputCls} mt-1`} /></label>
                     <label className="text-xs font-semibold text-slate-600">Událost<select value={action} onChange={(e) => setAction(e.target.value)} className={`${inputCls} mt-1`}><option value="">Všechny</option>{Object.entries(ACTION_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
@@ -46,7 +46,7 @@ export default function AuditLogView() {
             {rows === null ? <p className="flex items-center gap-2 text-sm text-slate-500" role="status"><Loader2 size={15} className="animate-spin" aria-hidden="true" /> Načítám…</p> : shown.length === 0 && !error ? <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">Žádné události pro zvolený filtr.</p> : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
                     <table className="w-full min-w-[44rem] text-left text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-2">Čas</th><th className="px-3 py-2">Kdo</th><th className="px-3 py-2">Věc</th><th className="px-3 py-2">Událost</th><th className="px-3 py-2">Co</th></tr></thead>
+                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-3 py-2">Čas</th><th className="px-3 py-2">Kdo</th><th className="px-3 py-2">Spis</th><th className="px-3 py-2">Událost</th><th className="px-3 py-2">Co</th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                             {shown.map((r, i) => (
                                 <tr key={`${r.at}-${i}`}>

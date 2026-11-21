@@ -266,7 +266,7 @@ export default function ClientPortal() {
         return (
             <div className="min-h-screen bg-[#f8fafc]">
                 <div className="mx-auto max-w-xl space-y-4 px-4 py-8 sm:py-12">
-                    <header><h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{data.title}</h1><p className="mt-1 text-sm text-slate-600">Než začneme, představte se prosím. Po vyplnění se vám otevře stav věci, dokumenty a zprávy.</p></header>
+                    <header><h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{data.title}</h1><p className="mt-1 text-sm text-slate-600">Než začneme, představte se prosím. Po vyplnění se vám otevře stav spisu, dokumenty a zprávy.</p></header>
                     <LawyerCard lawyer={data.lawyer} />
                     <form onSubmit={(e) => { e.preventDefault(); void identify(); }} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                         <h2 className="text-lg font-bold text-slate-900">Vaše údaje</h2>
@@ -278,10 +278,10 @@ export default function ClientPortal() {
                         <input value={identity.address} onChange={set('address')} maxLength={240} placeholder="Adresa (nepovinné)" aria-label="Adresa" autoComplete="street-address" className={field} />
                         <label className="flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-slate-700">
                             <input type="checkbox" checked={identity.consent} onChange={(e) => setIdentity((i) => ({ ...i, consent: e.target.checked }))} className="mt-0.5 h-4 w-4 accent-indigo-800" />
-                            <span>Souhlasím, aby advokát zpracovával mé údaje a dokumenty za účelem vedení mé věci. Údaje budou použity jen k tomuto účelu.</span>
+                            <span>Souhlasím, aby advokát zpracovával mé údaje a dokumenty za účelem vedení mého spisu. Údaje budou použity jen k tomuto účelu.</span>
                         </label>
                         {error && <p role="alert" className="text-sm text-rose-800">{error}</p>}
-                        <button type="submit" disabled={busy === 'id'} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-800 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-900 disabled:opacity-60 cursor-pointer">{busy === 'id' && <Loader2 size={16} className="animate-spin" />} Pokračovat do věci</button>
+                        <button type="submit" disabled={busy === 'id'} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-800 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-900 disabled:opacity-60 cursor-pointer">{busy === 'id' && <Loader2 size={16} className="animate-spin" />} Pokračovat do spisu</button>
                     </form>
                     {security}
                 </div>
@@ -324,7 +324,7 @@ export default function ClientPortal() {
                 {tab === 'prehled' && (
                     <div className="space-y-4" role="tabpanel">
                         <PortalAml token={token} />
-                        <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5"><p className="text-xs font-bold uppercase tracking-wide text-indigo-800">Aktuální stav</p><p className="mt-1 text-base leading-relaxed text-slate-900">{data.status || 'Advokát zatím nenapsal stav věci. Uvidíte ho tady.'}</p></div>
+                        <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5"><p className="text-xs font-bold uppercase tracking-wide text-indigo-800">Aktuální stav</p><p className="mt-1 text-base leading-relaxed text-slate-900">{data.status || 'Advokát zatím nenapsal stav spisu. Uvidíte ho tady.'}</p></div>
 
                         {data.requests.length > 0 && (
                             <Card title={waiting ? `Co od vás potřebujeme (${waiting})` : 'Co od vás potřebujeme'}>

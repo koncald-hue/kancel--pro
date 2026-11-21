@@ -79,7 +79,7 @@ export const czk = (n: number) => `${new Intl.NumberFormat('cs-CZ').format(Math.
 // CSV pro Excel (středník, UTF-8 s BOM)
 export function timesheetCsv(rows: { entry: TimeEntry; caseTitle: string; client: string }[]): string {
     const q = (v: string) => `"${v.replace(/"/g, '""')}"`;
-    const lines = [['Datum', 'Věc', 'Klient', 'Popis', 'Hodiny', 'Sazba', 'Částka', 'Vyfakturováno'].map(q).join(';')];
+    const lines = [['Datum', 'Spis', 'Klient', 'Popis', 'Hodiny', 'Sazba', 'Částka', 'Vyfakturováno'].map(q).join(';')];
     for (const { entry, caseTitle, client } of rows) {
         lines.push([entry.entry_date, caseTitle, client, entry.description, (entry.minutes / 60).toFixed(2).replace('.', ','), String(entry.rate), entryAmount(entry).toFixed(2).replace('.', ','), entry.billed ? 'ano' : 'ne'].map((v) => q(String(v))).join(';'));
     }

@@ -20,7 +20,7 @@ export const PRESETS: Preset[] = [
         },
     },
     {
-        id: 'singlecase', label: 'SingleCase', hint: 'Export seznamu věcí, kontaktů a časových záznamů do Excelu nebo CSV.',
+        id: 'singlecase', label: 'SingleCase', hint: 'Export seznamu spisů, kontaktů a časových záznamů do Excelu nebo CSV.',
         extra: {
             klienti: { name: ['klient', 'kontakt', 'kontakt nazev', 'contact name', 'client name', 'company name'], company: ['spolecnost', 'nazev spolecnosti'], ico: ['ico', 'ic', 'company id'], email: ['email adresa', 'e mail', 'primary email'], phone: ['telefon', 'mobil', 'primary phone'] },
             veci: { title: ['matter name', 'matter', 'nazev veci', 'nazev spisu', 'vec nazev', 'nazev kauzy'], reference: ['matter number', 'cislo veci', 'cislo spisu', 'spisova znacka', 'sp zn'], authority: ['court', 'soud', 'urad'], client: ['client', 'client name', 'klient'], status: ['status', 'matter status', 'stav veci'] },

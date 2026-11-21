@@ -38,7 +38,7 @@ export default function EveningSummary() {
     const today = pragueDay(new Date().toISOString());
     const list = useMemo(() => (data ? suggest(data.acts, data.logged, { unit: readUnit() }) : []), [data]);
     const sum = useMemo(() => daySummary(list, today), [list, today]);
-    const title = (id: string | null) => (id ? data?.cases.find((c) => c.id === id)?.title ?? 'Věc' : 'Bez věci');
+    const title = (id: string | null) => (id ? data?.cases.find((c) => c.id === id)?.title ?? 'Spis' : 'Bez spisu');
     const rateFor = (caseId: string) => {
         const c = data?.cases.find((x) => x.id === caseId);
         return data?.clients.find((x) => x.name.toLowerCase() === (c?.client_name ?? '').trim().toLowerCase())?.hourly_rate ?? access.default_rate ?? 0;
@@ -66,7 +66,7 @@ export default function EveningSummary() {
             </div>
             {sum.today.length > 0 && (
                 <>
-                    <p className="mt-1 text-sm text-slate-600">Z toho, co jste dnes v aplikaci udělali, vychází {fmtMinutes(sum.minutes)} h na {sum.cases} {sum.cases === 1 ? 'věci' : 'věcech'}. Čas je odhad: zkontrolujte ho nebo upravte ve Výkazech, než ho zapíšete.</p>
+                    <p className="mt-1 text-sm text-slate-600">Z toho, co jste dnes v aplikaci udělali, vychází {fmtMinutes(sum.minutes)} h na {sum.cases} {sum.cases === 1 ? 'spisu' : 'spisech'}. Čas je odhad: zkontrolujte ho nebo upravte ve Výkazech, než ho zapíšete.</p>
                     <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
                         {sum.today.slice(0, 5).map((s) => (
                             <li key={s.key} className="flex items-baseline gap-3 px-3 py-2 text-sm">

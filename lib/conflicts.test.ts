@@ -36,16 +36,16 @@ describe('conflicts', () => {
     it('podobný tvar příjmení (Nováková/Novák) s křestním jménem', () => {
         expect(findConflicts({ name: 'Jan Nováka' }, 'protistrana', pool)[0]?.entry.name).toBe('Jan Novák');
     });
-    it('stejný klient na kartě i ve věci se ukáže jednou, s věcí', () => {
+    it('stejný klient na kartě i ve spisu se ukáže jednou, se spisem', () => {
         const h = findConflicts({ name: 'Jan Novák' }, 'protistrana', [{ kind: 'klient', name: 'Jan Novák' }, { kind: 'klient', name: 'Novák Jan', caseId: 'c9', caseTitle: 'Žaloba' }]);
         expect(h).toHaveLength(1); expect(h[0].entry.caseId).toBe('c9');
     });
-    it('skloňované jméno z názvu věci (Dvořákovi, Apolovi) se najde jako podobné', () => {
+    it('skloňované jméno z názvu spisu (Dvořákovi, Apolovi) se najde jako podobné', () => {
         expect(findConflicts({ name: 'Petru Dvořákovi' }, 'klient', pool)[0]?.entry.name).toBe('Petr Dvořák');
         expect(findConflicts({ name: 'Dvořákovi' }, 'klient', pool)[0]?.entry.name).toBe('Petr Dvořák');
         expect(findConflicts({ name: 'Svobodovi' }, 'klient', pool)).toEqual([]);
     });
-    it('strany z názvu věci', () => {
+    it('strany z názvu spisu', () => {
         expect(partiesFromTitle('Novák proti Dvořákovi')).toEqual(['Novák', 'Dvořákovi']);
         expect(partiesFromTitle('Pokuta za rychlost')).toEqual([]);
     });

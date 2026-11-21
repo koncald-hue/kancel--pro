@@ -216,9 +216,9 @@ export default function LawyerInvoiceEditor() {
                             {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                     </label>
-                    <label className="block text-xs font-semibold text-slate-600">Věc (nepovinné)
+                    <label className="block text-xs font-semibold text-slate-600">Spis (nepovinné)
                         <select value={inv.case_id ?? ''} onChange={(e) => patch({ case_id: e.target.value || null })} className={`${inputCls} mt-1 font-normal`}>
-                            <option value="">Bez věci</option>
+                            <option value="">Bez spisu</option>
                             {clientCases.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                         </select>
                     </label>
@@ -228,7 +228,7 @@ export default function LawyerInvoiceEditor() {
                     ))}
                     {client && <p className="text-xs text-slate-500 sm:col-span-3">{[client.address, client.ico && `IČO ${client.ico}`, client.dic && `DIČ ${client.dic}`].filter(Boolean).join(' · ') || 'Klient nemá vyplněnou adresu a IČO. Doplníte je v záložce Klienti.'}</p>}
                     {draft && <label className="flex items-start gap-2 text-sm text-slate-800 sm:col-span-3"><input type="checkbox" checked={inv.kind === 'zaloha'} onChange={(e) => patch({ kind: e.target.checked ? 'zaloha' : 'faktura' })} className="mt-0.5" /> <span><strong>Zálohová faktura</strong> (výzva k platbě zálohy, není daňový doklad, vlastní číselná řada Z{inv.issue_date.slice(0, 4)}-…). Po zaplacení ji odečtete v konečném vyúčtování.</span></label>}
-                    <label className="block text-xs font-semibold text-slate-600 sm:col-span-3">Název / předmět (nepovinné)<input value={inv.title} onChange={(e) => patch({ title: e.target.value })} maxLength={200} className={`${inputCls} mt-1 font-normal`} placeholder="např. Zastupování ve věci Novák proti Dvořákovi" /></label>
+                    <label className="block text-xs font-semibold text-slate-600 sm:col-span-3">Název / předmět (nepovinné)<input value={inv.title} onChange={(e) => patch({ title: e.target.value })} maxLength={200} className={`${inputCls} mt-1 font-normal`} placeholder="např. Zastupování ve spisu Novák proti Dvořákovi" /></label>
                     <label className="block text-xs font-semibold text-slate-600">Datum vystavení<input type="date" value={inv.issue_date} onChange={(e) => patch({ issue_date: e.target.value })} className={`${inputCls} mt-1 font-normal`} /></label>
                     <label className="block text-xs font-semibold text-slate-600">Splatnost<input type="date" value={inv.due_date ?? ''} onChange={(e) => patch({ due_date: e.target.value || null })} className={`${inputCls} mt-1 font-normal`} /><span className="font-normal text-slate-400">prázdné = {access.due_days ?? 14} dní od vystavení</span></label>
                     <label className="block text-xs font-semibold text-slate-600">Měna<select value={inv.currency} onChange={(e) => patch({ currency: e.target.value as 'CZK' | 'EUR' })} className={`${inputCls} mt-1 font-normal`}><option value="CZK">Kč</option><option value="EUR">€</option></select></label>
@@ -252,7 +252,7 @@ export default function LawyerInvoiceEditor() {
                 )}
                 {picker && draft && (
                     <div className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50/50 p-3">
-                        {unbilled.length === 0 ? <p className="text-sm text-slate-600">Žádné nevyfakturované výkazy pro vybraného klienta a věc.</p> : (
+                        {unbilled.length === 0 ? <p className="text-sm text-slate-600">Žádné nevyfakturované výkazy pro vybraného klienta a spis.</p> : (
                             <>
                                 <ul className="max-h-60 space-y-1 overflow-auto text-sm">
                                     {unbilled.map((e) => (

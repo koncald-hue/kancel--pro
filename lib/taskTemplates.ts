@@ -48,7 +48,7 @@ export function planTemplate(items: TemplateItem[], startIso: string, eventIso: 
 }
 
 export const STARTER_TEMPLATES: { name: string; items: TemplateItem[] }[] = [
-    { name: 'Nová věc: úvodní kroky', items: [
+    { name: 'Nový spis: úvodní kroky', items: [
         { title: 'Podepsat plnou moc a smlouvu o poskytování právních služeb', offset: 1, base: 'start', workdays: true },
         { title: 'Provést identifikaci a kontrolu klienta (AML)', offset: 1, base: 'start', workdays: true },
         { title: 'Vyžádat od klienta podklady', offset: 2, base: 'start', workdays: true },

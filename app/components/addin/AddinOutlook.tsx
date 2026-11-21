@@ -44,8 +44,8 @@ function Panel() {
                 const folder = bundle.folders.find((f) => f.name === 'Korespondence')?.id ?? null;
                 for (const att of real) { const f = await mailAttachment(att.id, att.name, att.contentType); if (f) { await uploadCaseFile(userId, chosen, folder, f); n++; } }
             }
-            await insertRow('case_entries', { case_id: chosen, user_id: userId, kind: 'event', title: `E-mail: ${mail.subject}`.slice(0, 200), body: `Od: ${mail.fromName} <${mail.fromEmail}>\nKomu: ${mail.to.join(', ')}\nDatum: ${mail.received ? new Date(mail.received).toLocaleString('cs-CZ') : ''}${n ? `\nPřílohy uloženy do souborů věci: ${n}` : ''}\n\n${mail.body.slice(0, 6000)}`, happened_on: mail.received ? mail.received.slice(0, 10) : null });
-            setMsg(`Uloženo do věci${n ? `, včetně ${n} příloh` : ''}.`);
+            await insertRow('case_entries', { case_id: chosen, user_id: userId, kind: 'event', title: `E-mail: ${mail.subject}`.slice(0, 200), body: `Od: ${mail.fromName} <${mail.fromEmail}>\nKomu: ${mail.to.join(', ')}\nDatum: ${mail.received ? new Date(mail.received).toLocaleString('cs-CZ') : ''}${n ? `\nPřílohy uloženy do souborů spisu: ${n}` : ''}\n\n${mail.body.slice(0, 6000)}`, happened_on: mail.received ? mail.received.slice(0, 10) : null });
+            setMsg(`Uloženo do spisu${n ? `, včetně ${n} příloh` : ''}.`);
         } catch (e) { setErr(e instanceof Error ? e.message : 'Nepodařilo se.'); } finally { setBusy(false); }
     }
 
@@ -59,7 +59,7 @@ function Panel() {
             {!picked && matches[0] && matches[0].score >= 70 && <p className="text-xs text-indigo-900">Navrženo podle: {matches[0].reason}.</p>}
             {!chosen && <AiRouteSuggest mail={{ subject: mail.subject, text: mail.body }} cases={cases.map((c) => ({ id: c.id, title: c.title }))} onPick={(id) => { setCaseId(id); setPicked(true); }} />}
             {real.length > 0 && <label className="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" checked={withAtt} onChange={(e) => setWithAtt(e.target.checked)} /> Uložit i přílohy do složky Korespondence</label>}
-            <button type="button" disabled={!chosen || busy} onClick={() => void save()} className={`${primaryBtn} w-full justify-center`}>{busy ? <Loader2 size={14} className="animate-spin" /> : <MailPlus size={14} />} Uložit e-mail do věci</button>
+            <button type="button" disabled={!chosen || busy} onClick={() => void save()} className={`${primaryBtn} w-full justify-center`}>{busy ? <Loader2 size={14} className="animate-spin" /> : <MailPlus size={14} />} Uložit e-mail do spisu</button>
             {msg && <p role="status" className="flex items-start gap-1.5 text-xs font-semibold text-emerald-800"><CheckCircle2 size={14} className="mt-px shrink-0" aria-hidden="true" /> {msg}</p>}
             {err && <p role="alert" className="text-xs font-semibold text-rose-800">{err}</p>}
         </div>

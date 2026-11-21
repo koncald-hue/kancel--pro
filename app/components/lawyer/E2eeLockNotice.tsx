@@ -13,7 +13,7 @@ export default function E2eeLockNotice() {
     return (
         <div role="status" className="mb-5 flex items-start gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950">
             <LockKeyhole size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
-            <p className="flex-1">{reason === 'idle' ? 'Šifrování se po 30 minutách nečinnosti zamklo.' : 'Po obnovení stránky je šifrování zamčené.'} Šifrované zprávy a soubory teď nejsou vidět, nic se ale nesmazalo. Až je budete potřebovat, odemkněte je znovu šifrovacím heslem (např. ve věci v záložce Klient).</p>
+            <p className="flex-1">{reason === 'idle' ? 'Šifrování se po 30 minutách nečinnosti zamklo.' : 'Po obnovení stránky je šifrování zamčené.'} Šifrované zprávy a soubory teď nejsou vidět, nic se ale nesmazalo. Až je budete potřebovat, odemkněte je znovu šifrovacím heslem (např. ve spisu v záložce Klient).</p>
             <button type="button" onClick={clearLockReason} aria-label="Zavřít upozornění" className="rounded p-1 hover:bg-indigo-100 cursor-pointer"><X size={15} /></button>
         </div>
     );

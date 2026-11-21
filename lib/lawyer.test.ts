@@ -15,7 +15,7 @@ describe('lawyer helpers', () => {
     it('computes amounts and CSV', () => {
         const entry: TimeEntry = { id: '1', case_id: null, entry_date: '2026-11-15', minutes: 90, description: 'Porada "A"', rate: 2000, billed: false };
         expect(entryAmount(entry)).toBe(3000);
-        const csv = timesheetCsv([{ entry, caseTitle: 'Věc', client: 'Novák' }]);
+        const csv = timesheetCsv([{ entry, caseTitle: 'Spis', client: 'Novák' }]);
         expect(csv.startsWith('﻿')).toBe(true);
         expect(csv).toContain('"Porada ""A"""');
         expect(csv).toContain('"1,50"');
