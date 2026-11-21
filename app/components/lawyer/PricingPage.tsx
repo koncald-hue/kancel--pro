@@ -32,12 +32,13 @@ const FAQ: [string, string][] = [
 export default function PricingPage() {
     const { account, openLogin } = useAuth();
     const [prices, setPrices] = useState<Prices>(EMPTY_PRICES);
+    const [loaded, setLoaded] = useState(false);
     const [firmPrices, setFirmPrices] = useState<FirmPrices>(EMPTY_FIRM_PRICES);
     const [mode, setMode] = useState<'solo' | 'firm'>('solo');
     const [size, setSize] = useState<FirmSize>(3);
     useEffect(() => {
         let alive = true;
-        fetch('/api/lawyer-prices').then((r) => r.json()).then((p) => { if (alive) { setPrices({ ...EMPTY_PRICES, ...p }); setFirmPrices({ ...EMPTY_FIRM_PRICES, ...p.firm }); } }).catch(() => undefined);
+        fetch('/api/lawyer-prices').then((r) => r.json()).then((p) => { if (alive) { setPrices({ ...EMPTY_PRICES, ...p }); setFirmPrices({ ...EMPTY_FIRM_PRICES, ...p.firm }); setLoaded(true); } }).catch(() => { if (alive) setLoaded(true); });
         return () => { alive = false; };
     }, []);
     const table = mode === 'firm' ? firmPrices[size] : prices;
@@ -70,7 +71,7 @@ export default function PricingPage() {
                             <div key={plan.id} className={`relative flex flex-col rounded-3xl bg-white p-7 ${featured ? 'border-2 border-indigo-600 shadow-xl shadow-indigo-100' : 'border border-slate-200'}`}>
                                 {featured && <span className="absolute -top-3 left-7 rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">Nejčastější volba</span>}
                                 <h2 className="text-lg font-bold text-slate-900">{plan.name}</h2>
-                                <p className="mt-4 flex flex-col"><span className="shrink-0 whitespace-nowrap text-5xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>{price > 0 && <span className="mt-1 whitespace-nowrap text-sm text-slate-500">{plan.unit}</span>}</p>
+                                <p className="mt-4 flex flex-col"><span className="shrink-0 whitespace-nowrap text-5xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : loaded ? 'Brzy' : <span aria-hidden="true" className="inline-block h-12 w-36 animate-pulse rounded-lg bg-slate-200 align-middle" />}</span>{price > 0 && <span className="mt-1 whitespace-nowrap text-sm text-slate-500">{plan.unit}</span>}</p>
                                 <p className="mt-2 h-5 text-sm text-slate-500">{pm > 0 && plan.months > 1 ? `tedy ${czk(pm)} měsíčně` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>
                                 <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Sleva ${savingPct(table, plan.id)} % (${czk(save)})` : ' '}</p>
                                 <ul className="mt-5 flex-1 space-y-2 text-sm text-slate-700">

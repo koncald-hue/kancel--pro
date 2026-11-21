@@ -20,12 +20,13 @@ const INCLUDED = [
 export default function LawyerPricing({ bare = false }: { bare?: boolean } = {}) {
     const { account, openLogin } = useAuth();
     const [prices, setPrices] = useState<Prices>(EMPTY_PRICES);
+    const [loaded, setLoaded] = useState(false);
     const [firmPrices, setFirmPrices] = useState<FirmPrices>(EMPTY_FIRM_PRICES);
     const [mode, setMode] = useState<'solo' | 'firm'>('solo');
     const [size, setSize] = useState<FirmSize>(3);
     useEffect(() => {
         let cancelled = false;
-        fetch('/api/lawyer-prices').then((r) => r.json()).then((p) => { if (!cancelled) { setPrices({ ...EMPTY_PRICES, ...p }); setFirmPrices({ ...EMPTY_FIRM_PRICES, ...p.firm }); } }).catch(() => undefined);
+        fetch('/api/lawyer-prices').then((r) => r.json()).then((p) => { if (!cancelled) { setPrices({ ...EMPTY_PRICES, ...p }); setFirmPrices({ ...EMPTY_FIRM_PRICES, ...p.firm }); setLoaded(true); } }).catch(() => { if (!cancelled) setLoaded(true); });
         return () => { cancelled = true; };
     }, []);
 
@@ -58,7 +59,7 @@ export default function LawyerPricing({ bare = false }: { bare?: boolean } = {})
                             {featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">Nejčastější volba</span>}
                             <h3 className="text-lg font-bold text-slate-900">{plan.name}{mode === 'firm' ? ` · do ${size} advokátů + ${traineeSeats(size)} koncipient${traineeSeats(size) === 1 ? '' : traineeSeats(size) < 5 ? 'i' : 'ů'}` : ''}</h3>
                             <p className="mt-4 flex flex-col">
-                                <span className="shrink-0 whitespace-nowrap text-4xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>
+                                <span className="shrink-0 whitespace-nowrap text-4xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : loaded ? 'Brzy' : <span aria-hidden="true" className="inline-block h-9 w-28 animate-pulse rounded-lg bg-slate-200 align-middle" />}</span>
                                 {price > 0 && <span className="mt-1 whitespace-nowrap text-sm text-slate-500">{plan.unit}</span>}
                             </p>
                             <p className="mt-1 h-5 text-xs font-semibold text-emerald-700">{save > 0 ? `Sleva ${savingPct(table, plan.id)} % oproti měsíčnímu placení (${czk(save)})` : price > 0 ? ' ' : 'Cenu zveřejníme před spuštěním'}</p>

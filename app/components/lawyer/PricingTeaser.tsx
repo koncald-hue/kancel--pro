@@ -11,9 +11,10 @@ import { useAuth } from '../site/AuthContext';
 export default function PricingTeaser() {
     const { account, openLogin } = useAuth();
     const [prices, setPrices] = useState<Prices>(EMPTY_PRICES);
+    const [loaded, setLoaded] = useState(false);
     useEffect(() => {
         let alive = true;
-        fetch('/api/lawyer-prices').then((r) => r.json()).then((p) => { if (alive) setPrices({ ...EMPTY_PRICES, ...p }); }).catch(() => undefined);
+        fetch('/api/lawyer-prices').then((r) => r.json()).then((p) => { if (alive) { setPrices({ ...EMPTY_PRICES, ...p }); setLoaded(true); } }).catch(() => { if (alive) setLoaded(true); });
         return () => { alive = false; };
     }, []);
     return (
@@ -30,7 +31,7 @@ export default function PricingTeaser() {
                             <div key={plan.id} className={`relative rounded-2xl bg-white p-6 ${featured ? 'border-2 border-indigo-600 shadow-lg shadow-indigo-100' : 'border border-slate-200'}`}>
                                 {featured && <span className="absolute -top-3 left-6 rounded-full bg-indigo-600 px-3 py-0.5 text-xs font-bold text-white">Nejčastější volba</span>}
                                 <h3 className="font-bold text-slate-900">{plan.name}</h3>
-                                <p className="mt-3 flex items-baseline gap-2"><span className="text-3xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : 'Brzy'}</span>{price > 0 && <span className="text-sm text-slate-500">{plan.unit}</span>}</p>
+                                <p className="mt-3 flex items-baseline gap-2"><span className="text-3xl font-bold tracking-tight text-slate-900">{price > 0 ? czk(price) : loaded ? 'Brzy' : <span aria-hidden="true" className="inline-block h-9 w-28 animate-pulse rounded-lg bg-slate-200 align-middle" />}</span>{price > 0 && <span className="text-sm text-slate-500">{plan.unit}</span>}</p>
                                 <p className="mt-1 h-5 text-sm font-semibold text-emerald-700">{save > 0 ? `Sleva ${savingPct(prices, plan.id)} % (${czk(save)})` : ' '}</p>
                             </div>
                         );
