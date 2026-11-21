@@ -14,13 +14,13 @@ const FOUR: { icon: typeof Scale; tone: string; title: string; text: string }[] 
     { icon: FolderOpen, tone: 'bg-slate-100 text-indigo-800', title: 'Vedete spisy', text: 'Každý spis má své místo: soubory, e-maily, datové zprávy, poznámky a kontakty.' },
     { icon: CalendarClock, tone: 'bg-slate-100 text-indigo-800', title: 'Hlídáte lhůty', text: 'Lhůty se spočítají a posunou na pracovní den. Včas víte, co hoří.' },
     { icon: Users, tone: 'bg-slate-100 text-indigo-800', title: 'Komunikujete s klientem', text: 'Klient nahraje podklady a píše zprávy přes soukromý odkaz, bez registrace.' },
-    { icon: Receipt, tone: 'bg-slate-100 text-indigo-800', title: 'Účtujete práci', text: 'Výkazy, faktury s QR platbou a kontrola, kdo už zaplatil.' },
+    { icon: Receipt, tone: 'bg-slate-100 text-indigo-800', title: 'Účtujete práci', text: 'Výkazy, faktury a kontrola, kdo už zaplatil.' },
 ];
 
 const CMP: [string, string, string][] = [
     ['Lhůty', 'Počítáte ručně a hlídáte v kalendáři', 'Spočítají se a posunou na pracovní den'],
     ['Podklady od klienta', 'Přílohy v e-mailu', 'Klient je nahraje přes soukromý odkaz'],
-    ['Čas a faktury', 'Tabulka a ruční fakturace', 'Výkazy, faktura s QR platbou, kontrola plateb'],
+    ['Čas a faktury', 'Tabulka a ruční fakturace', 'Výkazy, faktura, kontrola plateb'],
     ['Data o klientech', 'Rozeseta po složkách a schránkách', 'Na jednom místě, šifrovaná'],
 ];
 

@@ -14,7 +14,7 @@ const FUNCS: { id: string; icon: typeof Scale; title: string; text: string }[] =
     { id: 'email', icon: Mail, title: 'E-mail ve spisu', text: 'Pošta uložená tam, kde je spis' },
     { id: 'vykaz', icon: Clock3, title: 'Výkaz práce', text: 'Navrhne se sám, vy potvrdíte' },
     { id: 'klient', icon: Users, title: 'Klient a podpisy', text: 'Soukromá stránka bez registrace' },
-    { id: 'penize', icon: Receipt, title: 'Faktury a platby', text: 'QR platba a párování úhrad' },
+    { id: 'penize', icon: Receipt, title: 'Faktury a platby', text: 'Faktury a kontrola úhrad' },
     { id: 'radar', icon: ShieldAlert, title: 'Radar protistrany', text: 'Insolvence a změny firem' },
 ];
 

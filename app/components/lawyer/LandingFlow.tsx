@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarClock, Check, FileText, Link2, Mail, QrCode, Timer, Wallet } from 'lucide-react';
+import { CalendarClock, Check, FileText, Link2, Mail, Receipt, Timer, Wallet } from 'lucide-react';
 import { Window } from './LandingMockups';
 
 // Krátké ukázky v pohybu: tři postupy o třech krocích. Jména a údaje jsou smyšlené.
@@ -25,7 +25,7 @@ const FLOWS: Flow[] = [
         window: 'Výkazy a fakturace',
         steps: [
             { icon: Timer, title: 'Zapsáno 2 h 30 min', text: 'Čas jde přímo do spisu, s vaší hodinovou sazbou.' },
-            { icon: QrCode, title: 'Vyúčtování připraveno', text: 'Faktura s QR platbou. Pošlete ji jedním klepnutím.' },
+            { icon: Receipt, title: 'Vyúčtování připraveno', text: 'Faktura z výkazu. Pošlete ji jedním klepnutím.' },
             { icon: Wallet, title: 'Platba spárována', text: 'Kancelář pozná, že klient zaplatil, a faktura je uhrazená.' },
         ],
     },

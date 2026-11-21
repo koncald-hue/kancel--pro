@@ -13,7 +13,7 @@ import { FinalCta, SiteFooter, SiteHeader } from './LandingChrome';
 const GROUPS: { icon: typeof Users; tone: string; title: string; items: string[] }[] = [
     { icon: FolderOpen, tone: 'bg-indigo-100 text-indigo-700', title: 'Spisy a lhůty', items: ['Neomezený počet spisů a klientů', 'Lhůty s přesunem na pracovní den', 'Datové schránky přímo v aplikaci', 'Lhůty z rozhodnutí k potvrzení', 'Vzory dokumentů ve Wordu'] },
     { icon: Users, tone: 'bg-sky-100 text-sky-700', title: 'Klienti a komunikace', items: ['Soukromá stránka klienta bez registrace', 'Šifrované zprávy a soubory', 'Podpis dokumentů s dokladem', 'Identifikace klienta (AML)', 'E-mail ve spisu (Gmail, Seznam a další)'] },
-    { icon: Banknote, tone: 'bg-emerald-100 text-emerald-700', title: 'Peníze', items: ['Výkazy práce a automatický návrh výkazu', 'Faktury s QR platbou a ISDOC', 'Párování plateb z banky, upomínky', 'Rentabilita spisů a klientů', 'Export podkladů pro účetní'] },
+    { icon: Banknote, tone: 'bg-emerald-100 text-emerald-700', title: 'Peníze', items: ['Výkazy práce a automatický návrh výkazu', 'Faktury a ISDOC', 'Párování plateb z banky, upomínky', 'Rentabilita spisů a klientů', 'Export podkladů pro účetní'] },
     { icon: Landmark, tone: 'bg-amber-100 text-amber-700', title: 'Přehled a rejstříky', items: ['Přehled dne s nejbližšími lhůtami', 'Právní novinky a změny zákonů', 'ARES a katastr nemovitostí', 'Import dat z Excelu a jiných programů', 'Sdílené spisy pro kolegy v kanceláři'] },
 ];
 
