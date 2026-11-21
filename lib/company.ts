@@ -10,8 +10,8 @@ export const PROVIDER = {
     email: '',           // kontaktní e-mail pro zákazníky a pro oznamování incidentů
     phone: '',           // telefon (nepovinné)
     dataProtectionEmail: '', // e-mail pro žádosti o ochranu osobních údajů (může být stejný jako e-mail výše)
-    hosting: '',         // kde aplikace běží (např. „Vercel Inc.“) a v jakém regionu
-    dbRegion: '',        // region databáze Supabase (např. „Frankfurt, EU“)
+    hosting: 'Vercel Inc., region Dublin, Irsko (EU)', // kde aplikace běží (např. „Vercel Inc.“) a v jakém regionu
+    dbRegion: 'Irsko (EU)', // region databáze Supabase (např. „Frankfurt, EU“)
     mailProvider: '',    // poskytovatel e-mailů (např. „Resend“), až bude zapojen
     paymentProvider: '', // platební brána (např. „Stripe“), až bude zapojena
     effectiveFrom: '',   // datum účinnosti znění podmínek (např. „1. 12. 2026“)
