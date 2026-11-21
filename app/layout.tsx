@@ -5,6 +5,7 @@ import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import ThemeSync from '@/app/components/site/ThemeSync';
 import PwaRegister from '@/app/components/site/PwaRegister';
 import ConfirmHost from '@/app/components/site/ConfirmHost';
+import ErrorReporter from '@/app/components/site/ErrorReporter';
 import { getSiteOrigin } from '@/lib/siteUrl';
 import './globals.css';
 
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-800">
         <AuthProvider>{children}</AuthProvider>
         <ConfirmHost />
+        <ErrorReporter />
         <PwaRegister />
         <ThemeSync />
       </body>
