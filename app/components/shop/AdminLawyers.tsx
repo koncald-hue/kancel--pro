@@ -23,6 +23,21 @@ function Tile({ label, value, note, tone }: { label: string; value: string; note
 
 const addMonths = (n: number) => { const d = new Date(); d.setMonth(d.getMonth() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
+// Nastavení přístupu podle data: budoucí datum = přístup do tohoto dne (zkušební zůstává zkušební), dnešní nebo minulé = přístup skončí
+function UntilDate({ row, onSet }: { row: LawyerAccess; onSet: (row: LawyerAccess, status: LawyerAccess['status'], until: string | null) => void }) {
+    const [date, setDate] = useState(row.until ?? '');
+    const apply = () => { if (!date) return; onSet(row, date <= todayIso() ? 'expired' : row.status === 'trial' ? 'trial' : 'active', date); };
+    return (
+        <div className="mt-3 flex flex-wrap items-end gap-2">
+            <label className="text-xs font-semibold text-slate-600">Přístup do data
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={`${inputCls} mt-1 block`} />
+            </label>
+            <button type="button" onClick={apply} disabled={!date} className={ghostBtn}>Nastavit datum</button>
+            <span className="text-[11px] text-slate-500">Dnešní nebo minulé datum přístup ukončí.</span>
+        </div>
+    );
+}
+
 // Přehled advokátů pro správce: profily, předplatné a platby. Obsah jejich věcí správce nevidí.
 export default function AdminLawyers({ rows, onSet }: { rows: LawyerAccess[]; onSet: (row: LawyerAccess, status: LawyerAccess['status'], until: string | null) => void }) {
     const [orders, setOrders] = useState<OrderRow[]>([]);
@@ -115,6 +130,7 @@ export default function AdminLawyers({ rows, onSet }: { rows: LawyerAccess[]; on
                                                     <button type="button" onClick={() => onSet(r, 'active', addMonths(12))} className={ghostBtn}>Ručně aktivovat 1 rok</button>
                                                     <button type="button" onClick={() => onSet(r, 'expired', null)} className={`${ghostBtn} text-rose-700`}>Zrušit přístup</button>
                                                 </div>
+                                                <UntilDate key={`${r.user_id}-${r.until}`} row={r} onSet={onSet} />
                                                 <AdminNote userId={r.user_id} />
                                             </td>
                                         </tr>
