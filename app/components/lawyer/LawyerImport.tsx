@@ -41,7 +41,7 @@ export default function LawyerImport() {
         const { data, error: e } = await supabase.from('import_batches').select('*').order('created_at', { ascending: false }).limit(10);
         if (!e) setBatches((data ?? []) as Batch[]);
     }, []);
-    useEffect(() => { const t = window.setTimeout(() => { void loadBatches(); loadExisting().then(setExisting).catch(() => undefined); }, 0); return () => window.clearTimeout(t); }, [loadBatches]);
+    useEffect(() => { const t = window.setTimeout(() => { void loadBatches(); loadExisting().then(setExisting).catch((e: unknown) => setError(`Nepodařilo se načíst stávající klienty a věci, import nelze spustit: ${e instanceof Error ? e.message : 'neznámá chyba'}`)); }, 0); return () => window.clearTimeout(t); }, [loadBatches]);
 
     const table = sheets[sheetIdx]?.table;
     function choose(i: number, list: Sheet[] = sheets) {
