@@ -22,7 +22,8 @@ export const metadata: Metadata = {
   applicationName: 'Kancelář Pro',
   openGraph: { type: 'website', locale: 'cs_CZ', siteName: 'Kancelář Pro', title: 'Kancelář Pro | software pro advokáty a právníky', description: 'Spisy, lhůty, klienti, výkazy práce a bezpečná komunikace s klientem na jednom místě.' },
   appleWebApp: { capable: true, title: 'Kancelář Pro', statusBarStyle: 'default' },
-  icons: { apple: '/pwa-icon/apple-180' },
+  // icon musí být uvedená výslovně: samotné apple ruší automatický odkaz na app/icon.tsx a prohlížeč pak ukáže výchozí ikonu
+  icons: { icon: [{ url: '/icon', type: 'image/png', sizes: '192x192' }], apple: '/pwa-icon/apple-180' },
 };
 
 export const viewport: Viewport = { themeColor: '#1f3556' };
