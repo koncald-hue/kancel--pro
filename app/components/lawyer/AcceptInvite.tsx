@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CheckCircle2, Loader2, Scale } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '../site/AuthContext';
 import { primaryBtn } from '../situation/caseUi';
+import { LogoSvg } from '@/lib/logo';
 
 // Přijetí pozvánky do kanceláře. Kód je v adrese; přijmout ji lze jen pod účtem se stejným e-mailem.
 export default function AcceptInvite() {
@@ -32,7 +33,7 @@ export default function AcceptInvite() {
 
     return (
         <div className="mx-auto max-w-md px-4 py-20 text-center">
-            <span className="mx-auto inline-flex rounded-xl bg-indigo-600 p-3 text-white"><Scale size={22} aria-hidden="true" /></span>
+            <span className="mx-auto inline-flex"><LogoSvg size={48} radius={12} /></span>
             <h1 className="mt-4 text-2xl font-bold text-slate-900">Pozvánka do kanceláře</h1>
             {info && !firm && <p className="mt-3 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-950">Kancelář <strong>{info.firm}</strong> zve {info.name ? <strong>{info.name}</strong> : 'vás'} jako člena. Pozvánka je určena pro e-mail <strong>{info.email_hint}</strong>, na ten se musíte přihlásit nebo zaregistrovat.</p>}
             {info === null && !firm && <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">Pozvánka je neplatná nebo už vypršela. Požádejte vedoucího kanceláře o novou.</p>}

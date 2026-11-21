@@ -1,20 +1,13 @@
 import { ImageResponse } from 'next/og';
+import { LogoSvg } from '@/lib/logo';
 
 export const alt = 'Kancelář Pro, pracovní prostor pro advokáty';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-// Náhled při sdílení odkazu (zprávy, sítě): značka vlevo nahoře, velký titulek, tenká linka a adresa, vpravo znak váhy v kruzích
+// Náhled při sdílení odkazu (zprávy, sítě): značka vlevo nahoře, velký titulek, tenká linka a adresa, vpravo znak značky v kruzích
 export default function OpengraphImage() {
-    const scales = (
-        <svg width={250} height={250} viewBox="0 0 24 24" fill="none" stroke="#f4f6fa" strokeWidth={1.1} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 3v18" />
-            <path d="m19 8 3 8a5 5 0 0 1-6 0zV7" />
-            <path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" />
-            <path d="m5 8 3 8a5 5 0 0 1-6 0zV7" />
-            <path d="M7 21h10" />
-        </svg>
-    );
+    const scales = <LogoSvg size={250} bare />;
     return new ImageResponse(
         (
             <div style={{ display: 'flex', width: '100%', height: '100%', background: 'radial-gradient(circle at 78% 45%, #2a4a78 0%, #0f1d33 70%)', color: '#f4f6fa', position: 'relative' }}>

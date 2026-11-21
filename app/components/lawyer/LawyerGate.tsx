@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState } from 'react';
 import Link from 'next/link';
-import { Briefcase, CalendarClock, Clock, Loader2, MessagesSquare, Scale, ShieldCheck } from 'lucide-react';
+import { Briefcase, CalendarClock, Clock, Loader2, MessagesSquare, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import { hasLawyerAccess, requestAccess, startTrial, TRIAL_DAYS, useLawyerAccess, type LawyerAccess } from '@/lib/lawyer';
 import { primaryBtn, ghostBtn } from '../situation/caseUi';
@@ -11,6 +11,7 @@ import { onboardingComplete } from '@/lib/onboarding';
 import AuthForm from '../site/AuthForm';
 import MfaChallenge from './MfaChallenge';
 import { useMfaState } from '@/lib/mfa';
+import { LogoSvg } from '@/lib/logo';
 
 const LawyerContext = createContext<{ access: LawyerAccess; userId: string; locked?: boolean } | null>(null);
 export const useLawyer = () => { const ctx = useContext(LawyerContext); if (!ctx) throw new Error('useLawyer mimo LawyerGate'); return ctx; };
@@ -32,7 +33,7 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
         return (
             <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white">
                 <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-5 sm:px-6">
-                    <Link href="/" className="flex items-center gap-2.5 font-bold text-slate-900"><span className="rounded-lg bg-indigo-600 p-1.5 text-white"><Scale size={18} aria-hidden="true" /></span> Kancelář Pro</Link>
+                    <Link href="/" className="flex items-center gap-2.5 font-bold text-slate-900"><LogoSvg size={32} radius={8} /> Kancelář Pro</Link>
                     <Link href="/" className="text-sm font-semibold text-slate-600 hover:text-slate-900">← Zpět na úvodní stránku</Link>
                 </header>
                 <main className="mx-auto grid max-w-5xl items-center gap-10 px-4 pb-16 pt-6 sm:px-6 md:grid-cols-2 md:pt-14">

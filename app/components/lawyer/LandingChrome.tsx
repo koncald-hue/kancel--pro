@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronDown, Clock3, Mail, MailCheck, Menu, Receipt, Scale, ShieldAlert, Users, X } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
+import { LogoSvg } from '@/lib/logo';
 
 export const NAV = [['/pro-klienty', 'Pro klienty'], ['/cenik', 'Ceník']] as const;
 
@@ -62,7 +63,7 @@ export function SiteHeader({ current }: { current?: string }) {
         <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white">
             <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-4 sm:px-6">
                 <Link href="/" className="flex items-center gap-2.5 text-slate-900" aria-label="Kancelář, úvodní stránka">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-indigo-800 text-white"><Scale size={18} aria-hidden="true" /></span>
+                    <LogoSvg size={36} radius={9} />
                     <span className="text-lg font-bold tracking-tight">Kancelář Pro</span>
                 </Link>
                 <nav className="hidden items-center gap-1 md:flex" aria-label="Hlavní navigace">

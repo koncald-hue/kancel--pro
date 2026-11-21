@@ -5,7 +5,7 @@ import { OfflineSync, clearOffline } from './OfflineDeadlines';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, Scale, X, Gavel, Eye, ListChecks, FileSpreadsheet, ChevronDown, Puzzle, Plus, BookOpen, Archive, CalendarDays, ListTodo, EyeOff, Contact, ScrollText } from 'lucide-react';
+import { Scale, Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Library, Lock, LogOut, Menu, Settings, ShieldCheck, Users, UsersRound, MessagesSquare, Landmark, Wallet, Search, ShieldAlert, X, Gavel, Eye, ListChecks, FileSpreadsheet, ChevronDown, Puzzle, Plus, BookOpen, Archive, CalendarDays, ListTodo, EyeOff, Contact, ScrollText } from 'lucide-react';
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
 import QuickAdd from './QuickAdd';
@@ -15,6 +15,7 @@ import DataBoxLauncher from './DataBoxLauncher';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
+import { LogoSvg } from '@/lib/logo';
 
 export type LawyerSection = 'prehled' | 'veci' | 'klienti' | 'poptavky' | 'katastr' | 'insolvence' | 'rejstriky' | 'infosoud' | 'hlidac' | 'schranka' | 'knihovna' | 'vykazy' | 'faktury' | 'cenik' | 'platby' | 'export' | 'import' | 'email' | 'penize' | 'kalkulacky' | 'chat' | 'tym' | 'sablony' | 'epr' | 'stret' | 'uschovy' | 'doplnky' | 'denik' | 'anonymizer' | 'plne-moci' | 'subjekty' | 'archiv' | 'kalendar' | 'ukoly' | 'nastaveni';
 type Item = readonly [LawyerSection, string, string, LucideIcon];
@@ -103,7 +104,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
     const sidebar = (
         <div className="flex h-full flex-col">
             <div className="flex items-center gap-3 px-5 py-5">
-                <span className="rounded-xl bg-indigo-600 p-2 text-white"><Scale size={18} aria-hidden="true" /></span>
+                <LogoSvg size={36} radius={9} />
                 <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-slate-900">{name}</p>
                     <p className="truncate text-xs text-slate-500">{subtitle}</p>

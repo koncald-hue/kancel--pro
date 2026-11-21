@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { Scale } from 'lucide-react';
 import { OFFLINE_KEY } from '@/lib/offlineDeadlines';
+import { LogoSvg } from '@/lib/logo';
 
 export const metadata: Metadata = { title: 'Jste offline | Kancelář Pro', robots: { index: false } };
 
@@ -18,7 +18,7 @@ root.appendChild(box);}catch(e){}})();`;
 export default function OfflinePage() {
     return (
         <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 py-10 text-center">
-            <span className="rounded-2xl bg-indigo-600 p-4 text-white" aria-hidden="true"><Scale size={36} /></span>
+            <LogoSvg size={68} radius={16} />
             <h1 className="mt-5 text-xl font-bold text-slate-900">Jste offline</h1>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">Kancelář potřebuje připojení k internetu. Z bezpečnostních důvodů se data spisů ani klientů neukládají do zařízení. Jakmile se spojení vrátí, otevřete aplikaci znovu.</p>
             <div id="offline-root" suppressHydrationWarning className="w-full" dangerouslySetInnerHTML={{ __html: '' }} />

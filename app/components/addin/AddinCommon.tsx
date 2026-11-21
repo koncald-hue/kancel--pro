@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
-import { Scale } from 'lucide-react';
 import { insideOffice } from '@/lib/officeBridge';
 import { loadCases, type LegalCase } from '@/lib/cases';
 import { inputCls } from '../situation/caseUi';
 import LawyerGate from '../lawyer/LawyerGate';
+import { LogoSvg } from '@/lib/logo';
 
 // Společný rám doplňků pro Word a Outlook: načte Office.js, přihlásí uživatele (včetně druhého faktoru) a nabídne otevřené věci
 export function AddinFrame({ title, children }: { title: string; children: React.ReactNode }) {
@@ -15,7 +15,7 @@ export function AddinFrame({ title, children }: { title: string; children: React
             <Script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" strategy="afterInteractive" />
             <LawyerGate>
                 <div className="mx-auto max-w-md space-y-3 p-3 text-sm">
-                    <h1 className="flex items-center gap-2 text-base font-bold text-slate-900"><span className="rounded-md bg-indigo-600 p-1 text-white"><Scale size={14} aria-hidden="true" /></span> Kancelář Pro · {title}</h1>
+                    <h1 className="flex items-center gap-2 text-base font-bold text-slate-900"><LogoSvg size={22} radius={6} /> Kancelář Pro · {title}</h1>
                     {children}
                 </div>
             </LawyerGate>
