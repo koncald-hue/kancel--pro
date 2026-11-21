@@ -14,7 +14,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ variant: strin
     const glyph = Math.round(v.size * (0.64 - v.pad));
     return new ImageResponse(
         (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#4338ca', borderRadius: v.radius }}>
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1f3556', borderRadius: v.radius }}>
                 <svg width={glyph} height={glyph} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 3v18" />
                     <path d="m19 8 3 8a5 5 0 0 1-6 0zV7" />

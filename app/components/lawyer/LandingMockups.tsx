@@ -4,7 +4,7 @@ import { CalendarClock, Check, FileText, Lock, Paperclip, Scale, Send } from 'lu
 export const Window = ({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) => (
     <div className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/50 ${className}`} role="img" aria-label={`Ukázka rozhraní: ${title}`}>
         <div className="flex items-center gap-1.5 border-b border-slate-100 bg-slate-50 px-4 py-2.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-rose-300" /><span className="h-2.5 w-2.5 rounded-full bg-amber-300" /><span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
+            
             <span className="ml-3 text-xs font-medium text-slate-400">{title}</span>
         </div>
         <div aria-hidden="true">{children}</div>

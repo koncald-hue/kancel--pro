@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Source_Serif_4 } from 'next/font/google';
 import { AuthProvider } from '@/app/components/site/AuthContext';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import ThemeSync from '@/app/components/site/ThemeSync';
@@ -10,6 +10,8 @@ import './globals.css';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin', 'latin-ext'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin', 'latin-ext'] });
+
+const sourceSerif = Source_Serif_4({ variable: '--font-source-serif', subsets: ['latin', 'latin-ext'] });
 
 const origin = getSiteOrigin();
 
@@ -23,11 +25,11 @@ export const metadata: Metadata = {
   icons: { apple: '/pwa-icon/apple-180' },
 };
 
-export const viewport: Viewport = { themeColor: '#4338ca' };
+export const viewport: Viewport = { themeColor: '#1f3556' };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="cs" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="cs" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} h-full antialiased`}>
       <head><script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} /></head>
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-800">
         <AuthProvider>{children}</AuthProvider>

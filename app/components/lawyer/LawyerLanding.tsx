@@ -9,10 +9,10 @@ import LandingFlow from './LandingFlow';
 
 // Co aplikace dělá, v lidské řeči. Čtyři věci, které advokát denně řeší.
 const FOUR: { icon: typeof Scale; tone: string; title: string; text: string }[] = [
-    { icon: FolderOpen, tone: 'bg-indigo-100 text-indigo-700', title: 'Vedete spisy', text: 'Každá věc má své místo: soubory, e-maily, datové zprávy, poznámky a kontakty.' },
-    { icon: CalendarClock, tone: 'bg-amber-100 text-amber-700', title: 'Hlídáte lhůty', text: 'Lhůty se spočítají a posunou na pracovní den. Včas víte, co hoří.' },
-    { icon: Users, tone: 'bg-sky-100 text-sky-700', title: 'Komunikujete s klientem', text: 'Klient nahraje podklady a píše zprávy přes soukromý odkaz, bez registrace.' },
-    { icon: Receipt, tone: 'bg-emerald-100 text-emerald-700', title: 'Účtujete práci', text: 'Výkazy, faktury s QR platbou a kontrola, kdo už zaplatil.' },
+    { icon: FolderOpen, tone: 'bg-slate-100 text-indigo-800', title: 'Vedete spisy', text: 'Každá věc má své místo: soubory, e-maily, datové zprávy, poznámky a kontakty.' },
+    { icon: CalendarClock, tone: 'bg-slate-100 text-indigo-800', title: 'Hlídáte lhůty', text: 'Lhůty se spočítají a posunou na pracovní den. Včas víte, co hoří.' },
+    { icon: Users, tone: 'bg-slate-100 text-indigo-800', title: 'Komunikujete s klientem', text: 'Klient nahraje podklady a píše zprávy přes soukromý odkaz, bez registrace.' },
+    { icon: Receipt, tone: 'bg-slate-100 text-indigo-800', title: 'Účtujete práci', text: 'Výkazy, faktury s QR platbou a kontrola, kdo už zaplatil.' },
 ];
 
 const CMP: [string, string, string][] = [
@@ -26,11 +26,11 @@ const ALSO = ['Datové schránky', 'E-mail ve spisu', 'Podpis dokumentů', 'Vzor
 
 export default function LawyerLanding() {
     return (
-        <div className="bg-white text-slate-800">
+        <div className="serif-headings bg-white text-slate-800">
             <SiteHeader />
 
             {/* 1. Co to je: jedna věta a jeden obrázek */}
-            <section className="overflow-hidden bg-gradient-to-b from-indigo-50/70 to-white">
+            <section className="overflow-hidden border-b border-slate-200 bg-slate-50">
                 <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pb-20 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.1fr] lg:pb-28">
                     <div>
                         <p className="text-sm font-semibold text-indigo-700">Pracovní prostor pro advokáty</p>
@@ -65,7 +65,7 @@ export default function LawyerLanding() {
                     <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
                         {FOUR.map(({ icon: Icon, tone, title, text }) => (
                             <li key={title}>
-                                <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${tone}`}><Icon size={22} aria-hidden="true" /></span>
+                                <span className={`inline-flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 ${tone}`}><Icon size={22} aria-hidden="true" /></span>
                                 <h3 className="mt-5 text-lg font-bold text-slate-900">{title}</h3>
                                 <p className="mt-2 leading-relaxed text-slate-600">{text}</p>
                             </li>
@@ -73,7 +73,7 @@ export default function LawyerLanding() {
                     </ul>
                     <p className="mt-14 text-sm font-semibold text-slate-500">K tomu navíc <Link href="/funkce" className="ml-2 text-indigo-700 hover:underline">Všechny funkce →</Link></p>
                     <ul className="mt-3 flex flex-wrap gap-2">
-                        {ALSO.map((t) => <li key={t} className="rounded-full border border-slate-200 px-3.5 py-1.5 text-sm text-slate-700">{t}</li>)}
+                        {ALSO.map((t) => <li key={t} className="rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700">{t}</li>)}
                     </ul>
                 </div>
             </section>

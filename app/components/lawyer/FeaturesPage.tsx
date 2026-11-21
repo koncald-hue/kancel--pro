@@ -23,7 +23,7 @@ const MORE = [
 
 export default function FeaturesPage() {
     return (
-        <div className="bg-white text-slate-800">
+        <div className="serif-headings bg-white text-slate-800">
             <SiteHeader current="/funkce" />
             <section className="bg-gradient-to-b from-indigo-50/70 to-white px-4 pb-6 pt-16 text-center sm:px-6 sm:pt-20">
                 <p className="text-sm font-semibold text-indigo-700">Co Kancelář umí</p>

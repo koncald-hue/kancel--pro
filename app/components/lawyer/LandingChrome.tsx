@@ -59,10 +59,10 @@ export function SiteHeader({ current }: { current?: string }) {
     const { account, openLogin } = useAuth();
     const [open, setOpen] = useState(false);
     return (
-        <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/90 backdrop-blur-md">
+        <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white">
             <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-4 sm:px-6">
                 <Link href="/" className="flex items-center gap-2.5 text-slate-900" aria-label="Kancelář, úvodní stránka">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-sm shadow-indigo-300/50"><Scale size={18} aria-hidden="true" /></span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-indigo-800 text-white"><Scale size={18} aria-hidden="true" /></span>
                     <span className="text-lg font-bold tracking-tight">Kancelář Pro</span>
                 </Link>
                 <nav className="hidden items-center gap-1 md:flex" aria-label="Hlavní navigace">
