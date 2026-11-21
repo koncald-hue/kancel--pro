@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import AdminFunnel from './AdminFunnel';
 
 type Data = { users: number; paying: number; expiring: number; pendingOrders: number; refunds: number; monthIncome: number | null; firms: number; profileMissing: number; invoicesMissing: number | null };
 const kc = (n: number) => `${new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 }).format(n)} Kč`;
@@ -59,6 +60,7 @@ export default function AdminHome() {
                 <h2 className="font-bold text-slate-900">K vyřízení</h2>
                 {todo.length === 0 ? <p className="mt-2 text-sm text-emerald-800">Nic nečeká.</p> : <ul className="mt-2 space-y-1.5">{todo.map(([t, h]) => <li key={t}><Link href={h} className="flex items-center gap-2 text-sm text-slate-800 hover:text-indigo-800"><AlertTriangle size={14} className="shrink-0 text-amber-600" aria-hidden="true" />{t}<ArrowRight size={13} aria-hidden="true" /></Link></li>)}</ul>}
             </section>
+            <AdminFunnel />
             <p className="text-xs text-slate-500">Správa vidí uživatele, předplatné, platby a vlastní účetnictví provozovatele. Obsah spisů, souborů a zpráv advokátů nevidí a vidět nemůže.</p>
         </div>
     );
