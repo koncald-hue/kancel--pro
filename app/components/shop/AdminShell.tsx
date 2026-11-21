@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, BookOpen, Calculator, ClipboardList, LayoutGrid, MessageSquareQuote, Users } from 'lucide-react';
+import { BarChart3, BookOpen, Calculator, ClipboardList, LayoutGrid, MessageCircleWarning, MessageSquareQuote, Users } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 
 const NAV = [
@@ -11,6 +11,7 @@ const NAV = [
     ['/admin/ucetnictvi', 'Účetnictví', Calculator],
     ['/admin/statistiky', 'Statistiky', BarChart3],
     ['/admin/zaznam', 'Záznam a poznámky', ClipboardList],
+    ['/admin/zpetna-vazba', 'Zpětná vazba', MessageCircleWarning],
     ['/admin/recenze', 'Recenze', MessageSquareQuote],
     ['/admin/judikatura', 'Judikatura', BookOpen],
 ] as const;

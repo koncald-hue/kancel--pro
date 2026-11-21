@@ -6,7 +6,7 @@ import { AlertTriangle, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import AdminFunnel from './AdminFunnel';
 
-type Data = { users: number; paying: number; expiring: number; pendingOrders: number; refunds: number; monthIncome: number | null; firms: number; profileMissing: number; invoicesMissing: number | null };
+type Data = { users: number; paying: number; expiring: number; pendingOrders: number; refunds: number; monthIncome: number | null; firms: number; profileMissing: number; invoicesMissing: number | null; feedbackNew: number };
 const kc = (n: number) => `${new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 }).format(n)} Kč`;
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -17,12 +17,13 @@ export default function AdminHome() {
         let a = true;
         (async () => {
             const today = iso(new Date()); const in14 = iso(new Date(Date.now() + 14 * 86_400_000)); const month = `${today.slice(0, 7)}-01`;
-            const [la, lo, io, inv, firms] = await Promise.all([
+            const [la, lo, io, inv, firms, fb] = await Promise.all([
                 supabase.from('lawyer_access').select('status, until, verification_status'),
                 supabase.from('lawyer_orders').select('id, status'),
                 supabase.from('isir_orders').select('id, status'),
                 supabase.from('ops_invoices').select('total, source_ref, issue_date'),
                 supabase.from('firms').select('id', { count: 'exact', head: true }),
+                supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('status', 'new'),
             ]);
             const rows = (la.data ?? []) as { status: string; until: string | null; verification_status?: string }[];
             const paying = rows.filter((r) => r.status === 'active' && r.until && r.until >= today);
@@ -34,6 +35,7 @@ export default function AdminHome() {
                 pendingOrders: orders.filter((o) => o.status === 'pending').length, refunds: orders.filter((o) => o.status === 'refund_due').length,
                 monthIncome: invs ? invs.filter((i) => i.issue_date >= month).reduce((s, i) => s + Number(i.total), 0) : null,
                 firms: firms.count ?? 0, profileMissing: rows.filter((r) => r.verification_status !== 'verified').length,
+                feedbackNew: fb.error ? 0 : fb.count ?? 0,
                 invoicesMissing: invs ? orders.filter((o) => o.status === 'paid' && !invoiced.has(o.id)).length : null,
             });
         })().catch(() => undefined);
@@ -42,6 +44,7 @@ export default function AdminHome() {
     if (!d) return <p className="text-sm text-slate-500" role="status">Načítám…</p>;
     const tile = (label: string, value: string, href: string, note = '') => <Link href={href} className="rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>{note && <p className="text-xs text-slate-500">{note}</p>}</Link>;
     const todo: [string, string][] = [
+        ...(d.feedbackNew ? [[`${d.feedbackNew} nových zpráv od uživatelů (zpětná vazba)`, '/admin/zpetna-vazba'] as [string, string]] : []),
         ...(d.pendingOrders ? [[`${d.pendingOrders} objednávek čeká na zaplacení nebo potvrzení platby`, '/admin/advokati'] as [string, string]] : []),
         ...(d.refunds ? [[`${d.refunds} objednávek k vrácení peněz (a vystavení dobropisu)`, '/admin/advokati'] as [string, string]] : []),
         ...(d.invoicesMissing ? [[`${d.invoicesMissing} zaplacených objednávek bez faktury: doplňte je v Účetnictví → Faktury`, '/admin/ucetnictvi'] as [string, string]] : []),

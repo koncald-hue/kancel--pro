@@ -12,6 +12,7 @@ import QuickAdd from './QuickAdd';
 import { unseenCount } from '@/lib/teamTasks';
 import E2eeLockNotice from './E2eeLockNotice';
 import DataBoxLauncher from './DataBoxLauncher';
+import FeedbackButton from './FeedbackButton';
 import { useAuth } from '../site/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS } from '@/lib/firm';
@@ -125,6 +126,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
             </nav>
             <div className="space-y-0.5 border-t border-slate-100 px-3 py-3">
                 {link(SETTINGS)}
+                <FeedbackButton />
                 {isStaff && <Link href="/admin" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"><ShieldCheck size={17} aria-hidden="true" className="text-slate-400" /> Správa</Link>}
                 <button type="button" onClick={() => { clearOffline(); logout(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"><LogOut size={17} aria-hidden="true" className="text-slate-400" /> Odhlásit se</button>
                 {access.status === 'trial' && access.until && <p className="mx-3 mt-2 rounded-lg bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-950">Zkušební přístup do {new Date(`${access.until}T12:00:00`).toLocaleDateString('cs-CZ')}</p>}
