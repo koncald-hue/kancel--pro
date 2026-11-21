@@ -17,6 +17,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
     "@tesseract.js-data/ces": "^1.0.0",
+    "@vercel/analytics": "^2.0.1",
     "imapflow": "^2.12.1",
     "jszip": "^3.10.2",
     "leaflet": "^1.9.4",

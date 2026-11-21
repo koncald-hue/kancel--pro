@@ -37,7 +37,7 @@ export default function Page() {
                     <li><strong>Zabezpečení a provoz:</strong> technické záznamy o přístupech a chybách, ochrana před zneužitím. Právní základ: oprávněný zájem (čl. 6 odst. 1 písm. f) GDPR).</li>
                     <li><strong>Komunikace se zákazníky:</strong> odpovědi na dotazy a provozní oznámení (potvrzení registrace, změny podmínek). Právní základ: plnění smlouvy a oprávněný zájem.</li>
                 </Sub>
-                <Cl n="2.2">Marketingové zprávy nezasíláme. Nepoužíváme analytické ani reklamní cookies. Služba ukládá do prohlížeče jen technické údaje nezbytné pro přihlášení a provoz (např. relaci přihlášení).</Cl>
+                <Cl n="2.2">Marketingové zprávy nezasíláme. Nepoužíváme reklamní cookies. Návštěvnost webu měříme anonymně nástrojem Vercel Web Analytics, který nepoužívá cookies a nesleduje jednotlivé uživatele napříč weby. Chyby aplikace se zapisují bez e-mailů a údajů o spisech, abychom je mohli opravit. Služba ukládá do prohlížeče jen technické údaje nezbytné pro přihlášení a provoz (např. relaci přihlášení).</Cl>
             </Section>
 
             <Section n={3} title="Komu údaje předáváme">

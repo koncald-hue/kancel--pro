@@ -6,6 +6,7 @@ import ThemeSync from '@/app/components/site/ThemeSync';
 import PwaRegister from '@/app/components/site/PwaRegister';
 import ConfirmHost from '@/app/components/site/ConfirmHost';
 import ErrorReporter from '@/app/components/site/ErrorReporter';
+import { Analytics } from '@vercel/analytics/next';
 import { getSiteOrigin } from '@/lib/siteUrl';
 import './globals.css';
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <AuthProvider>{children}</AuthProvider>
         <ConfirmHost />
         <ErrorReporter />
+        <Analytics />
         <PwaRegister />
         <ThemeSync />
       </body>
