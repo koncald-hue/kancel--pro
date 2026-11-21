@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { ArrowRight, CalendarClock, Check, FolderOpen, Lock, Receipt, Scale, ShieldCheck, Smartphone, Undo2, Users, X } from 'lucide-react';
+import type { ReactNode } from 'react';
+import type { Prices } from '@/lib/plans';
 import PricingTeaser from './PricingTeaser';
 import { FinalCta, SiteFooter, SiteHeader, StartButton } from './LandingChrome';
 import { CaseMock, ClientMock } from './LandingMockups';
@@ -24,7 +26,7 @@ const CMP: [string, string, string][] = [
 
 const ALSO = ['Datové schránky', 'E-mail ve spisu', 'Podpis dokumentů', 'Vzory ve Wordu', 'Insolvenční rejstřík', 'ARES a katastr', 'Import z Excelu', 'Práce v týmu'];
 
-export default function LawyerLanding() {
+export default function LawyerLanding({ initialPrices, reviews }: { initialPrices?: Prices; reviews?: ReactNode }) {
     return (
         <div className="serif-headings bg-white text-slate-800">
             <SiteHeader />
@@ -124,7 +126,8 @@ export default function LawyerLanding() {
             </section>
 
             {/* 4. Stručný ceník, podrobnosti na samostatné stránce */}
-            <PricingTeaser />
+            {reviews}
+            <PricingTeaser initialPrices={initialPrices} />
 
             <FinalCta />
             <SiteFooter />

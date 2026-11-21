@@ -12,6 +12,7 @@ import { buildAgenda, buildInbox, buildUnbilled, buildWaiting, describeSources, 
 import { deadlineText, deadlineTone } from '../situation/CaseDeadlinesTab';
 import DeadlineDialog, { MIGRATION_HINT, type DeadlineTarget } from '../situation/DeadlineDialog';
 import { useLawyer } from './LawyerGate';
+import ReviewPrompt from './ReviewPrompt';
 
 type Data = {
     cases: LegalCase[]; customs: CaseDeadline[]; entries: TimeEntry[];
@@ -141,6 +142,7 @@ export default function TodayBoard() {
 
     return (
         <div className="space-y-4">
+            <ReviewPrompt />
             {/* Zdroje: co skutečně funguje a co čeká na nastavení */}
             <ul className="flex flex-wrap gap-2" aria-label="Zdroje nových spisů">
                 {data.sources.map((s) => {

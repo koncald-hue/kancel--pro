@@ -8,15 +8,16 @@ import { EMPTY_PRICES, PLANS, saving, savingPct, type Prices } from '@/lib/plans
 import { useAuth } from '../site/AuthContext';
 
 // Stručný ceník pro hlavní stránku: tři plány a odkaz na podrobný ceník
-export default function PricingTeaser() {
+export default function PricingTeaser({ initialPrices }: { initialPrices?: Prices }) {
     const { account, openLogin } = useAuth();
-    const [prices, setPrices] = useState<Prices>(EMPTY_PRICES);
-    const [loaded, setLoaded] = useState(false);
+    const [prices, setPrices] = useState<Prices>(initialPrices ?? EMPTY_PRICES);
+    const [loaded, setLoaded] = useState(!!initialPrices);
     useEffect(() => {
+        if (initialPrices) return;
         let alive = true;
         fetch('/api/lawyer-prices').then((r) => r.json()).then((p) => { if (alive) { setPrices({ ...EMPTY_PRICES, ...p }); setLoaded(true); } }).catch(() => { if (alive) setLoaded(true); });
         return () => { alive = false; };
-    }, []);
+    }, [initialPrices]);
     return (
         <section className="bg-slate-50 px-4 py-20 sm:px-6 sm:py-24" aria-labelledby="cenik-title">
             <div className="mx-auto max-w-5xl">
