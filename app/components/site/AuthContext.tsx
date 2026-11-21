@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, useSyncExt
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { isFreshSignup } from '@/lib/signupNotice';
 import { endAllSessions } from '@/lib/isdsSession';
 import { clearBoxState } from '@/lib/dataBoxState';
 import AuthForm from './AuthForm';
@@ -32,6 +33,12 @@ export function useAuth(): AuthInfo {
     return hydrated ? auth : { ...auth, ...LOGGED_OUT };
 }
 
+// Správci se po přihlášení právě potvrzeného účtu pošle oznámení o registraci (server hlídá, že jen jednou)
+function notifySignup(session: { access_token: string; user: { email_confirmed_at?: string | null; app_metadata?: Record<string, unknown> | null } } | null) {
+    if (!session || !isFreshSignup(session.user)) return;
+    try { void fetch('/api/notify-signup', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` }, keepalive: true }).catch(() => undefined); } catch { /* oznámení nesmí rozbít přihlášení */ }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [account, setAccount] = useState<AuthUser | null>(null);
     const [isStaff, setIsStaff] = useState(false);
@@ -54,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Uložené přihlášení může patřit účtu, který už neexistuje (např. smazaný v Supabase): pak se odhlásí
             if (session) supabase.auth.getUser().then(({ error }) => { if (error) void supabase.auth.signOut(); });
         });
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => { if (event === 'SIGNED_OUT') void setMaster(null, 'logout'); apply(session?.user ?? null); });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => { if (event === 'SIGNED_OUT') void setMaster(null, 'logout'); apply(session?.user ?? null); if (event === 'SIGNED_IN') notifySignup(session); });
         return () => subscription.unsubscribe();
     }, []);
 
