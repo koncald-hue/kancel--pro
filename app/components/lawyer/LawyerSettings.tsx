@@ -68,6 +68,8 @@ export default function LawyerSettings() {
         return () => { cancelled = true; };
     }, []);
     const [sec, setSec] = useState<'ucet' | 'predplatne' | 'aplikace' | 'propojeni' | 'zabezpeceni'>('ucet');
+    // Odkaz /kancelar/nastaveni#sifrovani otevře rovnou záložku Zabezpečení se šifrovacím heslem
+    useEffect(() => { if (window.location.hash === '#sifrovani') setSec('zabezpeceni'); }, []);
     const [firm, setFirm] = useState(access.firm_name);
     const [rate, setRate] = useState(String(access.default_rate || ''));
     const [msg, setMsg] = useState('');
@@ -215,7 +217,7 @@ export default function LawyerSettings() {
             <CalendarFeedCard />
             </>)}
             {sec === 'zabezpeceni' && (<>
-            <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Šifrovací heslo">
+            <section id="sifrovani" className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Šifrovací heslo">
                 <h2 className="text-lg font-bold text-slate-900">Šifrovací heslo</h2>
                 <p className="mt-1 text-sm leading-relaxed text-slate-600">Chrání komunikaci s klienty, přihlášení k datové schránce, e-mailu a dalším službám. Zná ho jen váš prohlížeč, provozovatel ho nevidí. Bez něj ani bez záložního kódu se zašifrovaná data obnovit nedají.</p>
                 <div className="mt-3"><E2eeBox access={access} onChanged={() => undefined} /></div>
