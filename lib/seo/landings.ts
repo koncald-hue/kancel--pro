@@ -292,6 +292,96 @@ export const LANDINGS: Landing[] = [
         ],
         guides: ['stret-zajmu-advokat', 'jak-vybrat-software-pro-advokatni-kancelar'],
     },
+    {
+        slug: 'klientsky-portal-pro-advokaty',
+        title: 'Klientský portál pro advokáty | Kancelář Pro',
+        description: 'Soukromá stránka ke každému spisu: klient nahraje podklady z telefonu, napíše zprávu a podepíše dokument. Bez registrace. 14 dní zdarma.',
+        kicker: 'Klientský portál pro advokáty',
+        h1: 'Klientský portál, přes který klient pošle podklady a nemusí nic instalovat',
+        intro: 'Klient dostane odkaz na soukromou stránku svého spisu. Vidí, v jakém je stavu, nahraje dokumenty z telefonu, napíše zprávu a podepíše dokument. Vy nemusíte přeposílat přílohy z e-mailů a máte všechno rovnou ve spisu.',
+        sections: [
+            {
+                h: 'Co klient v portálu udělá',
+                p: ['Portál je záměrně jednoduchý, aby ho zvládl i klient, který nikdy nepoužil žádnou aplikaci. Vstupuje odkazem bez hesla a bez registrace. Odkaz můžete volitelně zabezpečit i kódem, který klientovi přijde na e-mail.'],
+                points: ['Podívá se na stav spisu a na to, co od něj advokát potřebuje', 'Nahraje fotky a dokumenty přímo z telefonu', 'Napíše zprávu a odpoví na dotaz advokáta', 'Podepíše dokument (po ověření kódem nebo osobním ověřením)']
+            },
+            {
+                h: 'Mlčenlivost bez kompromisů',
+                p: ['Zprávy mezi advokátem a klientem jsou šifrované end-to-end, takže je provozovatel služby nepřečte. Odkaz na portál jde kdykoli zrušit, má omezenou platnost a každý klient vidí jen svůj spis. Na stránce Zabezpečení přesně popisujeme, co je šifrované a co ne.'],
+            },
+            {
+                h: 'Méně e-mailů a přeposílání',
+                p: ['Dokumenty, které klient nahraje, se uloží přímo do správného spisu. Zpráva od klienta se objeví u spisu a v přehledu dne, takže nic neutone ve schránce. Při prvním kontaktu může klient vyplnit i poptávku a identifikační údaje pro AML.'],
+            },
+        ],
+        faq: [
+            { q: 'Musí se klient registrovat?', a: 'Ne. Přístup mu dáte odkazem a volitelně ho při vstupu ověří kód zaslaný na jeho e-mail.' },
+            { q: 'Co když klient odkaz ztratí?', a: 'Odkaz v kanceláři zrušíte a vytvoříte nový. Zrušený odkaz už nefunguje.' },
+            { q: 'Je komunikace v portálu šifrovaná?', a: 'Zprávy jsou šifrované end-to-end. Soubory a další údaje jsou chráněné přihlášením, přístupovými pravidly v databázi a šifrovaným přenosem. Podrobnosti jsou na stránce Zabezpečení.' },
+            { q: 'Je podpis v portálu kvalifikovaný elektronický podpis?', a: 'Ne. Jde o podpis dokumentu po ověření kódem a zapsání do záznamu spisu. Kdy je takový podpis pro konkrétní dokument dostačující, posuzuje advokát.' },
+        ],
+        feature: 'klient',
+        guides: ['mlcenlivost-advokata-a-cloud', 'jak-vybrat-software-pro-advokatni-kancelar'],
+    },
+    {
+        slug: 'radar-protistrany-insolvence',
+        title: 'Hlídání insolvence protistrany a klienta | Kancelář Pro',
+        description: 'Kancelář Pro hlídá firmy a osoby ve vašich spisech v insolvenčním rejstříku a v ARES a upozorní vás, když dlužník vstoupí do insolvence.',
+        kicker: 'Radar protistrany',
+        h1: 'Hlídání insolvence a změn u protistrany, aby vás nic nepřekvapilo',
+        intro: 'Dlužník vstoupí do insolvence a lhůta pro přihlášku pohledávky běží, aniž by vás kdo upozornil. Radar protistrany hlídá firmy a osoby z vašich spisů a řekne vám to dřív, než se to dozvíte náhodou.',
+        sections: [
+            {
+                h: 'Co radar hlídá',
+                p: ['Do radaru se dostanou protistrany, dlužníci i klienti z vašich spisů. Kancelář je pravidelně kontroluje a při změně vás upozorní přímo u spisu.'],
+                points: ['Vstup do insolvenčního řízení', 'Změny u firem v ARES, například likvidace', 'Navržená lhůta, když z události nějaká plyne', 'Přehled všeho, co radar sleduje, na jednom místě']
+            },
+            {
+                h: 'Proč na tom záleží',
+                p: ['U pohledávek za dlužníkem v insolvenci rozhodují lhůty a pořadí kroků. Pozdní reakce může znamenat ztracenou možnost pohledávku uplatnit. Automatická kontrola nahrazuje ruční projíždění rejstříku u každého spisu.'],
+            },
+            {
+                h: 'Kontrola je pomůcka, ne náhrada úsudku',
+                p: ['Radar vás upozorní a navrhne lhůtu. Konečné posouzení, zda a jak lhůta běží, zůstává na advokátovi.'],
+            },
+        ],
+        faq: [
+            { q: 'Které rejstříky radar používá?', a: 'Insolvenční rejstřík a veřejný rejstřík ARES. Zdroje jsou veřejné.' },
+            { q: 'Musím zadávat každého dlužníka zvlášť?', a: 'Ne. Radar vychází ze stran, které máte ve spisech, a hlídá je sám.' },
+            { q: 'Platí se radar zvlášť?', a: 'Aktuální ceny a obsah balíčku jsou v ceníku.' },
+        ],
+        feature: 'radar',
+        guides: ['pocitani-procesnich-lhut', 'stret-zajmu-advokat'],
+    },
+    {
+        slug: 'import-dat-do-advokatniho-softwaru',
+        title: 'Import dat do advokátního softwaru | Kancelář Pro',
+        description: 'Klienty, spisy, lhůty a výkazy práce naimportujete z Excelu nebo exportu jiného programu. Přechod na Kancelář Pro bez přepisování. 14 dní zdarma.',
+        kicker: 'Přechod z jiného programu',
+        h1: 'Přechod na nový advokátní software bez přepisování dat',
+        intro: 'Největší překážkou změny programu bývá strach z přepisování let práce. Kancelář Pro umí naimportovat klienty, spisy, lhůty i odpracovaný čas z Excelu, CSV nebo exportu vašeho dosavadního softwaru.',
+        sections: [
+            {
+                h: 'Co lze naimportovat',
+                p: ['Nahrajete soubor XLSX, CSV nebo vCard, případně vložíte buňky zkopírované z Excelu. Sešit s více listy se naimportuje najednou a sloupce se přiřadí podle běžných názvů.'],
+                points: ['Klienti a kontakty', 'Spisy se základními údaji', 'Lhůty a termíny', 'Odpracovaný čas', 'Kontakty z telefonu nebo e-mailu ve formátu vCard']
+            },
+            {
+                h: 'Vyzkoušejte si to bez rizika',
+                p: ['Prvních 14 dní je zdarma a bez zadání karty, takže import i celý provoz otestujete na skutečných datech. Nejdřív doporučujeme naimportovat menší vzorek a zkontrolovat ho.'],
+            },
+            {
+                h: 'Data zůstávají vaše',
+                p: ['Všechna data si můžete exportovat do tabulek, například jako zálohu nebo při přechodu jinam. Po skončení předplatného zůstanou data uložená a ke čtení.'],
+            },
+        ],
+        faq: [
+            { q: 'Z jakých souborů jde importovat?', a: 'Z tabulek XLSX a CSV, z kontaktů ve formátu vCard a ze zkopírovaných buněk z Excelu. Z jiného programu jde přenést to, co umí vyexportovat do některého z těchto formátů.' },
+            { q: 'Přijdu o data při přechodu?', a: 'Import data kopíruje, původní program zůstává beze změny. Doporučujeme nejdřív vyzkoušet menší vzorek.' },
+            { q: 'Dostanu svá data zpátky?', a: 'Ano. Všechna data si můžete exportovat do tabulek.' },
+        ],
+        guides: ['prechod-na-novy-advokatni-software', 'jak-vybrat-software-pro-advokatni-kancelar'],
+    },
 ];
 
 export const landingBySlug = (slug: string) => LANDINGS.find((l) => l.slug === slug);

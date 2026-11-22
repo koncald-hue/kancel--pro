@@ -5,8 +5,8 @@ import { getApprovedReviews, getPublicPrices } from '@/lib/publicDataServer';
 import { JsonLd, organizationLd, softwareLd } from '@/lib/seo/jsonLd';
 
 export const metadata: Metadata = {
-    title: 'Kancelář Pro | pracovní prostor pro advokáty',
-    description: 'Spisy, lhůty, klienti a faktury advokáta na jednom místě. Datové zprávy, e-maily i výkazy práce bez přepínání mezi programy. 14 dní zdarma.',
+    title: 'Software pro advokáty: spisy, lhůty a faktury | Kancelář Pro',
+    description: 'Software pro advokáty a advokátní kanceláře: spisy, lhůty, datové schránky, e-maily, výkazy práce a faktury na jednom místě. 14 dní zdarma, bez karty.',
     alternates: { canonical: '/' },
 };
 
