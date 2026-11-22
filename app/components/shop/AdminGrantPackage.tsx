@@ -28,7 +28,7 @@ export default function AdminGrantPackage({ onDone }: { onDone: () => void }) {
     return (
         <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5" aria-label="Přidělit balíček kanceláře">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Gift size={18} className="text-indigo-700" /> Přidělit balíček kanceláře bez placení</h2>
-            <p className="mt-1 text-xs text-slate-600">Uživateli s tímto e-mailem se založí kancelář (pokud žádnou nemá) a nastaví se jí balíček. Slouží ke zkoušení. Uživatel se musí nejdřív zaregistrovat.</p>
+            <p className="mt-1 text-xs text-slate-600">Pro kanceláře, kterým dáváte přístup zdarma (zkouška, zakládající zákazníci). Uživateli s tímto e-mailem se založí kancelář s názvem z jeho profilu (pokud žádnou nemá) a nastaví se jí balíček na zvolený počet měsíců. Kolegy si pak do kanceláře pozve sám. Uživatel se musí nejdřív zaregistrovat. Jednotlivému advokátovi stačí nastavit datum v jeho řádku níže.</p>
             <form onSubmit={grant} className="mt-3 grid gap-3 sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-end">
                 <label className="block text-xs font-semibold text-slate-600">E-mail uživatele<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={`${inputCls} mt-1 font-normal`} /></label>
                 <label className="block text-xs font-semibold text-slate-600">Počet míst<select value={seats} onChange={(e) => setSeats(Number(e.target.value))} className={`${inputCls} mt-1 font-normal`}>{FIRM_SIZES.map((n) => <option key={n} value={n}>do {n}</option>)}</select></label>
