@@ -16,7 +16,9 @@ export default function ConfirmHost() {
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); close(false); } };
         window.addEventListener('keydown', onKey);
         return () => { window.clearTimeout(t); window.removeEventListener('keydown', onKey); };
-    });
+        // Jen při otevření dialogu: bez seznamu závislostí by se po každém napsaném znaku znovu vybralo tlačítko Zpět a pole by přišlo o kurzor
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [req]);
     if (!req) return null;
     function close(ok: boolean) { req?.resolve(ok); setReq(null); }
     const needText = req.typeToConfirm ?? '';
