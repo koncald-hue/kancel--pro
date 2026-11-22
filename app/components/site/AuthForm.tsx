@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { TERMS_VERSION } from '@/lib/company';
+import { isBlockedRelayEmail, BLOCKED_EMAIL_MESSAGE } from '@/lib/emailGuard';
 
 // Přihlášení a registrace e-mailem a heslem. Používá se v okně i přímo na stránce.
 export default function AuthForm({ initialMode = 'login', onDone, idPrefix = 'auth' }: { initialMode?: 'login' | 'register'; onDone?: () => void; idPrefix?: string }) {
@@ -27,6 +28,7 @@ export default function AuthForm({ initialMode = 'login', onDone, idPrefix = 'au
             }
             if (isRegister) {
                 if (password.length < 10) { setNotice('Heslo musí mít alespoň 10 znaků.'); return; }
+                if (isBlockedRelayEmail(email)) { setNotice(BLOCKED_EMAIL_MESSAGE); return; }
                 if (!agree) { setNotice('Pro vytvoření účtu je nutné souhlasit s obchodními podmínkami.'); return; }
                 const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.pathname.startsWith('/pozvanka/') ? window.location.href : `${window.location.origin}/kancelar`, data: { terms_version: TERMS_VERSION, terms_accepted_at: new Date().toISOString(), professional_use: true } } });
                 if (error) { setNotice('Registrace se nepodařila: ' + error.message); return; }

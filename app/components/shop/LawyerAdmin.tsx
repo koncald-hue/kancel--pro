@@ -51,7 +51,7 @@ export default function LawyerAdmin() {
 
             <AdminBilling rows={rows} />
 
-            <AdminLawyers rows={rows} onSet={(r, st, until) => void set(r, st, until)} />
+            <AdminLawyers rows={rows} onSet={(r, st, until) => void set(r, st, until)} onDeleted={(m) => { setMessage(m); setReload((n) => n + 1); }} />
         </div>
     );
 }

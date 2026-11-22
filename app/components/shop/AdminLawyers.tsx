@@ -9,6 +9,7 @@ import { czk, type LawyerAccess } from '@/lib/lawyer';
 import { ghostBtn, inputCls } from '../situation/caseUi';
 import ContactActions from '../lawyer/ContactActions';
 import AdminNote from './AdminNote';
+import { confirmAction } from '@/lib/confirm';
 
 type OrderRow = { user_id: string; status: 'pending' | 'paid' | 'cancelled' | 'refund_due'; price_czk: number; paid_at: string | null };
 type Filter = 'all' | 'verified' | 'pending' | 'active' | 'expiring' | 'expired' | 'refund';
@@ -39,7 +40,7 @@ function UntilDate({ row, onSet }: { row: LawyerAccess; onSet: (row: LawyerAcces
 }
 
 // Přehled advokátů pro správce: profily, předplatné a platby. Obsah jejich věcí správce nevidí.
-export default function AdminLawyers({ rows, onSet }: { rows: LawyerAccess[]; onSet: (row: LawyerAccess, status: LawyerAccess['status'], until: string | null) => void }) {
+export default function AdminLawyers({ rows, onSet, onDeleted }: { rows: LawyerAccess[]; onSet: (row: LawyerAccess, status: LawyerAccess['status'], until: string | null) => void; onDeleted?: (message: string) => void }) {
     const [orders, setOrders] = useState<OrderRow[]>([]);
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState<Filter>('all');
@@ -51,6 +52,17 @@ export default function AdminLawyers({ rows, onSet }: { rows: LawyerAccess[]; on
         supabase.from('lawyer_orders').select('user_id, status, price_czk, paid_at').then(({ data }) => { if (!cancelled) setOrders((data ?? []) as OrderRow[]); });
         return () => { cancelled = true; };
     }, [rows]);
+
+    const deleteAccount = async (r: LawyerAccess, hasPaid: boolean) => {
+        const who = r.email;
+        if (!(await confirmAction(`Smazat účet ${who} úplně? Zmizí přihlášení i všechna data účtu (spisy, klienti, lhůty, soubory, nastavení). Smazání je nevratné.${hasPaid ? ' Účet má zaplacené objednávky, ty se smažou také (účetní záznamy zůstanou v účetní knize).' : ''}`, { title: 'Smazat účet', confirmLabel: 'Pokračovat', danger: true }))) return;
+        if (!(await confirmAction(`Opravdu naposledy: smazat účet ${who}? Pro potvrzení opište e-mail.`, { title: 'Poslední potvrzení', confirmLabel: 'Smazat účet navždy', danger: true, typeToConfirm: who }))) return;
+        const { data: sess } = await supabase.auth.getSession();
+        const res = await fetch('/api/admin/delete-user', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sess.session?.access_token ?? ''}` }, body: JSON.stringify({ userId: r.user_id, force: hasPaid }) });
+        const out = (await res.json().catch(() => ({}))) as { message?: string; mailed?: boolean };
+        if (!res.ok) { onDeleted?.(/admin_delete_user|schema cache|Could not find/i.test(out.message ?? '') ? 'Mazání účtů ještě není v databázi zapnuté (chybí spuštění souboru 20261122_34_mazani-uctu-a-skryte-emaily.sql).' : (out.message || 'Smazání se nepodařilo.')); return; }
+        onDeleted?.(`Účet ${who} je smazaný.${out.mailed ? ' Advokátovi odešel e-mail.' : ' E-mail advokátovi se odeslat nepodařilo.'}`);
+    };
 
     const today = todayIso();
     const data = useMemo(() => rows.map((r) => {
@@ -129,6 +141,7 @@ export default function AdminLawyers({ rows, onSet }: { rows: LawyerAccess[]; on
                                                     <button type="button" onClick={() => onSet(r, 'active', addMonths(1))} className={ghostBtn}>Ručně aktivovat 1 měsíc</button>
                                                     <button type="button" onClick={() => onSet(r, 'active', addMonths(12))} className={ghostBtn}>Ručně aktivovat 1 rok</button>
                                                     <button type="button" onClick={() => onSet(r, 'expired', null)} className={`${ghostBtn} text-rose-700`}>Zrušit přístup</button>
+                                                    <button type="button" onClick={() => void deleteAccount(r, paidCount > 0 || refund)} className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-100 cursor-pointer">Smazat účet</button>
                                                 </div>
                                                 <UntilDate key={`${r.user_id}-${r.until}`} row={r} onSet={onSet} />
                                                 <AdminNote userId={r.user_id} />
