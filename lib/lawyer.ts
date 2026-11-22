@@ -35,12 +35,6 @@ export async function startTrial(userId: string, email: string): Promise<LawyerA
     return data as LawyerAccess;
 }
 
-export async function requestAccess(userId: string, email: string): Promise<LawyerAccess> {
-    const { data, error } = await supabase.from('lawyer_access').insert({ user_id: userId, email, status: 'requested' }).select('*').single();
-    if (error) throw new Error(error.message);
-    return data as LawyerAccess;
-}
-
 export type LawyerState = { loading: boolean; access: LawyerAccess | null; error: string };
 
 export function useLawyerAccess(userId: string | undefined, version = 0): LawyerState {
