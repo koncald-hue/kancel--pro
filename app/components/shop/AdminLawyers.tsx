@@ -59,9 +59,9 @@ export default function AdminLawyers({ rows, onSet, onDeleted }: { rows: LawyerA
         if (!(await confirmAction(`Opravdu naposledy: smazat účet ${who}? Pro potvrzení opište e-mail.`, { title: 'Poslední potvrzení', confirmLabel: 'Smazat účet navždy', danger: true, typeToConfirm: who }))) return;
         const { data: sess } = await supabase.auth.getSession();
         const res = await fetch('/api/admin/delete-user', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sess.session?.access_token ?? ''}` }, body: JSON.stringify({ userId: r.user_id, force: hasPaid }) });
-        const out = (await res.json().catch(() => ({}))) as { message?: string; mailed?: boolean };
+        const out = (await res.json().catch(() => ({}))) as { message?: string; mailed?: boolean; mailProblem?: string };
         if (!res.ok) { onDeleted?.(/admin_delete_user|schema cache|Could not find/i.test(out.message ?? '') ? 'Mazání účtů ještě není v databázi zapnuté (chybí spuštění souboru 20261122_34_mazani-uctu-a-skryte-emaily.sql).' : (out.message || 'Smazání se nepodařilo.')); return; }
-        onDeleted?.(`Účet ${who} je smazaný.${out.mailed ? ' Advokátovi odešel e-mail.' : ' E-mail advokátovi se odeslat nepodařilo.'}`);
+        onDeleted?.(`Účet ${who} je smazaný.${out.mailed ? ' Advokátovi odešel e-mail.' : (out.mailProblem === 'notconfigured' ? ' E-mail neodešel: na serveru chybí nastavení odesílání (MAIL_FROM a klíč Brevo/Resend).' : out.mailProblem === 'noemail' ? ' E-mail neodešel: účet neměl e-mail.' : ' E-mail neodešel: poskytovatel odeslání odmítl (zkontrolujte ověřeného odesílatele MAIL_FROM).')}`);
     };
 
     const today = todayIso();

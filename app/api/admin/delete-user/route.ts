@@ -32,10 +32,11 @@ export async function POST(req: Request) {
         if (error) return NextResponse.json({ error: 'rpc', message: error.message }, { status: 400 });
 
         let mailed = false;
+        let mailProblem = mailConfigured() ? '' : 'notconfigured';
         if (email && mailConfigured()) {
-            try { const m = buildAccountDeleted(new URL(req.url).origin); await sendMail(email, m.subject, m.text); mailed = true; } catch (e) { console.warn('[delete-user mail]', (e as Error).message); }
+            try { const m = buildAccountDeleted(new URL(req.url).origin); await sendMail(email, m.subject, m.text); mailed = true; } catch (e) { mailProblem = 'send'; console.warn('[delete-user mail]', (e as Error).message); }
         }
-        return NextResponse.json({ ok: true, mailed });
+        return NextResponse.json({ ok: true, mailed, mailProblem: mailed ? '' : (email ? mailProblem : 'noemail') });
     } catch (e) {
         console.error('API admin/delete-user error:', e);
         return NextResponse.json({ error: 'failed' }, { status: 500 });
