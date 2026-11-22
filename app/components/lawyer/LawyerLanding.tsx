@@ -51,13 +51,25 @@ export default function LawyerLanding({ initialPrices, reviews }: { initialPrice
                 </div>
             </section>
 
-            {/* Pruh důvěry */}
-            <section className="border-y border-slate-200 bg-white" aria-label="Proč nám věřit">
-                <ul className="mx-auto flex max-w-6xl flex-wrap justify-center gap-x-10 gap-y-3 px-4 py-5 text-sm font-semibold text-slate-700 sm:px-6">
-                    <li className="flex items-center gap-2"><Lock size={16} className="text-indigo-700" aria-hidden="true" /> Šifrovaná data</li>
-                    <li className="flex items-center gap-2"><ShieldCheck size={16} className="text-indigo-700" aria-hidden="true" /> Vyrobeno v ČR</li>
-                    <li className="flex items-center gap-2"><Undo2 size={16} className="text-indigo-700" aria-hidden="true" /> Zrušíte kdykoli</li>
-                </ul>
+            {/* Důvěra: mlčenlivost je pro advokáta podmínka, proto hned za úvodem */}
+            <section className="border-y border-slate-200 bg-white px-4 py-12 sm:px-6" aria-labelledby="duvera-title">
+                <div className="mx-auto max-w-6xl">
+                    <h2 id="duvera-title" className="max-w-3xl text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Mlčenlivost je základ vaší práce. Proto je na prvním místě.</h2>
+                    <ul className="mt-8 grid gap-4 md:grid-cols-3">
+                        {[
+                            { icon: Lock, title: 'Komunikace s klientem je end-to-end šifrovaná', text: 'Zprávy a soubory se šifrují ve vašem prohlížeči. Provozovatel je přečíst nemůže.' },
+                            { icon: ShieldCheck, title: 'Každý vidí jen svá data', text: 'Přístup ke spisům hlídá přímo databáze, ne jen aplikace. Kolega vidí jen to, co mu sdílíte. Přihlášení lze chránit druhým krokem.' },
+                            { icon: Undo2, title: 'Jasně, co je a co není šifrované', text: 'Na jedné stránce rozepisujeme, co provozovatel technicky vidí a kdo data zpracovává. Nepíšeme „vše je šifrované“.' },
+                        ].map(({ icon: Icon, title, text }) => (
+                            <li key={title} className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+                                <span className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-indigo-700"><Icon size={20} aria-hidden="true" /></span>
+                                <h3 className="mt-4 text-base font-bold text-slate-900">{title}</h3>
+                                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{text}</p>
+                            </li>
+                        ))}
+                    </ul>
+                    <p className="mt-6 text-sm text-slate-600"><Link href="/zabezpeceni" className="font-semibold text-indigo-700 underline hover:text-indigo-900">Přečíst celé zabezpečení</Link> · Vyrobeno v ČR · Zrušíte kdykoli</p>
+                </div>
             </section>
 
             {/* 2. Čtyři věci, které za vás vyřeší */}
