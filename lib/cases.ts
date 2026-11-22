@@ -1,6 +1,8 @@
 import { supabase } from './supabase';
 import { LEGAL_DEADLINES, type LegalDeadline } from '@/app/data/deadlines';
 import { shiftToWorkingDay } from './workdays';
+import { deleteDemoData, DEMO_REMOVED_KEY } from './demoCleanup';
+import { isDemoTitle } from './demoMarks';
 
 export type CaseStep = { text: string; done: boolean };
 export type CaseUrgency = 'high' | 'medium' | 'low';
@@ -67,6 +69,8 @@ export const BLANK_CASE = { situation: '', summary: '', urgency: 'medium' as Cas
 export async function createCase(userId: string, input: NewCase): Promise<LegalCase> {
     const { data, error } = await supabase.from('cases').insert({ ...input, user_id: userId }).select(COLUMNS).single();
     if (error) throw new Error(error.message);
+    // První skutečný spis uklidí ukázková data, aby se nepletla s vlastními; vrátit jdou tlačítkem na Přehledu
+    if (!isDemoTitle(input.title)) void deleteDemoData(userId).then((removed) => { if (removed) { try { localStorage.setItem(DEMO_REMOVED_KEY, '1'); } catch { /* bez úložiště */ } } });
     return data as LegalCase;
 }
 

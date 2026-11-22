@@ -4,6 +4,7 @@ import LegalNews from './LegalNews';
 import EveningSummary from './EveningSummary';
 import MonthGlance from './MonthGlance';
 import FirstSteps from './FirstSteps';
+import DemoBanner from './DemoBanner';
 import SubstituteBanner from './SubstituteBanner';
 import TeamTasksCard from './TeamTasksCard';
 import { RadarPanel } from './RadarEvents';
@@ -85,6 +86,7 @@ export default function LawyerDashboard() {
 
     return (
         <div className="space-y-6">
+            <DemoBanner />
             <FirstSteps />
             <SubstituteBanner />
             <TeamTasksCard />

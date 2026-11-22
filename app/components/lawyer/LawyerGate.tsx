@@ -4,7 +4,6 @@ import { createContext, useContext, useState } from 'react';
 import Link from 'next/link';
 import { Briefcase, CalendarClock, Clock, Loader2, MessagesSquare, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
-import { createDemoCase } from '@/lib/demoCase';
 import { hasLawyerAccess, startTrial, TRIAL_DAYS, useLawyerAccess, type LawyerAccess } from '@/lib/lawyer';
 import { primaryBtn } from '../situation/caseUi';
 import Onboarding from './Onboarding';
@@ -77,9 +76,6 @@ export default function LawyerGate({ children, allowExpired = false }: { childre
         setBusy(true); setError('');
         try {
             await startTrial(account!.id, account!.email ?? '');
-            // Ukázkový spis s klientem, lhůtami, časem a konceptem vyúčtování, aby první pohled nebyl na prázdnou aplikaci.
-            // Když se nepovede, nic se neděje: v Přehledu jde založit tlačítkem.
-            await createDemoCase(account!.id, 1500).catch(() => undefined);
             setVersion((v) => v + 1);
         } catch (err) { setError(err instanceof Error ? err.message : 'Nepodařilo se.'); } finally { setBusy(false); }
     }
