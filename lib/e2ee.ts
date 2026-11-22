@@ -97,7 +97,8 @@ export async function unwrapKey(master: CryptoKey, wrapped: string): Promise<Cry
     return subtle().importKey('raw', toBuf(await decryptBytes(master, fromB64u(wrapped))), 'AES-GCM', true, ['encrypt', 'decrypt']);
 }
 
-// Odemčený hlavní klíč zůstává pouze v paměti této stránky.
+// Odemčený hlavní klíč je v paměti stránky a po dobu práce v této kartě i v sessionStorage, aby přežil obnovení stránky
+// a přesměrování (Google, Microsoft). Zamkne se po 30 minutách bez práce, odhlášením a zavřením karty.
 let masterKey: CryptoKey | null = null;
 const listeners = new Set<() => void>();
 export const getMaster = () => masterKey;
@@ -107,6 +108,9 @@ export const subscribeMaster = (fn: () => void) => { listeners.add(fn); return (
 export type LockReason = 'idle' | 'reload' | 'logout' | null;
 export const IDLE_LOCK_MS = 30 * 60_000;
 const FLAG = 'e2eeWasUnlocked';
+const KEY_STORE = 'e2eeMaster';
+const ACTIVE_STORE = 'e2eeLastActive';
+function touch() { try { sessionStorage.setItem(ACTIVE_STORE, String(Date.now())); } catch { /* úložiště nemusí být dostupné */ } }
 let lockReason: LockReason = null;
 let idleTimer: number | null = null;
 let lastActivity = 0;
@@ -116,6 +120,7 @@ function onActivity() {
     const now = Date.now();
     if (now - lastActivity < 5_000) return; // stačí zaznamenat aktivitu jednou za pár sekund
     lastActivity = now;
+    touch();
     armIdle();
 }
 function armIdle() {
@@ -134,8 +139,8 @@ export async function setMaster(key: CryptoKey | null, reason: Exclude<LockReaso
     masterKey = key;
     lockReason = key ? null : reason;
     try {
-        sessionStorage.removeItem('e2eeMaster');
-        if (key) sessionStorage.setItem(FLAG, '1'); else sessionStorage.removeItem(FLAG);
+        sessionStorage.removeItem(FLAG);
+        if (key) { sessionStorage.setItem(KEY_STORE, await exportKey(key)); touch(); } else { sessionStorage.removeItem(KEY_STORE); sessionStorage.removeItem(ACTIVE_STORE); }
     } catch { /* úložiště nemusí být dostupné */ }
     if (key) { watchActivity(true); armIdle(); } else watchActivity(false);
     listeners.forEach((fn) => fn());
@@ -144,13 +149,14 @@ export const clearLockReason = () => { lockReason = null; listeners.forEach((fn)
 export async function restoreMaster() {
     if (masterKey) return;
     try {
-        sessionStorage.removeItem('e2eeMaster');
-        // Klíč byl v této kartě odemčený, ale obnovením stránky zanikl: vysvětlíme to uživateli
-        if (sessionStorage.getItem(FLAG) === '1' && lockReason === null) { lockReason = 'reload'; sessionStorage.removeItem(FLAG); listeners.forEach((fn) => fn()); }
-    } catch { /* úložiště nemusí být dostupné */ }
+        const stored = sessionStorage.getItem(KEY_STORE);
+        if (!stored) return;
+        const last = Number(sessionStorage.getItem(ACTIVE_STORE) || 0);
+        if (Date.now() - last >= IDLE_LOCK_MS) { await setMaster(null, 'idle'); return; }
+        await setMaster(await importKey(stored));
+    } catch { /* poškozený nebo nedostupný záznam: uživatel klíč odemkne heslem */ }
 }
 
-// Šifrovaný soubor: obsah i název. Název se ukládá jako zašifrovaný text, typ se určí až po dešifrování
 export async function encryptFile(key: CryptoKey, file: File): Promise<{ blob: Blob; encName: string }> {
     const data = new Uint8Array(await file.arrayBuffer());
     return { blob: new Blob([toBuf(await encryptBytes(key, data))], { type: 'application/octet-stream' }), encName: await encryptText(key, file.name) };

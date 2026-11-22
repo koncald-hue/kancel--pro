@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { getLockReason, getMaster, restoreMaster, subscribeMaster, type LockReason } from './e2ee';
 
-// Odemčený hlavní klíč advokáta (null = zamčeno); po obnovení stránky se znovu zadává heslo.
+// Odemčený hlavní klíč advokáta (null = zamčeno); přežije obnovení stránky, zamkne se po 30 min nečinnosti.
 export function useMasterKey(): CryptoKey | null {
     const key = useSyncExternalStore(subscribeMaster, getMaster, () => null);
     useEffect(() => { void restoreMaster(); }, []);
