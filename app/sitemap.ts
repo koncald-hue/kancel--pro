@@ -1,11 +1,17 @@
 import type { MetadataRoute } from 'next';
 import { getSiteOrigin } from '@/lib/siteUrl';
+import { LANDINGS } from '@/lib/seo/landings';
+import { GUIDES } from '@/lib/seo/guides';
 
-const PAGES: [string, number][] = [['/', 1], ['/funkce', 0.8], ['/pro-klienty', 0.7], ['/cenik', 0.9], ['/zabezpeceni', 0.7], ['/obchodni-podminky', 0.3], ['/zpracovani-osobnich-udaju', 0.3], ['/ochrana-osobnich-udaju', 0.3]];
+const PAGES: [string, number][] = [['/', 1], ['/funkce', 0.8], ['/pro-klienty', 0.7], ['/cenik', 0.9], ['/zabezpeceni', 0.7], ['/navody', 0.7], ['/obchodni-podminky', 0.3], ['/zpracovani-osobnich-udaju', 0.3], ['/ochrana-osobnich-udaju', 0.3]];
 
 // Bez nastavené veřejné adresy (NEXT_PUBLIC_SITE_URL) se mapa webu nevytváří
 export default function sitemap(): MetadataRoute.Sitemap {
     const origin = getSiteOrigin();
     if (!origin) return [];
-    return PAGES.map(([path, priority]) => ({ url: `${origin}${path === '/' ? '' : path}`, priority }));
+    return [
+        ...PAGES.map(([path, priority]) => ({ url: `${origin}${path === '/' ? '' : path}`, priority })),
+        ...LANDINGS.map((l) => ({ url: `${origin}/${l.slug}`, priority: 0.8 })),
+        ...GUIDES.map((g) => ({ url: `${origin}/navody/${g.slug}`, lastModified: g.updated, priority: 0.6 })),
+    ];
 }
