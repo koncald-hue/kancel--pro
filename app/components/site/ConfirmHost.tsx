@@ -12,10 +12,11 @@ export default function ConfirmHost() {
     useEffect(() => { onConfirmRequest((r) => { setTyped(''); setReq(r); }); return () => onConfirmRequest(null); }, []);
     useEffect(() => {
         if (!req) return;
-        const t = window.setTimeout(() => cancelRef.current?.focus(), 20);
+        // Když se opisuje text, kurzor patří do pole; tlačítko Zpět se vybírá jen u dialogů bez pole
+        const t = req.typeToConfirm ? 0 : window.setTimeout(() => cancelRef.current?.focus(), 20);
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); close(false); } };
         window.addEventListener('keydown', onKey);
-        return () => { window.clearTimeout(t); window.removeEventListener('keydown', onKey); };
+        return () => { if (t) window.clearTimeout(t); window.removeEventListener('keydown', onKey); };
         // Jen při otevření dialogu: bez seznamu závislostí by se po každém napsaném znaku znovu vybralo tlačítko Zpět a pole by přišlo o kurzor
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [req]);
