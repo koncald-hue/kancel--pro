@@ -11,6 +11,8 @@ import { czk, entryAmount, formatMinutes, parseDuration, timesheetCsv, type Lawy
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { loadPriceItems, money, type PriceItem } from '@/lib/billing';
 import { useLawyer } from './LawyerGate';
+import DemoBadge from './DemoBadge';
+import { isDemoName } from '@/lib/demoMarks';
 
 const TIMER_KEY = 'lawyerTimer';
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -144,7 +146,7 @@ export default function LawyerTimesheet() {
                             {shown.map((e) => (
                                 <tr key={e.id}>
                                     <td className="whitespace-nowrap px-4 py-2.5 text-slate-700">{new Date(`${e.entry_date}T12:00:00`).toLocaleDateString('cs-CZ')}</td>
-                                    <td className="px-3 py-2.5"><span className="font-semibold text-slate-900">{caseTitle(e.case_id)}</span>{e.description && <span className="block text-xs text-slate-500">{e.description}</span>}</td>
+                                    <td className="px-3 py-2.5"><span className="font-semibold text-slate-900">{caseTitle(e.case_id)}</span>{isDemoName(e.description) && <DemoBadge className="ml-2" />}{e.description && <span className="block text-xs text-slate-500">{e.description}</span>}</td>
                                     <td className="px-3 py-2.5 text-slate-700">{formatMinutes(e.minutes)}</td>
                                     <td className="whitespace-nowrap px-3 py-2.5 text-slate-700">{czk(entryAmount(e))}</td>
                                     <td className="px-3 py-2.5"><label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-slate-600"><input type="checkbox" checked={e.billed} onChange={() => void toggleBilled(e)} className="h-4 w-4 accent-indigo-800" /> vyfakturováno</label></td>

@@ -52,7 +52,7 @@ export async function createDemoCase(userId: string, rate: number, opts: { vatRa
         id = (await createCase(userId, input)).id;
     }
     await Promise.all([
-        ...DEMO_PLAN.deadlines.map((d) => insertRow('case_deadlines', { case_id: id, user_id: userId, title: d.title, due_date: iso(d.offset), done: false })),
+        ...DEMO_PLAN.deadlines.map((d) => insertRow('case_deadlines', { case_id: id, user_id: userId, title: `${d.title} ${DEMO_MARK}`, due_date: iso(d.offset), done: false })),
         ...DEMO_PLAN.contacts.map((c) => insertRow('case_contacts', { case_id: id, user_id: userId, ...c })),
         ...DEMO_PLAN.entries.map((e) => insertRow('case_entries', { case_id: id, user_id: userId, kind: e.kind, title: e.title, body: e.body, happened_on: iso(e.offset) })),
         ...DEMO_PLAN.time.map((t) => supabase.from('time_entries').insert({ user_id: userId, case_id: id, entry_date: iso(t.offset), minutes: t.minutes, description: `${t.description} ${DEMO_MARK}`, rate }).then(({ error }) => { if (error) throw new Error(error.message); })),

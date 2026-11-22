@@ -32,7 +32,7 @@ export default function CaseFinanceTab({ item, userId, fail, patchItem }: TabPro
         try {
             const [e, all, c] = await Promise.all([
                 supabase.from('time_entries').select('*').eq('case_id', item.id).order('entry_date', { ascending: false }),
-                loadReceivables(vat),
+                loadReceivables(vat, { includeDemo: true }),
                 item.client_id ? supabase.from('lawyer_clients').select('hourly_rate').eq('id', item.client_id).maybeSingle() : Promise.resolve({ data: null }),
             ]);
             if (e.error) throw new Error(e.error.message);

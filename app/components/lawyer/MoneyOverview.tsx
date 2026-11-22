@@ -8,6 +8,7 @@ import { DUE_SOON_DAYS, loadReceivables, money, round2, type Receivable } from '
 import { czk, entryAmount, formatMinutes, type TimeEntry } from '@/lib/lawyer';
 import { useLawyer } from './LawyerGate';
 import ProfitSection from './ProfitSection';
+import { DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 function Tile({ label, value, note, tone, href }: { label: string; value: string; note?: string; tone?: string; href: string }) {
     return <Link href={href} className="rounded-2xl border border-slate-200 bg-white p-4 hover:border-indigo-300 sm:p-5"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p><p className={`mt-1 text-2xl font-bold ${tone ?? 'text-slate-900'}`}>{value}</p>{note && <p className="mt-0.5 text-xs text-slate-500">{note}</p>}</Link>;
@@ -23,7 +24,7 @@ export default function MoneyOverview() {
     useEffect(() => {
         let alive = true;
         (async () => {
-            const [r, e] = await Promise.all([loadReceivables(!!access.vat_payer), supabase.from('time_entries').select('*').eq('billed', false)]);
+            const [r, e] = await Promise.all([loadReceivables(!!access.vat_payer), supabase.from('time_entries').select('*').not('description', 'ilike', DEMO_MARK_LIKE).eq('billed', false)]);
             if (!alive) return;
             if (e.error) throw new Error(e.error.message);
             setRows(r); setEntries((e.data ?? []) as TimeEntry[]);

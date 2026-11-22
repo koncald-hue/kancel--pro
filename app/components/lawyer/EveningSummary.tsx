@@ -10,6 +10,7 @@ import { fmtMinutes, pragueDay, suggest, type Activity } from '@/lib/workLog';
 import { confirmSuggestions, daySummary } from '@/lib/workConfirm';
 import { primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
+import { DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 const UNIT_KEY = 'kancelar-vykaz-jednotka';
 const readUnit = () => { try { const v = Number(localStorage.getItem(UNIT_KEY)); return [5, 6, 10, 15, 30].includes(v) ? v : 15; } catch { return 15; } };
@@ -26,7 +27,7 @@ export default function EveningSummary() {
     const load = useCallback(async () => {
         const [a, t, cases, cl] = await Promise.all([
             supabase.from('work_activity').select('id, case_id, kind, label, words, at, time_entry_id, dismissed').gte('at', since()).order('at'),
-            supabase.from('time_entries').select('case_id, entry_date, minutes').gte('entry_date', pragueDay(since())),
+            supabase.from('time_entries').select('case_id, entry_date, minutes').not('description', 'ilike', DEMO_MARK_LIKE).gte('entry_date', pragueDay(since())),
             loadCases().catch(() => [] as LegalCase[]),
             supabase.from('lawyer_clients').select('*'),
         ]);

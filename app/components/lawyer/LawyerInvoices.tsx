@@ -10,6 +10,8 @@ import { supabase } from '@/lib/supabase';
 import { DUE_SOON_DAYS, RECEIVABLE_LABELS, loadReceivables, money, round2, todayIso, type Receivable, type ReceivableState } from '@/lib/billing';
 import { inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
+import DemoBadge from './DemoBadge';
+import { isDemoTitle } from '@/lib/demoMarks';
 
 const TONE: Record<ReceivableState, string> = { draft: 'bg-slate-100 text-slate-700', cancelled: 'bg-slate-100 text-slate-500', paid: 'bg-emerald-100 text-emerald-900', overdue: 'bg-rose-100 text-rose-900', due_soon: 'bg-amber-100 text-amber-900', partial: 'bg-sky-100 text-sky-900', open: 'bg-indigo-100 text-indigo-900' };
 const dateCz = (iso: string | null) => (iso ? new Date(`${iso}T12:00:00`).toLocaleDateString('cs-CZ') : '–');
@@ -37,7 +39,7 @@ export default function LawyerInvoices() {
     const vatNow = !!access.vat_payer;
 
     const load = useCallback(async () => {
-        try { setRows(await loadReceivables(vatNow)); setError(''); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se načíst.'); setRows([]); }
+        try { setRows(await loadReceivables(vatNow, { includeDemo: true })); setError(''); } catch (e) { setError(e instanceof Error ? e.message : 'Nepodařilo se načíst.'); setRows([]); }
     }, [vatNow]);
 
     useEffect(() => {
@@ -117,7 +119,7 @@ export default function LawyerInvoices() {
                     {list.map((r) => (
                         <tr key={r.id} className={r.state === 'overdue' ? 'bg-rose-50/50' : r.state === 'due_soon' ? 'bg-amber-50/50' : ''}>
                             <td className="px-3 py-2.5">{r.state !== 'draft' && r.state !== 'cancelled' && <input type="checkbox" checked={r.state === 'paid'} onChange={() => void togglePaid(r)} aria-label={`Zaplaceno: ${r.number ?? 'vyúčtování'}`} className="h-4 w-4 cursor-pointer accent-emerald-600" />}</td>
-                            <td className="px-3 py-2.5 font-semibold"><Link href={`/kancelar/faktury/${r.id}`} className="text-indigo-800 hover:underline">{r.number ?? 'Koncept'}</Link>{r.title && <span className="block text-xs font-normal text-slate-500">{r.title}</span>}</td>
+                            <td className="px-3 py-2.5 font-semibold"><Link href={`/kancelar/faktury/${r.id}`} className="text-indigo-800 hover:underline">{r.number ?? 'Koncept'}</Link>{isDemoTitle(r.title) && <DemoBadge className="ml-2" />}{r.title && <span className="block text-xs font-normal text-slate-500">{r.title}</span>}</td>
                             <td className="px-3 py-2.5 text-slate-700">{r.client_snapshot.name || '–'}{r.case_id && <Link href={`/kancelar/veci/${r.case_id}`} className="block text-xs font-semibold text-indigo-800 hover:underline">Otevřít spis</Link>}</td>
                             <td className={`px-3 py-2.5 ${r.state === 'overdue' ? 'font-bold text-rose-700' : r.state === 'due_soon' ? 'font-semibold text-amber-800' : 'text-slate-700'}`}>{dueText(r)}</td>
                             <td className="px-3 py-2.5"><span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${TONE[r.state]}`}>{RECEIVABLE_LABELS[r.state]}</span>{r.state === 'overdue' && r.due_date && r.currency === 'CZK' && <Link href={`/kancelar/kalkulacky?tab=urok&jistina=${r.outstanding}&splatnost=${r.due_date}${r.case_id ? `&case=${r.case_id}` : ''}`} className="mt-1 block text-xs font-semibold text-rose-800 hover:underline">Spočítat úrok z prodlení</Link>}</td>

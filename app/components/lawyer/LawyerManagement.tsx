@@ -9,6 +9,7 @@ import { loadCases, type LegalCase } from '@/lib/cases';
 import { czk, formatMinutes } from '@/lib/lawyer';
 import { teamStats } from '@/lib/teamProfit';
 import { byCase, byWeek, changePct, forecast, inMonth, monthEnd, monthOf, monthStart, shiftMonth, sumEntries, type Entry } from '@/lib/mgmt';
+import { DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 type Member = { user_id: string; name: string; shared: boolean; minutes: number | null; amount: number | null; billed_minutes: number | null };
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -50,7 +51,7 @@ export default function LawyerManagement() {
         let alive = true;
         (async () => {
             const [e, c, f] = await Promise.all([
-                supabase.from('time_entries').select('case_id, entry_date, minutes, rate, billed').gte('entry_date', monthStart(prev)).lte('entry_date', monthEnd(ym)),
+                supabase.from('time_entries').select('case_id, entry_date, minutes, rate, billed').not('description', 'ilike', DEMO_MARK_LIKE).gte('entry_date', monthStart(prev)).lte('entry_date', monthEnd(ym)),
                 loadCases().catch(() => [] as LegalCase[]),
                 supabase.rpc('firm_overview'),
             ]);

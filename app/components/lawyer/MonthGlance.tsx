@@ -6,6 +6,7 @@ import { TrendingDown, TrendingUp } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { czk, formatMinutes } from '@/lib/lawyer';
 import { changePct, forecast, inMonth, monthEnd, monthOf, monthStart, shiftMonth, sumEntries, type Entry } from '@/lib/mgmt';
+import { DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
@@ -14,7 +15,7 @@ export default function MonthGlance() {
     const [entries, setEntries] = useState<Entry[] | null>(null);
     useEffect(() => {
         let alive = true; const ym = monthOf(todayIso());
-        supabase.from('time_entries').select('case_id, entry_date, minutes, rate, billed').gte('entry_date', monthStart(shiftMonth(ym, -1))).lte('entry_date', monthEnd(ym))
+        supabase.from('time_entries').select('case_id, entry_date, minutes, rate, billed').not('description', 'ilike', DEMO_MARK_LIKE).gte('entry_date', monthStart(shiftMonth(ym, -1))).lte('entry_date', monthEnd(ym))
             .then(({ data, error }) => { if (alive && !error) setEntries((data ?? []) as Entry[]); });
         return () => { alive = false; };
     }, []);

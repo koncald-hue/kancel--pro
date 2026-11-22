@@ -9,6 +9,7 @@ import type { LegalCase } from '@/lib/cases';
 import { fmtMinutes, pragueDay, suggest, type Activity, type Suggestion } from '@/lib/workLog';
 import { confirmSuggestions } from '@/lib/workConfirm';
 import { inputCls, primaryBtn } from '../situation/caseUi';
+import { DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 const UNIT_KEY = 'kancelar-vykaz-jednotka';
 const DAYS = 14;
@@ -18,7 +19,7 @@ const sinceDay = () => pragueDay(since());
 async function loadData(): Promise<{ acts: Activity[]; logged: { case_id: string | null; entry_date: string; minutes: number }[] } | null> {
     const [a, t] = await Promise.all([
         supabase.from('work_activity').select('id, case_id, kind, label, words, at, time_entry_id, dismissed').gte('at', since()).order('at'),
-        supabase.from('time_entries').select('case_id, entry_date, minutes').gte('entry_date', sinceDay()),
+        supabase.from('time_entries').select('case_id, entry_date, minutes').not('description', 'ilike', DEMO_MARK_LIKE).gte('entry_date', sinceDay()),
     ]);
     if (a.error) return null;
     return { acts: (a.data ?? []) as Activity[], logged: (t.data ?? []) as { case_id: string | null; entry_date: string; minutes: number }[] };

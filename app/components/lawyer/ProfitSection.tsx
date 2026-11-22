@@ -9,6 +9,7 @@ import { loadReceivables, money, todayIso } from '@/lib/billing';
 import { groupProfit, type Entry, type Group, type Inv } from '@/lib/profit';
 import { useLawyer } from './LawyerGate';
 import { inputCls } from '../situation/caseUi';
+import { DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 const KEY = 'kancelar-cost-rate';
 type Period = 'month' | 'quarter' | 'year' | 'all';
@@ -33,7 +34,7 @@ export default function ProfitSection() {
     useEffect(() => {
         let alive = true;
         (async () => {
-            const [cases, e, inv] = await Promise.all([loadCases(), supabase.from('time_entries').select('case_id, entry_date, minutes, rate, billed'), loadReceivables(!!access.vat_payer)]);
+            const [cases, e, inv] = await Promise.all([loadCases(), supabase.from('time_entries').select('case_id, entry_date, minutes, rate, billed').not('description', 'ilike', DEMO_MARK_LIKE), loadReceivables(!!access.vat_payer)]);
             if (alive) setData({ cases, entries: (e.data ?? []) as Entry[], invoices: inv.map((i) => ({ issue_date: i.issue_date, case_id: i.case_id ?? null, status: i.status, state: i.state, base: i.base, total: i.total, paid: i.paid, currency: i.currency })) });
         })().catch(() => { if (alive) setData({ cases: [], entries: [], invoices: [] }); });
         return () => { alive = false; };

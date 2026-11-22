@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { buildAlerts, type Alert } from '@/lib/attention';
 import { entryAmount } from '@/lib/lawyer';
 import { todayIso } from '@/lib/billing';
+import { DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 // Na stránce Dnes: rozpočty věcí, které se blíží nebo jsou překročené, a plné moci, které končí. Bez upozornění se nezobrazí nic.
 export default function AttentionAlerts() {
@@ -16,7 +17,7 @@ export default function AttentionAlerts() {
         (async () => {
             const [c, t, p] = await Promise.all([
                 supabase.from('cases').select('id, title, budget_czk, budget_warn_pct').not('budget_czk', 'is', null).eq('status', 'open'),
-                supabase.from('time_entries').select('case_id, minutes, rate').not('case_id', 'is', null),
+                supabase.from('time_entries').select('case_id, minutes, rate').not('description', 'ilike', DEMO_MARK_LIKE).not('case_id', 'is', null),
                 supabase.from('powers_of_attorney').select('id, grantor, case_id, valid_from, valid_to').not('valid_to', 'is', null),
             ]);
             // Dokud migrace 20261119_27 není spuštěná, dotazy selžou a upozornění se jen nezobrazí

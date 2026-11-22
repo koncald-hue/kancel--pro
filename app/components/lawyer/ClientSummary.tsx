@@ -31,7 +31,7 @@ export default function ClientSummary({ client }: { client: LawyerClient }) {
             const ids = cases.map((c) => c.id);
             const [e, inv, q, w] = await Promise.all([
                 ids.length ? supabase.from('time_entries').select('*').in('case_id', ids) : Promise.resolve({ data: [] }),
-                loadReceivables(!!access.vat_payer).catch(() => [] as Receivable[]),
+                loadReceivables(!!access.vat_payer, { includeDemo: true }).catch(() => [] as Receivable[]),
                 supabase.from('lawyer_inquiries').select('id', { count: 'exact', head: true }).or(`email.eq.${client.email || '__none__'},name.ilike.${client.name.replace(/[,()%]/g, ' ')}`),
                 loadClientInsolvency(),
             ]);

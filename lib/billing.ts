@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { isDemoTitle } from './demoMarks';
 
 export type PriceKind = 'sluzba' | 'produkt' | 'vydaj';
 export type PriceItem = { id: string; name: string; description: string; kind: PriceKind; unit: string; unit_price: number; vat_rate: number; active: boolean };
@@ -117,7 +118,8 @@ export function receivableState(inv: Pick<Invoice, 'status' | 'due_date'>, total
 }
 
 // Všechna vyúčtování s částkami, zaplaceno a zbývá (pro přehledy a nástěnku)
-export async function loadReceivables(vatPayerNow: boolean): Promise<Receivable[]> {
+// Ukázkové vyúčtování (název začíná „Ukázka:“) se do přehledů peněz nepočítá; jen když se výslovně chce (seznam faktur, spis, klient).
+export async function loadReceivables(vatPayerNow: boolean, opts: { includeDemo?: boolean } = {}): Promise<Receivable[]> {
     const [inv, lines, pays] = await Promise.all([
         supabase.from('invoices').select('*').order('created_at', { ascending: false }),
         supabase.from('invoice_lines').select('invoice_id, qty, unit_price, vat_rate'),
@@ -129,7 +131,7 @@ export async function loadReceivables(vatPayerNow: boolean): Promise<Receivable[
     const paidBy = new Map<string, number>();
     // Chybějící tabulka plateb (nespuštěné SQL) znamená nulové platby
     if (!pays.error) for (const p of (pays.data ?? []) as { invoice_id: string; amount: number }[]) paidBy.set(p.invoice_id, round2((paidBy.get(p.invoice_id) ?? 0) + Number(p.amount)));
-    return ((inv.data ?? []) as Invoice[]).map((i) => {
+    return ((inv.data ?? []) as Invoice[]).filter((i) => opts.includeDemo || !isDemoTitle(i.title)).map((i) => {
         const calc = computeTotals(byInvoice.get(i.id) ?? [], i.status === 'draft' ? vatPayerNow : i.supplier_snapshot.vat_payer === true);
         const total = calc.total;
         const paid = i.status === 'paid' && !paidBy.get(i.id) ? total : (paidBy.get(i.id) ?? 0);

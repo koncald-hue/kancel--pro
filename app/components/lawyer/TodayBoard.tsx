@@ -14,6 +14,7 @@ import DeadlineDialog, { MIGRATION_HINT, type DeadlineTarget } from '../situatio
 import { useLawyer } from './LawyerGate';
 import ReviewPrompt from './ReviewPrompt';
 import NoticesCard from './NoticesCard';
+import { DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 type Data = {
     cases: LegalCase[]; customs: CaseDeadline[]; entries: TimeEntry[];
@@ -32,7 +33,7 @@ async function count(table: string): Promise<number | null> {
 async function loadToday(): Promise<Data> {
     const [cases, customs] = await Promise.all([loadCases(), loadAllDeadlines().catch(() => [] as CaseDeadline[])]);
     const [entries, inquiries, messages, requests, uploads, signatures, isds, mail] = await Promise.all([
-        rows<TimeEntry>(supabase.from('time_entries').select('*').eq('billed', false)),
+        rows<TimeEntry>(supabase.from('time_entries').select('*').not('description', 'ilike', DEMO_MARK_LIKE).eq('billed', false)),
         rows<InquiryRow>(supabase.from('lawyer_inquiries').select('*').in('status', ['new', 'accepted']).order('created_at', { ascending: false }).limit(200)),
         // Jen metadata zpráv (kdo, kdy, přečteno); obsah se pro přehled nenačítá
         rows<MessageRow>(supabase.from('client_messages').select('case_id, from_client, read, created_at').order('created_at', { ascending: false }).limit(1000)),

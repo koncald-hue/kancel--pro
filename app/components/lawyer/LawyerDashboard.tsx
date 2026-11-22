@@ -23,6 +23,7 @@ import TodayBoard from './TodayBoard';
 import { scheduleGoogleSync } from '@/lib/googleSync';
 import { AGENDA_DAYS } from '@/lib/today';
 import { ghostBtn } from '../situation/caseUi';
+import { DEMO_MARK_LIKE } from '@/lib/demoMarks';
 
 function Tile({ label, value, note, tone }: { label: string; value: string; note?: string; tone?: string }) {
     return (
@@ -60,7 +61,7 @@ export default function LawyerDashboard() {
             const cases = await loadCases();
             let customs: CaseDeadline[] = [];
             try { customs = await loadAllDeadlines(); } catch { /* lhůty nemusí být zapnuté */ }
-            const { data: entries, error: entryError } = await supabase.from('time_entries').select('*').eq('billed', false);
+            const { data: entries, error: entryError } = await supabase.from('time_entries').select('*').not('description', 'ilike', DEMO_MARK_LIKE).eq('billed', false);
             if (entryError) throw new Error(entryError.message);
             // Poptávky a zprávy klientů: když tabulky ještě nejsou, počítá se nula
             const inquiries = await supabase.from('lawyer_inquiries').select('id', { count: 'exact', head: true }).eq('status', 'new');
