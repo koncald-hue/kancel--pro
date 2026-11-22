@@ -137,7 +137,7 @@ export default function LawyerSettings() {
             </section>
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Fakturační údaje">
                 <h2 className="text-lg font-bold text-slate-900">Fakturační údaje</h2>
-                <p className="mt-1 text-sm text-slate-600">Uvádějí se na vašich vyúčtováních a fakturách (spolu s jménem a adresou z profilu).</p>
+                <p className="mt-1 text-sm text-slate-600">Uvádějí se na vašich vyúčtováních a fakturách (spolu se jménem a adresou z profilu).</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <div className="sm:col-span-2"><AresPicker compact onPick={(c) => setBill((b) => ({ ...b, ico: c.ico, dic: c.dic || b.dic }))} label="Doplnit IČO a DIČ z ARES" /></div>
                     <label className="block text-xs font-semibold text-slate-600">IČO<input value={bill.ico} onChange={(e) => setBill((b) => ({ ...b, ico: e.target.value }))} maxLength={20} className={`${inputCls} mt-1 font-normal`} /></label>

@@ -21,7 +21,7 @@ const STEPS: [string, string][] = [['Vyzkoušíte 14 dní zdarma', 'Zaregistruje
 
 const FAQ: [string, string][] = [
     ['Musím při registraci zadat kartu?', 'Ne. Zkušební období trvá 14 dní a nechce po vás žádné platební údaje.'],
-    ['Obnovuje se předplatné samo?', 'Jen když si to při platbě zvolíte. Tři dny předem vám pošleme upozornění a obnovování můžete kdykoli zrušit v Nastavení. Bez něj platíte předem na zvolené období a nic se nestrhává.'],
+    ['Obnovuje se předplatné samo?', 'Jen když ho při platbě kartou necháte zapnuté (je předvolené). Tři dny předem vám pošleme upozornění a obnovování můžete kdykoli zrušit v Nastavení. Bez něj platíte předem na zvolené období a nic se nestrhává.'],
     ['Co se stane s daty, když přestanu platit?', 'Funkce se zamknou, ale vaše data zůstanou uložená k nahlížení a stažení. Po obnovení předplatného se zase odemknou.'],
     ['Liší se plány funkcemi?', 'Ne. Měsíční, půlroční i roční plán mají úplně stejné funkce. Delší období je jen levnější za měsíc.'],
     ['Je cena s DPH?', 'Zda a v jaké výši je DPH, uvidíte u objednávky a na daňovém dokladu, který po zaplacení dostanete.'],

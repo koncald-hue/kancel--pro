@@ -110,7 +110,7 @@ export default function CaseFolder({ variant = 'citizen' }: { variant?: 'citizen
             ) : (
                 <>
                     <h1 className="text-3xl font-bold text-slate-900">Moje případy</h1>
-                    <p className="mt-1 text-sm text-slate-600">Kompletní spis ke každému spisu: soubory, lhůty, chronologie a kontakty. Vidíte ho jen vy.</p>
+                    <p className="mt-1 text-sm text-slate-600">Ke každému spisu máte soubory, lhůty, chronologii a kontakty. Vidíte je jen vy.</p>
                 </>
             )}
 

@@ -24,7 +24,7 @@ export function DatovkaMock() {
                     <p className="mt-1 text-[13px] leading-relaxed text-slate-700">„Proti tomuto rozsudku lze podat odvolání <mark className="rounded bg-amber-100 px-0.5 text-slate-900">do 15 dnů ode dne doručení</mark> jeho písemného vyhotovení…“</p>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-indigo-50 p-3">
-                    <div><p className="font-semibold text-indigo-950">Odvolání</p><p className="text-xs text-indigo-900/70">Konec lhůty pondělí 7. 12. 2026 (posunuto z neděle)</p></div>
+                    <div><p className="font-semibold text-indigo-950">Odvolání</p><p className="text-xs text-indigo-900/70">Konec lhůty pondělí 7. 12. 2026 (posunuto ze soboty)</p></div>
                     <span className="rounded-lg bg-indigo-700 px-3 py-1.5 text-xs font-bold text-white">Uložit do spisu</span>
                 </div>
             </div>

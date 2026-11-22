@@ -22,7 +22,7 @@ export default function LawyerAddins() {
                 <p className="mt-3 text-sm leading-relaxed text-slate-600">Jak na to: stáhněte si soubor (manifest) pro Word nebo Outlook a přidejte ho v daném programu v nabídce Doplňky, Moje doplňky, Nahrát můj doplněk. Stačí jednou, pak doplněk najdete na kartě Kancelář.</p>
                 {!okOrigin && (
                     <div className="mt-3">
-                        <p role="alert" className="rounded-lg bg-amber-50 p-3 text-xs text-amber-950">Doplňky Office funguje jen na zabezpečené adrese (HTTPS). Tuto verzi Kanceláře otevíráte na adrese bez HTTPS, proto je stažení vypnuté. Na ostré adrese kanceláře bude fungovat hned.</p>
+                        <p role="alert" className="rounded-lg bg-amber-50 p-3 text-xs text-amber-950">Doplňky Office fungují jen na zabezpečené adrese (HTTPS). Tuto verzi Kanceláře otevíráte na adrese bez HTTPS, proto je stažení vypnuté. Na ostré adrese kanceláře bude fungovat hned.</p>
                         <label className="mt-2 block text-xs font-semibold text-slate-600">Adresa Kanceláře (jen pro vyzkoušení)
                             <input value={origin} onChange={(e) => setOrigin(e.target.value.trim())} className={`${inputCls} mt-1 max-w-sm font-normal`} aria-label="Adresa aplikace" />
                         </label>
@@ -37,7 +37,7 @@ export default function LawyerAddins() {
                 <h3 className="font-bold text-slate-900">Jak doplněk přidat</h3>
                 <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-slate-700">
                     <li><strong>Word:</strong> Vložit → Doplňky → Moje doplňky → Nahrát můj doplněk, vyberte stažený soubor. Podokno Kancelář se otevře z karty Domů.</li>
-                    <li><strong>Outlook:</strong> Domů → Získat doplňky → Moje doplňky → Vlastní doplňky → Přidat z souboru. Doplněk pak uvidíte u otevřené zprávy.</li>
+                    <li><strong>Outlook:</strong> Domů → Získat doplňky → Moje doplňky → Vlastní doplňky → Přidat ze souboru. Doplněk pak uvidíte u otevřené zprávy.</li>
                     <li>V podokně se přihlaste svým účtem (i s druhým faktorem). Přihlášení platí jen v podokně Office.</li>
                     <li>Správce Microsoft 365 může doplněk nasadit celé kanceláři najednou stejným souborem.</li>
                 </ol>

@@ -75,7 +75,7 @@ export default function FirmSettings() {
             {canManageFirm(role) && (
                 <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Správa členů">
                     <h2 className="text-lg font-bold text-slate-900">Členové a pozvánky</h2>
-                    <p className="mt-1 text-sm text-slate-600">{isOwner ? 'Zvete kolegy, odebírejte členy, přidělujte role (správce, člen) a pořizujte balíček.' : 'Zvete kolegy a odebírejte členy. Role a balíček spravuje vedoucí.'}</p>
+                    <p className="mt-1 text-sm text-slate-600">{isOwner ? 'Zvěte kolegy, odebírejte členy, přidělujte role (správce, člen) a pořizujte balíček.' : 'Zvete kolegy a odebírejte členy. Role a balíček spravuje vedoucí.'}</p>
                     <Link href="/kancelar/tym" className={`${primaryBtn} mt-3 inline-flex`}>Otevřít Tým</Link>
                 </section>
             )}

@@ -27,7 +27,7 @@ export default function Anonymizer() {
         <div className="mx-auto max-w-4xl space-y-5">
             <header>
                 <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900"><EyeOff size={22} className="text-indigo-800" /> Anonymizér</h1>
-                <p className="mt-1 text-sm text-slate-600">Vložte text, zakryjeme rodná čísla, účty, e-maily, telefony, adresy a jména, která potvrdíte. Text s značkami pak můžete bezpečně vložit do AI. Odpověď si tu vrátíte zpět se skutečnými jmény. Všechno probíhá jen ve vašem prohlížeči, nic se neodesílá ani neukládá.</p>
+                <p className="mt-1 text-sm text-slate-600">Vložte text, zakryjeme rodná čísla, účty, e-maily, telefony, adresy a jména, která potvrdíte. Text se značkami pak můžete bezpečně vložit do AI. Odpověď si tu vrátíte zpět se skutečnými jmény. Všechno probíhá jen ve vašem prohlížeči, nic se neodesílá ani neukládá.</p>
             </header>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5">

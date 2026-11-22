@@ -140,7 +140,7 @@ export default function LawyerTeam() {
 
                     <section className="rounded-2xl border border-slate-200 bg-white p-6">
                         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><UserPlus size={18} className="text-indigo-700" /> Členové ({overview?.members?.length ?? 0}, z toho {(overview?.members ?? []).filter((m) => m.trainee).length} koncipientů)</h2>
-                        <p className="mt-1 text-xs text-slate-500">Vidíte jen jméno, e-mail, stav profilu a stav přístupu. Spisy, klienty, soubory ani zprávy členů nevidíte. Členové spolu mohou šifrovaně chatovat a sdílet spisu v záložce Chat.</p>
+                        <p className="mt-1 text-xs text-slate-500">Vidíte jen jméno, e-mail, stav profilu a stav přístupu. Spisy, klienty, soubory ani zprávy členů nevidíte. Členové spolu mohou šifrovaně chatovat a sdílet spisy v záložce Chat.</p>
                         <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 text-sm">
                             {(overview?.members ?? []).map((m) => (
                                 <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">

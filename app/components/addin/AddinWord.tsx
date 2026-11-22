@@ -104,7 +104,7 @@ function Panel() {
             )}
             {msg && <p role="status" className="flex items-start gap-1.5 text-xs font-semibold text-emerald-800"><CheckCircle2 size={14} className="mt-px shrink-0" aria-hidden="true" /> {msg}</p>}
             {err && <p role="alert" className="text-xs font-semibold text-rose-800">{err}</p>}
-            <p className="text-xs leading-relaxed text-slate-500">Dokument se uloží do souborů spisu (stejný spis ve Vaší Kanceláři) a při stejném názvu vznikne nová verze.</p>
+            <p className="text-xs leading-relaxed text-slate-500">Dokument se uloží do souborů spisu (stejný spis ve vaší Kanceláři) a při stejném názvu vznikne nová verze.</p>
         </div>
     );
 }

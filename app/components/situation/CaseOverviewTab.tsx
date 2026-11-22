@@ -30,7 +30,7 @@ export function caseHints(item: TabProps['item'], bundle: TabProps['bundle']): {
     if (bundle.files.length === 0) hints.push({ tone: 'tip', text: 'Nahrajte do spisu doručený dokument nebo jeho fotku, ať je vše na jednom místě.' });
     if (bundle.entries.filter((e) => e.kind === 'event').length === 0) hints.push({ tone: 'tip', text: 'Zapište do chronologie první událost, třeba kdy vám došlo oznámení.' });
     if (bundle.contacts.length === 0) hints.push({ tone: 'tip', text: 'Přidejte kontakt na úřad nebo soud, který spis vyřizuje.' });
-    if (item.steps.length > 0 && item.steps.every((s) => s.done) && item.status === 'open') hints.push({ tone: 'tip', text: 'Všechny kroky jsou hotové. Můžete případ označit jako vyřešený.' });
+    if (item.steps.length > 0 && item.steps.every((s) => s.done) && item.status === 'open') hints.push({ tone: 'tip', text: 'Všechny kroky jsou hotové. Můžete spis označit jako vyřešený.' });
     return hints;
 }
 

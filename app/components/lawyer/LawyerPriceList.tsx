@@ -79,7 +79,7 @@ export default function LawyerPriceList() {
                     <button type="submit" className={primaryBtn}>{editing ? <Check size={16} /> : <Plus size={16} />} {editing ? 'Uložit změny' : 'Přidat do ceníku'}</button>
                     {editing && <button type="button" onClick={() => { setEditing(null); setForm({ ...EMPTY, vat: form.vat }); }} className={ghostBtn}><X size={15} /> Zrušit</button>}
                 </div>
-                {!access.vat_payer && <p className="mt-3 text-xs text-slate-500">Nejste plátce DPH (nastavení v Nastavení, Fakturační údaje), takže se DPH ve vyúčtování nepočítá, ať je tu zvolená sazba jakákoli.</p>}
+                {!access.vat_payer && <p className="mt-3 text-xs text-slate-500">Nejste plátce DPH (změníte v Nastavení → Fakturační údaje), takže se DPH ve vyúčtování nepočítá, ať je tu zvolená sazba jakákoli.</p>}
             </form>
 
             {items === null ? <p className="text-sm text-slate-500" role="status">Načítám…</p> : items.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">Zatím žádné položky. Přidejte třeba svou hodinovou sazbu.</p> : (

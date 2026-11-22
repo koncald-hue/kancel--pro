@@ -43,7 +43,7 @@ export default function LawyerTemplates() {
         <div className="space-y-5">
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><ListChecks size={18} className="text-indigo-700" aria-hidden="true" /> Šablony úkolů</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Šablonu vyberete při založení spisu nebo ji použijete v kartě Lhůty existující spisu. Úkoly dostanou termín podle posunu ode dne založení nebo od data události (např. jednání), případně jen v pracovních dnech. Jde o interní úkoly, ne o zákonné lhůty: ty zadávejte zvlášť a potvrzujte.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Šablonu vyberete při založení spisu nebo ji použijete v kartě Lhůty existujícího spisu. Úkoly dostanou termín podle posunu ode dne založení nebo od data události (např. jednání), případně jen v pracovních dnech. Jde o interní úkoly, ne o zákonné lhůty: ty zadávejte zvlášť a potvrzujte.</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" onClick={() => setEditing({ id: null, name: '', items: [blank()], isDefault: !list?.some((t) => t.isDefault) })} className={primaryBtn}><Plus size={15} /> Nová šablona</button>
                     {list?.length === 0 && <button type="button" onClick={() => void addStarters()} className={ghostBtn}>Přidat dvě vzorové šablony</button>}

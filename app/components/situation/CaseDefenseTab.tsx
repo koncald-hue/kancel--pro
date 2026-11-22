@@ -186,7 +186,7 @@ export default function CaseDefenseTab({ item, bundle, lawyer, patchItem, fail }
                     </Block>
 
                     {defense.when_lawyer && <p className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm leading-relaxed text-rose-950"><AlertTriangle size={17} className="mt-0.5 shrink-0" /> {defense.when_lawyer}</p>}
-                    <p className="text-xs leading-relaxed text-slate-500">Jde o automaticky vytvořený orientační podklad, nikoli právní radu ani záruku úspěchu. Zkontrolujte ho s dokumenty ve spisu a u vážných spisů (trestní řízení, soud, vyšší částky) se poraďte s advokátem nebo bezplatnou právní poradnou.</p>
+                    <p className="text-xs leading-relaxed text-slate-500">Jde o automaticky vytvořený orientační podklad, nikoli právní radu ani záruku úspěchu. Zkontrolujte ho s dokumenty ve spisu a s vlastním odborným posouzením.</p>
                 </>
             )}
         </div>
