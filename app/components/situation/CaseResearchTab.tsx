@@ -6,6 +6,8 @@ import { AlertTriangle, BookOpenCheck, Check, ExternalLink, FileText, KeyRound, 
 import { supabase } from '@/lib/supabase';
 import { insertRow } from '@/lib/caseFile';
 import { useMasterKey } from '@/lib/useE2ee';
+import E2eeBox from './E2eeBox';
+import { useLawyer } from '../lawyer/LawyerGate';
 import { disconnect, legalApi, loadConnection, startConnect, validToken, type Connection } from '@/lib/legalClient';
 import { anonymize, MAX_DOCS, type Evaluation, type NameRule, type Source } from '@/lib/legalResearch';
 import { MAX_TOTAL_CHARS, extOf, extractText, isExtractable } from '@/lib/docText';
@@ -21,6 +23,7 @@ const TONE: Record<string, string> = { silný: 'bg-emerald-100 text-emerald-900'
 // Právní rešerše ve věci: dotaz do právní databáze DirectCase (vlastní účet advokáta), anonymizovaný vstup, ověřené citace
 export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps) {
     const master = useMasterKey();
+    const { access } = useLawyer();
     const [conn, setConn] = useState<Connection | null | 'broken' | undefined>(undefined);
     const [connError, setConnError] = useState('');
     const [question, setQuestion] = useState('');
@@ -114,11 +117,9 @@ export default function CaseResearchTab({ item, bundle, userId, fail }: TabProps
     const sourceChip = (id: string, r: Result) => <a key={id} href={`#res-${id}`} className="rounded-md bg-indigo-50 px-1.5 py-0.5 text-xs font-bold text-indigo-900 hover:bg-indigo-100" title={r.sources.find((s) => s.id === id)?.title}>{id}</a>;
 
     if (!master) return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <KeyRound size={24} className="text-indigo-700" aria-hidden="true" />
-            <h2 className="mt-3 text-lg font-bold text-slate-900">Nejdřív odemkněte šifrovací heslo</h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">Přihlášení k právní databázi se ukládá zašifrované vaším šifrovacím heslem. Odemkněte ho v Nastavení.</p>
-            <a href="/kancelar/nastaveni" className={`${primaryBtn} mt-4`}>Otevřít Nastavení</a>
+        <div className="space-y-3">
+            <p className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600"><KeyRound size={16} className="shrink-0 text-indigo-700" aria-hidden="true" /> Přihlášení k právní databázi se ukládá zašifrované vaším šifrovacím heslem. Nastavte ho nebo odemkněte tady.</p>
+            <E2eeBox access={access} onChanged={() => undefined} />
         </div>
     );
     if (conn === undefined) return <p className="text-sm text-slate-500" role="status">Načítám…</p>;

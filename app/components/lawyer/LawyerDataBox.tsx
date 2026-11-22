@@ -19,6 +19,7 @@ import DocActions from './DocActions';
 import { STATUS_LABELS, isDeleted, statusTone, type BoxHit, type Downloaded, type IsdsEnv, type Record_ } from '@/lib/isds';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
+import E2eeBox from '../situation/E2eeBox';
 
 type Account = { id: string; label: string; env: IsdsEnv; enc_cred: string };
 type Cred = { login: string; password: string; method?: 'password' | 'mobile_key' };
@@ -82,7 +83,7 @@ const fromBase64 = (b64: string, mime: string, name: string) => { const bin = at
 
 // Datová schránka: příjem zpráv, uložení příloh do spisu a odesílání. Přihlašovací údaje jsou zašifrované vaším šifrovacím heslem.
 export default function LawyerDataBox() {
-    const { userId } = useLawyer();
+    const { userId, access } = useLawyer();
     const master = useMasterKey();
     const [accounts, setAccounts] = useState<Account[] | null | undefined>(undefined);
     const [creds, setCreds] = useState<Record<string, Cred>>({});
@@ -112,11 +113,9 @@ export default function LawyerDataBox() {
     if (accounts === null) return <p role="alert" className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-slate-700">{error}</p>;
 
     if (!master) return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <KeyRound size={26} className="text-indigo-700" aria-hidden="true" />
-            <h2 className="mt-3 text-lg font-bold text-slate-900">Nejdřív odemkněte šifrovací heslo</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">Přihlašovací údaje k datové schránce jsou uložené zašifrované vaším šifrovacím heslem, takže je nikdo jiný (ani provozovatel služby) nepřečte. Odemkněte ho v Nastavení a vraťte se sem.</p>
-            <a href="/kancelar/nastaveni" className={`${primaryBtn} mt-4`}>Otevřít Nastavení</a>
+        <div className="space-y-3">
+            <p className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600"><KeyRound size={16} className="shrink-0 text-indigo-700" aria-hidden="true" /> Přihlašovací údaje k datové schránce jsou uložené zašifrované vaším šifrovacím heslem, takže je nikdo jiný (ani provozovatel služby) nepřečte. Nastavte ho nebo odemkněte tady.</p>
+            <E2eeBox access={access} onChanged={() => undefined} />
         </div>
     );
 

@@ -12,6 +12,7 @@ import { czk } from '@/lib/lawyer';
 import { ROLE_LABELS } from '@/lib/firm';
 import { PLANS, planName, type PlanId, type Prices } from '@/lib/plans';
 import { useLawyer } from './LawyerGate';
+import E2eeBox from '../situation/E2eeBox';
 import ProfileForm from './ProfileForm';
 import GoogleCalendarCard from './GoogleCalendarCard';
 import MicrosoftCalendarCard from './MicrosoftCalendarCard';
@@ -214,6 +215,11 @@ export default function LawyerSettings() {
             <CalendarFeedCard />
             </>)}
             {sec === 'zabezpeceni' && (<>
+            <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Šifrovací heslo">
+                <h2 className="text-lg font-bold text-slate-900">Šifrovací heslo</h2>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Chrání komunikaci s klienty, přihlášení k datové schránce, e-mailu a dalším službám. Zná ho jen váš prohlížeč, provozovatel ho nevidí. Bez něj ani bez záložního kódu se zašifrovaná data obnovit nedají.</p>
+                <div className="mt-3"><E2eeBox access={access} onChanged={() => undefined} /></div>
+            </section>
             <MfaCard />
             <Link href="/kancelar/audit" className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 text-sm hover:border-indigo-300"><span><strong className="block text-base text-slate-900">Auditní záznam</strong><span className="text-slate-600">Kdo kdy co ve spisech otevřel nebo změnil, s exportem do CSV.</span></span><span className="font-semibold text-indigo-800">Otevřít →</span></Link>
             <section className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
