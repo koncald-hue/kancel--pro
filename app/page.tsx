@@ -6,7 +6,7 @@ import { JsonLd, organizationLd, softwareLd } from '@/lib/seo/jsonLd';
 
 export const metadata: Metadata = {
     title: 'Software pro advokáty: spisy, lhůty a faktury | Kancelář Pro',
-    description: 'Software pro advokáty a advokátní kanceláře: spisy, lhůty, datové schránky, e-maily, výkazy práce a faktury na jednom místě. 14 dní zdarma, bez karty.',
+    description: 'Software pro advokáty: spisy, lhůty, datové schránky, výkazy a faktury na jednom místě. A noví klienti z bezplatné poradny Studuj právo, bez provizí. 14 dní zdarma.',
     alternates: { canonical: '/' },
 };
 

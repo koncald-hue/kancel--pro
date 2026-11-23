@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, CalendarClock, Check, FolderOpen, Lock, Receipt, Scale, ShieldCheck, Smartphone, Undo2, Users, X } from 'lucide-react';
+import { ArrowRight, CalendarClock, Check, FolderOpen, Lock, Receipt, Scale, ShieldCheck, Smartphone, Undo2, UserPlus, Users, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { Prices } from '@/lib/plans';
 import PricingTeaser from './PricingTeaser';
@@ -24,7 +24,7 @@ const CMP: [string, string, string][] = [
     ['Data o klientech', 'Rozeseta po složkách a schránkách', 'Na jednom místě, šifrovaná'],
 ];
 
-const ALSO = ['Datové schránky', 'E-mail ve spisu', 'Podpis dokumentů', 'Vzory ve Wordu', 'Insolvenční rejstřík', 'ARES a katastr', 'Import z Excelu', 'Práce v týmu'];
+const ALSO = ['Noví klienti ze Studuj právo', 'Datové schránky', 'E-mail ve spisu', 'Podpis dokumentů', 'Vzory ve Wordu', 'Insolvenční rejstřík', 'ARES a katastr', 'Import z Excelu', 'Práce v týmu'];
 
 export default function LawyerLanding({ initialPrices, reviews }: { initialPrices?: Prices; reviews?: ReactNode }) {
     return (
@@ -37,7 +37,8 @@ export default function LawyerLanding({ initialPrices, reviews }: { initialPrice
                     <div>
                         <p className="text-sm font-semibold text-indigo-700">Pracovní prostor pro advokáty</p>
                         <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">Všechna vaše práce na jednom místě.</h1>
-                        <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">Kancelář hlídá lhůty, počítá odpracované hodiny, vystaví fakturu a pošle klientovi odkaz, přes který nahraje podklady a podepíše. Nahrazuje Excel, složky v e-mailu a papírový kalendář. Do prvního spisu jste za deset minut.</p>
+                        <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">Kancelář hlídá lhůty, počítá odpracované hodiny, vystaví fakturu a pošle klientovi odkaz, přes který nahraje podklady a podepíše. <strong className="font-semibold text-slate-800">A přivede vám nové klienty</strong> z bezplatné právní poradny Studuj právo.</p>
+                        <a href="#novi-klienti" className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3.5 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-200"><UserPlus size={15} aria-hidden="true" /> Noví klienti bez provizí: jak to funguje <ArrowRight size={14} aria-hidden="true" /></a>
                         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                             <StartButton />
                             <Link href="/funkce" className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-[15px] font-semibold text-slate-800 hover:bg-slate-50">Co všechno umí</Link>
@@ -47,6 +48,35 @@ export default function LawyerLanding({ initialPrices, reviews }: { initialPrice
                     <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
                         <div className="lg:pr-24"><CaseMock /></div>
                         <div className="mt-6 flex justify-center lg:absolute lg:-bottom-12 lg:right-0 lg:mt-0"><div className="scale-[0.82] origin-top lg:origin-bottom-right"><ClientMock /></div></div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Noví klienti: Kancelář se zaplatí sama, protože přivádí poptávky ze Studuj právo */}
+            <section id="novi-klienti" className="scroll-mt-20 bg-emerald-700 px-4 py-16 text-white sm:px-6 sm:py-20" aria-labelledby="klienti-title">
+                <div className="mx-auto max-w-6xl">
+                    <p className="text-sm font-semibold text-emerald-200">V ceně předplatného</p>
+                    <h2 id="klienti-title" className="mt-3 max-w-3xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Kancelář vám přivede nové klienty. Bez provizí.</h2>
+                    <p className="mt-4 max-w-3xl text-lg leading-relaxed text-emerald-50">Na studujpravo.cz se lidé každý den ptají v bezplatné právní poradně: výpověď z bytu, rozvod, pokuta, dluh, pracovní spor. Kdo potřebuje advokáta, dostane katalog advokátů ze svého oboru a kraje. S Kanceláří Pro jste v něm i vy.</p>
+                    <ol className="mt-10 grid gap-4 sm:grid-cols-3">
+                        {[
+                            ['Člověk se zeptá v poradně', 'Popíše svůj problém. Když je potřeba advokát, pošleme mu katalog advokátů z jeho oboru a kraje.'],
+                            ['Vybere si vás', 'V katalogu jste automaticky, s fotkou, obory a cenou první konzultace. Zájemce vám rovnou pošle popis věci.'],
+                            ['Přijmete jedním klikem', 'Poptávka vám přijde do Kanceláře i e-mailem. Přijetím vznikne klient i spis a zájemce dostane vaše kontakty.'],
+                        ].map(([t, d], i) => (
+                            <li key={t} className="rounded-2xl bg-white/10 p-5 ring-1 ring-white/15">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm font-bold text-emerald-800">{i + 1}</span>
+                                <p className="mt-3 font-semibold">{t}</p>
+                                <p className="mt-1 text-sm leading-relaxed text-emerald-50">{d}</p>
+                            </li>
+                        ))}
+                    </ol>
+                    <ul className="mt-8 grid gap-2 text-sm text-emerald-50 sm:grid-cols-3">
+                        {['Žádná provize ani platba za poptávku: celý honorář je váš', 'Zájemce už ví, co potřebuje: z poradny má popsaný problém', 'Nechcete nové klienty? Katalog si vypnete jedním kliknutím'].map((t) => <li key={t} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-emerald-200" aria-hidden="true" />{t}</li>)}
+                    </ul>
+                    <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <StartButton light />
+                        <p className="text-sm text-emerald-100">Jediný nový klient obvykle pokryje předplatné na dlouho dopředu.</p>
                     </div>
                 </div>
             </section>
