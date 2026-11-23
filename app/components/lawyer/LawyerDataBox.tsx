@@ -167,32 +167,52 @@ function Connect({ master, onDone, first }: { master: CryptoKey; onDone: () => P
         setForm({ label: '', env: 'prod', login: '', password: '', method: 'password' });
         await onDone();
     }
-    const label = 'block text-xs font-semibold text-slate-600';
+    const label = 'block text-xs font-semibold text-slate-700';
+    const mk = form.method === 'mobile_key';
+    const choice = (on: boolean) => `rounded-xl border p-3 text-left text-sm cursor-pointer ${on ? 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200' : 'border-slate-300 bg-white hover:bg-slate-50'}`;
     return (
-        <form onSubmit={save} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Plug size={18} className="text-indigo-700" /> {first ? 'Připojit datovou schránku' : 'Připojit další schránku'}</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-                <label className={label}>Název (jak se bude zobrazovat)<input value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} maxLength={120} placeholder="např. Kancelář Novák" className={`${inputCls} mt-1 font-normal`} /></label>
-                <label className={label}>Prostředí<select value={form.env} onChange={(e) => setForm((f) => ({ ...f, env: e.target.value as IsdsEnv }))} className={`${inputCls} mt-1 font-normal`}><option value="prod">Ostrý provoz (mojedatovaschranka.cz)</option><option value="test">Testovací (czebox.cz)</option></select></label>
-                <label className={`${label} sm:col-span-2`}>Způsob přihlášení<select value={form.method} onChange={(e) => setForm((f) => ({ ...f, method: e.target.value as 'password' | 'mobile_key' }))} className={`${inputCls} mt-1 font-normal`}><option value="password">Jméno a heslo</option><option value="mobile_key">Mobilní klíč (komunikační kód)</option></select></label>
-                {form.method === 'mobile_key' && (
-                    <div className="rounded-lg bg-indigo-50 p-3 text-xs leading-relaxed text-indigo-950 sm:col-span-2">
-                        <p className="flex items-center gap-1.5 font-bold"><Smartphone size={13} aria-hidden="true" /> Jak získat komunikační kód (stačí jednou)</p>
-                        <ol className="mt-1.5 list-decimal space-y-1 pl-5">
-                            <li>Přihlaste se do <strong>portálu datových schránek</strong> (mojedatovaschranka.cz), třeba bankovní identitou nebo eObčankou.</li>
-                            <li>Otevřete <strong>Nastavení → Možnosti přihlášení → Přihlášení mobilním klíčem</strong> a mobilní klíč aktivujte (v telefonu aplikace „Mobilní klíč eGovernmentu“).</li>
-                            <li>Na téže stránce stiskněte <strong>Vygenerovat přístupové údaje</strong> a komunikační kód si zkopírujte.</li>
-                            <li>Zadejte ho sem místo hesla spolu s přihlašovacím jménem ke schránce. Při každém přihlášení z Kanceláře vám v telefonu přijde oznámení, které potvrdíte.</li>
-                        </ol>
-                        <p className="mt-1.5 text-indigo-900/80">Bankovní identitu datové schránky pro cizí aplikace nenabízejí, použije se jen k jednorázovému nastavení mobilního klíče.</p>
-                    </div>
-                )}
-                <label className={label}>Přihlašovací jméno *<input value={form.login} onChange={(e) => setForm((f) => ({ ...f, login: e.target.value }))} required autoComplete="off" className={`${inputCls} mt-1 font-normal`} /></label>
-                 <label className={label}>{form.method === 'mobile_key' ? 'Komunikační kód *' : 'Heslo *'}<input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} required autoComplete="new-password" className={`${inputCls} mt-1 font-normal`} /></label>
+        <form onSubmit={save} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
+            <div>
+                <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Plug size={18} className="text-indigo-700" /> {first ? 'Připojit datovou schránku' : 'Připojit další schránku'}</h2>
+                <p className="mt-1 text-sm text-slate-600">Hotovo za pár minut. Pak uvidíte došlé zprávy přímo v Kanceláři, uložíte přílohy do spisu a z doručení se vám samy vypočítají lhůty.</p>
             </div>
-            <p className="flex items-start gap-2 text-xs leading-relaxed text-slate-500"><Lock size={13} className="mt-0.5 shrink-0 text-indigo-700" aria-hidden="true" /> Údaje se před uložením zašifrují vaším šifrovacím heslem v prohlížeči. Při každém použití je prohlížeč pošle zabezpečeně na náš server, ten je použije na jedno volání datových schránek a nikde neuloží.</p>
+            <fieldset>
+                <legend className="mb-1.5 text-xs font-semibold text-slate-700">Jak se do schránky normálně přihlašujete?</legend>
+                <div className="grid gap-2 sm:grid-cols-2">
+                    <button type="button" aria-pressed={!mk} onClick={() => setForm((f) => ({ ...f, method: 'password' }))} className={choice(!mk)}><strong className="block text-slate-900">Jménem a heslem</strong><span className="text-xs text-slate-600">Nejrychlejší. Zadáte údaje, které znáte.</span></button>
+                    <button type="button" aria-pressed={mk} onClick={() => setForm((f) => ({ ...f, method: 'mobile_key' }))} className={choice(mk)}><strong className="block text-slate-900">Bankovní identitou, eObčankou, mobilním klíčem</strong><span className="text-xs text-slate-600">Jméno a heslo nemám. Jednorázově si nastavíte mobilní klíč.</span></button>
+                </div>
+            </fieldset>
+            {mk && (
+                <div className="rounded-xl bg-indigo-50 p-4 text-sm leading-relaxed text-indigo-950">
+                    <p className="flex items-center gap-1.5 font-bold"><Smartphone size={14} aria-hidden="true" /> Jednorázové nastavení (asi 3 minuty)</p>
+                    <ol className="mt-2 list-decimal space-y-1.5 pl-5">
+                        <li>Otevřete <a href="https://www.mojedatovaschranka.cz" target="_blank" rel="noopener noreferrer" className="font-bold underline">portál datových schránek</a> a přihlaste se, jak jste zvyklí (bankovní identita, eObčanka).</li>
+                        <li>V telefonu mějte aplikaci „Mobilní klíč eGovernmentu“. V portálu otevřete <strong>Nastavení → Možnosti přihlášení → Přihlášení mobilním klíčem</strong> a klíč aktivujte.</li>
+                        <li>Na téže stránce stiskněte <strong>Vygenerovat přístupové údaje</strong>. Zobrazí se <strong>přihlašovací jméno</strong> a <strong>komunikační kód</strong>. Opište je sem.</li>
+                    </ol>
+                    <p className="mt-2 text-xs text-indigo-900/80">Pak už stačí při přihlášení v Kanceláři jen potvrdit oznámení v telefonu. Bankovní identitu ani eObčanku Kancelář nikdy nevidí.</p>
+                </div>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+                <label className={label}>{mk ? 'Přihlašovací jméno z portálu *' : 'Přihlašovací jméno ke schránce *'}<input value={form.login} onChange={(e) => setForm((f) => ({ ...f, login: e.target.value }))} required autoComplete="off" className={`${inputCls} mt-1 font-normal`} /></label>
+                <label className={label}>{mk ? 'Komunikační kód *' : 'Heslo *'}<input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} required autoComplete="new-password" className={`${inputCls} mt-1 font-normal`} /></label>
+            </div>
+            <details className="text-sm text-slate-600">
+                <summary className="cursor-pointer text-xs font-semibold text-slate-600">Další možnosti (název, testovací prostředí)</summary>
+                <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                    <label className={label}>Název (jak se bude zobrazovat)<input value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} maxLength={120} placeholder="např. Kancelář Novák" className={`${inputCls} mt-1 font-normal`} /></label>
+                    <label className={label}>Prostředí<select value={form.env} onChange={(e) => setForm((f) => ({ ...f, env: e.target.value as IsdsEnv }))} className={`${inputCls} mt-1 font-normal`}><option value="prod">Ostrý provoz (mojedatovaschranka.cz)</option><option value="test">Testovací (czebox.cz)</option></select></label>
+                </div>
+            </details>
+            <p className="flex items-start gap-2 text-xs leading-relaxed text-slate-600"><Lock size={13} className="mt-0.5 shrink-0 text-indigo-700" aria-hidden="true" /> Údaje se zašifrují vaším šifrovacím heslem přímo v prohlížeči. Server je použije jen na jedno volání datových schránek a nikde je neukládá.</p>
             {waiting && <p role="status" className="flex items-center gap-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-950"><Smartphone size={16} aria-hidden="true" /> Potvrďte přihlášení v aplikaci Mobilní klíč v telefonu…</p>}
-            {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p>}
+            {error && (
+                <div role="alert" className="space-y-1 rounded-lg bg-rose-50 p-3 text-sm text-rose-900">
+                    <p>{error}</p>
+                    {!mk && <p className="text-xs text-rose-800">Nemáte jméno a heslo, nebo se přihlašujete bankovní identitou či eObčankou? Zvolte vpravo druhou možnost. Schránka může mít také vypnutý přístup aplikací; zapíná se v portálu v Nastavení.</p>}
+                </div>
+            )}
             <button type="submit" disabled={busy} className={primaryBtn}>{busy && <Loader2 size={15} className="animate-spin" />} Ověřit a připojit</button>
         </form>
     );
