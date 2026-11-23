@@ -10,11 +10,11 @@ export const metadata: Metadata = {
 
 // Přehled na první pohled: co je end-to-end šifrované (provozovatel to přečíst nemůže) a co ne
 const OVERVIEW: { what: string; how: string; e2ee: boolean; operator: string }[] = [
-    { what: 'Zprávy a soubory v klientském kanálu', how: 'Šifrované v prohlížeči, klíč klienta je v odkazu za znakem #', e2ee: true, operator: 'Ne' },
-    { what: 'Chat a sdílení spisů mezi kolegy v kanceláři', how: 'Šifrované v prohlížeči klíči členů kanceláře', e2ee: true, operator: 'Ne' },
-    { what: 'Hesla ke schránce a datové schránce, přístupové tokeny', how: 'Zašifrované hlavním klíčem advokáta', e2ee: true, operator: 'Ne' },
-    { what: 'Spisy, lhůty, klienti, kontakty, poznámky, faktury, výkazy', how: 'Přístupová práva v databázi, šifrování přenosu i uložení', e2ee: false, operator: 'Technicky ano, jako správce databáze. Omezuje to organizace a auditní záznam.' },
-    { what: 'Ostatní soubory ve spisu (nahrané advokátem)', how: 'Úložiště s právy podle spisu, šifrování přenosu i uložení', e2ee: false, operator: 'Technicky ano, jako správce úložiště' },
+    { what: 'Zprávy a soubory v klientském kanálu', how: 'Šifrované v prohlížeči, klíč klienta je v odkazu za znakem #', e2ee: true, operator: 'Jen vy a ti, komu je sdílíte. Provozovatel ne.' },
+    { what: 'Chat a sdílení spisů mezi kolegy v kanceláři', how: 'Šifrované v prohlížeči klíči členů kanceláře', e2ee: true, operator: 'Jen vy a ti, komu je sdílíte. Provozovatel ne.' },
+    { what: 'Hesla ke schránce a datové schránce, přístupové tokeny', how: 'Zašifrované hlavním klíčem advokáta', e2ee: true, operator: 'Jen vy a ti, komu je sdílíte. Provozovatel ne.' },
+    { what: 'Spisy, lhůty, klienti, kontakty, poznámky, faktury, výkazy', how: 'Přístupová práva v databázi, šifrování přenosu i uložení', e2ee: false, operator: 'Jen správce úložiště, a to výjimečně (např. při opravě chyby na vaši žádost). Každý zásah se zapisuje do auditního záznamu. Servery v Irsku (EU).' },
+    { what: 'Ostatní soubory ve spisu (nahrané advokátem)', how: 'Úložiště s právy podle spisu, šifrování přenosu i uložení', e2ee: false, operator: 'Jen správce úložiště, výjimečně a se záznamem. Servery v Irsku (EU).' },
     { what: 'Text poslaný AI asistentovi', how: 'Jen se souhlasem advokáta, jména a identifikátory se předem zakryjí', e2ee: false, operator: 'Odchází k poskytovateli AI (OpenAI)' },
 ];
 
@@ -25,7 +25,7 @@ const E2EE = [
 ];
 const RIGHTS = [
     ['Spisy, lhůty, klienti, kontakty, faktury, výkazy, úschovy', 'Nejsou end-to-end šifrované. Chrání je přístupová práva přímo v databázi (každý advokát vidí jen svá data a spisy, které mu kolega výslovně sdílel), šifrování přenosu a šifrování v klidu u poskytovatele databáze.'],
-    ['Obyčejné soubory ve spisu (nahrané advokátem)', 'Uložené v úložišti s právy podle spisu. Provozovatel k nim má technicky přístup jako správce databáze; přístup omezuje organizace a auditní záznam.'],
+    ['Obyčejné soubory ve spisu (nahrané advokátem)', 'Uložené v úložišti s právy podle spisu na serverech v Irsku (EU), šifrované při přenosu i při uložení. Přístup k nim má jen správce úložiště, a to výjimečně (např. při opravě chyby na vaši žádost); každý zásah se zapisuje do auditního záznamu.'],
     ['Evidence úschov', 'Vidí je jen vlastník záznamu. Pohyby se jen přidávají a nejdou přepsat ani smazat.'],
 ];
 const CONTROLS = [
@@ -62,7 +62,7 @@ export default function Page() {
                 <h2 className="mt-10 text-xl font-bold text-slate-900">Přehled na první pohled</h2>
                 <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
                     <table className="w-full min-w-[640px] text-left text-sm">
-                        <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Co</th><th className="px-4 py-3">Jak je chráněno</th><th className="px-4 py-3">End-to-end</th><th className="px-4 py-3">Může to přečíst provozovatel?</th></tr></thead>
+                        <thead className="bg-slate-50 text-xs font-semibold tracking-wide text-slate-600"><tr><th className="px-4 py-3">Jaká data</th><th className="px-4 py-3">Jak jsou chráněná</th><th className="px-4 py-3">Zašifrováno jen pro vás</th><th className="px-4 py-3">Kdo se k nim může dostat</th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                             {OVERVIEW.map((r) => (
                                 <tr key={r.what} className="align-top">
@@ -87,7 +87,8 @@ export default function Page() {
 
                 <h2 className="mt-10 text-xl font-bold text-slate-900">Kde jsou vaše data</h2>
                 <ul className="mt-3 space-y-2 text-sm leading-relaxed text-slate-700">
-                    <li><strong className="text-slate-900">Databáze a soubory:</strong> {PROVIDER.dbRegion ? `${PROVIDER.dbRegion} (Supabase).` : 'u poskytovatele Supabase; region uvádíme ve zpracovatelské smlouvě.'}</li>
+                    <li><strong className="text-slate-900">Databáze a soubory:</strong> {PROVIDER.dbRegion ? `${PROVIDER.dbRegion} (Supabase).` : 'u poskytovatele Supabase; region uvádíme ve zpracovatelské smlouvě.'} Data neopouštějí Evropskou unii.</li>
+                    <li><strong className="text-slate-900">Certifikace:</strong> Supabase má nezávislý bezpečnostní audit SOC 2 Type II. Datacentra Amazon Web Services v Irsku, ve kterých data leží, mají certifikace ISO/IEC 27001, 27017 a 27018 a fyzický přístup do nich je přísně kontrolovaný.</li>
                     <li><strong className="text-slate-900">Aplikace (hosting):</strong> {PROVIDER.hosting ? `${PROVIDER.hosting}.` : 'u poskytovatele Vercel; region uvádíme ve zpracovatelské smlouvě.'} Obsah spisů se tu trvale neukládá.</li>
                     <li><strong className="text-slate-900">AI asistent:</strong> jen když ho zapnete, a jen vybraný text po zakrytí jmen. Zpracovává ho poskytovatel AI (OpenAI), obvykle mimo EU.</li>
                 </ul>
