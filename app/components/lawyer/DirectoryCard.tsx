@@ -98,8 +98,8 @@ export default function DirectoryCard({ access }: { access: LawyerAccess }) {
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Inzerce na Studuj právo">
-                <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Megaphone size={18} className="text-indigo-800" aria-hidden="true" /> Hledáte koncipienta nebo asistenta? Inzerce zdarma</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Na Studuj právo čtou nabídky práce studenti a absolventi práv. S předplatným Kanceláře Pro tam inzerujete placené pozice zdarma. Při přidání nabídky na studujpravo.cz/nabidky-prace/pridat stačí vložit tento kód.</p>
+                <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Megaphone size={18} className="text-indigo-800" aria-hidden="true" /> Hledáte koncipienta nebo asistenta? Topování zdarma</h2>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Na Studuj právo čtou nabídky práce studenti a absolventi práv. Inzerovat tam může každý zdarma; s předplatným Kanceláře Pro máte zdarma i topování (14 dní nahoře v seznamu, jinak 399 Kč). Při přidání nabídky zaškrtněte topování a vložte tento kód.</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                     {jobCode ? (
                         <>

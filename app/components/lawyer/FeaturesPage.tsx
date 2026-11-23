@@ -58,7 +58,7 @@ export default function FeaturesPage() {
                         ].map(([t, d], i) => <li key={t} className="rounded-2xl border border-slate-200 bg-white p-5"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-700 text-sm font-bold text-white">{i + 1}</span><p className="mt-3 font-semibold text-slate-900">{t}</p><p className="mt-1 text-sm leading-relaxed text-slate-600">{d}</p></li>)}
                     </ol>
                     <ul className="mt-8 space-y-2.5">
-                        {['Žádná platba za poptávku ani podíl z odměny, katalog je součást předplatného', 'Inzerce placených pozic (koncipient, asistent) na Studuj právo zdarma', 'Cenu služeb si domlouváte přímo s klientem jako u každé jiné poptávky'].map((p) => <li key={p} className="flex items-start gap-2.5 text-slate-700"><Check size={18} className="mt-0.5 shrink-0 text-indigo-600" aria-hidden="true" />{p}</li>)}
+                        {['Žádná platba za poptávku ani podíl z odměny, katalog je součást předplatného', 'Topované nabídky práce (koncipient, asistent) na Studuj právo zdarma', 'Cenu služeb si domlouváte přímo s klientem jako u každé jiné poptávky'].map((p) => <li key={p} className="flex items-start gap-2.5 text-slate-700"><Check size={18} className="mt-0.5 shrink-0 text-indigo-600" aria-hidden="true" />{p}</li>)}
                     </ul>
                 </div>
             </section>

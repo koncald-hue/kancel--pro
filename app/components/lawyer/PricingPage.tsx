@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, Banknote, CalendarClock, Check, ChevronDown, FolderOpen, Landmark, Lock, ShieldAlert, Users } from 'lucide-react';
+import { BadgeCheck, Banknote, CalendarClock, Check, ChevronDown, FolderOpen, Landmark, Lock, ShieldAlert, UserPlus, Users } from 'lucide-react';
 import { czk } from '@/lib/lawyer';
 import { EMPTY_PRICES, PLANS, saving, savingPct, type PlanId, type Prices } from '@/lib/plans';
 import PriceCompare from './PriceCompare';
@@ -12,7 +12,7 @@ import { FinalCta, SiteFooter, SiteHeader } from './LandingChrome';
 
 const GROUPS: { icon: typeof Users; tone: string; title: string; items: string[] }[] = [
     { icon: FolderOpen, tone: 'bg-indigo-100 text-indigo-700', title: 'Spisy a lhůty', items: ['Neomezený počet spisů a klientů', 'Lhůty s přesunem na pracovní den', 'Datové schránky přímo v aplikaci', 'Lhůty z rozhodnutí k potvrzení', 'Vzory dokumentů ve Wordu'] },
-    { icon: Users, tone: 'bg-sky-100 text-sky-700', title: 'Klienti a komunikace', items: ['Soukromá stránka klienta bez registrace', 'Šifrované zprávy a soubory', 'Podpis dokumentů s dokladem', 'Identifikace klienta (AML)', 'E-mail ve spisu (Gmail, Seznam a další)'] },
+    { icon: Users, tone: 'bg-sky-100 text-sky-700', title: 'Klienti a komunikace', items: ['Noví klienti z katalogu na Studuj právo', 'Soukromá stránka klienta bez registrace', 'Šifrované zprávy a soubory', 'Podpis dokumentů s dokladem', 'Identifikace klienta (AML)', 'E-mail ve spisu (Gmail, Seznam a další)'] },
     { icon: Banknote, tone: 'bg-emerald-100 text-emerald-700', title: 'Peníze', items: ['Výkazy práce a automatický návrh výkazu', 'Faktury a ISDOC', 'Párování plateb z banky, upomínky', 'Rentabilita spisů a klientů', 'Export podkladů pro účetní'] },
     { icon: Landmark, tone: 'bg-amber-100 text-amber-700', title: 'Přehled a rejstříky', items: ['Přehled dne s nejbližšími lhůtami', 'Právní novinky a změny zákonů', 'ARES a katastr nemovitostí', 'Import dat z Excelu a jiných programů', 'Sdílené spisy pro kolegy v kanceláři'] },
 ];
@@ -23,6 +23,7 @@ const FAQ: [string, string][] = [
     ['Musím při registraci zadat kartu?', 'Ne. Zkušební období trvá 14 dní a nechce po vás žádné platební údaje.'],
     ['Obnovuje se předplatné samo?', 'Jen když ho při platbě kartou necháte zapnuté (je předvolené). Tři dny předem vám pošleme upozornění a obnovování můžete kdykoli zrušit v Nastavení. Bez něj platíte předem na zvolené období a nic se nestrhává.'],
     ['Co se stane s daty, když přestanu platit?', 'Funkce se zamknou, ale vaše data zůstanou uložená k nahlížení a stažení. Po obnovení předplatného se zase odemknou.'],
+    ['Jak funguje hledání nových klientů?', 'V Nastavení, záložce Noví klienti, si zapnete zobrazení v katalogu advokátů na studujpravo.cz a vyberete obory a kraje. Lidé z bezplatné poradny si vás tam mohou vybrat a poslat vám poptávku. Přijde vám do Kanceláře i e-mailem. Za poptávky nic neplatíte, je to součást předplatného.'],
     ['Liší se plány funkcemi?', 'Ne. Měsíční, půlroční i roční plán mají úplně stejné funkce. Delší období je jen levnější za měsíc.'],
     ['Je cena s DPH?', 'Zda a v jaké výši je DPH, uvidíte u objednávky a na daňovém dokladu, který po zaplacení dostanete.'],
     ['Jak funguje balíček pro kancelář?', 'Jedna platba za celou kancelář (2, 3, 5, 10 nebo 20 advokátů, k tomu místa pro koncipienty zdarma). Každý člen má vlastní účet, heslo a vlastní data, která vedoucí kanceláře nevidí. Spis může člen nasdílet kolegovi.'],
@@ -100,7 +101,15 @@ export default function PricingPage() {
                             </div>
                         ))}
                     </div>
-                    <div className="mt-14 flex flex-col gap-4 rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:flex-row sm:items-center sm:p-8">
+                    <div id="novi-klienti" className="mt-14 scroll-mt-24 rounded-3xl bg-indigo-700 p-6 text-white sm:p-10">
+                        <p className="flex items-center gap-2 text-sm font-semibold text-indigo-200"><UserPlus size={16} aria-hidden="true" /> V ceně předplatného</p>
+                        <h3 className="mt-2 max-w-3xl text-2xl font-bold leading-tight sm:text-3xl">Kancelář vám hledá nové klienty</h3>
+                        <p className="mt-3 max-w-3xl leading-relaxed text-indigo-100">Na studujpravo.cz se každý den lidé ptají v bezplatné právní poradně. Kdo potřebuje advokáta, dostane katalog advokátů ze svého oboru a kraje. Zapnete si ho v Nastavení a poptávky vám chodí rovnou do Kanceláře, kde z nich jedním klikem založíte klienta i spis.</p>
+                        <ul className="mt-5 grid gap-2 text-sm text-indigo-50 sm:grid-cols-3">
+                            {['Žádná provize ani platba za poptávku', 'Zájemce si vás vybere sám, pořadí je náhodné', 'Topované nabídky práce na Studuj právo zdarma'].map((t) => <li key={t} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-indigo-200" aria-hidden="true" />{t}</li>)}
+                        </ul>
+                    </div>
+                    <div className="mt-6 flex flex-col gap-4 rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:flex-row sm:items-center sm:p-8">
                         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-amber-700"><ShieldAlert size={22} aria-hidden="true" /></span>
                         <div><h3 className="text-lg font-bold text-slate-900">Volitelný doplněk: Hlídání insolvence</h3><p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-700">Denní kontrola klientů a protistran v insolvenčním rejstříku a v ARES s upozorněním a návrhem lhůty. Za příplatek k aktivnímu předplatnému. U kanceláře ho platí vedoucí jednou za všechny.</p></div>
                     </div>
