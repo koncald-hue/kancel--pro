@@ -18,6 +18,7 @@ import GoogleCalendarCard from './GoogleCalendarCard';
 import MicrosoftCalendarCard from './MicrosoftCalendarCard';
 import CalendarFeedCard from './CalendarFeedCard';
 import MfaCard from './MfaCard';
+import DirectoryCard from './DirectoryCard';
 import { InstallCard } from './InstallApp';
 import { OfflineCard } from './OfflineDeadlines';
 import PushCard from './PushCard';
@@ -31,7 +32,7 @@ import { formatIban, toIban } from '@/lib/qrPayment';
 
 const STATUS: Record<string, string> = { trial: 'Zkušební přístup', active: 'Aktivní předplatné', requested: 'Čeká na potvrzení', expired: 'Vypršelo' };
 
-const SECTIONS = [['ucet', 'Účet a fakturace'], ['predplatne', 'Předplatné'], ['aplikace', 'Aplikace a upozornění'], ['propojeni', 'Propojení'], ['zabezpeceni', 'Zabezpečení']] as const;
+const SECTIONS = [['ucet', 'Účet a fakturace'], ['klienti', 'Noví klienti'], ['predplatne', 'Předplatné'], ['aplikace', 'Aplikace a upozornění'], ['propojeni', 'Propojení'], ['zabezpeceni', 'Zabezpečení']] as const;
 
 export default function LawyerSettings() {
     const { access } = useLawyer();
@@ -67,9 +68,11 @@ export default function LawyerSettings() {
         })();
         return () => { cancelled = true; };
     }, []);
-    const [sec, setSec] = useState<'ucet' | 'predplatne' | 'aplikace' | 'propojeni' | 'zabezpeceni'>('ucet');
-    // Odkaz /kancelar/nastaveni#sifrovani otevře rovnou záložku Zabezpečení se šifrovacím heslem
-    useEffect(() => { if (window.location.hash === '#sifrovani') setSec('zabezpeceni'); }, []);
+    // Odkaz /kancelar/nastaveni#sifrovani otevře rovnou Zabezpečení se šifrovacím heslem, #klienti katalog na Studuj právo
+    const [sec, setSec] = useState<'ucet' | 'klienti' | 'predplatne' | 'aplikace' | 'propojeni' | 'zabezpeceni'>(() => {
+        const h = typeof window === 'undefined' ? '' : window.location.hash;
+        return h === '#sifrovani' ? 'zabezpeceni' : h === '#klienti' ? 'klienti' : 'ucet';
+    });
     const [firm, setFirm] = useState(access.firm_name);
     const [rate, setRate] = useState(String(access.default_rate || ''));
     const [msg, setMsg] = useState('');
@@ -211,6 +214,7 @@ export default function LawyerSettings() {
             <OfflineCard />
             <DigestSettings />
             </>)}
+            {sec === 'klienti' && <DirectoryCard access={access} />}
             {sec === 'propojeni' && (<>
             <GoogleCalendarCard />
             <MicrosoftCalendarCard />

@@ -5,6 +5,7 @@ import { serviceClient } from '@/lib/serverSupabase';
 import { mailConfigured, sendMail } from '@/lib/mail';
 import { getSiteOrigin } from '@/lib/siteUrl';
 import { buildNudge, planNudge, type NudgeKind } from '@/lib/trialNudges';
+import { expirePartnerInquiries } from '@/lib/partnerExpiry';
 
 const sameSecret = (a: string, b: string) => timingSafeEqual(createHash('sha256').update(a).digest(), createHash('sha256').update(b).digest());
 type Row = { user_id: string; email: string; status: string; until: string | null; created_at: string; display_name: string | null; nudge_day2_at: string | null; nudge_day5_at: string | null };
@@ -42,5 +43,7 @@ export async function GET(req: Request) {
             sent++;
         } catch { failed++; }
     }
-    return NextResponse.json({ sent, skipped, failed });
+    // Denně také vyprší poptávky ze Studuj právo, na které advokát nereagoval (zájemce dostane nabídku jiného advokáta)
+    const expired = await expirePartnerInquiries(db, now).catch(() => 0);
+    return NextResponse.json({ sent, skipped, failed, expired });
 }

@@ -45,6 +45,23 @@ export default function FeaturesPage() {
                     ))}
                 </div>
             </section>
+            <section id="novi-klienti" className="scroll-mt-24 border-t border-slate-100 px-4 py-20 sm:px-6">
+                <div className="mx-auto max-w-6xl">
+                    <p className="text-sm font-semibold text-indigo-700">Noví klienti</p>
+                    <h2 className="mt-3 max-w-3xl text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl">Klienti ze Studuj právo, bez provizí</h2>
+                    <p className="mt-4 max-w-3xl text-[17px] leading-relaxed text-slate-600">Na studujpravo.cz se lidé ptají v bezplatné právní poradně. Když potřebují advokáta, ukážeme jim katalog advokátů z jejich oboru a kraje. S Kanceláří Pro v něm můžete být i vy.</p>
+                    <ol className="mt-10 grid gap-6 sm:grid-cols-3">
+                        {[
+                            ['Zapnete katalog', 'V Nastavení vyberete obory a kraje. Nic dalšího nevyplňujete, použije se váš profil.'],
+                            ['Zájemce si vybere vás', 'Advokáti jsou v katalogu v náhodném pořadí. Člověk si sám vybere a pošle vám popis věci.'],
+                            ['Přijmete jedním klikem', 'Poptávka přijde do Kanceláře a e-mailem. Přijetím vznikne klient i spis a zájemce dostane zprávu.'],
+                        ].map(([t, d], i) => <li key={t} className="rounded-2xl border border-slate-200 bg-white p-5"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-700 text-sm font-bold text-white">{i + 1}</span><p className="mt-3 font-semibold text-slate-900">{t}</p><p className="mt-1 text-sm leading-relaxed text-slate-600">{d}</p></li>)}
+                    </ol>
+                    <ul className="mt-8 space-y-2.5">
+                        {['Žádná platba za poptávku ani podíl z odměny, katalog je součást předplatného', 'Inzerce placených pozic (koncipient, asistent) na Studuj právo zdarma', 'Cenu služeb si domlouváte přímo s klientem jako u každé jiné poptávky'].map((p) => <li key={p} className="flex items-start gap-2.5 text-slate-700"><Check size={18} className="mt-0.5 shrink-0 text-indigo-600" aria-hidden="true" />{p}</li>)}
+                    </ul>
+                </div>
+            </section>
             <section className="border-t border-slate-100 bg-slate-50 px-4 py-20 sm:px-6">
                 <div className="mx-auto max-w-6xl">
                     <h2 className="text-3xl font-bold tracking-tight text-slate-900">A k tomu</h2>
