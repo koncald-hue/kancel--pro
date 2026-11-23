@@ -15,7 +15,7 @@ const FEATURES: { id: string; kicker: string; title: string; text: string; point
 const MORE = [
     { icon: FileText, t: 'Vzory dokumentů', d: 'Smlouvy, plné moci, výzvy. Vyplní se ze spisu a klienta, výstup je upravený Word.' },
     { icon: MapIcon, t: 'Katastr nemovitostí', d: 'Parcely a stavby na mapě i podle čísla, přímo u spisu.' },
-    { icon: Users, t: 'Práce v týmu', d: 'Sdílené spisy s kolegy, role a šifrovaný chat kanceláře.' },
+    { icon: Users, t: 'Práce v týmu', d: 'Vedoucí vidí, kdo je dnes k dispozici a kolik má práce. Úkol nebo schůzku zadá jedním klikem a kolega o tom hned ví. Nástěnka se směrnicemi k potvrzení, sdílené spisy a šifrovaný chat.' },
     { icon: Upload, t: 'Přechod za odpoledne', d: 'Import klientů, spisů, lhůt a času z Excelu nebo jiného programu.' },
     { icon: FileArchive, t: 'Předání spisu', d: 'Souhrn spisu s očíslovanými přílohami pro soud, úřad nebo kolegu.' },
     { icon: Landmark, t: 'Právní novinky', d: 'Změny zákonů a novinky z právního světa sestavené automaticky v přehledu.' },

@@ -9,6 +9,7 @@ import { Scale, Briefcase, Building2, FileUp, Mail, Inbox, LayoutDashboard, Libr
 import LawyerGate, { useLawyer } from './LawyerGate';
 import GlobalSearch from './GlobalSearch';
 import QuickAdd from './QuickAdd';
+import NotificationBell from './NotificationBell';
 import { unseenCount } from '@/lib/teamTasks';
 import E2eeLockNotice from './E2eeLockNotice';
 import DataBoxLauncher from './DataBoxLauncher';
@@ -143,6 +144,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                 <p className="flex-1 truncate text-sm font-bold text-slate-900">{current?.[2] ?? 'Kancelář'}</p>
                 {!locked && <button type="button" onClick={() => setAddOpen(true)} aria-label="Rychle zapsat" className="rounded-lg bg-indigo-600 p-1.5 text-white hover:bg-indigo-700"><Plus size={18} /></button>}
                 <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat" className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100"><Search size={18} /></button>
+                <NotificationBell compact />
                 {unread > 0 && <Link href="/kancelar/chat" className="rounded-full bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">{unread}</Link>}
             </div>
             {open && (
@@ -164,6 +166,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                     <div className="mb-6 hidden items-center justify-between gap-4 lg:flex">
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900">{current?.[2]}</h1>
                         <div className="flex items-center gap-2">
+                        <NotificationBell />
                         {!locked && <button type="button" onClick={() => setAddOpen(true)} title="Klávesa N" className="flex items-center gap-1.5 rounded-xl bg-indigo-700 px-3.5 py-2 text-sm font-bold text-white shadow-xs hover:bg-indigo-800 cursor-pointer"><Plus size={15} aria-hidden="true" /> Zapsat</button>}
                         <button type="button" onClick={() => setSearchOpen(true)} aria-label="Hledat v celé kanceláři" className="flex w-72 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-left text-sm text-slate-500 shadow-xs hover:border-indigo-300 cursor-pointer"><Search size={15} aria-hidden="true" /><span className="flex-1">Hledat…</span><kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 text-[11px] font-semibold text-slate-500">Ctrl/⌘ K</kbd></button>
                         </div>

@@ -10,7 +10,7 @@ import { todayIso } from '@/lib/billing';
 import { confirmAction } from '@/lib/confirm';
 import { scheduleGoogleSync } from '@/lib/googleSync';
 import { EVENT_KIND, KIND_LABEL, addDays, byDate, eventItems, monthGrid, pragueParts, pragueToIso, shiftMonth, sortItems, taskItems, type AgendaItem, type CalEvent, type TeamTask } from '@/lib/agenda';
-import { loadColleagues, loadEvents, loadNames, loadTasks, type Colleague } from '@/lib/teamTasks';
+import { loadColleagues, loadEvents, loadNames, loadTasks, type Colleague, deliverTeamNotifications } from '@/lib/teamTasks';
 import { ghostBtn, inputCls, primaryBtn } from '../situation/caseUi';
 import { useLawyer } from './LawyerGate';
 import { TaskForm } from './LawyerTeamTasks';
@@ -78,7 +78,7 @@ export default function LawyerCalendar() {
         const { error } = evForm.id ? await supabase.from('calendar_events').update(row).eq('id', evForm.id) : await supabase.from('calendar_events').insert(row);
         setBusy(false);
         if (error) { setErr(/calendar_events|schema cache/i.test(error.message) ? 'Kalendář se zapne po spuštění migrace 20261118_21.' : error.message); return; }
-        setEvForm(null); setDay(evForm.date); scheduleGoogleSync(); await load();
+        setEvForm(null); setDay(evForm.date); scheduleGoogleSync(); if (evForm.attendees.length) void deliverTeamNotifications(); await load();
     }
     async function removeEvent(e: CalEvent) {
         if (!(await confirmAction(`Smazat událost „${e.title}“?${e.attendees.length ? ' Zmizí i pozvaným kolegům.' : ''}`))) return;

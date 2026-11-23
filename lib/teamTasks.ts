@@ -31,9 +31,18 @@ export async function createTask(t: { created_by: string; assignee_id: string; t
     const { error } = await supabase.from('team_tasks').insert({ ...t, title: t.title.trim().slice(0, 200), note: (t.note ?? '').trim().slice(0, 2000), due_time: t.due_time || null, case_id: t.case_id || null });
     if (error) throw new Error(MISSING.test(error.message) ? 'Úkoly pro kolegy se zapnou po spuštění migrace 20261118_21.' : error.message);
     scheduleGoogleSync();
+    if (t.assignee_id !== t.created_by) void deliverTeamNotifications();
 }
 // Počet nových (neviděných) úkolů pro mě od kolegů
 export async function unseenCount(me: string): Promise<number> {
     const { count, error } = await supabase.from('team_tasks').select('id', { count: 'exact', head: true }).eq('assignee_id', me).eq('status', 'open').is('seen_at', null);
     return error ? 0 : count ?? 0;
+}
+
+// Po zadání úkolu, pozvání do kalendáře nebo příspěvku na nástěnku: doručí upozornění kolegům hned (push, jinak e-mail)
+export async function deliverTeamNotifications(): Promise<void> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return;
+    await fetch('/api/team/notify', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => undefined);
 }
