@@ -13,7 +13,8 @@ const STUDUJPRAVO = 'https://studujpravo.cz';
 // Noví klienti ze Studuj právo: vysvětlení, jak to funguje, nastavení zobrazení v katalogu a kód pro inzerci zdarma.
 export default function DirectoryCard({ access }: { access: LawyerAccess }) {
     const a = access as LawyerAccess & Dir;
-    const [listed, setListed] = useState(!!a.directory_listed);
+    // Výchozí stav je „zobrazovat“ (všichni advokáti jsou v katalogu, dokud si to nevypnou)
+    const [listed, setListed] = useState(a.directory_listed !== false);
     const [areas, setAreas] = useState<string[]>(a.directory_areas ?? []);
     const [regions, setRegions] = useState<string[]>(a.directory_regions ?? []);
     const [consult, setConsult] = useState(a.directory_consult ?? '');
@@ -28,13 +29,12 @@ export default function DirectoryCard({ access }: { access: LawyerAccess }) {
 
     async function save(nextListed = listed) {
         setMsg('');
-        if (nextListed && (!areas.length || !regions.length)) { setMsg('Vyberte aspoň jeden obor a jeden kraj.'); return; }
         setBusy(true);
         const { error } = await supabase.rpc('save_directory', { p_listed: nextListed, p_areas: areas, p_regions: regions, p_consult: consult, p_bio: bio });
         setBusy(false);
         if (error) { setMsg(/save_directory|find the function/i.test(error.message) ? 'Katalog ještě není zapnutý v databázi (chybí spuštění 20261123_35_katalog-advokatu.sql).' : error.message); return; }
         setListed(nextListed);
-        setMsg(nextListed ? 'Uloženo. Jste v katalogu na Studuj právo (změna se tam projeví do pár minut).' : 'Uloženo. V katalogu nejste.');
+        setMsg(nextListed ? 'Uloženo. Jste v katalogu na Studuj právo (změna se tam projeví do pár minut).' : 'Uloženo. V katalogu nejste a nové poptávky ze Studuj právo vám nepřijdou.');
     }
 
     async function getCode() {
@@ -49,11 +49,11 @@ export default function DirectoryCard({ access }: { access: LawyerAccess }) {
         <>
             <section id="klienti" className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Noví klienti ze Studuj právo">
                 <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><UserPlus size={18} className="text-indigo-800" aria-hidden="true" /> Noví klienti ze Studuj právo</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Na studujpravo.cz se lidé ptají v bezplatné právní poradně. Když potřebují advokáta, ukážeme jim katalog advokátů z jejich oboru a kraje. Můžete v něm být i vy, je to součást předplatného.</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Na studujpravo.cz se lidé ptají v bezplatné právní poradně. Když potřebují advokáta, ukážeme jim katalog advokátů z jejich oboru a kraje. Jste v něm automaticky (pokud jste advokát s vyplněným profilem) a je to součást předplatného. Nechcete? Zobrazení si níže vypnete.</p>
 
                 <ol className="mt-4 grid gap-3 sm:grid-cols-3">
                     {[
-                        ['1', 'Zapnete si katalog', 'Vyberete obory a kraje, kde chcete nové klienty. Nic dalšího nevyplňujete, použije se váš profil.'],
+                        ['1', 'Jste v katalogu', 'Použije se váš profil. Vyberte obory a kraje, ať vás najdou ti správní lidé; bez výběru se ukazujete všude.'],
                         ['2', 'Člověk si vybere vás', 'V katalogu jsou advokáti v náhodném pořadí. Zájemce si sám vybere a pošle vám popis věci.'],
                         ['3', 'Přijmete, nebo odmítnete', `Poptávka přijde do Poptávek a e-mailem. Přijetím z ní jedním klikem vznikne klient a spis. Rozhodněte do ${PARTNER_REPLY_DAYS} dnů.`],
                     ].map(([n, t, d]) => (
@@ -66,7 +66,9 @@ export default function DirectoryCard({ access }: { access: LawyerAccess }) {
                 </ol>
                 <p className="mt-3 text-xs leading-relaxed text-slate-500"><strong>Za poptávky nic neplatíte</strong> a nikomu neplatíte podíl z odměny. Studuj právo vás nedoporučuje ani nijak neřadí, jen ukazuje katalog. Cenu služeb si domluvíte přímo s klientem, jako u každé jiné poptávky.</p>
 
-                {!profileOk ? (
+                {access.profession === 'jiny' ? (
+                    <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">Katalog na Studuj právo je jen pro advokáty zapsané u ČAK. V profilu máte uvedeno „Jiný právník“, proto se v něm nezobrazujete.</p>
+                ) : !profileOk ? (
                     <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">Nejdřív vyplňte profil (záložka Účet a fakturace). V katalogu se ukazuje vaše jméno, evidenční číslo ČAK, město a fotka z profilu.</p>
                 ) : (
                     <div className="mt-5 space-y-4 border-t border-slate-100 pt-4">
@@ -75,11 +77,11 @@ export default function DirectoryCard({ access }: { access: LawyerAccess }) {
                             Zobrazovat mě v katalogu advokátů na Studuj právo
                         </label>
                         <div>
-                            <p className="text-sm font-semibold text-slate-800">Obory, ve kterých chcete nové klienty</p>
+                            <p className="text-sm font-semibold text-slate-800">Obory, ve kterých chcete nové klienty <span className="font-normal text-slate-500">(bez výběru: všechny)</span></p>
                             <div className="mt-2 flex flex-wrap gap-2">{DIRECTORY_AREAS.map((x) => <button key={x.id} type="button" aria-pressed={areas.includes(x.id)} onClick={() => setAreas((l) => toggle(l, x.id))} className={chip(areas.includes(x.id))}>{x.label}</button>)}</div>
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-slate-800">Kraje, odkud klienty berete</p>
+                            <p className="text-sm font-semibold text-slate-800">Kraje, odkud klienty berete <span className="font-normal text-slate-500">(bez výběru: celá ČR)</span></p>
                             <div className="mt-2 flex flex-wrap gap-2">{DIRECTORY_REGIONS.map((r) => <button key={r} type="button" aria-pressed={regions.includes(r)} onClick={() => setRegions((l) => toggle(l, r))} className={chip(regions.includes(r))}>{r}</button>)}</div>
                         </div>
                         <label className="block text-sm font-semibold text-slate-800">První konzultace (nepovinné)

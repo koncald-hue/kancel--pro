@@ -52,7 +52,7 @@ export default function FeaturesPage() {
                     <p className="mt-4 max-w-3xl text-[17px] leading-relaxed text-slate-600">Na studujpravo.cz se lidé ptají v bezplatné právní poradně. Když potřebují advokáta, ukážeme jim katalog advokátů z jejich oboru a kraje. S Kanceláří Pro v něm můžete být i vy.</p>
                     <ol className="mt-10 grid gap-6 sm:grid-cols-3">
                         {[
-                            ['Zapnete katalog', 'V Nastavení vyberete obory a kraje. Nic dalšího nevyplňujete, použije se váš profil.'],
+                            ['Jste v katalogu automaticky', 'Použije se váš profil. V Nastavení si vyberete obory a kraje, nebo zobrazení vypnete.'],
                             ['Zájemce si vybere vás', 'Advokáti jsou v katalogu v náhodném pořadí. Člověk si sám vybere a pošle vám popis věci.'],
                             ['Přijmete jedním klikem', 'Poptávka přijde do Kanceláře a e-mailem. Přijetím vznikne klient i spis a zájemce dostane zprávu.'],
                         ].map(([t, d], i) => <li key={t} className="rounded-2xl border border-slate-200 bg-white p-5"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-700 text-sm font-bold text-white">{i + 1}</span><p className="mt-3 font-semibold text-slate-900">{t}</p><p className="mt-1 text-sm leading-relaxed text-slate-600">{d}</p></li>)}

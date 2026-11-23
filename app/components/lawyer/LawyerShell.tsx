@@ -27,11 +27,12 @@ type Group = { title: string; items: Item[]; fold?: string };
 const GROUPS: Group[] = [
     // „Dnes“ je pracovní plocha (adresa /kancelar zůstává)
     { title: '', items: [['prehled', '/kancelar', 'Dnes', LayoutDashboard]] },
-    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Spisy', Briefcase], ['kalendar', '/kancelar/kalendar', 'Kalendář', CalendarDays], ['ukoly', '/kancelar/ukoly', 'Úkoly', ListTodo], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['email', '/kancelar/email', 'E-mail', Mail], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox], ['denik', '/kancelar/podaci-denik', 'Podací deník', BookOpen], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library]] },
-    { title: 'Peníze', items: [['penize', '/kancelar/penize', 'Peníze', Wallet]] },
-    { title: 'Kancelář', items: [['chat', '/kancelar/chat', 'Chat', MessagesSquare], ['tym', '/kancelar/tym', 'Tým', UsersRound]] },
-    // Odborné a méně časté nástroje
-    { title: 'Nástroje', fold: 'tools', items: [['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['archiv', '/kancelar/archiv', 'Archiv spisů', Archive], ['subjekty', '/kancelar/subjekty', 'Subjekty', Contact], ['plne-moci', '/kancelar/plne-moci', 'Plné moci', ScrollText], ['anonymizer', '/kancelar/anonymizer', 'Anonymizér', EyeOff], ['stret', '/kancelar/stret-zajmu', 'Střet zájmů', Scale], ['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel], ['epr', '/kancelar/epr', 'Platební rozkazy', FileSpreadsheet], ['katastr', '/kancelar/katastr', 'Katastr', Landmark], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert]] },
+    // Každodenní práce: jen to, co advokát otevírá denně
+    { title: 'Práce', items: [['veci', '/kancelar/veci', 'Spisy', Briefcase], ['klienti', '/kancelar/klienti', 'Klienti', Users], ['kalendar', '/kancelar/kalendar', 'Kalendář', CalendarDays], ['ukoly', '/kancelar/ukoly', 'Úkoly', ListTodo], ['email', '/kancelar/email', 'E-mail', Mail], ['poptavky', '/kancelar/poptavky', 'Poptávky', Inbox]] },
+    { title: 'Kancelář', items: [['penize', '/kancelar/penize', 'Peníze', Wallet], ['tym', '/kancelar/tym', 'Tým', UsersRound], ['chat', '/kancelar/chat', 'Chat', MessagesSquare]] },
+    // Méně časté věci jsou sbalené; skupina s otevřenou stránkou se rozbalí sama
+    { title: 'Evidence', fold: 'records', items: [['denik', '/kancelar/podaci-denik', 'Podací deník', BookOpen], ['knihovna', '/kancelar/knihovna', 'Knihovna vzorů', Library], ['archiv', '/kancelar/archiv', 'Archiv spisů', Archive], ['subjekty', '/kancelar/subjekty', 'Subjekty', Contact], ['plne-moci', '/kancelar/plne-moci', 'Plné moci', ScrollText], ['stret', '/kancelar/stret-zajmu', 'Střet zájmů', Scale], ['anonymizer', '/kancelar/anonymizer', 'Anonymizér', EyeOff]] },
+    { title: 'Soudy a rejstříky', fold: 'tools', items: [['infosoud', '/kancelar/infosoud', 'Soudní řízení', Gavel], ['epr', '/kancelar/epr', 'Platební rozkazy', FileSpreadsheet], ['insolvence', '/kancelar/insolvence', 'Insolvence', ShieldAlert], ['hlidac', '/kancelar/hlidac', 'Hlídač', Eye], ['rejstriky', '/kancelar/rejstriky', 'Rejstříky', Building2], ['katastr', '/kancelar/katastr', 'Katastr', Landmark]] },
     { title: 'Přizpůsobit', fold: 'setup', items: [['sablony', '/kancelar/sablony', 'Šablony úkolů', ListChecks], ['import', '/kancelar/import', 'Import dat', FileUp], ['doplnky', '/kancelar/doplnky', 'Word a Outlook', Puzzle]] },
 ];
 const FOLD_KEY = 'kancelar-menu-otevreno';
@@ -120,7 +121,7 @@ function Inner({ active, children }: { active: LawyerSection; children: React.Re
                             {g.title && (g.fold
                                 ? <button type="button" onClick={() => toggleFold(g.fold!)} aria-expanded={shown} className="flex w-full items-center gap-1 px-3 pb-1.5 text-left text-xs font-bold uppercase tracking-[0.14em] text-slate-400 hover:text-slate-600 cursor-pointer">{g.title}<span className="ml-auto font-semibold normal-case tracking-normal">{shown ? '' : `${g.items.length}`}</span><ChevronDown size={13} aria-hidden="true" className={`transition ${shown ? 'rotate-180' : ''}`} /></button>
                                 : <p className="px-3 pb-1.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>)}
-                            {shown && <div className="space-y-0.5">{g.items.map((item) => link(item))}</div>}
+                            {shown && <div className="space-y-0.5">{g.items.filter(([id]) => id !== 'chat' || firm || navActive === 'chat').map((item) => link(item))}</div>}
                         </div>
                     );
                 })}

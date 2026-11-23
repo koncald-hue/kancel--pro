@@ -23,7 +23,7 @@ const FAQ: [string, string][] = [
     ['Musím při registraci zadat kartu?', 'Ne. Zkušební období trvá 14 dní a nechce po vás žádné platební údaje.'],
     ['Obnovuje se předplatné samo?', 'Jen když ho při platbě kartou necháte zapnuté (je předvolené). Tři dny předem vám pošleme upozornění a obnovování můžete kdykoli zrušit v Nastavení. Bez něj platíte předem na zvolené období a nic se nestrhává.'],
     ['Co se stane s daty, když přestanu platit?', 'Funkce se zamknou, ale vaše data zůstanou uložená k nahlížení a stažení. Po obnovení předplatného se zase odemknou.'],
-    ['Jak funguje hledání nových klientů?', 'V Nastavení, záložce Noví klienti, si zapnete zobrazení v katalogu advokátů na studujpravo.cz a vyberete obory a kraje. Lidé z bezplatné poradny si vás tam mohou vybrat a poslat vám poptávku. Přijde vám do Kanceláře i e-mailem. Za poptávky nic neplatíte, je to součást předplatného.'],
+    ['Jak funguje hledání nových klientů?', 'Jako advokát jste v katalogu advokátů na studujpravo.cz automaticky. V Nastavení, záložce Noví klienti, si vyberete obory a kraje, nebo zobrazení vypnete. Lidé z bezplatné poradny si vás tam mohou vybrat a poslat vám poptávku. Přijde vám do Kanceláře i e-mailem. Za poptávky nic neplatíte, je to součást předplatného.'],
     ['Liší se plány funkcemi?', 'Ne. Měsíční, půlroční i roční plán mají úplně stejné funkce. Delší období je jen levnější za měsíc.'],
     ['Je cena s DPH?', 'Zda a v jaké výši je DPH, uvidíte u objednávky a na daňovém dokladu, který po zaplacení dostanete.'],
     ['Jak funguje balíček pro kancelář?', 'Jedna platba za celou kancelář (2, 3, 5, 10 nebo 20 advokátů, k tomu místa pro koncipienty zdarma). Každý člen má vlastní účet, heslo a vlastní data, která vedoucí kanceláře nevidí. Spis může člen nasdílet kolegovi.'],
@@ -104,7 +104,7 @@ export default function PricingPage() {
                     <div id="novi-klienti" className="mt-14 scroll-mt-24 rounded-3xl bg-indigo-700 p-6 text-white sm:p-10">
                         <p className="flex items-center gap-2 text-sm font-semibold text-indigo-200"><UserPlus size={16} aria-hidden="true" /> V ceně předplatného</p>
                         <h3 className="mt-2 max-w-3xl text-2xl font-bold leading-tight sm:text-3xl">Kancelář vám hledá nové klienty</h3>
-                        <p className="mt-3 max-w-3xl leading-relaxed text-indigo-100">Na studujpravo.cz se každý den lidé ptají v bezplatné právní poradně. Kdo potřebuje advokáta, dostane katalog advokátů ze svého oboru a kraje. Zapnete si ho v Nastavení a poptávky vám chodí rovnou do Kanceláře, kde z nich jedním klikem založíte klienta i spis.</p>
+                        <p className="mt-3 max-w-3xl leading-relaxed text-indigo-100">Na studujpravo.cz se každý den lidé ptají v bezplatné právní poradně. Kdo potřebuje advokáta, dostane katalog advokátů ze svého oboru a kraje. Jste v něm automaticky (vypnout jde kdykoli v Nastavení) a poptávky vám chodí rovnou do Kanceláře, kde z nich jedním klikem založíte klienta i spis.</p>
                         <ul className="mt-5 grid gap-2 text-sm text-indigo-50 sm:grid-cols-3">
                             {['Žádná provize ani platba za poptávku', 'Zájemce si vás vybere sám, pořadí je náhodné', 'Topované nabídky práce na Studuj právo zdarma'].map((t) => <li key={t} className="flex items-start gap-2"><Check size={16} className="mt-0.5 shrink-0 text-indigo-200" aria-hidden="true" />{t}</li>)}
                         </ul>
