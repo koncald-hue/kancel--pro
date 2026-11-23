@@ -82,7 +82,7 @@ export default function LawyerLanding({ initialPrices, reviews }: { initialPrice
             </section>
 
             {/* Důvěra: mlčenlivost je pro advokáta podmínka, proto hned za úvodem */}
-            <section className="border-y border-slate-200 bg-white px-4 py-12 sm:px-6" aria-labelledby="duvera-title">
+            <section className="border-y border-slate-200 bg-slate-50 px-4 py-12 sm:px-6" aria-labelledby="duvera-title">
                 <div className="mx-auto max-w-6xl">
                     <h2 id="duvera-title" className="max-w-3xl text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Mlčenlivost je základ vaší práce. Proto je na prvním místě.</h2>
                     <ul className="mt-8 grid gap-4 md:grid-cols-3">
@@ -105,6 +105,7 @@ export default function LawyerLanding({ initialPrices, reviews }: { initialPrice
             {/* 2. Čtyři věci, které za vás vyřeší */}
             <section className="px-4 py-20 sm:px-6 sm:py-24" aria-labelledby="co-title">
                 <div className="mx-auto max-w-6xl">
+                    <span aria-hidden="true" className="mb-5 block h-1 w-12 rounded-full bg-indigo-700" />
                     <h2 id="co-title" className="max-w-2xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Čtyři věci, které advokát dělá každý den</h2>
                     <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
                         {FOUR.map(({ icon: Icon, tone, title, text }) => (
