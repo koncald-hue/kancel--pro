@@ -57,7 +57,7 @@ export default function LawyerLanding({ initialPrices, reviews }: { initialPrice
                 <div className="mx-auto max-w-6xl">
                     <p className="text-sm font-semibold text-emerald-200">V ceně předplatného</p>
                     <h2 id="klienti-title" className="mt-3 max-w-3xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Kancelář vám přivede nové klienty. Bez provizí.</h2>
-                    <p className="mt-4 max-w-3xl text-lg leading-relaxed text-emerald-50">Na studujpravo.cz se lidé každý den ptají v bezplatné právní poradně: výpověď z bytu, rozvod, pokuta, dluh, pracovní spor. Kdo potřebuje advokáta, dostane katalog advokátů ze svého oboru a kraje. S Kanceláří Pro jste v něm i vy.</p>
+                    <p className="mt-4 max-w-3xl text-lg leading-relaxed text-emerald-50">Na studujpravo.cz se lidé dozvědí, jaký mají právní problém a co s ním dělat. Každý den se ptají v bezplatné poradně: výpověď z bytu, rozvod, pokuta, dluh, pracovní spor. Kdo potřebuje advokáta, dostane katalog advokátů ze svého oboru a kraje. S Kanceláří Pro jste v něm i vy.</p>
                     <ol className="mt-10 grid gap-4 sm:grid-cols-3">
                         {[
                             ['Člověk se zeptá v poradně', 'Popíše svůj problém. Když je potřeba advokát, pošleme mu katalog advokátů z jeho oboru a kraje.'],
