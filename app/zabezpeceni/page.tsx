@@ -13,8 +13,8 @@ const OVERVIEW: { what: string; how: string; e2ee: boolean; operator: string }[]
     { what: 'Zprávy a soubory v klientském kanálu', how: 'Šifrované v prohlížeči, klíč klienta je v odkazu za znakem #', e2ee: true, operator: 'Jen vy a ti, komu je sdílíte. Provozovatel ne.' },
     { what: 'Chat a sdílení spisů mezi kolegy v kanceláři', how: 'Šifrované v prohlížeči klíči členů kanceláře', e2ee: true, operator: 'Jen vy a ti, komu je sdílíte. Provozovatel ne.' },
     { what: 'Hesla ke schránce a datové schránce, přístupové tokeny', how: 'Zašifrované hlavním klíčem advokáta', e2ee: true, operator: 'Jen vy a ti, komu je sdílíte. Provozovatel ne.' },
-    { what: 'Spisy, lhůty, klienti, kontakty, poznámky, faktury, výkazy', how: 'Přístupová práva v databázi, šifrování přenosu i uložení', e2ee: false, operator: 'Jen správce úložiště, a to výjimečně (např. při opravě chyby na vaši žádost). Každý zásah se zapisuje do auditního záznamu. Servery v Irsku (EU).' },
-    { what: 'Ostatní soubory ve spisu (nahrané advokátem)', how: 'Úložiště s právy podle spisu, šifrování přenosu i uložení', e2ee: false, operator: 'Jen správce úložiště, výjimečně a se záznamem. Servery v Irsku (EU).' },
+    { what: 'Spisy, lhůty, klienti, kontakty, poznámky, faktury, výkazy', how: 'Přístupová práva v databázi, šifrování přenosu i uložení', e2ee: false, operator: 'Jen správce úložiště, a to přísně kontrolovaně a jen výjimečně (např. při opravě chyby na vaši žádost). Servery jsou v Irsku (EU).' },
+    { what: 'Ostatní soubory ve spisu (nahrané advokátem)', how: 'Úložiště s právy podle spisu, šifrování přenosu i uložení', e2ee: false, operator: 'Jen správce úložiště, přísně kontrolovaně a výjimečně. Servery jsou v Irsku (EU).' },
     { what: 'Text poslaný AI asistentovi', how: 'Jen se souhlasem advokáta, jména a identifikátory se předem zakryjí', e2ee: false, operator: 'Odchází k poskytovateli AI (OpenAI)' },
 ];
 
@@ -25,7 +25,7 @@ const E2EE = [
 ];
 const RIGHTS = [
     ['Spisy, lhůty, klienti, kontakty, faktury, výkazy, úschovy', 'Nejsou end-to-end šifrované. Chrání je přístupová práva přímo v databázi (každý advokát vidí jen svá data a spisy, které mu kolega výslovně sdílel), šifrování přenosu a šifrování v klidu u poskytovatele databáze.'],
-    ['Obyčejné soubory ve spisu (nahrané advokátem)', 'Uložené v úložišti s právy podle spisu na serverech v Irsku (EU), šifrované při přenosu i při uložení. Přístup k nim má jen správce úložiště, a to výjimečně (např. při opravě chyby na vaši žádost); každý zásah se zapisuje do auditního záznamu.'],
+    ['Obyčejné soubory ve spisu (nahrané advokátem)', 'Uložené v úložišti s právy podle spisu na serverech v Irsku (EU), šifrované při přenosu i při uložení. Přístup k nim má jen správce úložiště, a to přísně kontrolovaně a výjimečně (např. při opravě chyby na vaši žádost). Ke spisům a klientům se nikdo nedívá bez důvodu.'],
     ['Evidence úschov', 'Vidí je jen vlastník záznamu. Pohyby se jen přidávají a nejdou přepsat ani smazat.'],
 ];
 const CONTROLS = [
