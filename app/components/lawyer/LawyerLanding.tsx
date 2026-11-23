@@ -61,7 +61,7 @@ export default function LawyerLanding({ initialPrices, reviews }: { initialPrice
                     <ol className="mt-10 grid gap-4 sm:grid-cols-3">
                         {[
                             ['Člověk se zeptá v poradně', 'Popíše svůj problém. Když je potřeba advokát, pošleme mu katalog advokátů z jeho oboru a kraje.'],
-                            ['Vybere si vás', 'V katalogu jste automaticky, s fotkou, obory a cenou první konzultace. Zájemce vám rovnou pošle popis věci.'],
+                            ['Vybere si vás', 'Automaticky se zobrazíte v katalogu, a to s fotkou, svými obory a cenou první konzultace. Zájemce si vás vybere a rovnou vám pošle popis své věci.'],
                             ['Přijmete jedním klikem', 'Poptávka vám přijde do Kanceláře i e-mailem. Přijetím vznikne klient i spis a zájemce dostane vaše kontakty.'],
                         ].map(([t, d], i) => (
                             <li key={t} className="rounded-2xl bg-white/10 p-5 ring-1 ring-white/15">
