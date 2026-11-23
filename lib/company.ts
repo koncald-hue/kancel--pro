@@ -2,14 +2,14 @@
 // DOPLŇTE všechny prázdné položky před zveřejněním. Spusťte `npm run check:legal`, ukáže, co chybí.
 // Prázdná položka se na stránkách zobrazí jako zvýrazněné „[DOPLNIT: …]“.
 export const PROVIDER = {
-    name: '',            // obchodní firma nebo jméno a příjmení (OSVČ)
+    name: 'Dominik Končal', // obchodní firma nebo jméno a příjmení (OSVČ)
     ico: '',             // IČO
     vat: '',             // DIČ, nebo napište „není plátcem DPH“
     address: '',         // sídlo / místo podnikání
     register: '',        // zápis v rejstříku (např. „vedená u Městského soudu v Praze, sp. zn. C 12345“) nebo „zapsán v živnostenském rejstříku“
-    email: '',           // kontaktní e-mail pro zákazníky a pro oznamování incidentů
-    phone: '',           // telefon (nepovinné)
-    dataProtectionEmail: '', // e-mail pro žádosti o ochranu osobních údajů (může být stejný jako e-mail výše)
+    email: 'dominikkoncal@gmail.com', // kontaktní e-mail pro zákazníky a pro oznamování incidentů
+    phone: '+420 735 762 729', // telefon (nepovinné)
+    dataProtectionEmail: 'dominikkoncal@gmail.com', // e-mail pro žádosti o ochranu osobních údajů (může být stejný jako e-mail výše)
     hosting: 'Vercel Inc., region Dublin, Irsko (EU)', // kde aplikace běží (např. „Vercel Inc.“) a v jakém regionu
     dbRegion: 'Irsko (EU)', // region databáze Supabase (např. „Frankfurt, EU“)
     mailProvider: '',    // poskytovatel e-mailů (např. „Resend“), až bude zapojen

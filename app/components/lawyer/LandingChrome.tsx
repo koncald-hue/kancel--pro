@@ -2,9 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronDown, Clock3, Mail, MailCheck, Menu, Receipt, Scale, ShieldAlert, Users, X } from 'lucide-react';
+import { ArrowRight, Building2, ChevronDown, Clock3, Lock, Mail, MailCheck, Menu, Phone, Receipt, Scale, ShieldAlert, Users, X } from 'lucide-react';
 import { useAuth } from '../site/AuthContext';
 import { LogoSvg } from '@/lib/logo';
+import { PROVIDER as COMPANY } from '@/lib/company';
+
+const phoneHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 import { LANDINGS } from '@/lib/seo/landings';
 
 export const NAV = [['/pro-klienty', 'Pro klienty'], ['/navody', 'Návody'], ['/cenik', 'Ceník']] as const;
@@ -93,12 +96,63 @@ export function SiteHeader({ current }: { current?: string }) {
     );
 }
 
-export function SiteFooter() {
+const FOOT_LINK = 'hover:text-white';
+
+function FooterColumn({ title, links }: { title: string; links: readonly (readonly [string, string])[] }) {
     return (
-        <footer className="border-t border-slate-100 px-4 py-8 text-center text-xs leading-relaxed text-slate-500 sm:px-6">
-            <nav aria-label="Kancelář Pro pro advokáty" className="mx-auto mb-6 max-w-4xl"><ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">{LANDINGS.map((l) => <li key={l.slug}><Link href={`/${l.slug}`} className="hover:text-slate-800">{l.kicker}</Link></li>)}</ul></nav>
-            <p>Kancelář slouží k organizaci práce a nenahrazuje právní poradenství ani úsudek advokáta. Lhůty a výpočty jsou pomůckou ke kontrole. Ukázky rozhraní obsahují smyšlená jména a údaje.</p>
-            <p className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 font-semibold"><Link href="/funkce" className="hover:text-slate-800">Funkce</Link><Link href="/pro-klienty" className="hover:text-slate-800">Pro klienty</Link><Link href="/cenik" className="hover:text-slate-800">Ceník</Link><Link href="/zabezpeceni" className="hover:text-slate-800">Zabezpečení</Link><Link href="/navody" className="hover:text-slate-800">Návody</Link><Link href="/obchodni-podminky" className="hover:text-slate-800">Obchodní podmínky</Link><Link href="/zpracovani-osobnich-udaju" className="hover:text-slate-800">Zpracování osobních údajů</Link><Link href="/ochrana-osobnich-udaju" className="hover:text-slate-800">Ochrana soukromí</Link></p>
+        <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-300/90">{title}</h3>
+            <ul className="mt-4 space-y-2.5 text-sm">
+                {links.map(([href, label]) => <li key={href}><Link href={href} className={`text-slate-300 ${FOOT_LINK}`}>{label}</Link></li>)}
+            </ul>
+        </div>
+    );
+}
+
+export function SiteFooter() {
+    const detail = [COMPANY.ico ? `IČO ${COMPANY.ico}` : '', COMPANY.address].filter(Boolean);
+    return (
+        <footer className="relative overflow-hidden bg-slate-950 text-slate-300 print:hidden">
+            <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[40rem] -translate-x-1/2 rounded-full bg-indigo-600/15 blur-3xl" />
+            <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-14 sm:px-6">
+                <div className="grid gap-10 lg:grid-cols-[1.3fr_0.8fr_0.8fr_1.1fr]">
+                    <div>
+                        <Link href="/" className="inline-flex items-center gap-2.5 text-white" aria-label="Kancelář Pro, úvodní stránka">
+                            <LogoSvg size={38} radius={9} />
+                            <span className="text-lg font-bold tracking-tight">Kancelář Pro</span>
+                        </Link>
+                        <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">Spisy, lhůty, klienti a výkazy práce v jedné aplikaci pro advokáty a advokátní kanceláře.</p>
+                        <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-xs text-slate-300 ring-1 ring-white/10"><Lock size={13} className="text-amber-300" aria-hidden="true" /> Data šifrovaně v EU</p>
+                    </div>
+
+                    <FooterColumn title="Aplikace" links={[['/funkce', 'Funkce'], ['/pro-klienty', 'Pro klienty'], ['/cenik', 'Ceník'], ['/zabezpeceni', 'Zabezpečení'], ['/navody', 'Návody']]} />
+                    <FooterColumn title="Právní" links={[['/obchodni-podminky', 'Obchodní podmínky'], ['/zpracovani-osobnich-udaju', 'Zpracování osobních údajů'], ['/ochrana-osobnich-udaju', 'Ochrana soukromí']]} />
+
+                    <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-300/90">Kontakt</h3>
+                        <div className="mt-4 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
+                            <p className="text-sm font-semibold text-white">{COMPANY.name}</p>
+                            <p className="text-xs text-slate-400">Zakladatel a provozovatel</p>
+                            <ul className="mt-3 space-y-2 text-sm">
+                                <li><a href={`mailto:${COMPANY.email}`} className={`inline-flex items-center gap-2 text-slate-200 ${FOOT_LINK}`}><Mail size={14} className="text-amber-300" aria-hidden="true" /> {COMPANY.email}</a></li>
+                                <li><a href={phoneHref(COMPANY.phone)} className={`inline-flex items-center gap-2 text-slate-200 ${FOOT_LINK}`}><Phone size={14} className="text-amber-300" aria-hidden="true" /> {COMPANY.phone}</a></li>
+                                {detail.length > 0 && <li className="flex items-start gap-2 text-slate-400"><Building2 size={14} className="mt-0.5 shrink-0 text-amber-300" aria-hidden="true" /><span>{detail.join(' · ')}</span></li>}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <nav aria-label="Kancelář Pro pro advokáty" className="mt-12 border-t border-white/10 pt-6">
+                    <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-slate-400 lg:justify-start">
+                        {LANDINGS.map((l) => <li key={l.slug}><Link href={`/${l.slug}`} className={FOOT_LINK}>{l.kicker}</Link></li>)}
+                    </ul>
+                </nav>
+
+                <div className="mt-6 flex flex-col gap-2 text-xs leading-relaxed text-slate-500 lg:flex-row lg:items-start lg:justify-between">
+                    <p className="max-w-3xl">Kancelář slouží k organizaci práce a nenahrazuje právní poradenství ani úsudek advokáta. Lhůty a výpočty jsou pomůckou ke kontrole. Ukázky rozhraní obsahují smyšlená jména a údaje.</p>
+                    <p className="shrink-0">© {COMPANY.name}</p>
+                </div>
+            </div>
         </footer>
     );
 }
