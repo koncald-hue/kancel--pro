@@ -14,7 +14,7 @@ export const PROVIDER = {
     dbRegion: 'Irsko (EU)', // region databáze Supabase (např. „Frankfurt, EU“)
     mailProvider: 'Brevo (Sendinblue SAS)',    // poskytovatel e-mailů (např. „Resend“), až bude zapojen
     paymentProvider: 'Comgate a.s.', // platební brána (např. „Stripe“), až bude zapojena
-    effectiveFrom: '25. 11. 2026',   // datum účinnosti znění podmínek (např. „1. 12. 2026“)
+    effectiveFrom: '27. 11. 2026',   // datum účinnosti znění podmínek (např. „1. 12. 2026“)
 };
 
 export type ProviderKey = keyof typeof PROVIDER;
