@@ -464,6 +464,96 @@ export const GUIDES: Guide[] = [
         takeaways: ['Lhůty převádějte první a kontrolujte je.', 'Importujte s náhledem a kontrolou.', 'Krátký souběh obou systémů je bezpečnější než ostrý přechod.'],
         landing: 'advokatni-software',
     },
+    {
+        slug: 'insolvencni-rejstrik-hlidani-protistrany',
+        title: 'Insolvenční rejstřík: jak hlídat klienty a protistrany advokátem',
+        description: 'Jak advokát používá insolvenční rejstřík: kdy protistranu kontrolovat, podle čeho ji hledat, proč nestačí jednorázová kontrola a jak hlídat změny ve spisech.',
+        category: 'Vedení kanceláře',
+        published: '2026-11-24',
+        updated: '2026-11-24',
+        minutes: 4,
+        lead: 'Úpadek protistrany změní strategii sporu i vymáhání. Kdo to zjistí až při exekuci, ztrácí čas a někdy i možnost pohledávku včas přihlásit.',
+        sections: [
+            {
+                h: 'Kdy insolvenční rejstřík kontrolovat',
+                points: [
+                    'Před podáním žaloby nebo návrhu na výkon rozhodnutí proti dlužníkovi.',
+                    'Před převzetím pohledávky k vymáhání a před dohodou o splátkách.',
+                    'Průběžně u protistran ve všech běžících sporech, protože insolvenční řízení může začít kdykoli.',
+                    'U vlastních klientů, kteří jsou věřiteli: úpadek jejich dlužníka běží bez ohledu na to, zda se klient ozve.',
+                ],
+                p: [],
+            },
+            {
+                h: 'Podle čeho hledat',
+                p: [
+                    'Insolvenční rejstřík je veřejný a vede ho Ministerstvo spravedlnosti. U podnikatelů a právnických osob se hledá podle IČO, u fyzické osoby bez IČO podle jména, příjmení a data narození. Jednoznačnost hledání proto závisí na tom, jak kvalitní údaje o protistraně ve spisu máte.',
+                ],
+            },
+            {
+                h: 'Proč nestačí jednorázová kontrola',
+                p: [
+                    'Kontrola ke dni podání žaloby neřekne nic o tom, co se stane o tři měsíce později. Lhůty, které s insolvencí souvisejí (zejména lhůta k přihlášení pohledávky, kterou soud uvádí v rozhodnutí o úpadku), jsou krátké a jejich zmeškání může věřitele připravit o možnost uspokojení z majetkové podstaty. Konkrétní lhůtu a postup vždy ověřte v rozhodnutí soudu a v insolvenčním zákoně (zákon č. 182/2006 Sb.).',
+                ],
+            },
+            {
+                h: 'Jak to zvládnout v kanceláři',
+                points: [
+                    'Mějte u každého klienta a protistrany vyplněné IČO, případně datum narození.',
+                    'Nastavte pravidelnou automatickou kontrolu všech otevřených spisů.',
+                    'Zjištěný záznam si uložte ke spisu s datem a okamžitě informujte klienta.',
+                    'Ke každé nalezené shodě ověřte, že jde skutečně o stejnou osobu, než z ní vyvodíte závěry.',
+                ],
+                p: [],
+            },
+        ],
+        takeaways: ['Kontrolujte protistranu před žalobou i během sporu.', 'Kvalita údajů ve spisu určuje kvalitu kontroly.', 'Lhůty v insolvenci ověřujte vždy v rozhodnutí soudu.'],
+        landing: 'radar-protistrany-insolvence',
+    },
+    {
+        slug: 'bezpecne-sdileni-dokumentu-s-klientem',
+        title: 'Bezpečné sdílení dokumentů s klientem: e-mail, nebo klientský portál?',
+        description: 'Proč e-mailové přílohy nejsou pro advokáta ideální, co říká mlčenlivost podle § 21 zákona o advokacii a jak vypadá bezpečné sdílení dokumentů a zpráv s klientem.',
+        category: 'Ochrana dat',
+        published: '2026-11-24',
+        updated: '2026-11-24',
+        minutes: 4,
+        lead: 'Klient pošle fotku smlouvy, rodné číslo i sken občanského průkazu v běžném e-mailu. Advokát pak odpovídá za to, že s tím naloží tak, aby se k nim nikdo nedostal.',
+        sections: [
+            {
+                h: 'Mlčenlivost a technická opatření',
+                p: [
+                    'Advokát je povinen zachovávat mlčenlivost o všem, co se při poskytování právních služeb dozvěděl (§ 21 zákona o advokacii). Zákon nepředepisuje konkrétní technologii, ale od advokáta se očekává, že zvolí takový způsob komunikace a uložení, který odpovídá citlivosti údajů.',
+                ],
+            },
+            {
+                h: 'Slabiny e-mailu',
+                points: [
+                    'Příloha zůstává v poštovních schránkách obou stran a často i v zálohách a na mobilech.',
+                    'Chybně zadaná adresa nejde vzít zpět.',
+                    'Dokumenty jsou rozeseté po schránkách místo ve spisu; kolega je nenajde.',
+                    'Není zřejmé, kdo a kdy dokument viděl.',
+                ],
+                p: [],
+            },
+            {
+                h: 'Jak vypadá bezpečnější postup',
+                points: [
+                    'Klient dostane soukromý odkaz a nahraje podklady přímo do spisu, bez zakládání dalšího účtu.',
+                    'Zprávy a dokumenty se ukládají na jedno místo ke spisu, ne do osobních schránek.',
+                    'Přístup mají jen oprávnění členové kanceláře a odkaz lze kdykoli zrušit.',
+                    'Klienta jednou poučte, jak odkaz používat, a nevyžadujte podklady e-mailem.',
+                ],
+                p: [],
+            },
+            {
+                h: 'Co nezapomenout',
+                p: ['Bezpečné sdílení nenahrazuje povinnosti podle GDPR ani dokumentaci spisu. Pokud používáte externí službu, ověřte, kde jsou data uložena a jak je upraveno jejich zpracování (smlouva o zpracování osobních údajů).'],
+            },
+        ],
+        takeaways: ['E-mailové přílohy zanechávají kopie na mnoha místech.', 'Podklady od klienta patří přímo do spisu.', 'U externí služby si ověřte uložení dat a zpracovatelskou smlouvu.'],
+        landing: 'klientsky-portal-pro-advokaty',
+    },
 ];
 
 export const guideBySlug = (slug: string) => GUIDES.find((g) => g.slug === slug);

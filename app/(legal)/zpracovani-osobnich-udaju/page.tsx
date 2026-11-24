@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Cl, Fill, LegalPage, Section, Sub } from '@/app/components/legal/Legal';
+import { PrintButton } from '@/app/components/legal/PrintButton';
 import { RETENTION_MONTHS, TERMS_VERSION } from '@/lib/company';
 
 export const metadata: Metadata = { title: 'Smlouva o zpracování osobních údajů | Kancelář Pro' };
@@ -8,6 +9,7 @@ export const metadata: Metadata = { title: 'Smlouva o zpracování osobních úd
 export default function Page() {
     return (
         <LegalPage title="Smlouva o zpracování osobních údajů" intro="Zpracovatelská smlouva podle čl. 28 nařízení (EU) 2016/679 (GDPR). Je nedílnou součástí Obchodních podmínek a uzavírá se spolu s nimi.">
+            <div className="-mt-4 print:hidden"><PrintButton /> <span className="ml-2 text-xs text-slate-500">V dialogu tisku zvolte „Uložit jako PDF“. Smlouva se uzavírá současně s Obchodními podmínkami, samostatný podpis není nutný.</span></div>
             <p className="-mt-6 text-sm text-slate-600">Znění {TERMS_VERSION}, účinné od <Fill k="effectiveFrom" label="datum účinnosti" />.</p>
 
             <Section n={1} title="Smluvní strany a vymezení rolí">

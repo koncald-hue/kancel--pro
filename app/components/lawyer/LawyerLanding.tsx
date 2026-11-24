@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowRight, CalendarClock, Check, FolderOpen, Lock, Receipt, Scale, ShieldCheck, Smartphone, Undo2, UserPlus, Users, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { Prices } from '@/lib/plans';
+import { czk } from '@/lib/lawyer';
 import PricingTeaser from './PricingTeaser';
 import { FinalCta, SiteFooter, SiteHeader, StartButton } from './LandingChrome';
 import { CaseMock, ClientMock } from './LandingMockups';
@@ -43,7 +44,7 @@ export default function LawyerLanding({ initialPrices, reviews }: { initialPrice
                             <StartButton />
                             <Link href="/funkce" className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-[15px] font-semibold text-slate-800 hover:bg-slate-50">Co všechno umí</Link>
                         </div>
-                        <p className="mt-4 text-sm text-slate-500">14 dní zdarma · bez platební karty · bez závazku · data šifrovaná, <Link href="/zabezpeceni" className="underline hover:text-slate-700">jak je chráníme</Link></p>
+                        <p className="mt-4 text-sm text-slate-500">14 dní zdarma · {initialPrices && initialPrices.month > 0 ? <>potom od <strong className="text-slate-700">{czk(initialPrices.month)}</strong> měsíčně · </> : null}bez platební karty · bez závazku · data šifrovaná, <Link href="/zabezpeceni" className="underline hover:text-slate-700">jak je chráníme</Link></p>
                     </div>
                     <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
                         <div className="lg:pr-24"><CaseMock /></div>

@@ -12,7 +12,7 @@ export function Fill({ k, label }: { k: ProviderKey; label?: string }) {
 export function LegalPage({ title, intro, children }: { title: string; intro?: string; children: React.ReactNode }) {
     return (
         <div className="min-h-screen bg-white text-slate-800">
-            <header className="border-b border-slate-100">
+            <header className="border-b border-slate-100 print:hidden">
                 <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3 sm:px-6">
                     <Link href="/" className="flex items-center gap-2.5 font-bold text-slate-900"><LogoSvg size={32} radius={8} /> Kancelář Pro</Link>
                     <nav className="flex gap-4 text-xs font-semibold text-slate-600" aria-label="Právní dokumenty">
