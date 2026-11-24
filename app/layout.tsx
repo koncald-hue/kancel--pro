@@ -6,6 +6,7 @@ import ThemeSync from '@/app/components/site/ThemeSync';
 import PwaRegister from '@/app/components/site/PwaRegister';
 import ConfirmHost from '@/app/components/site/ConfirmHost';
 import ErrorReporter from '@/app/components/site/ErrorReporter';
+import SupportWidget from '@/app/components/site/SupportWidget';
 import { Analytics } from '@vercel/analytics/next';
 import { getSiteOrigin } from '@/lib/siteUrl';
 import './globals.css';
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang="cs" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} h-full antialiased`}>
       <head><script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} /></head>
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-800">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>{children}<SupportWidget /></AuthProvider>
         <ConfirmHost />
         <ErrorReporter />
         <Analytics />

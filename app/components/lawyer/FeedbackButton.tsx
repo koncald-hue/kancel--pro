@@ -27,6 +27,8 @@ export default function FeedbackButton() {
         const { error: err } = await supabase.from('feedback').insert({ user_id: userId, email: u.user?.email ?? '', kind, message: message.trim(), page: pageOnly(path ?? '') });
         setBusy(false);
         if (err) { setError('Zprávu se nepodařilo odeslat. Zkuste to prosím znovu.'); return; }
+        // Upozornění e-mailem správci (zpráva je už uložená ve Správě, chyba e-mailu nevadí)
+        if (u.user?.email) void fetch('/api/support', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: u.user.email, message: message.trim(), kind, page: pageOnly(path ?? '') }) }).catch(() => {});
         setSent(true);
     }
 
