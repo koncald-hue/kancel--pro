@@ -12,9 +12,9 @@ export const PROVIDER = {
     dataProtectionEmail: 'dominikkoncal@gmail.com', // e-mail pro žádosti o ochranu osobních údajů (může být stejný jako e-mail výše)
     hosting: 'Vercel Inc., region Dublin, Irsko (EU)', // kde aplikace běží (např. „Vercel Inc.“) a v jakém regionu
     dbRegion: 'Irsko (EU)', // region databáze Supabase (např. „Frankfurt, EU“)
-    mailProvider: '',    // poskytovatel e-mailů (např. „Resend“), až bude zapojen
-    paymentProvider: '', // platební brána (např. „Stripe“), až bude zapojena
-    effectiveFrom: '',   // datum účinnosti znění podmínek (např. „1. 12. 2026“)
+    mailProvider: 'Brevo (Sendinblue SAS)',    // poskytovatel e-mailů (např. „Resend“), až bude zapojen
+    paymentProvider: 'Comgate a.s.', // platební brána (např. „Stripe“), až bude zapojena
+    effectiveFrom: '25. 11. 2026',   // datum účinnosti znění podmínek (např. „1. 12. 2026“)
 };
 
 export type ProviderKey = keyof typeof PROVIDER;
