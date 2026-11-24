@@ -4,17 +4,19 @@ import { htmlFromText } from './mailHtml';
 // Odesílatel MAIL_FROM musí být u poskytovatele ověřený. Bez klíče se e-maily neodesílají.
 export const mailConfigured = () => !!((process.env.RESEND_API_KEY || process.env.BREVO_API_KEY) && process.env.MAIL_FROM);
 
-export async function sendMail(to: string, subject: string, text: string, f: typeof fetch = fetch): Promise<void> {
+export type MailAttachment = { name: string; content: string };
+export async function sendMail(to: string, subject: string, text: string, f: typeof fetch = fetch, attachments: MailAttachment[] = []): Promise<void> {
+    const b64 = (a: MailAttachment) => Buffer.from(a.content, 'utf8').toString('base64');
     const from = process.env.MAIL_FROM ?? '';
     const html = htmlFromText(text, process.env.NEXT_PUBLIC_SITE_URL || 'https://kancelarpro.cz');
     if (process.env.RESEND_API_KEY) {
-        const res = await f('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, text, html }), cache: 'no-store' });
+        const res = await f('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, text, html, ...(attachments.length ? { attachments: attachments.map((a) => ({ filename: a.name, content: b64(a) })) } : {}) }), cache: 'no-store' });
         if (!res.ok) { console.warn(`[mail] Resend ${res.status}`); throw new Error('E-mail se nepodařilo odeslat.'); }
         return;
     }
     if (process.env.BREVO_API_KEY) {
         const m = from.match(/^(.*?)\s*<([^>]+)>$/); const sender = m ? { name: m[1].replace(/^"|"$/g, ''), email: m[2] } : { email: from };
-        const res = await f('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ sender, to: [{ email: to }], subject, textContent: text, htmlContent: html }), cache: 'no-store' });
+        const res = await f('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ sender, to: [{ email: to }], subject, textContent: text, htmlContent: html, ...(attachments.length ? { attachment: attachments.map((a) => ({ name: a.name, content: b64(a) })) } : {}) }), cache: 'no-store' });
         if (!res.ok) {
             // Do logu serveru jen kód a hláška poskytovatele (bez příjemce a obsahu), např. zablokovaná IP adresa
             const why = await res.json().catch(() => null) as { code?: string; message?: string } | null;

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serviceClient } from '@/lib/serverSupabase';
 import { notifyAdmin } from '@/lib/adminMail';
+import { sendInvoiceForOrder } from '@/lib/invoiceMail';
 import { comgateConfig, getStatus, isPaidFor } from '@/lib/comgate';
 
 // Oznámení o změně stavu platby od Comgate (adresu nastavte v klientském portálu Comgate).
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
             refund ? `Zaplatil někdo, kdo nemá ověřenou totožnost. Peníze je třeba vrátit (objednávka č. ${st.refId}).` : `Někdo zaplatil objednávku Kanceláře č. ${st.refId}.`,
             `Částka: ${Number(order.price_czk)} Kč`,
         ]);
+        if (!refund) await sendInvoiceForOrder(st.refId, 'predplatne');
     }
     return reply(true);
 }
