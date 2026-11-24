@@ -3,7 +3,7 @@
 // Prázdná položka se na stránkách zobrazí jako zvýrazněné „[DOPLNIT: …]“.
 export const PROVIDER = {
     name: 'Dominik Končal', // obchodní firma nebo jméno a příjmení (OSVČ)
-    ico: '',             // IČO
+    ico: '30292620',     // IČO
     vat: '',             // DIČ, nebo napište „není plátcem DPH“
     address: '',         // sídlo / místo podnikání
     register: '',        // zápis v rejstříku (např. „vedená u Městského soudu v Praze, sp. zn. C 12345“) nebo „zapsán v živnostenském rejstříku“
