@@ -1,6 +1,6 @@
 # Smlouva o zpracování osobních údajů (NÁVRH)
 
-> **Návrh připravený programem, nikoli právní služba. Před použitím jej musí zkontrolovat a upravit advokát.** Položky v hranatých závorkách jsou k doplnění. Struktura vychází z čl. 28 nařízení (EU) 2016/679 (GDPR).
+> **Návrh připravený programem, nikoli právní služba.** Položky v hranatých závorkách jsou k doplnění. Struktura vychází z čl. 28 nařízení (EU) 2016/679 (GDPR).
 
 **Správce:** [jméno advokáta nebo název kanceláře, IČO, adresa] (dále „Správce“)
 **Zpracovatel:** [provozovatel Kanceláře, IČO, adresa] (dále „Zpracovatel“)
@@ -60,7 +60,7 @@ Za Správce: ____________  Za Zpracovatele: ____________  V ________ dne _______
 
 ---
 
-**Poznámky ke kontrole advokátem (nejsou součástí smlouvy):**
+**Poznámky k úpravě (nejsou součástí smlouvy):**
 - Zda je Správce (advokát) vždy správcem, nebo u některých činností společným správcem či samostatným správcem.
 - Vztah k povinné mlčenlivosti a k předpisům České advokátní komory o používání externích služeb. ČAK podle dostupných výsledků nemá jednotné doporučení pro cloud, ověřte aktuální stav.
 - Právní základ předání při AI funkci a rozsah zakrývání identifikátorů.
