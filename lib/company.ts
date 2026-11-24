@@ -4,7 +4,7 @@
 export const PROVIDER = {
     name: 'Dominik Končal', // obchodní firma nebo jméno a příjmení (OSVČ)
     ico: '30292620',     // IČO
-    vat: '',             // DIČ, nebo napište „není plátcem DPH“
+    vat: 'není plátcem DPH', // DIČ, nebo napište „není plátcem DPH“
     address: 'K Cihelně 47, 330 12 Horní Bříza',         // sídlo / místo podnikání
     register: 'zapsán v živnostenském rejstříku',        // zápis v rejstříku (např. „vedená u Městského soudu v Praze, sp. zn. C 12345“) nebo „zapsán v živnostenském rejstříku“
     email: 'dominikkoncal@gmail.com', // kontaktní e-mail pro zákazníky a pro oznamování incidentů
