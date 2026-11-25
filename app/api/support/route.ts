@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { mailConfigured, sendMail } from '@/lib/mail';
+import { clientIp, rateLimited } from '@/lib/serverSupabase';
 
 // Zpráva od návštěvníka nebo zákazníka („Napište nám“, v aplikaci „Nahlásit problém“). Jde e-mailem správci (ADMIN_NOTIFY_EMAIL)
 // s adresou pro odpověď nastavenou na zákazníka, takže stačí v poště kliknout na Odpovědět.
@@ -7,6 +8,8 @@ const isEmail = (s: string) => s.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$
 export async function POST(req: Request) {
     const b = await req.json().catch(() => null) as { email?: string; name?: string; message?: string; page?: string; kind?: string; website?: string } | null;
     if (b?.website) return NextResponse.json({ ok: true });
+    const ip = clientIp(req);
+    if (await rateLimited(`support:${ip}`, 5, 3_600_000) || await rateLimited(`support-d:${ip}`, 20, 86_400_000)) return NextResponse.json({ error: 'Poslali jste už hodně zpráv. Zkuste to prosím později.' }, { status: 429 });
     const email = String(b?.email ?? '').trim();
     const name = String(b?.name ?? '').trim().slice(0, 100);
     const message = String(b?.message ?? '').trim();
