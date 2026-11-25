@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
 import { Geist, Geist_Mono, Source_Serif_4 } from 'next/font/google';
 import { AuthProvider } from '@/app/components/site/AuthContext';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
@@ -36,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang="cs" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} h-full antialiased`}>
       <head><script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} /></head>
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-800">
-        <AuthProvider>{children}<SupportWidget /></AuthProvider>
+        <AuthProvider>{children}<Suspense fallback={null}><SupportWidget /></Suspense></AuthProvider>
         <ConfirmHost />
         <ErrorReporter />
         <Analytics />
