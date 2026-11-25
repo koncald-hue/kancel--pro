@@ -110,7 +110,7 @@ function FooterColumn({ title, links }: { title: string; links: readonly (readon
 }
 
 export function SiteFooter() {
-    const detail = [COMPANY.ico ? `IČO ${COMPANY.ico}` : '', COMPANY.address].filter(Boolean);
+    const detail = [COMPANY.ico ? `IČO ${COMPANY.ico}` : '', COMPANY.address, COMPANY.register].filter(Boolean);
     return (
         <footer className="relative overflow-hidden bg-slate-950 text-slate-300 print:hidden">
             <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[40rem] -translate-x-1/2 rounded-full bg-indigo-600/15 blur-3xl" />
