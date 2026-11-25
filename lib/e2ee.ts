@@ -123,8 +123,11 @@ function onActivity() {
     touch();
     armIdle();
 }
+// Na zapamatovaném zařízení se po nečinnosti nezamyká: klíč by se po obnovení stránky stejně odemkl sám
+let remembered = false;
+export const isRemembered = () => remembered;
 function armIdle() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || remembered) return;
     if (idleTimer !== null) window.clearTimeout(idleTimer);
     idleTimer = window.setTimeout(() => { void setMaster(null, 'idle'); }, IDLE_LOCK_MS);
 }
@@ -137,6 +140,8 @@ function watchActivity(on: boolean) {
 
 export async function setMaster(key: CryptoKey | null, reason: Exclude<LockReason, 'reload'> = null) {
     masterKey = key;
+    // Ruční zamčení a odhlášení zapamatované zařízení zapomenou, nečinnost ne
+    if (!key && (reason === 'logout' || (reason !== 'idle' && remembered))) { remembered = false; const { forgetDevice } = await import('./e2eeDevice'); await forgetDevice(); }
     lockReason = key ? null : reason;
     try {
         sessionStorage.removeItem(FLAG);
@@ -146,15 +151,45 @@ export async function setMaster(key: CryptoKey | null, reason: Exclude<LockReaso
     listeners.forEach((fn) => fn());
 }
 export const clearLockReason = () => { lockReason = null; listeners.forEach((fn) => fn()); };
-export async function restoreMaster() {
+// Zapamatuje (nebo zapomene) odemčený klíč na tomto zařízení pro přihlášený účet
+export async function setRemembered(on: boolean, userId?: string) {
+    const dev = await import('./e2eeDevice');
+    if (on && masterKey && userId) { remembered = await dev.rememberDevice(userId, masterKey); if (remembered && idleTimer !== null) { window.clearTimeout(idleTimer); idleTimer = null; } }
+    else { remembered = false; await dev.forgetDevice(); armIdle(); }
+    listeners.forEach((fn) => fn());
+}
+let restoring: Promise<void> | null = null;
+export function restoreMaster() { restoring ??= doRestore().finally(() => { restoring = null; }); return restoring; }
+async function doRestore() {
     if (masterKey) return;
     try {
         const stored = sessionStorage.getItem(KEY_STORE);
-        if (!stored) return;
         const last = Number(sessionStorage.getItem(ACTIVE_STORE) || 0);
-        if (Date.now() - last >= IDLE_LOCK_MS) { await setMaster(null, 'idle'); return; }
-        await setMaster(await importKey(stored));
-    } catch { /* poškozený nebo nedostupný záznam: uživatel klíč odemkne heslem */ }
+        if (stored && Date.now() - last < IDLE_LOCK_MS) { await setMaster(await importKey(stored)); }
+    } catch { /* poškozený nebo nedostupný záznam: zkusí se zapamatované zařízení */ }
+    if (masterKey) { await checkRemembered(); return; }
+    // Zapamatované zařízení: odemkne se samo, v každé kartě i po zavření prohlížeče
+    try {
+        const { supabase } = await import('./supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        if (userId) {
+            const { loadRememberedMaster } = await import('./e2eeDevice');
+            const key = await loadRememberedMaster(userId);
+            if (key) { remembered = true; await setMaster(key); return; }
+        }
+    } catch { /* bez zapamatovaného zařízení se odemyká heslem */ }
+    // Klíč v sessionStorage vypršel nečinností a zařízení zapamatované není
+    try { if (sessionStorage.getItem(KEY_STORE)) await setMaster(null, 'idle'); } catch { /* úložiště nemusí být dostupné */ }
+}
+async function checkRemembered() {
+    try {
+        const { supabase } = await import('./supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+        const { isDeviceRemembered } = await import('./e2eeDevice');
+        const on = !!session?.user?.id && await isDeviceRemembered(session.user.id);
+        if (on !== remembered) { remembered = on; if (on && idleTimer !== null) { window.clearTimeout(idleTimer); idleTimer = null; } listeners.forEach((fn) => fn()); }
+    } catch { /* ponechá se dosavadní stav */ }
 }
 
 export async function encryptFile(key: CryptoKey, file: File): Promise<{ blob: Blob; encName: string }> {

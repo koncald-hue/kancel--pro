@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useSyncExternalStore } from 'react';
-import { getLockReason, getMaster, restoreMaster, subscribeMaster, type LockReason } from './e2ee';
+import { getLockReason, getMaster, isRemembered, restoreMaster, subscribeMaster, type LockReason } from './e2ee';
 
 // Odemčený hlavní klíč advokáta (null = zamčeno); přežije obnovení stránky, zamkne se po 30 min nečinnosti.
 export function useMasterKey(): CryptoKey | null {
@@ -13,4 +13,9 @@ export function useMasterKey(): CryptoKey | null {
 // Důvod zamčení (nečinnost, obnovení stránky, odhlášení), aby aplikace mohla vysvětlit, proč šifrovaný obsah není vidět
 export function useLockReason(): LockReason {
     return useSyncExternalStore(subscribeMaster, getLockReason, () => null);
+}
+
+// Je klíč zapamatovaný na tomto zařízení (odemyká se sám)?
+export function useRemembered(): boolean {
+    return useSyncExternalStore(subscribeMaster, isRemembered, () => false);
 }

@@ -224,7 +224,7 @@ export default function LawyerSettings() {
             <section id="sifrovani" className="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Šifrovací heslo">
                 <h2 className="text-lg font-bold text-slate-900">Šifrovací heslo</h2>
                 <p className="mt-1 text-sm leading-relaxed text-slate-600">Chrání komunikaci s klienty, přihlášení k datové schránce, e-mailu a dalším službám. Zná ho jen váš prohlížeč, provozovatel ho nevidí. Bez něj ani bez záložního kódu se zašifrovaná data obnovit nedají.</p>
-                <p className="mt-2 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600"><strong>Kdy se heslo zamkne?</strong> Po 30 minutách bez jakékoli práce na webu, po odhlášení a po zavření karty. Při běžné práci, obnovení stránky nebo přihlášení ke Googlu zůstává odemčené.</p>
+                <p className="mt-2 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600"><strong>Kdy se heslo zamkne?</strong> Když při odemykání zaškrtnete „Zapamatovat toto zařízení“, zadáte ho na tomto počítači jen jednou a šifrování se odemyká samo (v každé kartě i po restartu). Zamkne se až odhlášením, tlačítkem Zamknout nebo „Zapomenout toto zařízení“. Bez zapamatování se zamkne po 30 minutách bez práce a po zavření karty.</p>
                 <div className="mt-3"><E2eeBox access={access} onChanged={() => undefined} /></div>
             </section>
             <MfaCard />
