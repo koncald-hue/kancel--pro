@@ -51,6 +51,35 @@ export const LANDINGS: Landing[] = [
         guides: ['jak-vybrat-software-pro-advokatni-kancelar', 'pocitani-procesnich-lhut', 'mlcenlivost-advokata-a-cloud'],
     },
     {
+        slug: 'software-pro-pravniky',
+        title: 'Software pro právníky: spisy, lhůty a faktury | Kancelář Pro',
+        description: 'Software pro právníky a advokátní kanceláře: spisy, hlídání lhůt, datové schránky, výkaz práce a fakturace v prohlížeči. 14 dní zdarma, bez karty.',
+        kicker: 'Software pro právníky',
+        h1: 'Software pro právníky, který hlídá lhůty a spisy za vás',
+        intro: 'Kancelář Pro je český program pro právníky v advokacii: advokáty, koncipienty a jejich kanceláře. Spisy, lhůty, datové schránky, e-maily, výkaz práce a faktury máte na jednom místě, v prohlížeči na počítači i v telefonu.',
+        sections: [
+            {
+                h: 'Co právníkovi ušetří nejvíc času',
+                p: ['Program je postavený na každodenní práci s věcmi klientů, ne na obecné správě úkolů:'],
+                points: ['Lhůty se spočítají z doručeného rozhodnutí, i s posunem na pracovní den', 'Datové zprávy a e-maily se ukládají přímo do spisu', 'Výkaz práce se navrhne sám z toho, na čem jste pracovali', 'Z výkazu je jedním krokem faktura a přehled, kdo zaplatil', 'Klient vám posílá podklady přes soukromý odkaz místo e-mailu'],
+            },
+            {
+                h: 'Pro koho je Kancelář Pro',
+                p: ['Kancelář Pro je určená hlavně pro advokáty, advokátní koncipienty a menší a střední advokátní kanceláře. Obsahuje i věci, které advokacie vyžaduje navíc: evidenci úschov, identifikaci klienta podle AML zákona a kontrolu střetu zájmů.', 'Evidenci spisů, hlídání lhůt a výkaz práce využije i právník, který pracuje samostatně mimo advokacii. Vyzkoušejte, jestli vám sedí, 14 dní zdarma.'],
+            },
+            {
+                h: 'Bez instalace a s důrazem na mlčenlivost',
+                p: ['Program běží v prohlížeči, nic neinstalujete a aktualizace i zálohy řešíme my. Přístup k datům hlídá přímo databáze, přihlášení je možné chránit dvoufázovým ověřením a citlivou komunikaci s klientem šifrujete klíčem, který máte jen vy.'],
+            },
+        ],
+        faq: [
+            { q: 'Je Kancelář Pro jen pro advokáty?', a: 'Je navržená pro advokáty a advokátní kanceláře, ale spisy, lhůty, výkaz práce a fakturaci využije i jiný právník. Vyzkoušejte 14 dní zdarma a uvidíte, jestli vám vyhovuje.' },
+            { q: 'Kolik stojí software pro právníky Kancelář Pro?', a: 'Prvních 14 dní je zdarma se všemi funkcemi a bez platební karty. Aktuální ceny předplatného najdete v ceníku.' },
+            { q: 'Musím něco instalovat?', a: 'Ne. Kancelář Pro běží v prohlížeči na počítači i v telefonu a na telefon si ji můžete přidat jako aplikaci na plochu.' },
+        ],
+        guides: ['jak-vybrat-software-pro-advokatni-kancelar', 'pocitani-procesnich-lhut'],
+    },
+    {
         slug: 'advokatni-software',
         title: 'Advokátní software: na co se dívat při výběru | Kancelář Pro',
         description: 'Jak vybrat advokátní software: lhůty, datové schránky, výkazy, fakturace, zabezpečení a přechod dat. Srovnejte s Kanceláří Pro, 14 dní zdarma.',
