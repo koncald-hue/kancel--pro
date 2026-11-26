@@ -6,8 +6,12 @@ type Json = Record<string, unknown>;
 const abs = (path: string) => `${getSiteOrigin() ?? 'https://kancelarpro.cz'}${path === '/' ? '' : path}`;
 
 export function JsonLd({ data }: { data: Json | Json[] }) {
+    // Každý objekt ve vlastní značce: vestavěné prohlížeče (Facebook, Instagram) čtou JSON-LD jako jeden objekt
+    // a na poli padaly s chybou „r["@context"].toLowerCase“. Google bere obě formy stejně.
     // Znak < se nahrazuje, aby text nemohl ukončit značku <script> (doporučení Next.js)
-    return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }} />;
+    return (Array.isArray(data) ? data : [data]).map((d, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(d).replace(/</g, '\\u003c') }} />
+    ));
 }
 
 export const organizationLd = (): Json => ({

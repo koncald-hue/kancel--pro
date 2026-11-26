@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 
 let sent = 0;
+// Chyby vestavěných prohlížečů (Facebook, Instagram na Androidu), ne naší aplikace
+const NOISE = /Java object is gone|Java bridge method invocation/i;
 // Odešle chybu do záznamu (nejvýše 5 za návštěvu, aby jedna chyba neobtěžovala server)
 export function reportError(error: unknown, source: 'client' | 'boundary' = 'client') {
     if (sent >= 5) return;
@@ -10,6 +12,7 @@ export function reportError(error: unknown, source: 'client' | 'boundary' = 'cli
     try {
         const e = error as { message?: unknown; stack?: unknown } | string | null;
         const message = typeof e === 'string' ? e : String((e && typeof e === 'object' && e.message) || '');
+        if (NOISE.test(message)) return;
         const stack = e && typeof e === 'object' && typeof e.stack === 'string' ? e.stack : '';
         void fetch('/api/log-error', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, stack, page: window.location.pathname, source }), keepalive: true }).catch(() => undefined);
     } catch { /* záznam chyb nesmí způsobit další chybu */ }
