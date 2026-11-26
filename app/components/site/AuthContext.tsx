@@ -9,6 +9,7 @@ import { endAllSessions } from '@/lib/isdsSession';
 import { clearBoxState } from '@/lib/dataBoxState';
 import AuthForm from './AuthForm';
 import { setMaster } from '@/lib/e2ee';
+import { handleGoogleReturn } from '@/lib/googleLogin';
 
 // Přihlášení do aplikace pro právníky: jeden účet, přihlašování e-mailem a heslem
 export type AuthInfo = {
@@ -61,7 +62,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Uložené přihlášení může patřit účtu, který už neexistuje (např. smazaný v Supabase): pak se odhlásí
             if (session) supabase.auth.getUser().then(({ error }) => { if (error) void supabase.auth.signOut(); });
         });
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => { if (event === 'SIGNED_OUT') void setMaster(null, 'logout'); apply(session?.user ?? null); if (event === 'SIGNED_IN') notifySignup(session); });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') void setMaster(null, 'logout');
+            // Návrat z přihlášení přes Google: souhlas s podmínkami a případný přístup ke kalendáři (jen když přihlášení právě proběhlo)
+            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') handleGoogleReturn(session);
+            apply(session?.user ?? null);
+            if (event === 'SIGNED_IN') notifySignup(session);
+        });
         return () => subscription.unsubscribe();
     }, []);
 

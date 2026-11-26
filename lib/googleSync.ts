@@ -36,13 +36,18 @@ export type Loaded = { row: Row; tokens: GoogleTokens };
 export async function finishGoogleConnect(master: CryptoKey, userId: string, code: string, p: Pending): Promise<void> {
     const ex = await api({ action: 'exchange', code, verifier: p.verifier, redirectUri: `${window.location.origin}${GOOGLE_CALLBACK_PATH}` });
     if (!ex.ok) throw new Error(typeof ex.json.message === 'string' ? ex.json.message : 'Přihlášení ke Googlu se nezdařilo.');
-    const tokens = ex.json.tokens as GoogleTokens;
+    await saveGoogleTokens(master, userId, ex.json.tokens as GoogleTokens);
+}
+
+// Vytvoří kalendář „Kancelář – lhůty“ a uloží přihlášení zašifrované šifrovacím heslem (z Nastavení i po přihlášení přes Google)
+export async function saveGoogleTokens(master: CryptoKey, userId: string, tokens: GoogleTokens): Promise<void> {
     if (!tokens.refresh_token) throw new Error('Google nevrátil trvalé přihlášení. Odeberte aplikaci v nastavení účtu Google a připojte se znovu.');
     const cal = await api({ action: 'cal', accessToken: tokens.access_token, op: 'createCalendar', body: { summary: CALENDAR_NAME } });
     if (!cal.ok || cal.json.status !== 200 || typeof cal.json.id !== 'string') throw new Error(typeof cal.json.message === 'string' ? cal.json.message : 'Kalendář se nepodařilo vytvořit.');
     const enc = await encryptText(master, JSON.stringify(tokens));
     const { error } = await supabase.from('google_connections').upsert({ user_id: userId, calendar_id: cal.json.id, enc_token: enc, detail: 'minimal', internal: true, updated_at: new Date().toISOString() });
     if (error) throw new Error(error.message);
+    try { localStorage.setItem('kancelar-google', '1'); } catch { /* úložiště nemusí být dostupné */ }
 }
 
 export async function loadGoogleConnection(master: CryptoKey): Promise<Loaded | null | 'broken'> {
